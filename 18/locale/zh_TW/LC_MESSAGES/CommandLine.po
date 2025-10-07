@@ -1,0 +1,1659 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 18\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../CommandLine.rst:3
+msgid "CommandLine 2.0 Library Manual"
+msgstr ""
+
+#: ../../../CommandLine.rst:9
+msgid "Introduction"
+msgstr ""
+
+#: ../../../CommandLine.rst:11
+msgid ""
+"This document describes the CommandLine argument processing library.  It "
+"will show you how to use it, and what it can do.  The CommandLine library "
+"uses a declarative approach to specifying the command line options that your "
+"program takes.  By default, these options declarations implicitly hold the "
+"value parsed for the option declared (of course this `can be changed`_)."
+msgstr ""
+
+#: ../../../CommandLine.rst:17
+msgid ""
+"Although there are a **lot** of command line argument parsing libraries out "
+"there in many different languages, none of them fit well with what I "
+"needed.  By looking at the features and problems of other libraries, I "
+"designed the CommandLine library to have the following features:"
+msgstr ""
+
+#: ../../../CommandLine.rst:22
+msgid ""
+"Speed: The CommandLine library is very quick and uses little resources.  The "
+"parsing time of the library is directly proportional to the number of "
+"arguments parsed, not the number of options recognized.  Additionally, "
+"command line argument values are captured transparently into user defined "
+"global variables, which can be accessed like any other variable (and with "
+"the same performance)."
+msgstr ""
+
+#: ../../../CommandLine.rst:29
+msgid ""
+"Type Safe: As a user of CommandLine, you don't have to worry about "
+"remembering the type of arguments that you want (is it an int?  a string? a "
+"bool? an enum?) and keep casting it around.  Not only does this help prevent "
+"error prone constructs, it also leads to dramatically cleaner source code."
+msgstr ""
+
+#: ../../../CommandLine.rst:34
+msgid ""
+"No subclasses required: To use CommandLine, you instantiate variables that "
+"correspond to the arguments that you would like to capture, you don't "
+"subclass a parser.  This means that you don't have to write **any** "
+"boilerplate code."
+msgstr ""
+
+#: ../../../CommandLine.rst:39
+msgid ""
+"Globally accessible: Libraries can specify command line arguments that are "
+"automatically enabled in any tool that links to the library.  This is "
+"possible because the application doesn't have to keep a list of arguments to "
+"pass to the parser.  This also makes supporting `dynamically loaded "
+"options`_ trivial."
+msgstr ""
+
+#: ../../../CommandLine.rst:45
+msgid ""
+"Cleaner: CommandLine supports enum and other types directly, meaning that "
+"there is less error and more security built into the library.  You don't "
+"have to worry about whether your integral command line argument accidentally "
+"got assigned a value that is not valid for your enum type."
+msgstr ""
+
+#: ../../../CommandLine.rst:50
+msgid ""
+"Powerful: The CommandLine library supports many different types of "
+"arguments, from simple `boolean flags`_ to `scalars arguments`_ (`strings`_, "
+"`integers`_, `enums`_, `doubles`_), to `lists of arguments`_.  This is "
+"possible because CommandLine is..."
+msgstr ""
+
+#: ../../../CommandLine.rst:55
+msgid ""
+"Extensible: It is very simple to add a new argument type to CommandLine. "
+"Simply specify the parser that you want to use with the command line option "
+"when you declare it. `Custom parsers`_ are no problem."
+msgstr ""
+
+#: ../../../CommandLine.rst:59
+msgid ""
+"Labor Saving: The CommandLine library cuts down on the amount of grunt work "
+"that you, the user, have to do.  For example, it automatically provides a ``-"
+"help`` option that shows the available command line options for your tool. "
+"Additionally, it does most of the basic correctness checking for you."
+msgstr ""
+
+#: ../../../CommandLine.rst:64
+msgid ""
+"Capable: The CommandLine library can handle lots of different forms of "
+"options often found in real programs.  For example, `positional`_ arguments, "
+"``ls`` style `grouping`_ options (to allow processing '``ls -lad``' "
+"naturally), ``ld`` style `prefix`_ options (to parse '``-lmalloc -L/usr/"
+"lib``'), and interpreter style options."
+msgstr ""
+
+#: ../../../CommandLine.rst:70
+msgid ""
+"This document will hopefully let you jump in and start using CommandLine in "
+"your utility quickly and painlessly.  Additionally it should be a simple "
+"reference manual to figure out how stuff works."
+msgstr ""
+
+#: ../../../CommandLine.rst:75
+msgid "Quick Start Guide"
+msgstr ""
+
+#: ../../../CommandLine.rst:77
+msgid ""
+"This section of the manual runs through a simple CommandLine'ification of a "
+"basic compiler tool.  This is intended to show you how to jump into using "
+"the CommandLine library in your own program, and show you some of the cool "
+"things it can do."
+msgstr ""
+
+#: ../../../CommandLine.rst:82
+msgid ""
+"To start out, you need to include the CommandLine header file into your "
+"program:"
+msgstr ""
+
+#: ../../../CommandLine.rst:88
+msgid ""
+"Additionally, you need to add this as the first line of your main program:"
+msgstr ""
+
+#: ../../../CommandLine.rst:97
+msgid ""
+"... which actually parses the arguments and fills in the variable "
+"declarations."
+msgstr ""
+
+#: ../../../CommandLine.rst:99
+msgid ""
+"Now that you are ready to support command line arguments, we need to tell "
+"the system which ones we want, and what type of arguments they are.  The "
+"CommandLine library uses a declarative syntax to model command line "
+"arguments with the global variable declarations that capture the parsed "
+"values.  This means that for every command line option that you would like "
+"to support, there should be a global variable declaration to capture the "
+"result.  For example, in a compiler, we would like to support the Unix-"
+"standard '``-o <filename>``' option to specify where to put the output.  "
+"With the CommandLine library, this is represented like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:116
+msgid ""
+"This declares a global variable \"``OutputFilename``\" that is used to "
+"capture the result of the \"``o``\" argument (first parameter).  We specify "
+"that this is a simple scalar option by using the \"``cl::opt``\" template "
+"(as opposed to the \"``cl::list``\" template), and tell the CommandLine "
+"library that the data type that we are parsing is a string."
+msgstr ""
+
+#: ../../../CommandLine.rst:122
+msgid ""
+"The second and third parameters (which are optional) are used to specify "
+"what to output for the \"``-help``\" option.  In this case, we get a line "
+"that looks like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:135
+msgid ""
+"Because we specified that the command line option should parse using the "
+"``string`` data type, the variable declared is automatically usable as a "
+"real string in all contexts that a normal C++ string object may be used.  "
+"For example:"
+msgstr ""
+
+#: ../../../CommandLine.rst:147
+msgid ""
+"There are many different options that you can use to customize the command "
+"line option handling library, but the above example shows the general "
+"interface to these options.  The options can be specified in any order, and "
+"are specified with helper functions like `cl::desc(...)`_, so there are no "
+"positional dependencies to remember.  The available options are discussed in "
+"detail in the `Reference Guide`_."
+msgstr ""
+
+#: ../../../CommandLine.rst:154
+msgid ""
+"Continuing the example, we would like to have our compiler take an input "
+"filename as well as an output filename, but we do not want the input "
+"filename to be specified with a hyphen (ie, not ``-filename.c``).  To "
+"support this style of argument, the CommandLine library allows for "
+"`positional`_ arguments to be specified for the program.  These positional "
+"arguments are filled with command line parameters that are not in option "
+"form.  We use this feature like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:166
+msgid ""
+"This declaration indicates that the first positional argument should be "
+"treated as the input filename.  Here we use the `cl::init`_ option to "
+"specify an initial value for the command line option, which is used if the "
+"option is not specified (if you do not specify a `cl::init`_ modifier for an "
+"option, then the default constructor for the data type is used to initialize "
+"the value).  Command line options default to being optional, so if we would "
+"like to require that the user always specify an input filename, we would add "
+"the `cl::Required`_ flag, and we could eliminate the `cl::init`_ modifier, "
+"like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:179
+msgid ""
+"Again, the CommandLine library does not require the options to be specified "
+"in any particular order, so the above declaration is equivalent to:"
+msgstr ""
+
+#: ../../../CommandLine.rst:186
+msgid ""
+"By simply adding the `cl::Required`_ flag, the CommandLine library will "
+"automatically issue an error if the argument is not specified, which shifts "
+"all of the command line option verification code out of your application "
+"into the library.  This is just one example of how using flags can alter the "
+"default behaviour of the library, on a per-option basis.  By adding one of "
+"the declarations above, the ``-help`` option synopsis is now extended to:"
+msgstr ""
+
+#: ../../../CommandLine.rst:202
+msgid "... indicating that an input filename is expected."
+msgstr ""
+
+#: ../../../CommandLine.rst:205
+msgid "Boolean Arguments"
+msgstr ""
+
+#: ../../../CommandLine.rst:207
+msgid ""
+"In addition to input and output filenames, we would like the compiler "
+"example to support three boolean flags: \"``-f``\" to force writing binary "
+"output to a terminal, \"``--quiet``\" to enable quiet mode, and \"``-q``\" "
+"for backwards compatibility with some of our users.  We can support these by "
+"declaring options of boolean type like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:219
+msgid ""
+"This does what you would expect: it declares three boolean variables "
+"(\"``Force``\", \"``Quiet``\", and \"``Quiet2``\") to recognize these "
+"options.  Note that the \"``-q``\" option is specified with the \"`cl::"
+"Hidden`_\" flag.  This modifier prevents it from being shown by the standard "
+"\"``-help``\" output (note that it is still shown in the \"``-help-"
+"hidden``\" output)."
+msgstr ""
+
+#: ../../../CommandLine.rst:225
+msgid ""
+"The CommandLine library uses a `different parser`_ for different data types. "
+"For example, in the string case, the argument passed to the option is copied "
+"literally into the content of the string variable... we obviously cannot do "
+"that in the boolean case, however, so we must use a smarter parser.  In the "
+"case of the boolean parser, it allows no options (in which case it assigns "
+"the value of true to the variable), or it allows the values \"``true``\" or "
+"\"``false``\" to be specified, allowing any of the following inputs:"
+msgstr ""
+
+#: ../../../CommandLine.rst:240
+msgid ""
+"... you get the idea.  The `bool parser`_ just turns the string values into "
+"boolean values, and rejects things like '``compiler -f=foo``'.  Similarly, "
+"the `float`_, `double`_, and `int`_ parsers work like you would expect, "
+"using the '``strtol``' and '``strtod``' C library calls to parse the string "
+"value into the specified data type."
+msgstr ""
+
+#: ../../../CommandLine.rst:246
+msgid "With the declarations above, \"``compiler -help``\" emits this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:258
+msgid "and \"``compiler -help-hidden``\" prints this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:271
+msgid ""
+"This brief example has shown you how to use the '`cl::opt`_' class to parse "
+"simple scalar command line arguments.  In addition to simple scalar "
+"arguments, the CommandLine library also provides primitives to support "
+"CommandLine option `aliases`_, and `lists`_ of options."
+msgstr ""
+
+#: ../../../CommandLine.rst:279
+msgid "Argument Aliases"
+msgstr ""
+
+#: ../../../CommandLine.rst:281
+msgid ""
+"So far, the example works well, except for the fact that we need to check "
+"the quiet condition like this now:"
+msgstr ""
+
+#: ../../../CommandLine.rst:290
+msgid ""
+"... which is a real pain!  Instead of defining two values for the same "
+"condition, we can use the \"`cl::alias`_\" class to make the \"``-q``\" "
+"option an **alias** for the \"``-quiet``\" option, instead of providing a "
+"value itself:"
+msgstr ""
+
+#: ../../../CommandLine.rst:300
+msgid ""
+"The third line (which is the only one we modified from above) defines a \"``-"
+"q``\" alias that updates the \"``Quiet``\" variable (as specified by the "
+"`cl::aliasopt`_ modifier) whenever it is specified.  Because aliases do not "
+"hold state, the only thing the program has to query is the ``Quiet`` "
+"variable now.  Another nice feature of aliases is that they automatically "
+"hide themselves from the ``-help`` output (although, again, they are still "
+"visible in the ``-help-hidden output``)."
+msgstr ""
+
+#: ../../../CommandLine.rst:307
+msgid "Now the application code can simply use:"
+msgstr ""
+
+#: ../../../CommandLine.rst:315
+msgid ""
+"... which is much nicer!  The \"`cl::alias`_\" can be used to specify an "
+"alternative name for any variable type, and has many uses."
+msgstr ""
+
+#: ../../../CommandLine.rst:321
+msgid "Selecting an alternative from a set of possibilities"
+msgstr ""
+
+#: ../../../CommandLine.rst:323
+msgid ""
+"So far we have seen how the CommandLine library handles builtin types like "
+"``std::string``, ``bool`` and ``int``, but how does it handle things it "
+"doesn't know about, like enums or '``int*``'s?"
+msgstr ""
+
+#: ../../../CommandLine.rst:327
+msgid ""
+"The answer is that it uses a table-driven generic parser (unless you specify "
+"your own parser, as described in the `Extension Guide`_).  This parser maps "
+"literal strings to whatever type is required, and requires you to tell it "
+"what this mapping should be."
+msgstr ""
+
+#: ../../../CommandLine.rst:332
+msgid ""
+"Let's say that we would like to add four optimization levels to our "
+"optimizer, using the standard flags \"``-g``\", \"``-O0``\", \"``-O1``\", "
+"and \"``-O2``\".  We could easily implement this with boolean options like "
+"above, but there are several problems with this strategy:"
+msgstr ""
+
+#: ../../../CommandLine.rst:337
+msgid ""
+"A user could specify more than one of the options at a time, for example, "
+"\"``compiler -O3 -O2``\".  The CommandLine library would not be able to "
+"catch this erroneous input for us."
+msgstr ""
+
+#: ../../../CommandLine.rst:341
+msgid "We would have to test 4 different variables to see which ones are set."
+msgstr ""
+
+#: ../../../CommandLine.rst:343
+msgid ""
+"This doesn't map to the numeric levels that we want... so we cannot easily "
+"see if some level >= \"``-O1``\" is enabled."
+msgstr ""
+
+#: ../../../CommandLine.rst:346
+msgid ""
+"To cope with these problems, we can use an enum value, and have the "
+"CommandLine library fill it in with the appropriate level directly, which is "
+"used like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:366
+msgid ""
+"This declaration defines a variable \"``OptimizationLevel``\" of the "
+"\"``OptLevel``\" enum type.  This variable can be assigned any of the values "
+"that are listed in the declaration.  The CommandLine library enforces that "
+"the user can only specify one of the options, and it ensure that only valid "
+"enum values can be specified.  The \"``clEnumVal``\" macros ensure that the "
+"command line arguments matched the enum values.  With this option added, our "
+"help output now is:"
+msgstr ""
+
+#: ../../../CommandLine.rst:389
+msgid ""
+"In this case, it is sort of awkward that flag names correspond directly to "
+"enum names, because we probably don't want an enum definition named "
+"\"``g``\" in our program.  Because of this, we can alternatively write this "
+"example like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:410
+msgid ""
+"By using the \"``clEnumValN``\" macro instead of \"``clEnumVal``\", we can "
+"directly specify the name that the flag should get.  In general a direct "
+"mapping is nice, but sometimes you can't or don't want to preserve the "
+"mapping, which is when you would use it."
+msgstr ""
+
+#: ../../../CommandLine.rst:416
+msgid "Named Alternatives"
+msgstr ""
+
+#: ../../../CommandLine.rst:418
+msgid ""
+"Another useful argument form is a named alternative style.  We shall use "
+"this style in our compiler to specify different debug levels that can be "
+"used. Instead of each debug level being its own switch, we want to support "
+"the following options, of which only one can be specified at a time: \"``--"
+"debug-level=none``\", \"``--debug-level=quick``\", \"``--debug-"
+"level=detailed``\".  To do this, we use the exact same format as our "
+"optimization level flags, but we also specify an option name.  For this "
+"case, the code looks like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:440
+msgid ""
+"This definition defines an enumerated command line variable of type \"``enum "
+"DebugLev``\", which works exactly the same way as before.  The difference "
+"here is just the interface exposed to the user of your program and the help "
+"output by the \"``-help``\" option:"
+msgstr ""
+
+#: ../../../CommandLine.rst:464
+msgid ""
+"Again, the only structural difference between the debug level declaration "
+"and the optimization level declaration is that the debug level declaration "
+"includes an option name (``\"debug_level\"``), which automatically changes "
+"how the library processes the argument.  The CommandLine library supports "
+"both forms so that you can choose the form most appropriate for your "
+"application."
+msgstr ""
+
+#: ../../../CommandLine.rst:473
+msgid "Parsing a list of options"
+msgstr ""
+
+#: ../../../CommandLine.rst:475
+msgid ""
+"Now that we have the standard run-of-the-mill argument types out of the way, "
+"lets get a little wild and crazy.  Lets say that we want our optimizer to "
+"accept a **list** of optimizations to perform, allowing duplicates.  For "
+"example, we might want to run: \"``compiler -dce -instsimplify -inline -dce -"
+"strip``\".  In this case, the order of the arguments and the number of "
+"appearances is very important.  This is what the \"``cl::list``\" template "
+"is for.  First, start by defining an enum of the optimizations that you "
+"would like to perform:"
+msgstr ""
+
+#: ../../../CommandLine.rst:490
+msgid "Then define your \"``cl::list``\" variable:"
+msgstr ""
+
+#: ../../../CommandLine.rst:501
+msgid ""
+"This defines a variable that is conceptually of the type \"``std::"
+"vector<enum Opts>``\".  Thus, you can access it with standard vector methods:"
+msgstr ""
+
+#: ../../../CommandLine.rst:511
+msgid "... to iterate through the list of options specified."
+msgstr ""
+
+#: ../../../CommandLine.rst:513
+msgid ""
+"Note that the \"``cl::list``\" template is completely general and may be "
+"used with any data types or other arguments that you can use with the "
+"\"``cl::opt``\" template.  One especially useful way to use a list is to "
+"capture all of the positional arguments together if there may be more than "
+"one specified.  In the case of a linker, for example, the linker takes "
+"several '``.o``' files, and needs to capture them into a list.  This is "
+"naturally specified as:"
+msgstr ""
+
+#: ../../../CommandLine.rst:526
+msgid ""
+"This variable works just like a \"``vector<string>``\" object.  As such, "
+"accessing the list is simple, just like above.  In this example, we used the "
+"`cl::OneOrMore`_ modifier to inform the CommandLine library that it is an "
+"error if the user does not specify any ``.o`` files on our command line.  "
+"Again, this just reduces the amount of checking we have to do."
+msgstr ""
+
+#: ../../../CommandLine.rst:533
+msgid "Collecting options as a set of flags"
+msgstr ""
+
+#: ../../../CommandLine.rst:535
+msgid ""
+"Instead of collecting sets of options in a list, it is also possible to "
+"gather information for enum values in a **bit vector**.  The representation "
+"used by the `cl::bits`_ class is an ``unsigned`` integer.  An enum value is "
+"represented by a 0/1 in the enum's ordinal value bit position. 1 indicating "
+"that the enum was specified, 0 otherwise.  As each specified value is "
+"parsed, the resulting enum's bit is set in the option's bit vector:"
+msgstr ""
+
+#: ../../../CommandLine.rst:546
+msgid ""
+"Options that are specified multiple times are redundant.  Any instances "
+"after the first are discarded."
+msgstr ""
+
+#: ../../../CommandLine.rst:549
+msgid ""
+"Reworking the above list example, we could replace `cl::list`_ with `cl::"
+"bits`_:"
+msgstr ""
+
+#: ../../../CommandLine.rst:560
+msgid ""
+"To test to see if ``instsimplify`` was specified, we can use the ``cl:bits::"
+"isSet`` function:"
+msgstr ""
+
+#: ../../../CommandLine.rst:569
+msgid ""
+"It's also possible to get the raw bit vector using the ``cl::bits::getBits`` "
+"function:"
+msgstr ""
+
+#: ../../../CommandLine.rst:576
+msgid ""
+"Finally, if external storage is used, then the location specified must be of "
+"**type** ``unsigned``. In all other ways a `cl::bits`_ option is equivalent "
+"to a `cl::list`_ option."
+msgstr ""
+
+#: ../../../CommandLine.rst:583
+msgid "Adding freeform text to help output"
+msgstr ""
+
+#: ../../../CommandLine.rst:585
+msgid ""
+"As our program grows and becomes more mature, we may decide to put summary "
+"information about what it does into the help output.  The help output is "
+"styled to look similar to a Unix ``man`` page, providing concise information "
+"about a program.  Unix ``man`` pages, however often have a description about "
+"what the program does.  To add this to your CommandLine program, simply pass "
+"a third argument to the `cl::ParseCommandLineOptions`_ call in main.  This "
+"additional argument is then printed as the overview information for your "
+"program, allowing you to include any additional information that you want.  "
+"For example:"
+msgstr ""
+
+#: ../../../CommandLine.rst:602
+msgid "would yield the help output:"
+msgstr ""
+
+#: ../../../CommandLine.rst:620
+msgid "Grouping options into categories"
+msgstr ""
+
+#: ../../../CommandLine.rst:622
+msgid ""
+"If our program has a large number of options it may become difficult for "
+"users of our tool to navigate the output of ``-help``. To alleviate this "
+"problem we can put our options into categories. This can be done by "
+"declaring option categories (`cl::OptionCategory`_ objects) and then placing "
+"our options into these categories using the `cl::cat`_ option attribute. For "
+"example:"
+msgstr ""
+
+#: ../../../CommandLine.rst:639
+msgid ""
+"The output of ``-help`` will become categorized if an option category is "
+"declared. The output looks something like ::"
+msgstr ""
+
+#: ../../../CommandLine.rst:659
+msgid ""
+"In addition to the behaviour of ``-help`` changing when an option category "
+"is declared, the command line option ``-help-list`` becomes visible which "
+"will print the command line options as uncategorized list."
+msgstr ""
+
+#: ../../../CommandLine.rst:663
+msgid ""
+"Note that Options that are not explicitly categorized will be placed in the "
+"``cl::getGeneralCategory()`` category."
+msgstr ""
+
+#: ../../../CommandLine.rst:669
+msgid "Reference Guide"
+msgstr ""
+
+#: ../../../CommandLine.rst:671
+msgid ""
+"Now that you know the basics of how to use the CommandLine library, this "
+"section will give you the detailed information you need to tune how command "
+"line options work, as well as information on more \"advanced\" command line "
+"option processing capabilities."
+msgstr ""
+
+#: ../../../CommandLine.rst:683
+msgid "Positional Arguments"
+msgstr ""
+
+#: ../../../CommandLine.rst:685
+msgid ""
+"Positional arguments are those arguments that are not named, and are not "
+"specified with a hyphen.  Positional arguments should be used when an option "
+"is specified by its position alone.  For example, the standard Unix ``grep`` "
+"tool takes a regular expression argument, and an optional filename to search "
+"through (which defaults to standard input if a filename is not specified).  "
+"Using the CommandLine library, this would be specified as:"
+msgstr ""
+
+#: ../../../CommandLine.rst:697
+msgid ""
+"Given these two option declarations, the ``-help`` output for our grep "
+"replacement would look like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:707
+msgid ""
+"... and the resultant program could be used just like the standard ``grep`` "
+"tool."
+msgstr ""
+
+#: ../../../CommandLine.rst:710
+msgid ""
+"Positional arguments are sorted by their order of construction.  This means "
+"that command line options will be ordered according to how they are listed "
+"in a .cpp file, but will not have an ordering defined if the positional "
+"arguments are defined in multiple .cpp files.  The fix for this problem is "
+"simply to define all of your positional arguments in one .cpp file."
+msgstr ""
+
+#: ../../../CommandLine.rst:717
+msgid "Specifying positional options with hyphens"
+msgstr ""
+
+#: ../../../CommandLine.rst:719
+msgid ""
+"Sometimes you may want to specify a value to your positional argument that "
+"starts with a hyphen (for example, searching for '``-foo``' in a file).  At "
+"first, you will have trouble doing this, because it will try to find an "
+"argument named '``-foo``', and will fail (and single quotes will not save "
+"you).  Note that the system ``grep`` has the same problem:"
+msgstr ""
+
+#: ../../../CommandLine.rst:736
+msgid ""
+"The solution for this problem is the same for both your tool and the system "
+"version: use the '``--``' marker.  When the user specifies '``--``' on the "
+"command line, it is telling the program that all options after the '``--``' "
+"should be treated as positional arguments, not options.  Thus, we can use it "
+"like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:748
+msgid "Determining absolute position with getPosition()"
+msgstr ""
+
+#: ../../../CommandLine.rst:750
+msgid ""
+"Sometimes an option can affect or modify the meaning of another option. For "
+"example, consider ``gcc``'s ``-x LANG`` option. This tells ``gcc`` to ignore "
+"the suffix of subsequent positional arguments and force the file to be "
+"interpreted as if it contained source code in language ``LANG``. In order to "
+"handle this properly, you need to know the absolute position of each "
+"argument, especially those in lists, so their interaction(s) can be applied "
+"correctly. This is also useful for options like ``-llibname`` which is "
+"actually a positional argument that starts with a dash."
+msgstr ""
+
+#: ../../../CommandLine.rst:759
+msgid ""
+"So, generally, the problem is that you have two ``cl::list`` variables that "
+"interact in some way. To ensure the correct interaction, you can use the "
+"``cl::list::getPosition(optnum)`` method. This method returns the absolute "
+"position (as found on the command line) of the ``optnum`` item in the ``cl::"
+"list``."
+msgstr ""
+
+#: ../../../CommandLine.rst:765
+msgid "The idiom for usage is like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:800
+msgid ""
+"Note that, for compatibility reasons, the ``cl::opt`` also supports an "
+"``unsigned getPosition()`` option that will provide the absolute position of "
+"that option. You can apply the same approach as above with a ``cl::opt`` and "
+"a ``cl::list`` option as you can with two lists."
+msgstr ""
+
+#: ../../../CommandLine.rst:810
+msgid "The ``cl::ConsumeAfter`` modifier"
+msgstr ""
+
+#: ../../../CommandLine.rst:812
+msgid ""
+"The ``cl::ConsumeAfter`` `formatting option`_ is used to construct programs "
+"that use \"interpreter style\" option processing.  With this style of option "
+"processing, all arguments specified after the last positional argument are "
+"treated as special interpreter arguments that are not interpreted by the "
+"command line argument."
+msgstr ""
+
+#: ../../../CommandLine.rst:818
+msgid ""
+"As a concrete example, lets say we are developing a replacement for the "
+"standard Unix Bourne shell (``/bin/sh``).  To run ``/bin/sh``, first you "
+"specify options to the shell itself (like ``-x`` which turns on trace "
+"output), then you specify the name of the script to run, then you specify "
+"arguments to the script.  These arguments to the script are parsed by the "
+"Bourne shell command line option processor, but are not interpreted as "
+"options to the shell itself.  Using the CommandLine library, we would "
+"specify this as:"
+msgstr ""
+
+#: ../../../CommandLine.rst:832
+msgid "which automatically provides the help output:"
+msgstr ""
+
+#: ../../../CommandLine.rst:842
+msgid ""
+"At runtime, if we run our new shell replacement as ```spiffysh -x test.sh -a "
+"-x -y bar``', the ``Trace`` variable will be set to true, the ``Script`` "
+"variable will be set to \"``test.sh``\", and the ``Argv`` list will contain "
+"``[\"-a\", \"-x\", \"-y\", \"bar\"]``, because they were specified after the "
+"last positional argument (which is the script name)."
+msgstr ""
+
+#: ../../../CommandLine.rst:848
+msgid ""
+"There are several limitations to when ``cl::ConsumeAfter`` options can be "
+"specified.  For example, only one ``cl::ConsumeAfter`` can be specified per "
+"program, there must be at least one `positional argument`_ specified, there "
+"must not be any `cl::list`_ positional arguments, and the ``cl::"
+"ConsumeAfter`` option should be a `cl::list`_ option."
+msgstr ""
+
+#: ../../../CommandLine.rst:858
+msgid "Internal vs External Storage"
+msgstr ""
+
+#: ../../../CommandLine.rst:860
+msgid ""
+"By default, all command line options automatically hold the value that they "
+"parse from the command line.  This is very convenient in the common case, "
+"especially when combined with the ability to define command line options in "
+"the files that use them.  This is called the internal storage model."
+msgstr ""
+
+#: ../../../CommandLine.rst:865
+msgid ""
+"Sometimes, however, it is nice to separate the command line option "
+"processing code from the storage of the value parsed.  For example, lets say "
+"that we have a '``-debug``' option that we would like to use to enable debug "
+"information across the entire body of our program.  In this case, the "
+"boolean value controlling the debug code should be globally accessible (in a "
+"header file, for example) yet the command line option processing code should "
+"not be exposed to all of these clients (requiring lots of .cpp files to "
+"``#include CommandLine.h``)."
+msgstr ""
+
+#: ../../../CommandLine.rst:873
+msgid ""
+"To do this, set up your .h file with your option, like this for example:"
+msgstr ""
+
+#: ../../../CommandLine.rst:896
+msgid ""
+"This allows clients to blissfully use the ``LLVM_DEBUG()`` macro, or the "
+"``DebugFlag`` explicitly if they want to.  Now we just need to be able to "
+"set the ``DebugFlag`` boolean when the option is set.  To do this, we pass "
+"an additional argument to our command line argument processor, and we "
+"specify where to fill in with the `cl::location`_ attribute:"
+msgstr ""
+
+#: ../../../CommandLine.rst:908
+msgid ""
+"In the above example, we specify \"``true``\" as the second argument to the "
+"`cl::opt`_ template, indicating that the template should not maintain a copy "
+"of the value itself.  In addition to this, we specify the `cl::location`_ "
+"attribute, so that ``DebugFlag`` is automatically set."
+msgstr ""
+
+#: ../../../CommandLine.rst:914
+msgid "Option Attributes"
+msgstr ""
+
+#: ../../../CommandLine.rst:916
+msgid ""
+"This section describes the basic attributes that you can specify on options."
+msgstr ""
+
+#: ../../../CommandLine.rst:918
+msgid ""
+"The option name attribute (which is required for all options, except "
+"`positional options`_) specifies what the option name is.  This option is "
+"specified in simple double quotes:"
+msgstr ""
+
+#: ../../../CommandLine.rst:928
+msgid ""
+"The **cl::desc** attribute specifies a description for the option to be "
+"shown in the ``-help`` output for the program. This attribute supports multi-"
+"line descriptions with lines separated by '\\n'."
+msgstr ""
+
+#: ../../../CommandLine.rst:934
+msgid ""
+"The **cl::value_desc** attribute specifies a string that can be used to fine "
+"tune the ``-help`` output for a command line option.  Look `here`_ for an "
+"example."
+msgstr ""
+
+#: ../../../CommandLine.rst:940
+msgid ""
+"The **cl::init** attribute specifies an initial value for a `scalar`_ "
+"option.  If this attribute is not specified then the command line option "
+"value defaults to the value created by the default constructor for the type."
+msgstr ""
+
+#: ../../../CommandLine.rst:947
+msgid ""
+"If you specify both **cl::init** and **cl::location** for an option, you "
+"must specify **cl::location** first, so that when the command-line parser "
+"sees **cl::init**, it knows where to put the initial value. (You will get an "
+"error at runtime if you don't put them in the right order.)"
+msgstr ""
+
+#: ../../../CommandLine.rst:954
+msgid ""
+"The **cl::location** attribute where to store the value for a parsed command "
+"line option if using external storage.  See the section on `Internal vs "
+"External Storage`_ for more information."
+msgstr ""
+
+#: ../../../CommandLine.rst:960
+msgid ""
+"The **cl::aliasopt** attribute specifies which option a `cl::alias`_ option "
+"is an alias for."
+msgstr ""
+
+#: ../../../CommandLine.rst:965
+msgid ""
+"The **cl::values** attribute specifies the string-to-value mapping to be "
+"used by the generic parser.  It takes a list of (option, value, description) "
+"triplets that specify the option name, the value mapped to, and the "
+"description shown in the ``-help`` for the tool.  Because the generic parser "
+"is used most frequently with enum values, two macros are often useful:"
+msgstr ""
+
+#: ../../../CommandLine.rst:971
+msgid ""
+"The **clEnumVal** macro is used as a nice simple way to specify a triplet "
+"for an enum.  This macro automatically makes the option name be the same as "
+"the enum name.  The first option to the macro is the enum, the second is the "
+"description for the command line option."
+msgstr ""
+
+#: ../../../CommandLine.rst:976
+msgid ""
+"The **clEnumValN** macro is used to specify macro options where the option "
+"name doesn't equal the enum name.  For this macro, the first argument is the "
+"enum value, the second is the flag name, and the second is the description."
+msgstr ""
+
+#: ../../../CommandLine.rst:981
+msgid ""
+"You will get a compile time error if you try to use cl::values with a parser "
+"that does not support it."
+msgstr ""
+
+#: ../../../CommandLine.rst:986
+msgid ""
+"The **cl::multi_val** attribute specifies that this option takes has "
+"multiple values (example: ``-sectalign segname sectname sectvalue``). This "
+"attribute takes one unsigned argument - the number of values for the option. "
+"This attribute is valid only on ``cl::list`` options (and will fail with "
+"compile error if you try to use it with other option types). It is allowed "
+"to use all of the usual modifiers on multi-valued options (besides ``cl::"
+"ValueDisallowed``, obviously)."
+msgstr ""
+
+#: ../../../CommandLine.rst:996
+msgid ""
+"The **cl::cat** attribute specifies the option category that the option "
+"belongs to. The category should be a `cl::OptionCategory`_ object."
+msgstr ""
+
+#: ../../../CommandLine.rst:1001
+msgid ""
+"The **cl::callback** attribute specifies a callback function that is called "
+"when an option is seen, and can be used to set other options, as in option B "
+"implies option A.  If the option is a `cl::list`_, and `cl::CommaSeparated`_ "
+"is also specified, the callback will fire once for each value.  This could "
+"be used to validate combinations or selectively set other options."
+msgstr ""
+
+#: ../../../CommandLine.rst:1025
+msgid "Option Modifiers"
+msgstr ""
+
+#: ../../../CommandLine.rst:1027
+msgid ""
+"Option modifiers are the flags and expressions that you pass into the "
+"constructors for `cl::opt`_ and `cl::list`_.  These modifiers give you the "
+"ability to tweak how options are parsed and how ``-help`` output is "
+"generated to fit your application well."
+msgstr ""
+
+#: ../../../CommandLine.rst:1032
+msgid "These options fall into five main categories:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1034 ../../../CommandLine.rst:1051
+msgid "Hiding an option from ``-help`` output"
+msgstr ""
+
+#: ../../../CommandLine.rst:1036 ../../../CommandLine.rst:1075
+msgid "Controlling the number of occurrences required and allowed"
+msgstr ""
+
+#: ../../../CommandLine.rst:1038 ../../../CommandLine.rst:1118
+msgid "Controlling whether or not a value must be specified"
+msgstr ""
+
+#: ../../../CommandLine.rst:1040 ../../../CommandLine.rst:1160
+msgid "Controlling other formatting options"
+msgstr ""
+
+#: ../../../CommandLine.rst:1042 ../../../CommandLine.rst:1246
+msgid "Miscellaneous option modifiers"
+msgstr ""
+
+#: ../../../CommandLine.rst:1044
+msgid ""
+"It is not possible to specify two options from the same category (you'll get "
+"a runtime error) to a single option, except for options in the miscellaneous "
+"category.  The CommandLine library specifies defaults for all of these "
+"settings that are the most useful in practice and the most common, which "
+"mean that you usually shouldn't have to worry about these."
+msgstr ""
+
+#: ../../../CommandLine.rst:1053
+msgid ""
+"The ``cl::NotHidden``, ``cl::Hidden``, and ``cl::ReallyHidden`` modifiers "
+"are used to control whether or not an option appears in the ``-help`` and ``-"
+"help-hidden`` output for the compiled program:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1059
+msgid ""
+"The **cl::NotHidden** modifier (which is the default for `cl::opt`_ and `cl::"
+"list`_ options) indicates the option is to appear in both help listings."
+msgstr ""
+
+#: ../../../CommandLine.rst:1065
+msgid ""
+"The **cl::Hidden** modifier (which is the default for `cl::alias`_ options) "
+"indicates that the option should not appear in the ``-help`` output, but "
+"should appear in the ``-help-hidden`` output."
+msgstr ""
+
+#: ../../../CommandLine.rst:1071
+msgid ""
+"The **cl::ReallyHidden** modifier indicates that the option should not "
+"appear in any help output."
+msgstr ""
+
+#: ../../../CommandLine.rst:1077
+msgid ""
+"This group of options is used to control how many time an option is allowed "
+"(or required) to be specified on the command line of your program.  "
+"Specifying a value for this setting allows the CommandLine library to do "
+"error checking for you."
+msgstr ""
+
+#: ../../../CommandLine.rst:1082 ../../../CommandLine.rst:1125
+msgid "The allowed values for this option group are:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1086
+msgid ""
+"The **cl::Optional** modifier (which is the default for the `cl::opt`_ and "
+"`cl::alias`_ classes) indicates that your program will allow either zero or "
+"one occurrence of the option to be specified."
+msgstr ""
+
+#: ../../../CommandLine.rst:1092
+msgid ""
+"The **cl::ZeroOrMore** modifier (which is the default for the `cl::list`_ "
+"class) indicates that your program will allow the option to be specified "
+"zero or more times."
+msgstr ""
+
+#: ../../../CommandLine.rst:1098
+msgid ""
+"The **cl::Required** modifier indicates that the specified option must be "
+"specified exactly one time."
+msgstr ""
+
+#: ../../../CommandLine.rst:1103
+msgid ""
+"The **cl::OneOrMore** modifier indicates that the option must be specified "
+"at least one time."
+msgstr ""
+
+#: ../../../CommandLine.rst:1106
+msgid ""
+"The **cl::ConsumeAfter** modifier is described in the `Positional arguments "
+"section`_."
+msgstr ""
+
+#: ../../../CommandLine.rst:1109
+msgid ""
+"If an option is not specified, then the value of the option is equal to the "
+"value specified by the `cl::init`_ attribute.  If the ``cl::init`` attribute "
+"is not specified, the option value is initialized with the default "
+"constructor for the data type."
+msgstr ""
+
+#: ../../../CommandLine.rst:1114
+msgid ""
+"If an option is specified multiple times for an option of the `cl::opt`_ "
+"class, only the last value will be retained."
+msgstr ""
+
+#: ../../../CommandLine.rst:1120
+msgid ""
+"This group of options is used to control whether or not the option allows a "
+"value to be present.  In the case of the CommandLine library, a value is "
+"either specified with an equal sign (e.g. '``-index-depth=17``') or as a "
+"trailing string (e.g. '``-o a.out``')."
+msgstr ""
+
+#: ../../../CommandLine.rst:1129
+msgid ""
+"The **cl::ValueOptional** modifier (which is the default for ``bool`` typed "
+"options) specifies that it is acceptable to have a value, or not.  A boolean "
+"argument can be enabled just by appearing on the command line, or it can "
+"have an explicit '``-foo=true``'.  If an option is specified with this mode, "
+"it is illegal for the value to be provided without the equal sign.  "
+"Therefore '``-foo true``' is illegal.  To get this behavior, you must use "
+"the `cl::ValueRequired`_ modifier."
+msgstr ""
+
+#: ../../../CommandLine.rst:1139
+msgid ""
+"The **cl::ValueRequired** modifier (which is the default for all other types "
+"except for `unnamed alternatives using the generic parser`_) specifies that "
+"a value must be provided.  This mode informs the command line library that "
+"if an option is not provides with an equal sign, that the next argument "
+"provided must be the value.  This allows things like '``-o a.out``' to work."
+msgstr ""
+
+#: ../../../CommandLine.rst:1147
+msgid ""
+"The **cl::ValueDisallowed** modifier (which is the default for `unnamed "
+"alternatives using the generic parser`_) indicates that it is a runtime "
+"error for the user to specify a value.  This can be provided to disallow "
+"users from providing options to boolean options (like '``-foo=true``')."
+msgstr ""
+
+#: ../../../CommandLine.rst:1152
+msgid ""
+"In general, the default values for this option group work just like you "
+"would want them to.  As mentioned above, you can specify the `cl::"
+"ValueDisallowed`_ modifier to a boolean argument to restrict your command "
+"line parser.  These options are mostly useful when `extending the library`_."
+msgstr ""
+
+#: ../../../CommandLine.rst:1162
+msgid ""
+"The formatting option group is used to specify that the command line option "
+"has special abilities and is otherwise different from other command line "
+"arguments. As usual, you can only specify one of these arguments at most."
+msgstr ""
+
+#: ../../../CommandLine.rst:1168
+msgid ""
+"The **cl::NormalFormatting** modifier (which is the default all options) "
+"specifies that this option is \"normal\"."
+msgstr ""
+
+#: ../../../CommandLine.rst:1173
+msgid ""
+"The **cl::Positional** modifier specifies that this is a positional argument "
+"that does not have a command line option associated with it.  See the "
+"`Positional Arguments`_ section for more information."
+msgstr ""
+
+#: ../../../CommandLine.rst:1177
+msgid ""
+"The **cl::ConsumeAfter** modifier specifies that this option is used to "
+"capture \"interpreter style\" arguments.  See `this section for more "
+"information`_."
+msgstr ""
+
+#: ../../../CommandLine.rst:1184
+msgid ""
+"The **cl::Prefix** modifier specifies that this option prefixes its value. "
+"With 'Prefix' options, the equal sign does not separate the value from the "
+"option name specified. Instead, the value is everything after the prefix, "
+"including any equal sign if present. This is useful for processing odd "
+"arguments like ``-lmalloc`` and ``-L/usr/lib`` in a linker tool or ``-"
+"DNAME=value`` in a compiler tool.  Here, the '``l``', '``D``' and '``L``' "
+"options are normal string (or list) options, that have the **cl::Prefix** "
+"modifier added to allow the CommandLine library to recognize them.  Note "
+"that **cl::Prefix** options must not have the **cl::ValueDisallowed** "
+"modifier specified."
+msgstr ""
+
+#: ../../../CommandLine.rst:1199
+msgid "Controlling options grouping"
+msgstr ""
+
+#: ../../../CommandLine.rst:1201
+msgid ""
+"The **cl::Grouping** modifier can be combined with any formatting types "
+"except for `cl::Positional`_.  It is used to implement Unix-style tools "
+"(like ``ls``) that have lots of single letter arguments, but only require a "
+"single dash. For example, the '``ls -labF``' command actually enables four "
+"different options, all of which are single letters."
+msgstr ""
+
+#: ../../../CommandLine.rst:1207
+msgid ""
+"Note that **cl::Grouping** options can have values only if they are used "
+"separately or at the end of the groups.  For `cl::ValueRequired`_, it is a "
+"runtime error if such an option is used elsewhere in the group."
+msgstr ""
+
+#: ../../../CommandLine.rst:1211
+msgid ""
+"The CommandLine library does not restrict how you use the **cl::Prefix** or "
+"**cl::Grouping** modifiers, but it is possible to specify ambiguous argument "
+"settings.  Thus, it is possible to have multiple letter options that are "
+"prefix or grouping options, and they will still work as designed."
+msgstr ""
+
+#: ../../../CommandLine.rst:1216
+msgid ""
+"To do this, the CommandLine library uses a greedy algorithm to parse the "
+"input option into (potentially multiple) prefix and grouping options.  The "
+"strategy basically looks like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1248
+msgid ""
+"The miscellaneous option modifiers are the only flags where you can specify "
+"more than one flag from the set: they are not mutually exclusive.  These "
+"flags specify boolean properties that modify the option."
+msgstr ""
+
+#: ../../../CommandLine.rst:1254
+msgid ""
+"The **cl::CommaSeparated** modifier indicates that any commas specified for "
+"an option's value should be used to split the value up into multiple values "
+"for the option.  For example, these two options are equivalent when ``cl::"
+"CommaSeparated`` is specified: \"``-foo=a -foo=b -foo=c``\" and \"``-foo=a,b,"
+"c``\".  This option only makes sense to be used in a case where the option "
+"is allowed to accept one or more values (i.e. it is a `cl::list`_ option)."
+msgstr ""
+
+#: ../../../CommandLine.rst:1264
+msgid ""
+"The **cl::DefaultOption** modifier is used to specify that the option is a "
+"default that can be overridden by application specific parsers. For example, "
+"the ``-help`` alias, ``-h``, is registered this way, so it can be overridden "
+"by applications that need to use the ``-h`` option for another purpose, "
+"either as a regular option or an alias for another option."
+msgstr ""
+
+#: ../../../CommandLine.rst:1272
+msgid ""
+"The **cl::PositionalEatsArgs** modifier (which only applies to positional "
+"arguments, and only makes sense for lists) indicates that positional "
+"argument should consume any strings after it (including strings that start "
+"with a \"-\") up until another recognized positional argument.  For example, "
+"if you have two \"eating\" positional arguments, \"``pos1``\" and "
+"\"``pos2``\", the string \"``-pos1 -foo -bar baz -pos2 -bork``\" would cause "
+"the \"``-foo -bar -baz``\" strings to be applied to the \"``-pos1``\" option "
+"and the \"``-bork``\" string to be applied to the \"``-pos2``\" option."
+msgstr ""
+
+#: ../../../CommandLine.rst:1283
+msgid ""
+"The **cl::Sink** modifier is used to handle unknown options. If there is at "
+"least one option with ``cl::Sink`` modifier specified, the parser passes "
+"unrecognized option strings to it as values instead of signaling an error. "
+"As with ``cl::CommaSeparated``, this modifier only makes sense with a `cl::"
+"list`_ option."
+msgstr ""
+
+#: ../../../CommandLine.rst:1292
+msgid "Response files"
+msgstr ""
+
+#: ../../../CommandLine.rst:1294
+msgid ""
+"Some systems, such as certain variants of Microsoft Windows and some older "
+"Unices have a relatively low limit on command-line length. It is therefore "
+"customary to use the so-called 'response files' to circumvent this "
+"restriction. These files are mentioned on the command-line (using the "
+"\"@file\") syntax. The program reads these files and inserts the contents "
+"into argv, thereby working around the command-line length limits."
+msgstr ""
+
+#: ../../../CommandLine.rst:1302
+msgid "Top-Level Classes and Functions"
+msgstr ""
+
+#: ../../../CommandLine.rst:1304
+msgid ""
+"Despite all of the built-in flexibility, the CommandLine option library "
+"really only consists of one function `cl::ParseCommandLineOptions`_ and "
+"three main classes: `cl::opt`_, `cl::list`_, and `cl::alias`_.  This section "
+"describes these three classes in detail."
+msgstr ""
+
+#: ../../../CommandLine.rst:1312
+msgid "The ``cl::getRegisteredOptions`` function"
+msgstr ""
+
+#: ../../../CommandLine.rst:1314
+msgid ""
+"The ``cl::getRegisteredOptions`` function is designed to give a programmer "
+"access to declared non-positional command line options so that how they "
+"appear in ``-help`` can be modified prior to calling `cl::"
+"ParseCommandLineOptions`_. Note this method should not be called during any "
+"static initialisation because it cannot be guaranteed that all options will "
+"have been initialised. Hence it should be called from ``main``."
+msgstr ""
+
+#: ../../../CommandLine.rst:1321
+msgid ""
+"This function can be used to gain access to options declared in libraries "
+"that the tool writer may not have direct access to."
+msgstr ""
+
+#: ../../../CommandLine.rst:1324
+msgid ""
+"The function retrieves a :ref:`StringMap <dss_stringmap>` that maps the "
+"option string (e.g. ``-help``) to an ``Option*``."
+msgstr ""
+
+#: ../../../CommandLine.rst:1327
+msgid "Here is an example of how the function could be used:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1362
+msgid "The ``cl::ParseCommandLineOptions`` function"
+msgstr ""
+
+#: ../../../CommandLine.rst:1364
+msgid ""
+"The ``cl::ParseCommandLineOptions`` function is designed to be called "
+"directly from ``main``, and is used to fill in the values of all of the "
+"command line option variables once ``argc`` and ``argv`` are available."
+msgstr ""
+
+#: ../../../CommandLine.rst:1368
+msgid ""
+"The ``cl::ParseCommandLineOptions`` function requires two parameters "
+"(``argc`` and ``argv``), but may also take an optional third parameter which "
+"holds `additional extra text`_ to emit when the ``-help`` option is invoked."
+msgstr ""
+
+#: ../../../CommandLine.rst:1373
+msgid "The ``cl::SetVersionPrinter`` function"
+msgstr ""
+
+#: ../../../CommandLine.rst:1375
+msgid ""
+"The ``cl::SetVersionPrinter`` function is designed to be called directly "
+"from ``main`` and *before* ``cl::ParseCommandLineOptions``. Its use is "
+"optional. It simply arranges for a function to be called in response to the "
+"``--version`` option instead of having the ``CommandLine`` library print out "
+"the usual version string for LLVM. This is useful for programs that are not "
+"part of LLVM but wish to use the ``CommandLine`` facilities. Such programs "
+"should just define a small function that takes no arguments and returns "
+"``void`` and that prints out whatever version information is appropriate for "
+"the program. Pass the address of that function to ``cl::SetVersionPrinter`` "
+"to arrange for it to be called when the ``--version`` option is given by the "
+"user."
+msgstr ""
+
+#: ../../../CommandLine.rst:1390
+msgid "The ``cl::opt`` class"
+msgstr ""
+
+#: ../../../CommandLine.rst:1392
+msgid ""
+"The ``cl::opt`` class is the class used to represent scalar command line "
+"options, and is the one used most of the time.  It is a templated class "
+"which can take up to three arguments (all except for the first have default "
+"values though):"
+msgstr ""
+
+#: ../../../CommandLine.rst:1405
+msgid ""
+"The first template argument specifies what underlying data type the command "
+"line argument is, and is used to select a default parser implementation.  "
+"The second template argument is used to specify whether the option should "
+"contain the storage for the option (the default) or whether external storage "
+"should be used to contain the value parsed for the option (see `Internal vs "
+"External Storage`_ for more information)."
+msgstr ""
+
+#: ../../../CommandLine.rst:1412
+msgid ""
+"The third template argument specifies which parser to use.  The default "
+"value selects an instantiation of the ``parser`` class based on the "
+"underlying data type of the option.  In general, this default works well for "
+"most applications, so this option is only used when using a `custom parser`_."
+msgstr ""
+
+#: ../../../CommandLine.rst:1421
+msgid "The ``cl::list`` class"
+msgstr ""
+
+#: ../../../CommandLine.rst:1423
+msgid ""
+"The ``cl::list`` class is the class used to represent a list of command line "
+"options.  It too is a templated class which can take up to three arguments:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1434
+msgid ""
+"This class works the exact same as the `cl::opt`_ class, except that the "
+"second argument is the **type** of the external storage, not a boolean "
+"value.  For this class, the marker type '``bool``' is used to indicate that "
+"internal storage should be used."
+msgstr ""
+
+#: ../../../CommandLine.rst:1442
+msgid "The ``cl::bits`` class"
+msgstr ""
+
+#: ../../../CommandLine.rst:1444
+msgid ""
+"The ``cl::bits`` class is the class used to represent a list of command line "
+"options in the form of a bit vector.  It is also a templated class which can "
+"take up to three arguments:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1456
+msgid ""
+"This class works the exact same as the `cl::list`_ class, except that the "
+"second argument must be of **type** ``unsigned`` if external storage is used."
+msgstr ""
+
+#: ../../../CommandLine.rst:1462
+msgid "The ``cl::alias`` class"
+msgstr ""
+
+#: ../../../CommandLine.rst:1464
+msgid ""
+"The ``cl::alias`` class is a nontemplated class that is used to form aliases "
+"for other arguments."
+msgstr ""
+
+#: ../../../CommandLine.rst:1473
+msgid ""
+"The `cl::aliasopt`_ attribute should be used to specify which option this is "
+"an alias for.  Alias arguments default to being `cl::Hidden`_, and use the "
+"aliased options parser to do the conversion from string to data."
+msgstr ""
+
+#: ../../../CommandLine.rst:1480
+msgid "The ``cl::extrahelp`` class"
+msgstr ""
+
+#: ../../../CommandLine.rst:1482
+msgid ""
+"The ``cl::extrahelp`` class is a nontemplated class that allows extra help "
+"text to be printed out for the ``-help`` option."
+msgstr ""
+
+#: ../../../CommandLine.rst:1491
+msgid ""
+"To use the extrahelp, simply construct one with a ``const char*`` parameter "
+"to the constructor. The text passed to the constructor will be printed at "
+"the bottom of the help message, verbatim. Note that multiple ``cl::"
+"extrahelp`` **can** be used, but this practice is discouraged. If your tool "
+"needs to print additional help information, put all that help into a single "
+"``cl::extrahelp`` instance."
+msgstr ""
+
+#: ../../../CommandLine.rst:1498
+msgid "For example:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1507
+msgid "The ``cl::OptionCategory`` class"
+msgstr ""
+
+#: ../../../CommandLine.rst:1509
+msgid ""
+"The ``cl::OptionCategory`` class is a simple class for declaring option "
+"categories."
+msgstr ""
+
+#: ../../../CommandLine.rst:1518
+msgid ""
+"An option category must have a name and optionally a description which are "
+"passed to the constructor as ``const char*``."
+msgstr ""
+
+#: ../../../CommandLine.rst:1521
+msgid ""
+"Note that declaring an option category and associating it with an option "
+"before parsing options (e.g. statically) will change the output of ``-help`` "
+"from uncategorized to categorized. If an option category is declared but not "
+"associated with an option then it will be hidden from the output of ``-"
+"help``."
+msgstr ""
+
+#: ../../../CommandLine.rst:1530
+msgid "Builtin parsers"
+msgstr ""
+
+#: ../../../CommandLine.rst:1532
+msgid ""
+"Parsers control how the string value taken from the command line is "
+"translated into a typed value, suitable for use in a C++ program.  By "
+"default, the CommandLine library uses an instance of ``parser<type>`` if the "
+"command line option specifies that it uses values of type '``type``'.  "
+"Because of this, custom option processing is specified with specializations "
+"of the '``parser``' class."
+msgstr ""
+
+#: ../../../CommandLine.rst:1539
+msgid ""
+"The CommandLine library provides the following builtin parser "
+"specializations, which are sufficient for most applications. It can, "
+"however, also be extended to work with new data types and new ways of "
+"interpreting the same data.  See the `Writing a Custom Parser`_ for more "
+"details on this type of library extension."
+msgstr ""
+
+#: ../../../CommandLine.rst:1547
+msgid ""
+"The generic ``parser<t>`` parser can be used to map strings values to any "
+"data type, through the use of the `cl::values`_ property, which specifies "
+"the mapping information.  The most common use of this parser is for parsing "
+"enum values, which allows you to use the CommandLine library for all of the "
+"error checking to make sure that only valid enum values are specified (as "
+"opposed to accepting arbitrary strings).  Despite this, however, the generic "
+"parser class can be used for any data type."
+msgstr ""
+
+#: ../../../CommandLine.rst:1558
+msgid ""
+"The **parser<bool> specialization** is used to convert boolean strings to a "
+"boolean value.  Currently accepted strings are \"``true``\", \"``TRUE``\", "
+"\"``True``\", \"``1``\", \"``false``\", \"``FALSE``\", \"``False``\", and "
+"\"``0``\"."
+msgstr ""
+
+#: ../../../CommandLine.rst:1562
+msgid ""
+"The **parser<boolOrDefault> specialization** is used for cases where the "
+"value is boolean, but we also need to know whether the option was specified "
+"at all. boolOrDefault is an enum with 3 values, BOU_UNSET, BOU_TRUE and "
+"BOU_FALSE. This parser accepts the same strings as **``parser<bool>``**."
+msgstr ""
+
+#: ../../../CommandLine.rst:1569
+msgid ""
+"The **parser<string> specialization** simply stores the parsed string into "
+"the string value specified.  No conversion or modification of the data is "
+"performed."
+msgstr ""
+
+#: ../../../CommandLine.rst:1576
+msgid ""
+"The **parser<int> specialization** uses the C ``strtol`` function to parse "
+"the string input.  As such, it will accept a decimal number (with an "
+"optional '+' or '-' prefix) which must start with a non-zero digit.  It "
+"accepts octal numbers, which are identified with a '``0``' prefix digit, and "
+"hexadecimal numbers with a prefix of '``0x``' or '``0X``'."
+msgstr ""
+
+#: ../../../CommandLine.rst:1586
+msgid ""
+"The **parser<double>** and **parser<float> specializations** use the "
+"standard C ``strtod`` function to convert floating point strings into "
+"floating point values.  As such, a broad range of string formats is "
+"supported, including exponential notation (ex: ``1.7e15``) and properly "
+"supports locales."
+msgstr ""
+
+#: ../../../CommandLine.rst:1595
+msgid "Extension Guide"
+msgstr ""
+
+#: ../../../CommandLine.rst:1597
+msgid ""
+"Although the CommandLine library has a lot of functionality built into it "
+"already (as discussed previously), one of its true strengths lie in its "
+"extensibility.  This section discusses how the CommandLine library works "
+"under the covers and illustrates how to do some simple, common, extensions."
+msgstr ""
+
+#: ../../../CommandLine.rst:1607
+msgid "Writing a custom parser"
+msgstr ""
+
+#: ../../../CommandLine.rst:1609
+msgid ""
+"One of the simplest and most common extensions is the use of a custom "
+"parser. As `discussed previously`_, parsers are the portion of the "
+"CommandLine library that turns string input from the user into a particular "
+"parsed data type, validating the input in the process."
+msgstr ""
+
+#: ../../../CommandLine.rst:1614
+msgid "There are two ways to use a new parser:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1616
+msgid "Specialize the `cl::parser`_ template for your custom data type."
+msgstr ""
+
+#: ../../../CommandLine.rst:1618
+msgid ""
+"This approach has the advantage that users of your custom data type will "
+"automatically use your custom parser whenever they define an option with a "
+"value type of your data type.  The disadvantage of this approach is that it "
+"doesn't work if your fundamental data type is something that is already "
+"supported."
+msgstr ""
+
+#: ../../../CommandLine.rst:1624
+msgid ""
+"Write an independent class, using it explicitly from options that need it."
+msgstr ""
+
+#: ../../../CommandLine.rst:1626
+msgid ""
+"This approach works well in situations where you would line to parse an "
+"option using special syntax for a not-very-special data-type.  The drawback "
+"of this approach is that users of your parser have to be aware that they are "
+"using your parser instead of the builtin ones."
+msgstr ""
+
+#: ../../../CommandLine.rst:1631
+msgid ""
+"To guide the discussion, we will discuss a custom parser that accepts file "
+"sizes, specified with an optional unit after the numeric size.  For example, "
+"we would like to parse \"102kb\", \"41M\", \"1G\" into the appropriate "
+"integer value.  In this case, the underlying data type we want to parse into "
+"is '``unsigned``'.  We choose approach #2 above because we don't want to "
+"make this the default for all ``unsigned`` options."
+msgstr ""
+
+#: ../../../CommandLine.rst:1638
+msgid "To start out, we declare our new ``FileSizeParser`` class:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1648
+msgid ""
+"Our new class inherits from the ``cl::parser`` template class to fill in the "
+"default, boiler plate code for us.  We give it the data type that we parse "
+"into, the last argument to the ``parse`` method, so that clients of our "
+"custom parser know what object type to pass in to the parse method.  (Here "
+"we declare that we parse into '``unsigned``' variables.)"
+msgstr ""
+
+#: ../../../CommandLine.rst:1654
+msgid ""
+"For most purposes, the only method that must be implemented in a custom "
+"parser is the ``parse`` method.  The ``parse`` method is called whenever the "
+"option is invoked, passing in the option itself, the option name, the string "
+"to parse, and a reference to a return value.  If the string to parse is not "
+"well-formed, the parser should output an error message and return true.  "
+"Otherwise it should return false and set '``Val``' to the parsed value.  In "
+"our example, we implement ``parse`` as:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1690
+msgid ""
+"This function implements a very simple parser for the kinds of strings we "
+"are interested in.  Although it has some holes (it allows \"``123KKK``\" for "
+"example), it is good enough for this example.  Note that we use the option "
+"itself to print out the error message (the ``error`` method always returns "
+"true) in order to get a nice error message (shown below).  Now that we have "
+"our parser class, we can use it like this:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1703
+msgid "Which adds this to the output of our program:"
+msgstr ""
+
+#: ../../../CommandLine.rst:1712
+msgid ""
+"And we can test that our parse works correctly now (the test program just "
+"prints out the max-file-size argument value):"
+msgstr ""
+
+#: ../../../CommandLine.rst:1726
+msgid ""
+"It looks like it works.  The error message that we get is nice and helpful, "
+"and we seem to accept reasonable file sizes.  This wraps up the \"custom "
+"parser\" tutorial."
+msgstr ""
+
+#: ../../../CommandLine.rst:1731
+msgid "Exploiting external storage"
+msgstr ""
+
+#: ../../../CommandLine.rst:1733
+msgid ""
+"Several of the LLVM libraries define static ``cl::opt`` instances that will "
+"automatically be included in any program that links with that library.  This "
+"is a feature. However, sometimes it is necessary to know the value of the "
+"command line option outside of the library. In these cases the library does "
+"or should provide an external storage location that is accessible to users "
+"of the library. Examples of this include the ``llvm::DebugFlag`` exported by "
+"the ``lib/Support/Debug.cpp`` file and the ``llvm::TimePassesIsEnabled`` "
+"flag exported by the ``lib/IR/PassManager.cpp`` file."
+msgstr ""
+
+#: ../../../CommandLine.rst:1742 ../../../CommandLine.rst:1751
+msgid "Todo"
+msgstr ""
+
+#: ../../../CommandLine.rst:1744
+msgid "TODO: complete this section"
+msgstr ""
+
+#: ../../../CommandLine.rst:1749
+msgid "Dynamically adding command line options"
+msgstr ""
+
+#: ../../../CommandLine.rst:1753
+msgid "TODO: fill in this section"
+msgstr ""
