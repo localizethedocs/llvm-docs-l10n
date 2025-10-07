@@ -1,0 +1,277 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 13\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:14+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../OpaquePointers.rst:3
+msgid "Opaque Pointers"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:6
+msgid "The Opaque Pointer Type"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:8
+msgid ""
+"Traditionally, LLVM IR pointer types have contained a pointee type. For "
+"example, ``i32 *`` is a pointer that points to an ``i32`` somewhere in "
+"memory. However, due to a lack of pointee type semantics and various issues "
+"with having pointee types, there is a desire to remove pointee types from "
+"pointers."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:13
+msgid ""
+"The opaque pointer type project aims to replace all pointer types containing "
+"pointee types in LLVM with an opaque pointer type. The new pointer type is "
+"tentatively represented textually as ``ptr``."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:17
+msgid ""
+"Address spaces are still used to distinguish between different kinds of "
+"pointers where the distinction is relevant for lowering (e.g. data vs "
+"function pointers have different sizes on some architectures). Opaque "
+"pointers are not changing anything related to address spaces and lowering. "
+"For more information, see `DataLayout <LangRef.html#langref-datalayout>`_."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:24
+msgid "Issues with explicit pointee types"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:26
+msgid ""
+"LLVM IR pointers can be cast back and forth between pointers with different "
+"pointee types. The pointee type does not necessarily actually represent the "
+"actual underlying type in memory. In other words, the pointee type contains "
+"no real semantics."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:31
+msgid ""
+"Lots of operations do not actually care about the underlying type. These "
+"operations, typically intrinsics, usually end up taking an ``i8 *``. This "
+"causes lots of redundant no-op bitcasts in the IR to and from a pointer with "
+"a different pointee type. The extra bitcasts take up space and require extra "
+"work to look through in optimizations. And more bitcasts increases the "
+"chances of incorrect bitcasts, especially in regards to address spaces."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:38
+msgid ""
+"Some instructions still need to know what type to treat the memory pointed "
+"to by the pointer as. For example, a load needs to know how many bytes to "
+"load from memory. In these cases, instructions themselves contain a type "
+"argument. For example the load instruction from older versions of LLVM"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:47
+msgid "becomes"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:53
+msgid ""
+"A nice analogous transition that happened earlier in LLVM is integer "
+"signedness. There is no distinction between signed and unsigned integer "
+"types, rather the integer operations themselves contain what to treat the "
+"integer as. Initially, LLVM IR distinguished between unsigned and signed "
+"integer types. The transition from manifesting signedness in types to "
+"instructions happened early on in LLVM's life to the betterment of LLVM IR."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:61
+msgid "I Still Need Pointee Types!"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:63
+msgid ""
+"The frontend should already know what type each operation operates on based "
+"on the input source code. However, some frontends like Clang may end up "
+"relying on LLVM pointer pointee types to keep track of pointee types. The "
+"frontend needs to keep track of frontend pointee types on its own."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:68
+msgid ""
+"For optimizations around frontend types, pointee types are not useful due "
+"their lack of semantics. Rather, since LLVM IR works on untyped memory, for "
+"a frontend to tell LLVM about frontend types for the purposes of alias "
+"analysis, extra metadata is added to the IR. For more information, see `TBAA "
+"<LangRef.html#tbaa-metadata>`_."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:74
+msgid ""
+"Some specific operations still need to know what type a pointer types to. "
+"For the most part, this is codegen and ABI specific. For example, `byval "
+"<LangRef.html#parameter-attributes>`_ arguments are pointers, but backends "
+"need to know the underlying type of the argument to properly lower it. In "
+"cases like these, the attributes contain a type argument. For example,"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:84
+msgid ""
+"signifies that ``%p`` as an argument should be lowered as an ``i32`` passed "
+"indirectly."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:87
+msgid ""
+"If you have use cases that this sort of fix doesn't cover, please email llvm-"
+"dev."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:91
+msgid "Transition Plan"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:93
+msgid ""
+"LLVM currently has many places that depend on pointee types. Each dependency "
+"on pointee types needs to be resolved in some way or another. This "
+"essentially translates to figuring out how to remove all calls to "
+"``PointerType::getElementType`` and ``Type::getPointerElementType()``."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:98
+msgid ""
+"Making everything use opaque pointers in one huge commit is infeasible. This "
+"needs to be done incrementally. The following steps need to be done, in no "
+"particular order:"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:102
+msgid "Introduce the opaque pointer type"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:104
+msgid "Already done"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:106
+msgid "Remove remaining in-tree users of pointee types"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:108
+msgid ""
+"There are many miscellaneous uses that should be cleaned up individually"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:110
+msgid "Some of the larger use cases are mentioned below"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:112
+msgid ""
+"Various ABI attributes and instructions that rely on pointee types need to "
+"be modified to specify the type separately"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:115
+msgid ""
+"This has already happened for all instructions like loads, stores, GEPs, and "
+"various attributes like ``byval``"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:118
+msgid "More cases may be found as work continues"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:120
+msgid ""
+"Remove calls to and deprecate ``IRBuilder`` methods that rely on pointee "
+"types"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:122
+msgid ""
+"For example, some of the ``IRBuilder::CreateGEP()`` methods use the pointer "
+"operand's pointee type to determine the GEP operand type"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:125
+msgid ""
+"Some methods are already deprecated with ``LLVM_ATTRIBUTE_DEPRECATED``, such "
+"as some overloads of ``IRBuilder::CreateLoad()``"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:128
+msgid ""
+"Allow bitcode auto-upgrade of legacy pointer type to the new opaque pointer "
+"type (not to be turned on until ready)"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:131
+msgid ""
+"To support legacy bitcode, such as legacy stores/loads, we need to track "
+"pointee types for all values since legacy instructions may infer the types "
+"from a pointer operand's pointee type"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:135
+msgid ""
+"Migrate frontends to not keep track of frontend pointee types via LLVM "
+"pointer pointee types"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:138
+msgid "This is mostly Clang, see ``clang::CodeGen::Address::getElementType()``"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:140
+msgid ""
+"Add option to internally treat all pointer types opaque pointers and see "
+"what breaks, starting with LLVM tests, then run Clang over large codebases"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:143
+msgid ""
+"We don't want to start mass-updating tests until we're fairly confident that "
+"opaque pointers won't cause major issues"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:145
+msgid "Replace legacy pointer types in LLVM tests with opaque pointer types"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:148
+msgid "Frontend Migration Steps"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:150
+msgid ""
+"If you have your own frontend, there are a couple of things to do after "
+"opaque pointer types fully work."
+msgstr ""
+
+#: ../../../OpaquePointers.rst:153
+msgid ""
+"Don't rely on LLVM pointee types to keep track of frontend pointee types"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:155
+msgid ""
+"Migrate away from LLVM IR instruction builders that rely on pointee types"
+msgstr ""
+
+#: ../../../OpaquePointers.rst:157
+msgid ""
+"For example, ``IRBuilder::CreateGEP()`` has multiple overloads; make sure to "
+"use one where the source element type is explicitly passed in, not inferred "
+"from the pointer operand pointee type"
+msgstr ""
