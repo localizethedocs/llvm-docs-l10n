@@ -1,0 +1,275 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 16\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:13+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../GlobalISel/Pipeline.rst:4
+msgid "Core Pipeline"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:14
+msgid "The core pipeline of GlobalISel is:"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:18
+msgid "The four passes shown in the diagram consist of:"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:20
+msgid ":doc:`IRTranslator`"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:22
+msgid ""
+"Converts :doc:`LLVM-IR <../LangRef>` into :doc:`gMIR (Generic MIR) <GMIR>`. "
+"This is largely a direct translation and has little target customization. "
+"It's somewhat analogous to SelectionDAGBuilder but builds a flavour of MIR "
+"called gMIR instead of a specialized representation. gMIR uses exactly the "
+"same data structures as MIR but has more relaxed constraints. For example, a "
+"virtual register may be constrained to a particular type without also "
+"constraining it to a specific register class."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:30
+msgid ":doc:`Legalizer`"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:32
+msgid ""
+"Replaces unsupported operations with supported ones. In other words, it "
+"shapes the gMIR to suit what the backend can support. There is a very small "
+"set of operations which targets are required to support but aside from that "
+"targets can shape the MIR as they wish."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:37
+msgid ":doc:`Register Bank Selector <RegBankSelect>`"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:39
+msgid ""
+"Binds virtual registers to register banks. This pass is intended to minimize "
+"cross-register-bank copies by clustering portions of the MIR together."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:42
+msgid ":doc:`Instruction Select <InstructionSelect>`"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:44
+msgid ""
+"Select target instructions using the gMIR. At this point, the gMIR has been "
+"constrained enough that it becomes MIR."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:47
+msgid ""
+"Although we tend to talk about them as distinct passes, it should be noted "
+"that there's a good deal of flexibility here and it's ok for things to "
+"happen earlier than described below. For example, it's not unusual for the "
+"legalizer to legalize an intrinsic directly to a target instruction. The "
+"concrete requirement is that the following additional constraints are "
+"preserved after each of these passes:"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:54
+msgid "IRTranslator"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:56
+msgid ""
+"The representation must be gMIR, MIR, or a mixture of the two after this "
+"pass. The majority will typically be gMIR to begin with but later passes "
+"will gradually transition the gMIR to MIR."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:60
+msgid "Legalizer"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:62
+msgid "No illegal operations must remain or be introduced after this pass."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:64
+msgid "Register Bank Selector"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:66
+msgid ""
+"All virtual registers must have a register bank assigned after this pass."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:68
+msgid "Instruction Select"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:70
+msgid ""
+"No gMIR must remain or be introduced after this pass. In other words, we "
+"must have completed the conversion from gMIR to MIR."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:73
+msgid ""
+"In addition to these passes, there are also some optional passes that "
+"perform an optimization. The current optional passes are:"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:76
+msgid "Combiner"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:78
+msgid ""
+"Replaces patterns of instructions with a better alternative. Typically, this "
+"means improving run time performance by replacing instructions with faster "
+"alternatives but Combiners can also focus on code size or other metrics."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:82
+msgid ""
+"Additional passes such as these can be inserted to support higher "
+"optimization levels or target specific needs. A likely pipeline is:"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:87
+msgid ""
+"Of course, combiners can be inserted in other places too. Also passes can be "
+"replaced entirely so long as their task is complete as shown in this (more "
+"customized) example pipeline."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:96
+msgid "MachineVerifier"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:98
+msgid ""
+"The pass approach lets us use the ``MachineVerifier`` to enforce invariants "
+"that are required beyond certain points of the pipeline. For example, a "
+"function with the ``legalized`` property can have the ``MachineVerifier`` "
+"enforce that no illegal instructions occur. Similarly, a ``regBankSelected`` "
+"function may not have virtual registers without a register bank assigned."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:107
+msgid ""
+"For layering reasons, ``MachineVerifier`` isn't able to be the sole verifier "
+"in GlobalISel. Currently some of the passes also perform verification while "
+"we find a way to solve this problem."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:111
+msgid ""
+"The main issue is that GlobalISel is a separate library, so we can't "
+"directly reference it from CodeGen."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:115
+msgid "Testing"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:117
+msgid ""
+"The ability to test GlobalISel is significantly improved over SelectionDAG. "
+"SelectionDAG is something of a black box and there's a lot going on inside "
+"it. This makes it difficult to write a test that reliably tests a particular "
+"aspect of its behaviour. For comparison, see the following diagram:"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:124
+msgid ""
+"Each of the grey boxes indicates an opportunity to serialize the current "
+"state and test the behaviour between two points in the pipeline. The current "
+"state can be serialized using ``-stop-before`` or ``-stop-after`` and loaded "
+"using ``-start-before``, ``-start-after``, and ``-run-pass``."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:129
+msgid ""
+"We can also go further still, as many of GlobalISel's passes are readily "
+"unit testable:"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:134
+msgid ""
+"It's possible to create an imaginary target such as in `LegalizerHelperTest."
+"cpp <https://github.com/llvm/llvm-project/"
+"blob/93b29d3882baf7df42e4e9bc26b977b00373ef56/llvm/unittests/CodeGen/"
+"GlobalISel/LegalizerHelperTest.cpp#L28-L57>`_ and perform a single step of "
+"the algorithm and check the result. The MIR and FileCheck directives can be "
+"embedded using strings so you still have access to the convenience available "
+"in llvm-lit."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:140
+msgid "Debugging"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:142
+msgid ""
+"One debugging technique that's proven particularly valuable is to use the "
+"BlockExtractor to extract basic blocks into new functions. This can be used "
+"to track down correctness bugs and can also be used to track down "
+"performance regressions. It can also be coupled with function attributes to "
+"disable GlobalISel for one or more of the extracted functions."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:150
+msgid "The command to do the extraction is:"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:156
+msgid ""
+"This particular example extracts two basic blocks from a function named "
+"``foo``. The new LLVM-IR can then be modified to add the ``failedISel`` "
+"attribute to the extracted function containing bb4 to make that function use "
+"SelectionDAG."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:160
+msgid ""
+"This can prevent some optimizations as GlobalISel is generally able to work "
+"on a single function at a time. This technique can be repeated for different "
+"combinations of basic blocks until you have identified the critical blocks "
+"involved in a bug."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:165
+msgid ""
+"Once the critical blocks have been identified, you can further increase the "
+"resolution to the critical instructions by splitting the blocks like from:"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:174
+msgid "into:"
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:185
+msgid "and then repeating the process for the new blocks."
+msgstr ""
+
+#: ../../../GlobalISel/Pipeline.rst:187
+msgid ""
+"It's also possible to use this technique in a mode where the main function "
+"is compiled with GlobalISel and the extracted basic blocks are compiled with "
+"SelectionDAG (or the other way around) to leverage the existing quality of "
+"another code generator to track down bugs. This technique can also be used "
+"to improve the similarity between fast and slow code when tracking down "
+"performance regressions and help you zero in on a particular cause of the "
+"regression."
+msgstr ""
