@@ -1,0 +1,249 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 14\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:12+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../DependenceGraphs/index.rst:3
+msgid "Dependence Graphs in LLVM"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:9
+msgid "Introduction"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:10
+msgid ""
+"Dependence graphs are useful tools in compilers for analyzing relationships "
+"between various program elements to help guide optimizations. The ideas "
+"behind these graphs are described in papers [1]_ and [2]_."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:14
+msgid ""
+"The implementation of these ideas in LLVM may be slightly different than "
+"what is mentioned in the papers. These differences are documented in the "
+"`implementation details <implementation-details_>`_."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:21
+msgid "Data Dependence Graph"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:22
+msgid ""
+"In its simplest form the Data Dependence Graph (or DDG) represents data "
+"dependencies between individual instructions. Each node in such a graph "
+"represents a single instruction and is referred to as an \"atomic\" node. It "
+"is also possible to combine some atomic nodes that have a simple def-use "
+"dependency between them into larger nodes that contain multiple- "
+"instructions."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:29
+msgid ""
+"As described in [1]_ the DDG uses graph abstraction to group nodes that are "
+"part of a strongly connected component of the graph into special nodes "
+"called pi-blocks. pi-blocks represent cycles of data dependency that prevent "
+"reordering transformations. Since any strongly connected component of the "
+"graph is a maximal subgraph of all the nodes that form a cycle, pi-blocks "
+"are at most one level deep. In other words, no pi-blocks are nested inside "
+"another pi-block, resulting in a hierarchical representation that is at most "
+"one level deep."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:39
+msgid "For example, consider the following:"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:47
+msgid ""
+"This code contains a statement that has a loop carried dependence on itself "
+"creating a cycle in the DDG. The figure below illustrates how the cycle of "
+"dependency is carried through multiple def-use relations and a memory access "
+"dependency."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:54
+msgid ""
+"The DDG corresponding to this example would have a pi-block that contains "
+"all the nodes participating in the cycle, as shown below:"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:60
+msgid "Program Dependence Graph"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:62
+msgid ""
+"The Program Dependence Graph (or PDG) has a similar structure as the DDG, "
+"but it is capable of representing both data dependencies and control-flow "
+"dependencies between program elements such as instructions, groups of "
+"instructions, basic blocks or groups of basic blocks."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:69
+msgid "High-Level Design"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:71
+msgid ""
+"The DDG and the PDG are both directed graphs and they extend the "
+"``DirectedGraph`` class. Each implementation extends its corresponding node "
+"and edge types resulting in the inheritance relationship depicted in the UML "
+"diagram below:"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:79
+msgid "Graph Construction"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:81
+msgid ""
+"The graph build algorithm considers dependencies between elements of a given "
+"set of instructions or basic blocks. Any dependencies coming into or going "
+"out of instructions that do not belong to that range are ignored. The steps "
+"in the build algorithm for the DDG are very similar to the steps in the "
+"build algorithm for the PDG. As such, one of the design goals is to reuse "
+"the build algorithm code to allow creation of both DDG and PDG "
+"representations while allowing the two implementations to define their own "
+"distinct and independent node and edge types. This is achieved by using the "
+"well-known builder design pattern to isolate the construction of the "
+"dependence graph from its concrete representation."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:93
+msgid ""
+"The following UML diagram depicts the overall structure of the design "
+"pattern as it applies to the dependence graph implementation."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:98
+msgid ""
+"Notice that the common code for building the two types of graphs are "
+"provided in the ``DependenceGraphBuilder`` class, while the ``DDGBuilder`` "
+"and ``PDGBuilder`` control some aspects of how the graph is constructed by "
+"the way of overriding virtual methods defined in ``DependenceGraphBuilder``."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:103
+msgid ""
+"Note also that the steps and the names used in this diagram are for "
+"illustrative purposes and may be different from those in the actual "
+"implementation."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:108
+msgid "Design Trade-offs"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:111
+msgid "Advantages:"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:112
+msgid "Builder allows graph construction code to be reused for DDG and PDG."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:113
+msgid "Builder allows us to create DDG and PDG as separate graphs."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:114
+msgid ""
+"DDG nodes and edges are completely disjoint from PDG nodes and edges "
+"allowing them to change easily and independently."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:117
+msgid "Disadvantages:"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:118
+msgid "Builder may be perceived as over-engineering at first."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:119
+msgid ""
+"There are some similarities between DDG nodes and edges compared to PDG "
+"nodes and edges, but there is little reuse of the class definitions."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:121
+msgid ""
+"This is tolerable given that the node and edge types are fairly simple and "
+"there is little code reuse opportunity anyway."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:127
+msgid "Implementation Details"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:129
+msgid ""
+"The current implementation of DDG differs slightly from the dependence graph "
+"described in [1]_ in the following ways:"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:132
+msgid ""
+"The graph nodes in the paper represent three main program components, namely "
+"*assignment statements*, *for loop headers* and *while loop headers*. In "
+"this implementation, DDG nodes naturally represent LLVM IR instructions. An "
+"assignment statement in this implementation typically involves a node "
+"representing the ``store`` instruction along with a number of individual "
+"nodes computing the right-hand-side of the assignment that connect to the "
+"``store`` node via a def-use edge.  The loop header instructions are not "
+"represented as special nodes in this implementation because they have "
+"limited uses and can be easily identified, for example, through "
+"``LoopAnalysis``."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:133
+msgid ""
+"The paper describes five types of dependency edges between nodes namely "
+"*loop dependency*, *flow-*, *anti-*, *output-*, and *input-* dependencies. "
+"In this implementation *memory* edges represent the *flow-*, *anti-*, "
+"*output-*, and *input-* dependencies. However, *loop dependencies* are not "
+"made explicit, because they mainly represent association between a loop "
+"structure and the program elements inside the loop and this association is "
+"fairly obvious in LLVM IR itself."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:134
+msgid ""
+"The paper describes two types of pi-blocks; *recurrences* whose bodies are "
+"SCCs and *IN* nodes whose bodies are not part of any SCC. In this "
+"implementation, pi-blocks are only created for *recurrences*. *IN* nodes "
+"remain as simple DDG nodes in the graph."
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:138
+msgid "References"
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:139
+msgid ""
+"\"D. J. Kuck, R. H. Kuhn, D. A. Padua, B. Leasure, and M. Wolfe (1981). "
+"DEPENDENCE GRAPHS AND COMPILER OPTIMIZATIONS.\""
+msgstr ""
+
+#: ../../../DependenceGraphs/index.rst:140
+msgid ""
+"\"J. FERRANTE (IBM), K. J. OTTENSTEIN (Michigan Technological University) "
+"and JOE D. WARREN (Rice University), 1987. The Program Dependence Graph and "
+"Its Use in Optimization.\""
+msgstr ""
