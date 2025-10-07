@@ -1,0 +1,349 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:12+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../Proposals/VectorizationPlan.rst:3
+msgid "Vectorization Plan"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:9
+msgid "Abstract"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:10
+msgid ""
+"The vectorization transformation can be rather complicated, involving "
+"several potential alternatives, especially for outer-loops [1]_ but also "
+"possibly for innermost loops. These alternatives may have significant "
+"performance impact, both positive and negative. A cost model is therefore "
+"employed to identify the best alternative, including the alternative of "
+"avoiding any transformation altogether."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:17
+msgid ""
+"The Vectorization Plan is an explicit model for describing vectorization "
+"candidates. It serves for both optimizing candidates including estimating "
+"their cost reliably, and for performing their final translation into IR. "
+"This facilitates dealing with multiple vectorization candidates."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:23
+msgid "High-level Design"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:26
+msgid "Vectorization Workflow"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:27
+msgid ""
+"VPlan-based vectorization involves three major steps, taking a \"scenario-"
+"based approach\" to vectorization planning:"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:30
+msgid ""
+"Legal Step: check if a loop can be legally vectorized; encode constraints "
+"and artifacts if so."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:32
+msgid "Plan Step:"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:34
+msgid ""
+"Build initial VPlans following the constraints and decisions taken by Legal "
+"Step 1, and compute their cost."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:36
+msgid ""
+"Apply optimizations to the VPlans, possibly forking additional VPlans. Prune "
+"sub-optimal VPlans having relatively high cost."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:38
+msgid ""
+"Execute Step: materialize the best VPlan. Note that this is the only step "
+"that modifies the IR."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:42
+msgid "Design Guidelines"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:43
+msgid ""
+"In what follows, the term \"input IR\" refers to code that is fed into the "
+"vectorizer whereas the term \"output IR\" refers to code that is generated "
+"by the vectorizer. The output IR contains code that has been vectorized or "
+"\"widened\" according to a loop Vectorization Factor (VF), and/or loop "
+"unroll-and-jammed according to an Unroll Factor (UF). The design of VPlan "
+"follows several high-level guidelines:"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:50
+msgid ""
+"Analysis-like: building and manipulating VPlans must not modify the input "
+"IR. In particular, if the best option is not to vectorize at all, the "
+"vectorization process terminates before reaching Step 3, and compilation "
+"should proceed as if VPlans had not been built."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:55
+msgid ""
+"Align Cost & Execute: each VPlan must support both estimating the cost and "
+"generating the output IR code, such that the cost estimation evaluates the "
+"to-be-generated code reliably."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:59
+msgid "Support vectorizing additional constructs:"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:61
+msgid ""
+"Outer-loop vectorization. In particular, VPlan must be able to model the "
+"control-flow of the output IR which may include multiple basic-blocks and "
+"nested loops."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:64
+msgid "SLP vectorization."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:65
+msgid ""
+"Combinations of the above, including nested vectorization: vectorizing both "
+"an inner loop and an outer-loop at the same time (each with its own VF and "
+"UF), mixed vectorization: vectorizing a loop with SLP patterns inside [4]_, "
+"(re)vectorizing input IR containing vector code."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:69
+msgid "Function vectorization [2]_."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:71
+msgid ""
+"Support multiple candidates efficiently. In particular, similar candidates "
+"related to a range of possible VF's and UF's must be represented "
+"efficiently. Potential versioning needs to be supported efficiently."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:75
+msgid ""
+"Support vectorizing idioms, such as interleaved groups of strided loads or "
+"stores. This is achieved by modeling a sequence of output instructions using "
+"a \"Recipe\", which is responsible for computing its cost and generating its "
+"code."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:80
+msgid ""
+"Encapsulate Single-Entry Single-Exit regions (SESE). During vectorization "
+"such regions may need to be, for example, predicated and linearized, or "
+"replicated VF*UF times to handle scalarized and predicated instructions. "
+"Innerloops are also modelled as SESE regions."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:86
+msgid "Low-level Design"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:87
+msgid "The low-level design of VPlan comprises of the following classes."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:0
+msgid "LoopVectorizationPlanner"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:90
+msgid ""
+"A LoopVectorizationPlanner is designed to handle the vectorization of a loop "
+"or a loop nest. It can construct, optimize and discard one or more VPlans, "
+"each VPlan modelling a distinct way to vectorize the loop or the loop nest. "
+"Once the best VPlan is determined, including the best VF and UF, this VPlan "
+"drives the generation of output IR."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:0
+msgid "VPlan"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:97
+msgid ""
+"A model of a vectorized candidate for a given input IR loop or loop nest. "
+"This candidate is represented using a Hierarchical CFG. VPlan supports "
+"estimating the cost and driving the generation of the output IR code it "
+"represents."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:0
+msgid "Hierarchical CFG"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:102
+msgid ""
+"A control-flow graph whose nodes are basic-blocks or Hierarchical CFG's. The "
+"Hierarchical CFG data structure is similar to the Tile Tree [5]_, where "
+"cross-Tile edges are lifted to connect Tiles instead of the original basic-"
+"blocks as in Sharir [6]_, promoting the Tile encapsulation. The terms Region "
+"and Block are used rather than Tile [5]_ to avoid confusion with loop tiling."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:0
+msgid "VPBlockBase"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:110
+msgid ""
+"The building block of the Hierarchical CFG. A pure-virtual base-class of "
+"VPBasicBlock and VPRegionBlock, see below. VPBlockBase models the "
+"hierarchical control-flow relations with other VPBlocks. Note that in "
+"contrast to the IR BasicBlock, a VPBlockBase models its control-flow "
+"successors and predecessors directly, rather than through a Terminator "
+"branch or through predecessor branches that \"use\" the VPBlockBase."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:0
+msgid "VPBasicBlock"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:118
+msgid ""
+"VPBasicBlock is a subclass of VPBlockBase, and serves as the leaves of the "
+"Hierarchical CFG. It represents a sequence of output IR instructions that "
+"will appear consecutively in an output IR basic-block. The instructions of "
+"this basic-block originate from one or more VPBasicBlocks. VPBasicBlock "
+"holds a sequence of zero or more VPRecipes that model the cost and "
+"generation of the output IR instructions."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:0
+msgid "VPRegionBlock"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:126
+msgid ""
+"VPRegionBlock is a subclass of VPBlockBase. It models a collection of "
+"VPBasicBlocks and VPRegionBlocks which form a SESE subgraph of the output IR "
+"CFG. A VPRegionBlock may indicate that its contents are to be replicated a "
+"constant number of times when output IR is generated, effectively "
+"representing a loop with constant trip-count that will be completely "
+"unrolled. This is used to support scalarized and predicated instructions "
+"with a single model for multiple candidate VF's and UF's."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:0
+msgid "VPRecipeBase"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:135
+msgid ""
+"A pure-virtual base class modeling a sequence of one or more output IR "
+"instructions, possibly based on one or more input IR instructions. These "
+"input IR instructions are referred to as \"Ingredients\" of the Recipe. A "
+"Recipe may specify how its ingredients are to be transformed to produce the "
+"output IR instructions; e.g., cloned once, replicated multiple times or "
+"widened according to selected VF."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:0
+msgid "VPTransformState"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:143
+msgid ""
+"Stores information used for generating output IR, passed from "
+"LoopVectorizationPlanner to its selected VPlan for execution, and used to "
+"pass additional information down to VPBlocks and VPRecipes."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:148
+msgid "Related LLVM components"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:149
+msgid ""
+"SLP Vectorizer: one can compare the VPlan model with LLVM's existing SLP "
+"tree, where TSLP [3]_ adds Plan Step 2.b."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:152
+msgid ""
+"RegionInfo: one can compare VPlan's H-CFG with the Region Analysis as used "
+"by Polly [7]_."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:156
+msgid "References"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:157
+msgid ""
+"\"Outer-loop vectorization: revisited for short SIMD architectures\", Dorit "
+"Nuzman and Ayal Zaks, PACT 2008."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:160
+msgid ""
+"\"Proposal for function vectorization and loop vectorization with function "
+"calls\", Xinmin Tian, [`cfe-dev <http://lists.llvm.org/pipermail/cfe-"
+"dev/2016-March/047732.html>`_]., March 2, 2016. See also `review <https://"
+"reviews.llvm.org/D22792>`_."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:166
+msgid ""
+"\"Throttling Automatic Vectorization: When Less is More\", Vasileios "
+"Porpodas and Tim Jones, PACT 2015 and LLVM Developers' Meeting 2015."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:169
+msgid ""
+"\"Exploiting mixed SIMD parallelism by reducing data reorganization "
+"overhead\", Hao Zhou and Jingling Xue, CGO 2016."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:172
+msgid ""
+"\"Register Allocation via Hierarchical Graph Coloring\", David Callahan and "
+"Brian Koblenz, PLDI 1991"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:175
+msgid ""
+"\"Structural analysis: A new approach to flow analysis in optimizing "
+"compilers\", M. Sharir, Journal of Computer Languages, Jan. 1980"
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:178
+msgid ""
+"\"Enabling Polyhedral Optimizations in LLVM\", Tobias Grosser, Diploma "
+"thesis, 2011."
+msgstr ""
+
+#: ../../../Proposals/VectorizationPlan.rst:181
+msgid ""
+"\"Introducing VPlan to the Loop Vectorizer\", Gil Rapaport and Ayal Zaks, "
+"European LLVM Developers' Meeting 2017."
+msgstr ""
