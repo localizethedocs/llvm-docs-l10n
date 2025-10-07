@@ -1,0 +1,546 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 19\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../DirectX/DXILResources.rst:3
+msgid "DXIL Resource Handling"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:12
+msgid "Introduction"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:14
+msgid ""
+"Resources in DXIL are represented via ``TargetExtType`` in LLVM IR and "
+"eventually lowered by the DirectX backend into metadata in DXIL."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:17
+msgid ""
+"In DXC and DXIL, static resources are represented as lists of SRVs (Shader "
+"Resource Views), UAVs (Uniform Access Views), CBVs (Constant Bffer Views), "
+"and Samplers. This metadata consists of a \"resource record ID\" which "
+"uniquely identifies a resource and type information. As of shader model 6.6, "
+"there are also dynamic resources, which forgo the metadata and are described "
+"via ``annotateHandle`` operations in the instruction stream instead."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:24
+msgid ""
+"In LLVM we attempt to unify some of the alternative representations that are "
+"present in DXC, with the aim of making handling of resources in the middle "
+"end of the compiler simpler and more consistent."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:29
+msgid "Resource Type Information and Properties"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:31
+msgid "There are a number of properties associated with a resource in DXIL."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:37
+msgid "`Resource ID`"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:34
+msgid "An arbitrary ID that must be unique per resource type (SRV, UAV, etc)."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:36
+msgid ""
+"In LLVM we don't bother representing this, instead opting to generate it at "
+"DXIL lowering time."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:48
+msgid "`Binding information`"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:40
+msgid ""
+"Information about where the resource comes from. This is either (a) a "
+"register space, lower bound in that space, and size of the binding, or (b) "
+"an index into a dynamic resource heap."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:44
+msgid ""
+"In LLVM we represent binding information in the arguments of the :ref:"
+"`handle creation intrinsics <dxil-resources-handles>`. When generating DXIL "
+"we transform these calls to metadata, ``dx.op.createHandle``, ``dx.op."
+"createHandleFromBinding``, ``dx.op.createHandleFromHeap``, and ``dx.op."
+"createHandleForLib`` as needed."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:57
+msgid "`Type information`"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:51
+msgid ""
+"The type of data that's accessible via the resource. For buffers and "
+"textures this can be a simple type like ``float`` or ``float4``, a struct, "
+"or raw bytes. For constant buffers this is just a size. For samplers this is "
+"the kind of sampler."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:56
+msgid ""
+"In LLVM we embed this information as a parameter on the ``target()`` type of "
+"the resource. See :ref:`dxil-resources-types-of-resource`."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:67
+msgid "`Resource kind information`"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:60
+msgid ""
+"The kind of resource. In HLSL we have things like ``ByteAddressBuffer``, "
+"``RWTexture2D``, and ``RasterizerOrderedStructuredBuffer``. These map to a "
+"set of DXIL kinds like ``RawBuffer`` and ``Texture2D`` with fields for "
+"certain properties such as ``IsUAV`` and ``IsROV``."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:65
+msgid ""
+"In LLVM we represent this in the ``target()`` type. We omit information "
+"that's deriveable from the type information, but we do have fields to encode "
+"``IsWriteable``, ``IsROV``, and ``SampleCount`` when needed."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:69
+msgid ""
+"TODO: There are two fields in the DXIL metadata that are not represented as "
+"part of the target type: ``IsGloballyCoherent`` and ``HasCounter``."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:73
+msgid ""
+"Since these are derived from analysis, storing them on the type would mean "
+"we need to change the type during the compiler pipeline. That just isn't "
+"practical. It isn't entirely clear to me that we need to serialize this info "
+"into the IR during the compiler pipeline anyway - we can probably get away "
+"with an analysis pass that can calculate the information when we need it."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:79
+msgid ""
+"If analysis is insufficient we'll need something akin to ``annotateHandle`` "
+"(but limited to these two properties) or to encode these in the handle "
+"creation."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:86
+msgid "Types of Resource"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:88
+msgid ""
+"We define a set of ``TargetExtTypes`` that is similar to the HLSL "
+"representations for the various resources, albeit with a few things "
+"parameterized. This is different than DXIL, as simplifying the types to "
+"something like \"dx.srv\" and \"dx.uav\" types would mean the operations on "
+"these types would have to be overly generic."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:95
+msgid "Buffers"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:102
+msgid ""
+"We need two separate buffer types to account for the differences between the "
+"16-byte `bufferLoad`_ / `bufferStore`_ operations that work on DXIL's "
+"TypedBuffers and the `rawBufferLoad`_ / `rawBufferStore`_ operations that "
+"are used for DXIL's RawBuffers and StructuredBuffers. We call the latter "
+"\"RawBuffer\" to match the naming of the operations, but it can represent "
+"both the Raw and Structured variants."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:109
+msgid ""
+"For TypedBuffer, the element type must be an integer or floating point type. "
+"For RawBuffer the type can be an integer, floating point, or struct type. "
+"HLSL's ByteAddressBuffer is represented by an `i8` element type."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:113
+msgid ""
+"These types are generally used by BufferLoad and BufferStore operations, as "
+"well as atomics."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:116
+msgid "There are a few fields to describe variants of all of these types:"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:118
+msgid "Buffer Fields"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:121
+msgid "Field"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:122
+#: ../../../DirectX/DXILResources.rst:166
+#: ../../../DirectX/DXILResources.rst:231
+#: ../../../DirectX/DXILResources.rst:306
+#: ../../../DirectX/DXILResources.rst:339
+#: ../../../DirectX/DXILResources.rst:374
+msgid "Description"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:123
+msgid "ElementType"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:124
+msgid ""
+"Type for a single element, such as ``i8``, ``v4f32``, or a structure type."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:126
+msgid "IsWriteable"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:127
+msgid ""
+"Whether or not the field is writeable. This distinguishes SRVs (not "
+"writeable) and UAVs (writeable)."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:129
+msgid "IsROV"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:130
+msgid "Whether the UAV is a rasterizer ordered view. Always ``0`` for SRVs."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:138
+msgid "Resource Operations"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:143
+msgid "Resource Handles"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:145
+msgid ""
+"We provide a few different ways to instantiate resources in the IR via the "
+"``llvm.dx.handle.*`` intrinsics. These intrinsics are overloaded on return "
+"type, returning an appropriate handle for the resource, and represent "
+"binding information in the arguments to the intrinsic."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:150
+msgid ""
+"The three operations we need are ``llvm.dx.handle.fromBinding``, ``llvm.dx."
+"handle.fromHeap``, and ``llvm.dx.handle.fromPointer``. These are rougly "
+"equivalent to the DXIL operations ``dx.op.createHandleFromBinding``, ``dx.op."
+"createHandleFromHeap``, and ``dx.op.createHandleForLib``, but they fold the "
+"subsequent ``dx.op.annotateHandle`` operation in. Note that we don't have an "
+"analogue for `dx.op.createHandle`_, since ``dx.op.createHandleFromBinding`` "
+"subsumes it."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:160
+msgid "``@llvm.dx.handle.fromBinding``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:163
+#: ../../../DirectX/DXILResources.rst:228
+#: ../../../DirectX/DXILResources.rst:303
+#: ../../../DirectX/DXILResources.rst:336
+#: ../../../DirectX/DXILResources.rst:371
+msgid "Argument"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:165
+#: ../../../DirectX/DXILResources.rst:230
+#: ../../../DirectX/DXILResources.rst:305
+#: ../../../DirectX/DXILResources.rst:338
+#: ../../../DirectX/DXILResources.rst:373
+msgid "Type"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:167
+#: ../../../DirectX/DXILResources.rst:232
+#: ../../../DirectX/DXILResources.rst:307
+#: ../../../DirectX/DXILResources.rst:340
+#: ../../../DirectX/DXILResources.rst:375
+msgid "Return value"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:169
+#: ../../../DirectX/DXILResources.rst:234
+msgid "A ``target()`` type"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:170
+#: ../../../DirectX/DXILResources.rst:235
+msgid "A handle which can be operated on"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:171
+msgid "``%reg_space``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:172
+#: ../../../DirectX/DXILResources.rst:241
+#: ../../../DirectX/DXILResources.rst:316
+#: ../../../DirectX/DXILResources.rst:349
+#: ../../../DirectX/DXILResources.rst:384
+msgid "1"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:173
+#: ../../../DirectX/DXILResources.rst:177
+#: ../../../DirectX/DXILResources.rst:181
+#: ../../../DirectX/DXILResources.rst:185
+#: ../../../DirectX/DXILResources.rst:238
+#: ../../../DirectX/DXILResources.rst:317
+#: ../../../DirectX/DXILResources.rst:350
+#: ../../../DirectX/DXILResources.rst:385
+msgid "``i32``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:174
+msgid "Register space ID in the root signature for this resource."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:175
+msgid "``%lower_bound``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:176
+#: ../../../DirectX/DXILResources.rst:353
+msgid "2"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:178
+msgid "Lower bound of the binding in its register space."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:179
+msgid "``%range_size``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:180
+msgid "3"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:182
+msgid "Range size of the binding."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:183
+#: ../../../DirectX/DXILResources.rst:236
+#: ../../../DirectX/DXILResources.rst:315
+#: ../../../DirectX/DXILResources.rst:348
+#: ../../../DirectX/DXILResources.rst:383
+msgid "``%index``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:184
+msgid "4"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:186
+#: ../../../DirectX/DXILResources.rst:239
+msgid "Index of the resource to access."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:187
+#: ../../../DirectX/DXILResources.rst:240
+msgid "``%non-uniform``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:188
+msgid "5"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:189
+#: ../../../DirectX/DXILResources.rst:242
+msgid "i1"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:190
+#: ../../../DirectX/DXILResources.rst:243
+msgid "Must be ``true`` if the resource index may be non-uniform."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:192
+msgid ""
+"TODO: Can we drop the uniformity bit? I suspect we can derive it from "
+"uniformity analysis..."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:195
+#: ../../../DirectX/DXILResources.rst:245
+#: ../../../DirectX/DXILResources.rst:320
+#: ../../../DirectX/DXILResources.rst:357
+#: ../../../DirectX/DXILResources.rst:388
+msgid "Examples:"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:225
+msgid "``@llvm.dx.handle.fromHeap``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:237
+#: ../../../DirectX/DXILResources.rst:312
+#: ../../../DirectX/DXILResources.rst:345
+#: ../../../DirectX/DXILResources.rst:380
+msgid "0"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:260
+msgid "Buffer Loads and Stores"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:262
+msgid "*relevant types: Buffers*"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:264
+msgid ""
+"We need to treat buffer loads and stores from \"dx.TypedBuffer\" and \"dx."
+"RawBuffer\" separately. For TypedBuffer, we have ``llvm.dx.typedBufferLoad`` "
+"and ``llvm.dx.typedBufferStore``, which load and store 16-byte \"rows\" of "
+"data via a simple index. For RawBuffer, we have ``llvm.dx.rawBufferPtr``, "
+"which return a pointer that can be indexed, loaded, and stored to as needed."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:270
+msgid ""
+"The typed load and store operations always operate on exactly 16 bytes of "
+"data, so there are only a few valid overloads. For types that are 32-bits or "
+"smaller, we operate on 4-element vectors, such as ``<4 x i32>``, ``<4 x "
+"float>``, or ``<4 x half>``. Note that in 16-bit cases each 16-bit value "
+"occupies 32-bits of storage. For 64-bit types we operate on 2-element "
+"vectors - ``<2 x double>`` or ``<2 x i64>``. When a type like "
+"`Buffer<float>` is used at the HLSL level, it is expected that this will "
+"operate on a single float in each 16 byte row - that is, a load would use "
+"the ``<4 x float>`` variant and then extract the first element."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:280
+msgid ""
+"In DXC, trying to operate on a ``Buffer<double4>`` crashes the compiler. We "
+"should probably just reject this in the frontend."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:283
+msgid ""
+"The TypedBuffer intrinsics are lowered to the `bufferLoad`_ and "
+"`bufferStore`_ operations, and the operations on the memory accessed by "
+"RawBufferPtr are lowered to `rawBufferLoad`_ and `rawBufferStore`_. Note "
+"that if we want to support DXIL versions prior to 1.2 we'll need to lower "
+"the RawBuffer loads and stores to the non-raw operations as well."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:289
+msgid "TODO: We need to account for `CheckAccessFullyMapped`_ here."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:291
+msgid ""
+"In DXIL the load operations always return an ``i32`` status value, but this "
+"isn't very ergonomic when it isn't used. We can (1) bite the bullet and have "
+"the loads return `{%ret_type, %i32}` all the time, (2) create a variant or "
+"update the signature iff the status is used, or (3) hide this in a sideband "
+"channel somewhere. I'm leaning towards (2), but could probably be convinced "
+"that the ugliness of (1) is worth the simplicity."
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:300
+msgid "``@llvm.dx.typedBufferLoad``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:309
+#: ../../../DirectX/DXILResources.rst:354
+msgid "A 4- or 2-element vector of the type of the buffer"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:310
+msgid "The data loaded from the buffer"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:311
+#: ../../../DirectX/DXILResources.rst:344
+#: ../../../DirectX/DXILResources.rst:379
+msgid "``%buffer``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:313
+#: ../../../DirectX/DXILResources.rst:346
+msgid "``target(dx.TypedBuffer, ...)``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:314
+#: ../../../DirectX/DXILResources.rst:382
+msgid "The buffer to load from"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:318
+#: ../../../DirectX/DXILResources.rst:351
+#: ../../../DirectX/DXILResources.rst:386
+msgid "Index into the buffer"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:333
+msgid "``@llvm.dx.typedBufferStore``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:342
+msgid "``void``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:347
+msgid "The buffer to store into"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:352
+msgid "``%data``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:355
+msgid "The data to store"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:368
+msgid "``@llvm.dx.rawBufferPtr``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:377
+msgid "``ptr``"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:378
+msgid "Pointer to an element of the buffer"
+msgstr ""
+
+#: ../../../DirectX/DXILResources.rst:381
+msgid "``target(dx.RawBuffer, ...)``"
+msgstr ""
