@@ -1,0 +1,487 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 11\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:12+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../ScudoHardenedAllocator.rst:3
+msgid "Scudo Hardened Allocator"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:10
+msgid "Introduction"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:12
+msgid ""
+"The Scudo Hardened Allocator is a user-mode allocator based on LLVM "
+"Sanitizer's CombinedAllocator, which aims at providing additional "
+"mitigations against heap based vulnerabilities, while maintaining good "
+"performance."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:16
+msgid ""
+"Currently, the allocator supports (was tested on) the following "
+"architectures:"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:18
+msgid "i386 (& i686) (32-bit);"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:19
+msgid "x86_64 (64-bit);"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:20
+msgid "armhf (32-bit);"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:21
+msgid "AArch64 (64-bit);"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:22
+msgid "MIPS (32-bit & 64-bit)."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:24
+msgid ""
+"The name \"Scudo\" has been retained from the initial implementation (Escudo "
+"meaning Shield in Spanish and Portuguese)."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:28
+msgid "Design"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:31
+msgid "Allocator"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:32
+msgid ""
+"Scudo can be considered a Frontend to the Sanitizers' common allocator "
+"(later referenced as the Backend). It is split between a Primary allocator, "
+"fast and efficient, that services smaller allocation sizes, and a Secondary "
+"allocator that services larger allocation sizes and is backed by the "
+"operating system memory mapping primitives."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:38
+msgid ""
+"Scudo was designed with security in mind, but aims at striking a good "
+"balance between security and performance. It is highly tunable and "
+"configurable."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:42
+msgid "Chunk Header"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:43
+msgid ""
+"Every chunk of heap memory will be preceded by a chunk header. This has two "
+"purposes, the first one being to store various information about the chunk, "
+"the second one being to detect potential heap overflows. In order to achieve "
+"this, the header will be checksummed, involving the pointer to the chunk "
+"itself and a global secret. Any corruption of the header will be detected "
+"when said header is accessed, and the process terminated."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:50
+msgid "The following information is stored in the header:"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:52
+msgid "the 16-bit checksum;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:53
+msgid ""
+"the class ID for that chunk, which is the \"bucket\" where the chunk resides "
+"for Primary backed allocations, or 0 for Secondary backed allocations;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:55
+msgid ""
+"the size (Primary) or unused bytes amount (Secondary) for that chunk, which "
+"is necessary for computing the size of the chunk;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:57
+msgid "the state of the chunk (available, allocated or quarantined);"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:58
+msgid ""
+"the allocation type (malloc, new, new[] or memalign), to detect potential "
+"mismatches in the allocation APIs used;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:60
+msgid ""
+"the offset of the chunk, which is the distance in bytes from the beginning "
+"of the returned chunk to the beginning of the Backend allocation;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:63
+msgid "This header fits within 8 bytes, on all platforms supported."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:65
+msgid ""
+"The checksum is computed as a CRC32 (made faster with hardware support) of "
+"the global secret, the chunk pointer itself, and the 8 bytes of header with "
+"the checksum field zeroed out. It is not intended to be cryptographically "
+"strong."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:70
+msgid ""
+"The header is atomically loaded and stored to prevent races. This is "
+"important as two consecutive chunks could belong to different threads. We "
+"also want to avoid any type of double fetches of information located in the "
+"header, and use local copies of the header for this purpose."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:76
+msgid "Delayed Freelist"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:77
+msgid ""
+"A delayed freelist allows us to not return a chunk directly to the Backend, "
+"but to keep it aside for a while. Once a criterion is met, the delayed "
+"freelist is emptied, and the quarantined chunks are returned to the Backend. "
+"This helps mitigate use-after-free vulnerabilities by reducing the "
+"determinism of the allocation and deallocation patterns."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:83
+msgid ""
+"This feature is using the Sanitizer's Quarantine as its base, and the amount "
+"of memory that it can hold is configurable by the user (see the Options "
+"section below)."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:88
+msgid "Randomness"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:89
+msgid ""
+"It is important for the allocator to not make use of fixed addresses. We use "
+"the dynamic base option for the SizeClassAllocator, allowing us to benefit "
+"from the randomness of the system memory mapping functions."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:94
+msgid "Usage"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:97
+msgid "Library"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:98
+msgid ""
+"The allocator static library can be built from the LLVM build tree thanks to "
+"the ``scudo`` CMake rule. The associated tests can be exercised thanks to "
+"the ``check-scudo`` CMake rule."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:102
+msgid ""
+"Linking the static library to your project can require the use of the "
+"``whole-archive`` linker flag (or equivalent), depending on your linker. "
+"Additional flags might also be necessary."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:106
+msgid ""
+"Your linked binary should now make use of the Scudo allocation and "
+"deallocation functions."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:109
+msgid "You may also build Scudo like this:"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:118
+msgid "and then use it with existing binaries as follows:"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:125
+msgid "Clang"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:126
+msgid ""
+"With a recent version of Clang (post rL317337), the allocator can be linked "
+"with a binary at compilation using the ``-fsanitize=scudo`` command-line "
+"argument, if the target platform is supported. Currently, the only other "
+"Sanitizer Scudo is compatible with is UBSan (eg: ``-fsanitize=scudo,"
+"undefined``). Compiling with Scudo will also enforce PIE for the output "
+"binary."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:133
+msgid "Options"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:134
+msgid ""
+"Several aspects of the allocator can be configured on a per process basis "
+"through the following ways:"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:137
+msgid ""
+"at compile time, by defining ``SCUDO_DEFAULT_OPTIONS`` to the options string "
+"you want set by default;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:140
+msgid ""
+"by defining a ``__scudo_default_options`` function in one's program that "
+"returns the options string to be parsed. Said function must have the "
+"following prototype: ``extern \"C\" const char* "
+"__scudo_default_options(void)``, with a default visibility. This will "
+"override the compile time define;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:145
+msgid ""
+"through the environment variable SCUDO_OPTIONS, containing the options "
+"string to be parsed. Options defined this way will override any definition "
+"made through ``__scudo_default_options``."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:149
+msgid ""
+"The options string follows a syntax similar to ASan, where distinct options "
+"can be assigned in the same string, separated by colons."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:152
+msgid "For example, using the environment variable:"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:158
+msgid "Or using the function:"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:167
+msgid "The following options are available:"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:170
+msgid "Option"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:170
+msgid "64-bit default"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:170
+msgid "32-bit default"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:170
+msgid "Description"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:172
+msgid "QuarantineSizeKb"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:172
+#: ../../../ScudoHardenedAllocator.rst:183
+msgid "256"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:172
+msgid "64"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:172
+msgid ""
+"The size (in Kb) of quarantine used to delay the actual deallocation of "
+"chunks. Lower value may reduce memory usage but decrease the effectiveness "
+"of the mitigation; a negative value will fallback to the defaults. Setting "
+"*both* this and ThreadLocalQuarantineSizeKb to zero will disable the "
+"quarantine entirely."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:180
+msgid "QuarantineChunksUpToSize"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:180
+msgid "2048"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:180
+msgid "512"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:180
+msgid "Size (in bytes) up to which chunks can be quarantined."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:183
+msgid "ThreadLocalQuarantineSizeKb"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:183
+msgid "1024"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:183
+msgid ""
+"The size (in Kb) of per-thread cache use to offload the global quarantine. "
+"Lower value may reduce memory usage but might increase contention on the "
+"global quarantine. Setting *both* this and QuarantineSizeKb to zero will "
+"disable the quarantine entirely."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:190
+msgid "DeallocationTypeMismatch"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:190
+#: ../../../ScudoHardenedAllocator.rst:193
+msgid "true"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:190
+msgid ""
+"Whether or not we report errors on malloc/delete, new/free, new/delete[], "
+"etc."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:193
+msgid "DeleteSizeMismatch"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:193
+msgid ""
+"Whether or not we report errors on mismatch between sizes of new and delete."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:196
+msgid "ZeroContents"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:196
+msgid "false"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:196
+msgid "Whether or not we zero chunk contents on allocation and deallocation."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:200
+msgid ""
+"Allocator related common Sanitizer options can also be passed through Scudo "
+"options, such as ``allocator_may_return_null`` or ``abort_on_error``. A "
+"detailed list including those can be found here: https://github.com/google/"
+"sanitizers/wiki/SanitizerCommonFlags."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:206
+msgid "Error Types"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:208
+msgid ""
+"The allocator will output an error message, and potentially terminate the "
+"process, when an unexpected behavior is detected. The output usually starts "
+"with ``\"Scudo ERROR:\"`` followed by a short summary of the problem that "
+"occurred as well as the pointer(s) involved. Once again, Scudo is meant to "
+"be a mitigation, and might not be the most useful of tools to help you root-"
+"cause the issue, please consider `ASan <https://github.com/google/sanitizers/"
+"wiki/AddressSanitizer>`_ for this purpose."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:216
+msgid "Here is a list of the current error messages and their potential cause:"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:218
+msgid ""
+"``\"corrupted chunk header\"``: the checksum verification of the chunk "
+"header has failed. This is likely due to one of two things: the header was "
+"overwritten (partially or totally), or the pointer passed to the function is "
+"not a chunk at all;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:223
+msgid ""
+"``\"race on chunk header\"``: two different threads are attempting to "
+"manipulate the same header at the same time. This is usually symptomatic of "
+"a race-condition or general lack of locking when performing operations on "
+"that chunk;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:228
+msgid ""
+"``\"invalid chunk state\"``: the chunk is not in the expected state for a "
+"given operation, eg: it is not allocated when trying to free it, or it's not "
+"quarantined when trying to recycle it, etc. A double-free is the typical "
+"reason this error would occur;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:233
+msgid ""
+"``\"misaligned pointer\"``: we strongly enforce basic alignment "
+"requirements, 8 bytes on 32-bit platforms, 16 bytes on 64-bit platforms. If "
+"a pointer passed to our functions does not fit those, something is "
+"definitely wrong."
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:237
+msgid ""
+"``\"allocation type mismatch\"``: when the optional deallocation type "
+"mismatch check is enabled, a deallocation function called on a chunk has to "
+"match the type of function that was called to allocate it. Security "
+"implications of such a mismatch are not necessarily obvious but situational "
+"at best;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:242
+msgid ""
+"``\"invalid sized delete\"``: when the C++14 sized delete operator is used, "
+"and the optional check enabled, this indicates that the size passed when "
+"deallocating a chunk is not congruent with the one requested when allocating "
+"it. This is likely to be a `compiler issue <https://software.intel.com/en-us/"
+"forums/intel-c-compiler/topic/783942>`_, as was the case with Intel C++ "
+"Compiler, or some type confusion on the object being deallocated;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:249
+msgid ""
+"``\"RSS limit exhausted\"``: the maximum RSS optionally specified has been "
+"exceeded;"
+msgstr ""
+
+#: ../../../ScudoHardenedAllocator.rst:252
+msgid ""
+"Several other error messages relate to parameter checking on the libc "
+"allocation APIs and are fairly straightforward to understand."
+msgstr ""
