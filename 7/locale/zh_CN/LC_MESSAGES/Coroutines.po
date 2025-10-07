@@ -1,0 +1,1111 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 7\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:13+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../Coroutines.rst:3
+msgid "Coroutines in LLVM"
+msgstr ""
+
+#: ../../../Coroutines.rst:10
+msgid ""
+"This is a work in progress. Compatibility across LLVM releases is not "
+"guaranteed."
+msgstr ""
+
+#: ../../../Coroutines.rst:14
+msgid "Introduction"
+msgstr ""
+
+#: ../../../Coroutines.rst:18
+msgid ""
+"LLVM coroutines are functions that have one or more `suspend points`_. When "
+"a suspend point is reached, the execution of a coroutine is suspended and "
+"control is returned back to its caller. A suspended coroutine can be resumed "
+"to continue execution from the last suspend point or it can be destroyed."
+msgstr ""
+
+#: ../../../Coroutines.rst:23
+msgid ""
+"In the following example, we call function `f` (which may or may not be a "
+"coroutine itself) that returns a handle to a suspended coroutine "
+"(**coroutine handle**) that is used by `main` to resume the coroutine twice "
+"and then destroy it:"
+msgstr ""
+
+#: ../../../Coroutines.rst:41
+msgid ""
+"In addition to the function stack frame which exists when a coroutine is "
+"executing, there is an additional region of storage that contains objects "
+"that keep the coroutine state when a coroutine is suspended. This region of "
+"storage is called **coroutine frame**. It is created when a coroutine is "
+"called and destroyed when a coroutine runs to completion or destroyed by a "
+"call to the `coro.destroy`_ intrinsic."
+msgstr ""
+
+#: ../../../Coroutines.rst:48
+msgid ""
+"An LLVM coroutine is represented as an LLVM function that has calls to "
+"`coroutine intrinsics`_ defining the structure of the coroutine. After "
+"lowering, a coroutine is split into several functions that represent three "
+"different ways of how control can enter the coroutine:"
+msgstr ""
+
+#: ../../../Coroutines.rst:54
+msgid ""
+"a ramp function, which represents an initial invocation of the coroutine "
+"that creates the coroutine frame and executes the coroutine code until it "
+"encounters a suspend point or reaches the end of the function;"
+msgstr ""
+
+#: ../../../Coroutines.rst:58
+msgid ""
+"a coroutine resume function that is invoked when the coroutine is resumed;"
+msgstr ""
+
+#: ../../../Coroutines.rst:60
+msgid ""
+"a coroutine destroy function that is invoked when the coroutine is destroyed."
+msgstr ""
+
+#: ../../../Coroutines.rst:62
+msgid ""
+"Splitting out resume and destroy functions are just one of the possible ways "
+"of lowering the coroutine. We chose it for initial implementation as it "
+"matches closely the mental model and results in reasonably nice code."
+msgstr ""
+
+#: ../../../Coroutines.rst:68
+msgid "Coroutines by Example"
+msgstr ""
+
+#: ../../../Coroutines.rst:71
+msgid "Coroutine Representation"
+msgstr ""
+
+#: ../../../Coroutines.rst:73
+msgid ""
+"Let's look at an example of an LLVM coroutine with the behavior sketched by "
+"the following pseudo-code."
+msgstr ""
+
+#: ../../../Coroutines.rst:85
+msgid ""
+"This coroutine calls some function `print` with value `n` as an argument and "
+"suspends execution. Every time this coroutine resumes, it calls `print` "
+"again with an argument one bigger than the last time. This coroutine never "
+"completes by itself and must be destroyed explicitly. If we use this "
+"coroutine with a `main` shown in the previous section. It will call `print` "
+"with values 4, 5 and 6 after which the coroutine will be destroyed."
+msgstr ""
+
+#: ../../../Coroutines.rst:90
+msgid "The LLVM IR for this coroutine looks like this:"
+msgstr ""
+
+#: ../../../Coroutines.rst:117
+msgid ""
+"The `entry` block establishes the coroutine frame. The `coro.size`_ "
+"intrinsic is lowered to a constant representing the size required for the "
+"coroutine frame. The `coro.begin`_ intrinsic initializes the coroutine frame "
+"and returns the coroutine handle. The second parameter of `coro.begin` is "
+"given a block of memory to be used if the coroutine frame needs to be "
+"allocated dynamically. The `coro.id`_ intrinsic serves as coroutine identity "
+"useful in cases when the `coro.begin`_ intrinsic get duplicated by "
+"optimization passes such as jump-threading."
+msgstr ""
+
+#: ../../../Coroutines.rst:126
+msgid ""
+"The `cleanup` block destroys the coroutine frame. The `coro.free`_ "
+"intrinsic, given the coroutine handle, returns a pointer of the memory block "
+"to be freed or `null` if the coroutine frame was not allocated dynamically. "
+"The `cleanup` block is entered when coroutine runs to completion by itself "
+"or destroyed via call to the `coro.destroy`_ intrinsic."
+msgstr ""
+
+#: ../../../Coroutines.rst:132
+msgid ""
+"The `suspend` block contains code to be executed when coroutine runs to "
+"completion or suspended. The `coro.end`_ intrinsic marks the point where a "
+"coroutine needs to return control back to the caller if it is not an initial "
+"invocation of the coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:137
+msgid ""
+"The `loop` blocks represents the body of the coroutine. The `coro.suspend`_ "
+"intrinsic in combination with the following switch indicates what happens to "
+"control flow when a coroutine is suspended (default case), resumed (case 0) "
+"or destroyed (case 1)."
+msgstr ""
+
+#: ../../../Coroutines.rst:143
+msgid "Coroutine Transformation"
+msgstr ""
+
+#: ../../../Coroutines.rst:145
+msgid ""
+"One of the steps of coroutine lowering is building the coroutine frame. The "
+"def-use chains are analyzed to determine which objects need be kept alive "
+"across suspend points. In the coroutine shown in the previous section, use "
+"of virtual register `%n.val` is separated from the definition by a suspend "
+"point, therefore, it cannot reside on the stack frame since the latter goes "
+"away once the coroutine is suspended and control is returned back to the "
+"caller. An i32 slot is allocated in the coroutine frame and `%n.val` is "
+"spilled and reloaded from that slot as needed."
+msgstr ""
+
+#: ../../../Coroutines.rst:154
+msgid ""
+"We also store addresses of the resume and destroy functions so that the "
+"`coro.resume` and `coro.destroy` intrinsics can resume and destroy the "
+"coroutine when its identity cannot be determined statically at compile time. "
+"For our example, the coroutine frame will be:"
+msgstr ""
+
+#: ../../../Coroutines.rst:163
+msgid ""
+"After resume and destroy parts are outlined, function `f` will contain only "
+"the code responsible for creation and initialization of the coroutine frame "
+"and execution of the coroutine until a suspend point is reached:"
+msgstr ""
+
+#: ../../../Coroutines.rst:188
+msgid ""
+"Outlined resume part of the coroutine will reside in function `f.resume`:"
+msgstr ""
+
+#: ../../../Coroutines.rst:202
+msgid ""
+"Whereas function `f.destroy` will contain the cleanup code for the coroutine:"
+msgstr ""
+
+#: ../../../Coroutines.rst:214
+msgid "Avoiding Heap Allocations"
+msgstr ""
+
+#: ../../../Coroutines.rst:216
+msgid ""
+"A particular coroutine usage pattern, which is illustrated by the `main` "
+"function in the overview section, where a coroutine is created, manipulated "
+"and destroyed by the same calling function, is common for coroutines "
+"implementing RAII idiom and is suitable for allocation elision optimization "
+"which avoid dynamic allocation by storing the coroutine frame as a static "
+"`alloca` in its caller."
+msgstr ""
+
+#: ../../../Coroutines.rst:223
+msgid ""
+"In the entry block, we will call `coro.alloc`_ intrinsic that will return "
+"`true` when dynamic allocation is required, and `false` if dynamic "
+"allocation is elided."
+msgstr ""
+
+#: ../../../Coroutines.rst:241
+msgid ""
+"In the cleanup block, we will make freeing the coroutine frame conditional "
+"on `coro.free`_ intrinsic. If allocation is elided, `coro.free`_ returns "
+"`null` thus skipping the deallocation code:"
+msgstr ""
+
+#: ../../../Coroutines.rst:257
+msgid ""
+"With allocations and deallocations represented as described as above, after "
+"coroutine heap allocation elision optimization, the resulting main will be:"
+msgstr ""
+
+#: ../../../Coroutines.rst:271
+msgid "Multiple Suspend Points"
+msgstr ""
+
+#: ../../../Coroutines.rst:273
+msgid "Let's consider the coroutine that has more than one suspend point:"
+msgstr ""
+
+#: ../../../Coroutines.rst:286
+msgid ""
+"Matching LLVM code would look like (with the rest of the code remaining the "
+"same as the code in the previous section):"
+msgstr ""
+
+#: ../../../Coroutines.rst:305
+msgid ""
+"In this case, the coroutine frame would include a suspend index that will "
+"indicate at which suspend point the coroutine needs to resume. The resume "
+"function will use an index to jump to an appropriate basic block and will "
+"look as follows:"
+msgstr ""
+
+#: ../../../Coroutines.rst:337
+msgid ""
+"If different cleanup code needs to get executed for different suspend "
+"points, a similar switch will be in the `f.destroy` function."
+msgstr ""
+
+#: ../../../Coroutines.rst:342
+msgid ""
+"Using suspend index in a coroutine state and having a switch in `f.resume` "
+"and `f.destroy` is one of the possible implementation strategies. We "
+"explored another option where a distinct `f.resume1`, `f.resume2`, etc. are "
+"created for every suspend point, and instead of storing an index, the resume "
+"and destroy function pointers are updated at every suspend. Early testing "
+"showed that the current approach is easier on the optimizer than the latter "
+"so it is a lowering strategy implemented at the moment."
+msgstr ""
+
+#: ../../../Coroutines.rst:351
+msgid "Distinct Save and Suspend"
+msgstr ""
+
+#: ../../../Coroutines.rst:353
+msgid ""
+"In the previous example, setting a resume index (or some other state change "
+"that needs to happen to prepare a coroutine for resumption) happens at the "
+"same time as a suspension of a coroutine. However, in certain cases, it is "
+"necessary to control when coroutine is prepared for resumption and when it "
+"is suspended."
+msgstr ""
+
+#: ../../../Coroutines.rst:358
+msgid ""
+"In the following example, a coroutine represents some activity that is "
+"driven by completions of asynchronous operations `async_op1` and `async_op2` "
+"which get a coroutine handle as a parameter and resume the coroutine once "
+"async operation is finished."
+msgstr ""
+
+#: ../../../Coroutines.rst:380
+msgid ""
+"In this case, coroutine should be ready for resumption prior to a call to "
+"`async_op1` and `async_op2`. The `coro.save`_ intrinsic is used to indicate "
+"a point when coroutine should be ready for resumption (namely, when a resume "
+"index should be stored in the coroutine frame, so that it can be resumed at "
+"the correct resume point):"
+msgstr ""
+
+#: ../../../Coroutines.rst:404
+msgid "Coroutine Promise"
+msgstr ""
+
+#: ../../../Coroutines.rst:406
+msgid ""
+"A coroutine author or a frontend may designate a distinguished `alloca` that "
+"can be used to communicate with the coroutine. This distinguished alloca is "
+"called **coroutine promise** and is provided as the second parameter to the "
+"`coro.id`_ intrinsic."
+msgstr ""
+
+#: ../../../Coroutines.rst:411
+msgid ""
+"The following coroutine designates a 32 bit integer `promise` and uses it to "
+"store the current value produced by a coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:447
+msgid ""
+"A coroutine consumer can rely on the `coro.promise`_ intrinsic to access the "
+"coroutine promise."
+msgstr ""
+
+#: ../../../Coroutines.rst:469
+msgid ""
+"After example in this section is compiled, result of the compilation will be:"
+msgstr ""
+
+#: ../../../Coroutines.rst:485
+msgid "Final Suspend"
+msgstr ""
+
+#: ../../../Coroutines.rst:487
+msgid ""
+"A coroutine author or a frontend may designate a particular suspend to be "
+"final, by setting the second argument of the `coro.suspend`_ intrinsic to "
+"`true`. Such a suspend point has two properties:"
+msgstr ""
+
+#: ../../../Coroutines.rst:491
+msgid ""
+"it is possible to check whether a suspended coroutine is at the final "
+"suspend point via `coro.done`_ intrinsic;"
+msgstr ""
+
+#: ../../../Coroutines.rst:494
+msgid ""
+"a resumption of a coroutine stopped at the final suspend point leads to "
+"undefined behavior. The only possible action for a coroutine at a final "
+"suspend point is destroying it via `coro.destroy`_ intrinsic."
+msgstr ""
+
+#: ../../../Coroutines.rst:498
+msgid ""
+"From the user perspective, the final suspend point represents an idea of a "
+"coroutine reaching the end. From the compiler perspective, it is an "
+"optimization opportunity for reducing number of resume points (and therefore "
+"switch cases) in the resume function."
+msgstr ""
+
+#: ../../../Coroutines.rst:503
+msgid ""
+"The following is an example of a function that keeps resuming the coroutine "
+"until the final suspend point is reached after which point the coroutine is "
+"destroyed:"
+msgstr ""
+
+#: ../../../Coroutines.rst:522
+msgid ""
+"Usually, final suspend point is a frontend injected suspend point that does "
+"not correspond to any explicitly authored suspend point of the high level "
+"language. For example, for a Python generator that has only one suspend "
+"point:"
+msgstr ""
+
+#: ../../../Coroutines.rst:532
+msgid ""
+"Python frontend would inject two more suspend points, so that the actual "
+"code looks like this:"
+msgstr ""
+
+#: ../../../Coroutines.rst:547
+msgid "and python iterator `__next__` would look like:"
+msgstr ""
+
+#: ../../../Coroutines.rst:558
+msgid "Intrinsics"
+msgstr ""
+
+#: ../../../Coroutines.rst:561
+msgid "Coroutine Manipulation Intrinsics"
+msgstr ""
+
+#: ../../../Coroutines.rst:563
+msgid ""
+"Intrinsics described in this section are used to manipulate an existing "
+"coroutine. They can be used in any function which happen to have a pointer "
+"to a `coroutine frame`_ or a pointer to a `coroutine promise`_."
+msgstr ""
+
+#: ../../../Coroutines.rst:570
+msgid "'llvm.coro.destroy' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:573
+msgid "Syntax:"
+msgstr ""
+
+#: ../../../Coroutines.rst:580 ../../../Coroutines.rst:608
+#: ../../../Coroutines.rst:635 ../../../Coroutines.rst:661
+#: ../../../Coroutines.rst:739 ../../../Coroutines.rst:764
+#: ../../../Coroutines.rst:797 ../../../Coroutines.rst:846
+#: ../../../Coroutines.rst:892 ../../../Coroutines.rst:918
+#: ../../../Coroutines.rst:945 ../../../Coroutines.rst:987
+#: ../../../Coroutines.rst:1079 ../../../Coroutines.rst:1143
+#: ../../../Coroutines.rst:1190
+msgid "Overview:"
+msgstr ""
+
+#: ../../../Coroutines.rst:582
+msgid "The '``llvm.coro.destroy``' intrinsic destroys a suspended coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:586 ../../../Coroutines.rst:613
+#: ../../../Coroutines.rst:641 ../../../Coroutines.rst:667
+#: ../../../Coroutines.rst:745 ../../../Coroutines.rst:769
+#: ../../../Coroutines.rst:804 ../../../Coroutines.rst:852
+#: ../../../Coroutines.rst:898 ../../../Coroutines.rst:924
+#: ../../../Coroutines.rst:950 ../../../Coroutines.rst:994
+#: ../../../Coroutines.rst:1088 ../../../Coroutines.rst:1150
+#: ../../../Coroutines.rst:1199
+msgid "Arguments:"
+msgstr ""
+
+#: ../../../Coroutines.rst:588
+msgid "The argument is a coroutine handle to a suspended coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:591 ../../../Coroutines.rst:618
+#: ../../../Coroutines.rst:646 ../../../Coroutines.rst:685
+#: ../../../Coroutines.rst:750 ../../../Coroutines.rst:778
+#: ../../../Coroutines.rst:858 ../../../Coroutines.rst:903
+#: ../../../Coroutines.rst:929 ../../../Coroutines.rst:969
+#: ../../../Coroutines.rst:1006 ../../../Coroutines.rst:1123
+#: ../../../Coroutines.rst:1155 ../../../Coroutines.rst:1208
+msgid "Semantics:"
+msgstr ""
+
+#: ../../../Coroutines.rst:593
+msgid ""
+"When possible, the `coro.destroy` intrinsic is replaced with a direct call "
+"to the coroutine destroy function. Otherwise it is replaced with an indirect "
+"call based on the function pointer for the destroy function stored in the "
+"coroutine frame. Destroying a coroutine that is not suspended leads to "
+"undefined behavior."
+msgstr ""
+
+#: ../../../Coroutines.rst:601
+msgid "'llvm.coro.resume' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:610
+msgid "The '``llvm.coro.resume``' intrinsic resumes a suspended coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:615 ../../../Coroutines.rst:643
+msgid "The argument is a handle to a suspended coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:620
+msgid ""
+"When possible, the `coro.resume` intrinsic is replaced with a direct call to "
+"the coroutine resume function. Otherwise it is replaced with an indirect "
+"call based on the function pointer for the resume function stored in the "
+"coroutine frame. Resuming a coroutine that is not suspended leads to "
+"undefined behavior."
+msgstr ""
+
+#: ../../../Coroutines.rst:628
+msgid "'llvm.coro.done' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:637
+msgid ""
+"The '``llvm.coro.done``' intrinsic checks whether a suspended coroutine is "
+"at the final suspend point or not."
+msgstr ""
+
+#: ../../../Coroutines.rst:648
+msgid ""
+"Using this intrinsic on a coroutine that does not have a `final suspend`_ "
+"point or on a coroutine that is not suspended leads to undefined behavior."
+msgstr ""
+
+#: ../../../Coroutines.rst:654
+msgid "'llvm.coro.promise' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:663
+msgid ""
+"The '``llvm.coro.promise``' intrinsic obtains a pointer to a `coroutine "
+"promise`_ given a coroutine handle and vice versa."
+msgstr ""
+
+#: ../../../Coroutines.rst:669
+msgid ""
+"The first argument is a handle to a coroutine if `from` is false. Otherwise, "
+"it is a pointer to a coroutine promise."
+msgstr ""
+
+#: ../../../Coroutines.rst:672
+msgid ""
+"The second argument is an alignment requirements of the promise. If a "
+"frontend designated `%promise = alloca i32` as a promise, the alignment "
+"argument to `coro.promise` should be the alignment of `i32` on the target "
+"platform. If a frontend designated `%promise = alloca i32, align 16` as a "
+"promise, the alignment argument should be 16. This argument only accepts "
+"constants."
+msgstr ""
+
+#: ../../../Coroutines.rst:679
+msgid ""
+"The third argument is a boolean indicating a direction of the "
+"transformation. If `from` is true, the intrinsic returns a coroutine handle "
+"given a pointer to a promise. If `from` is false, the intrinsics return a "
+"pointer to a promise from a coroutine handle. This argument only accepts "
+"constants."
+msgstr ""
+
+#: ../../../Coroutines.rst:687
+msgid ""
+"Using this intrinsic on a coroutine that does not have a coroutine promise "
+"leads to undefined behavior. It is possible to read and modify coroutine "
+"promise of the coroutine which is currently executing. The coroutine author "
+"and a coroutine user are responsible to makes sure there is no data races."
+msgstr ""
+
+#: ../../../Coroutines.rst:693 ../../../Coroutines.rst:865
+#: ../../../Coroutines.rst:1162 ../../../Coroutines.rst:1221
+msgid "Example:"
+msgstr ""
+
+#: ../../../Coroutines.rst:725
+msgid "Coroutine Structure Intrinsics"
+msgstr ""
+
+#: ../../../Coroutines.rst:726
+msgid ""
+"Intrinsics described in this section are used within a coroutine to describe "
+"the coroutine structure. They should not be used outside of a coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:732
+msgid "'llvm.coro.size' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:741
+msgid ""
+"The '``llvm.coro.size``' intrinsic returns the number of bytes required to "
+"store a `coroutine frame`_."
+msgstr ""
+
+#: ../../../Coroutines.rst:747 ../../../Coroutines.rst:900
+#: ../../../Coroutines.rst:926
+msgid "None"
+msgstr ""
+
+#: ../../../Coroutines.rst:752
+msgid ""
+"The `coro.size` intrinsic is lowered to a constant representing the size of "
+"the coroutine frame."
+msgstr ""
+
+#: ../../../Coroutines.rst:758
+msgid "'llvm.coro.begin' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:766
+msgid ""
+"The '``llvm.coro.begin``' intrinsic returns an address of the coroutine "
+"frame."
+msgstr ""
+
+#: ../../../Coroutines.rst:771 ../../../Coroutines.rst:806
+#: ../../../Coroutines.rst:854
+msgid ""
+"The first argument is a token returned by a call to '``llvm.coro.id``' "
+"identifying the coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:774
+msgid ""
+"The second argument is a pointer to a block of memory where coroutine frame "
+"will be stored if it is allocated dynamically."
+msgstr ""
+
+#: ../../../Coroutines.rst:780
+msgid ""
+"Depending on the alignment requirements of the objects in the coroutine "
+"frame and/or on the codegen compactness reasons the pointer returned from "
+"`coro.begin` may be at offset to the `%mem` argument. (This could be "
+"beneficial if instructions that express relative access to data can be more "
+"compactly encoded with small positive and negative offsets)."
+msgstr ""
+
+#: ../../../Coroutines.rst:786
+msgid ""
+"A frontend should emit exactly one `coro.begin` intrinsic per coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:791
+msgid "'llvm.coro.free' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:799
+msgid ""
+"The '``llvm.coro.free``' intrinsic returns a pointer to a block of memory "
+"where coroutine frame is stored or `null` if this instance of a coroutine "
+"did not use dynamically allocated memory for its coroutine frame."
+msgstr ""
+
+#: ../../../Coroutines.rst:809
+msgid ""
+"The second argument is a pointer to the coroutine frame. This should be the "
+"same pointer that was returned by prior `coro.begin` call."
+msgstr ""
+
+#: ../../../Coroutines.rst:813
+msgid "Example (custom deallocation function):"
+msgstr ""
+
+#: ../../../Coroutines.rst:828
+msgid "Example (standard deallocation functions):"
+msgstr ""
+
+#: ../../../Coroutines.rst:840
+msgid "'llvm.coro.alloc' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:848
+msgid ""
+"The '``llvm.coro.alloc``' intrinsic returns `true` if dynamic allocation is "
+"required to obtain a memory for the coroutine frame and `false` otherwise."
+msgstr ""
+
+#: ../../../Coroutines.rst:860
+msgid ""
+"A frontend should emit at most one `coro.alloc` intrinsic per coroutine. The "
+"intrinsic is used to suppress dynamic allocation of the coroutine frame when "
+"possible."
+msgstr ""
+
+#: ../../../Coroutines.rst:886
+msgid "'llvm.coro.noop' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:894
+msgid ""
+"The '``llvm.coro.noop``' intrinsic returns an address of the coroutine frame "
+"of a coroutine that does nothing when resumed or destroyed."
+msgstr ""
+
+#: ../../../Coroutines.rst:905
+msgid ""
+"This intrinsic is lowered to refer to a private constant coroutine frame. "
+"The resume and destroy handlers for this frame are empty functions that do "
+"nothing. Note that in different translation units llvm.coro.noop may return "
+"different pointers."
+msgstr ""
+
+#: ../../../Coroutines.rst:912
+msgid "'llvm.coro.frame' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:920
+msgid ""
+"The '``llvm.coro.frame``' intrinsic returns an address of the coroutine "
+"frame of the enclosing coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:931
+msgid ""
+"This intrinsic is lowered to refer to the `coro.begin`_ instruction. This is "
+"a frontend convenience intrinsic that makes it easier to refer to the "
+"coroutine frame."
+msgstr ""
+
+#: ../../../Coroutines.rst:938
+msgid "'llvm.coro.id' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:947
+msgid ""
+"The '``llvm.coro.id``' intrinsic returns a token identifying a coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:952
+msgid ""
+"The first argument provides information on the alignment of the memory "
+"returned by the allocation function and given to `coro.begin` by the first "
+"argument. If this argument is 0, the memory is assumed to be aligned to 2 * "
+"sizeof(i8*). This argument only accepts constants."
+msgstr ""
+
+#: ../../../Coroutines.rst:957
+msgid ""
+"The second argument, if not `null`, designates a particular alloca "
+"instruction to be a `coroutine promise`_."
+msgstr ""
+
+#: ../../../Coroutines.rst:960
+msgid ""
+"The third argument is `null` coming out of the frontend. The CoroEarly pass "
+"sets this argument to point to the function this coro.id belongs to."
+msgstr ""
+
+#: ../../../Coroutines.rst:963
+msgid ""
+"The fourth argument is `null` before coroutine is split, and later is "
+"replaced to point to a private global constant array containing function "
+"pointers to outlined resume and destroy parts of the coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:971
+msgid ""
+"The purpose of this intrinsic is to tie together `coro.id`, `coro.alloc` and "
+"`coro.begin` belonging to the same coroutine to prevent optimization passes "
+"from duplicating any of these instructions unless entire body of the "
+"coroutine is duplicated."
+msgstr ""
+
+#: ../../../Coroutines.rst:976
+msgid "A frontend should emit exactly one `coro.id` intrinsic per coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:981
+msgid "'llvm.coro.end' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:989
+msgid ""
+"The '``llvm.coro.end``' marks the point where execution of the resume part "
+"of the coroutine should end and control should return to the caller."
+msgstr ""
+
+#: ../../../Coroutines.rst:996
+msgid ""
+"The first argument should refer to the coroutine handle of the enclosing "
+"coroutine. A frontend is allowed to supply null as the first parameter, in "
+"this case `coro-early` pass will replace the null with an appropriate "
+"coroutine handle value."
+msgstr ""
+
+#: ../../../Coroutines.rst:1001
+msgid ""
+"The second argument should be `true` if this coro.end is in the block that "
+"is part of the unwind sequence leaving the coroutine body due to an "
+"exception and `false` otherwise."
+msgstr ""
+
+#: ../../../Coroutines.rst:1007
+msgid ""
+"The purpose of this intrinsic is to allow frontends to mark the cleanup and "
+"other code that is only relevant during the initial invocation of the "
+"coroutine and should not be present in resume and destroy parts."
+msgstr ""
+
+#: ../../../Coroutines.rst:1011
+msgid ""
+"This intrinsic is lowered when a coroutine is split into the start, resume "
+"and destroy parts. In the start part, it is a no-op, in resume and destroy "
+"parts, it is replaced with `ret void` instruction and the rest of the block "
+"containing `coro.end` instruction is discarded. In landing pads it is "
+"replaced with an appropriate instruction to unwind to caller. The handling "
+"of coro.end differs depending on whether the target is using landingpad or "
+"WinEH exception model."
+msgstr ""
+
+#: ../../../Coroutines.rst:1019
+msgid ""
+"For landingpad based exception model, it is expected that frontend uses the "
+"`coro.end`_ intrinsic as follows:"
+msgstr ""
+
+#: ../../../Coroutines.rst:1038
+msgid ""
+"The `CoroSpit` pass replaces `coro.end` with ``True`` in the resume "
+"functions, thus leading to immediate unwind to the caller, whereas in start "
+"function it is replaced with ``False``, thus allowing to proceed to the rest "
+"of the cleanup code that is only needed during initial invocation of the "
+"coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:1043
+msgid ""
+"For Windows Exception handling model, a frontend should attach a funclet "
+"bundle referring to an enclosing cleanuppad as follows:"
+msgstr ""
+
+#: ../../../Coroutines.rst:1053
+msgid ""
+"The `CoroSplit` pass, if the funclet bundle is present, will insert "
+"``cleanupret from %tok unwind to caller`` before the `coro.end`_ intrinsic "
+"and will remove the rest of the block."
+msgstr ""
+
+#: ../../../Coroutines.rst:1057
+msgid "The following table summarizes the handling of `coro.end`_ intrinsic."
+msgstr ""
+
+#: ../../../Coroutines.rst:1060
+msgid "In Start Function"
+msgstr ""
+
+#: ../../../Coroutines.rst:1060
+msgid "In Resume/Destroy Functions"
+msgstr ""
+
+#: ../../../Coroutines.rst:1062
+msgid "unwind=false"
+msgstr ""
+
+#: ../../../Coroutines.rst:1062 ../../../Coroutines.rst:1064
+#: ../../../Coroutines.rst:1066
+msgid "nothing"
+msgstr ""
+
+#: ../../../Coroutines.rst:1062
+msgid "``ret void``"
+msgstr ""
+
+#: ../../../Coroutines.rst:1065
+msgid "unwind=true"
+msgstr ""
+
+#: ../../../Coroutines.rst:1064
+msgid "WinEH"
+msgstr ""
+
+#: ../../../Coroutines.rst:1064
+msgid "``cleanupret unwind to caller``"
+msgstr ""
+
+#: ../../../Coroutines.rst:1066
+msgid "Landingpad"
+msgstr ""
+
+#: ../../../Coroutines.rst:1073
+msgid "'llvm.coro.suspend' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:1081
+msgid ""
+"The '``llvm.coro.suspend``' marks the point where execution of the coroutine "
+"need to get suspended and control returned back to the caller. Conditional "
+"branches consuming the result of this intrinsic lead to basic blocks where "
+"coroutine should proceed when suspended (-1), resumed (0) or destroyed (1)."
+msgstr ""
+
+#: ../../../Coroutines.rst:1090
+msgid ""
+"The first argument refers to a token of `coro.save` intrinsic that marks the "
+"point when coroutine state is prepared for suspension. If `none` token is "
+"passed, the intrinsic behaves as if there were a `coro.save` immediately "
+"preceding the `coro.suspend` intrinsic."
+msgstr ""
+
+#: ../../../Coroutines.rst:1095
+msgid ""
+"The second argument indicates whether this suspension point is `final`_. The "
+"second argument only accepts constants. If more than one suspend point is "
+"designated as final, the resume and destroy branches should lead to the same "
+"basic blocks."
+msgstr ""
+
+#: ../../../Coroutines.rst:1101
+msgid "Example (normal suspend point):"
+msgstr ""
+
+#: ../../../Coroutines.rst:1110
+msgid "Example (final suspend point):"
+msgstr ""
+
+#: ../../../Coroutines.rst:1125
+msgid ""
+"If a coroutine that was suspended at the suspend point marked by this "
+"intrinsic is resumed via `coro.resume`_ the control will transfer to the "
+"basic block of the 0-case. If it is resumed via `coro.destroy`_, it will "
+"proceed to the basic block indicated by the 1-case. To suspend, coroutine "
+"proceed to the default label."
+msgstr ""
+
+#: ../../../Coroutines.rst:1131
+msgid ""
+"If suspend intrinsic is marked as final, it can consider the `true` branch "
+"unreachable and can perform optimizations that can take advantage of that "
+"fact."
+msgstr ""
+
+#: ../../../Coroutines.rst:1137
+msgid "'llvm.coro.save' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:1145
+msgid ""
+"The '``llvm.coro.save``' marks the point where a coroutine need to update "
+"its state to prepare for resumption to be considered suspended (and thus "
+"eligible for resumption)."
+msgstr ""
+
+#: ../../../Coroutines.rst:1152
+msgid ""
+"The first argument points to a coroutine handle of the enclosing coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:1157
+msgid ""
+"Whatever coroutine state changes are required to enable resumption of the "
+"coroutine from the corresponding suspend point should be done at the point "
+"of `coro.save` intrinsic."
+msgstr ""
+
+#: ../../../Coroutines.rst:1164
+msgid ""
+"Separate save and suspend points are necessary when a coroutine is used to "
+"represent an asynchronous control flow driven by callbacks representing "
+"completions of asynchronous operations."
+msgstr ""
+
+#: ../../../Coroutines.rst:1168
+msgid ""
+"In such a case, a coroutine should be ready for resumption prior to a call "
+"to `async_op` function that may trigger resumption of a coroutine from the "
+"same or a different thread possibly prior to `async_op` call returning "
+"control back to the coroutine:"
+msgstr ""
+
+#: ../../../Coroutines.rst:1184
+msgid "'llvm.coro.param' Intrinsic"
+msgstr ""
+
+#: ../../../Coroutines.rst:1192
+msgid ""
+"The '``llvm.coro.param``' is used by a frontend to mark up the code used to "
+"construct and destruct copies of the parameters. If the optimizer discovers "
+"that a particular parameter copy is not used after any suspends, it can "
+"remove the construction and destruction of the copy by replacing "
+"corresponding coro.param with `i1 false` and replacing any use of the `copy` "
+"with the `original`."
+msgstr ""
+
+#: ../../../Coroutines.rst:1201
+msgid ""
+"The first argument points to an `alloca` storing the value of a parameter to "
+"a coroutine."
+msgstr ""
+
+#: ../../../Coroutines.rst:1204
+msgid ""
+"The second argument points to an `alloca` storing the value of the copy of "
+"that parameter."
+msgstr ""
+
+#: ../../../Coroutines.rst:1210
+msgid "The optimizer is free to always replace this intrinsic with `i1 true`."
+msgstr ""
+
+#: ../../../Coroutines.rst:1212
+msgid ""
+"The optimizer is also allowed to replace it with `i1 false` provided that "
+"the parameter copy is only used prior to control flow reaching any of the "
+"suspend points. The code that would be DCE'd if the `coro.param` is replaced "
+"with `i1 false` is not considered to be a use of the parameter copy."
+msgstr ""
+
+#: ../../../Coroutines.rst:1217
+msgid ""
+"The frontend can emit this intrinsic if its language rules allow for this "
+"optimization."
+msgstr ""
+
+#: ../../../Coroutines.rst:1222
+msgid ""
+"Consider the following example. A coroutine takes two parameters `a` and `b` "
+"that has a destructor and a move constructor."
+msgstr ""
+
+#: ../../../Coroutines.rst:1238
+msgid ""
+"Note that, uses of `b` is used after a suspend point and thus must be copied "
+"into a coroutine frame, whereas `a` does not have to, since it never used "
+"after suspend."
+msgstr ""
+
+#: ../../../Coroutines.rst:1242
+msgid "A frontend can create parameter copies for `a` and `b` as follows:"
+msgstr ""
+
+#: ../../../Coroutines.rst:1258
+msgid ""
+"The optimizer can replace coro.param(a',a) with `i1 false` and replace all "
+"uses of `a` with `a'`, since it is not used after suspend."
+msgstr ""
+
+#: ../../../Coroutines.rst:1261
+msgid ""
+"The optimizer must replace coro.param(b', b) with `i1 true`, since `b` is "
+"used after suspend and therefore, it has to reside in the coroutine frame."
+msgstr ""
+
+#: ../../../Coroutines.rst:1265
+msgid "Coroutine Transformation Passes"
+msgstr ""
+
+#: ../../../Coroutines.rst:1267
+msgid "CoroEarly"
+msgstr ""
+
+#: ../../../Coroutines.rst:1268
+msgid ""
+"The pass CoroEarly lowers coroutine intrinsics that hide the details of the "
+"structure of the coroutine frame, but, otherwise not needed to be preserved "
+"to help later coroutine passes. This pass lowers `coro.frame`_, `coro."
+"done`_, and `coro.promise`_ intrinsics."
+msgstr ""
+
+#: ../../../Coroutines.rst:1276
+msgid "CoroSplit"
+msgstr ""
+
+#: ../../../Coroutines.rst:1277
+msgid ""
+"The pass CoroSplit buides coroutine frame and outlines resume and destroy "
+"parts into separate functions."
+msgstr ""
+
+#: ../../../Coroutines.rst:1281
+msgid "CoroElide"
+msgstr ""
+
+#: ../../../Coroutines.rst:1282
+msgid ""
+"The pass CoroElide examines if the inlined coroutine is eligible for heap "
+"allocation elision optimization. If so, it replaces `coro.begin` intrinsic "
+"with an address of a coroutine frame placed on its caller and replaces `coro."
+"alloc` and `coro.free` intrinsics with `false` and `null` respectively to "
+"remove the deallocation code. This pass also replaces `coro.resume` and "
+"`coro.destroy` intrinsics with direct calls to resume and destroy functions "
+"for a particular coroutine where possible."
+msgstr ""
+
+#: ../../../Coroutines.rst:1291
+msgid "CoroCleanup"
+msgstr ""
+
+#: ../../../Coroutines.rst:1292
+msgid ""
+"This pass runs late to lower all coroutine related intrinsics not replaced "
+"by earlier passes."
+msgstr ""
+
+#: ../../../Coroutines.rst:1296
+msgid "Areas Requiring Attention"
+msgstr ""
+
+#: ../../../Coroutines.rst:1297
+msgid ""
+"A coroutine frame is bigger than it could be. Adding stack packing and stack "
+"coloring like optimization on the coroutine frame will result in tighter "
+"coroutine frames."
+msgstr ""
+
+#: ../../../Coroutines.rst:1301
+msgid ""
+"Take advantage of the lifetime intrinsics for the data that goes into the "
+"coroutine frame. Leave lifetime intrinsics as is for the data that stays in "
+"allocas."
+msgstr ""
+
+#: ../../../Coroutines.rst:1305
+msgid ""
+"The CoroElide optimization pass relies on coroutine ramp function to be "
+"inlined. It would be beneficial to split the ramp function further to "
+"increase the chance that it will get inlined into its caller."
+msgstr ""
+
+#: ../../../Coroutines.rst:1309
+msgid ""
+"Design a convention that would make it possible to apply coroutine heap "
+"elision optimization across ABI boundaries."
+msgstr ""
+
+#: ../../../Coroutines.rst:1312
+msgid ""
+"Cannot handle coroutines with `inalloca` parameters (used in x86 on Windows)."
+msgstr ""
+
+#: ../../../Coroutines.rst:1314
+msgid "Alignment is ignored by coro.begin and coro.free intrinsics."
+msgstr ""
+
+#: ../../../Coroutines.rst:1316
+msgid ""
+"Make required changes to make sure that coroutine optimizations work with "
+"LTO."
+msgstr ""
+
+#: ../../../Coroutines.rst:1319
+msgid "More tests, more tests, more tests"
+msgstr ""
