@@ -1,0 +1,1352 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 21\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../ConvergenceAndUniformity.rst:5
+msgid "Convergence And Uniformity"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:11
+msgid "Introduction"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:13
+msgid ""
+"In some environments, groups of threads execute the same program in "
+"parallel, where efficient communication within a group is established using "
+"special primitives called :ref:`convergent "
+"operations<convergent_operations>`. The outcome of a convergent operation is "
+"sensitive to the set of threads that participate in it."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:19
+msgid ""
+"The intuitive picture of *convergence* is built around threads executing in "
+"\"lock step\" --- a set of threads is thought of as *converged* if they are "
+"all executing \"the same sequence of instructions together\". Such threads "
+"may *diverge* at a *divergent branch*, and they may later *reconverge* at "
+"some common program point."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:25
+msgid ""
+"In this intuitive picture, when converged threads execute an instruction, "
+"the resulting value is said to be *uniform* if it is the same in those "
+"threads, and *divergent* otherwise. Correspondingly, a branch is said to be "
+"a uniform branch if its condition is uniform, and it is a divergent branch "
+"otherwise."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:30
+msgid ""
+"But the assumption of lock-step execution is not necessary for describing "
+"communication at convergent operations. It also constrains the "
+"implementation (compiler as well as hardware) by overspecifying how threads "
+"execute in such a parallel environment. To eliminate this assumption:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:35
+msgid ""
+"We define convergence as a relation between the execution of each "
+"instruction by different threads and not as a relation between the threads "
+"themselves. This definition is reasonable for known targets and is "
+"compatible with the semantics of :ref:`convergent "
+"operations<convergent_operations>` in LLVM IR."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:39
+msgid ""
+"We also define uniformity in terms of this convergence. The output of an "
+"instruction can be examined for uniformity across multiple threads only if "
+"the corresponding executions of that instruction are converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:43
+msgid ""
+"This document describes a static analysis for determining convergence at "
+"each instruction in a function. The analysis extends previous work on "
+"divergence analysis [DivergenceSPMD]_ to cover irreducible control-flow. The "
+"described analysis is used in LLVM to implement a UniformityAnalysis that "
+"determines the uniformity of value(s) computed at each instruction in an "
+"LLVM IR or MIR function."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:50
+msgid ""
+"Julian Rosemann, Simon Moll, and Sebastian Hack. 2021. An Abstract "
+"Interpretation for SPMD Divergence on Reducible Control Flow Graphs. Proc. "
+"ACM Program. Lang. 5, POPL, Article 31 (January 2021), 35 pages. https://doi."
+"org/10.1145/3434312"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:57
+msgid "Motivation"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:59
+msgid ""
+"Divergent branches constrain program transforms such as changing the CFG or "
+"moving a convergent operation to a different point of the CFG. Performing "
+"these transformations across a divergent branch can change the sets of "
+"threads that execute convergent operations convergently. While these "
+"constraints are out of scope for this document, uniformity analysis allows "
+"these transformations to identify uniform branches where these constraints "
+"do not hold."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:68
+msgid ""
+"Uniformity is also useful by itself on targets that execute threads in "
+"groups with shared execution resources (e.g. waves, warps, or subgroups):"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:72
+msgid ""
+"Uniform outputs can potentially be computed or stored on shared resources."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:74
+msgid ""
+"These targets must \"linearize\" a divergent branch to ensure that each side "
+"of the branch is followed by the corresponding threads in the same group. "
+"But linearization is unnecessary at uniform branches, since the whole group "
+"of threads follows either one side of the branch or the other."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:81
+msgid "Terminology"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:84
+msgid "Cycles"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:84
+msgid "Described in :ref:`cycle-terminology`."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:87
+msgid "Closed path"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:87
+msgid "Described in :ref:`cycle-closed-path`."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:91
+msgid "Disjoint paths"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:90
+msgid ""
+"Two paths in a CFG are said to be disjoint if the only nodes common to both "
+"are the start node or the end node, or both."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:95
+msgid "Join node"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:94
+msgid ""
+"A join node of a branch is a node reachable along disjoint paths starting "
+"from that branch."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:100
+msgid "Diverged path"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:98
+msgid ""
+"A diverged path is a path that starts from a divergent branch and either "
+"reaches a join node of the branch or reaches the end of the function without "
+"passing through any join node of the branch."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:105
+msgid "Threads and Dynamic Instances"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:107
+msgid ""
+"Each occurrence of an instruction in the program source is called a *static "
+"instance*. When a thread executes a program, each execution of a static "
+"instance produces a distinct *dynamic instance* of that instruction."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:112
+msgid "Each thread produces a unique sequence of dynamic instances:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:114
+msgid "The sequence is generated along branch decisions and loop traversals."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:116
+msgid "Starts with a dynamic instance of a \"first\" instruction."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:117
+msgid "Continues with dynamic instances of successive \"next\" instructions."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:120
+msgid ""
+"Threads are independent; some targets may choose to execute them in groups "
+"in order to share resources when possible."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:131
+#: ../../../ConvergenceAndUniformity.rst:168
+#: ../../../ConvergenceAndUniformity.rst:261
+#: ../../../ConvergenceAndUniformity.rst:364
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:591
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:131
+#: ../../../ConvergenceAndUniformity.rst:168
+#: ../../../ConvergenceAndUniformity.rst:261
+#: ../../../ConvergenceAndUniformity.rst:364
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:591
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:131
+#: ../../../ConvergenceAndUniformity.rst:168
+#: ../../../ConvergenceAndUniformity.rst:261
+#: ../../../ConvergenceAndUniformity.rst:364
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:591
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "3"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:131
+#: ../../../ConvergenceAndUniformity.rst:168
+#: ../../../ConvergenceAndUniformity.rst:261
+#: ../../../ConvergenceAndUniformity.rst:364
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:591
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "4"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:131
+#: ../../../ConvergenceAndUniformity.rst:168
+#: ../../../ConvergenceAndUniformity.rst:261
+#: ../../../ConvergenceAndUniformity.rst:364
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:591
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "5"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:131
+#: ../../../ConvergenceAndUniformity.rst:168
+#: ../../../ConvergenceAndUniformity.rst:261
+#: ../../../ConvergenceAndUniformity.rst:364
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:591
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "6"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:131
+#: ../../../ConvergenceAndUniformity.rst:168
+#: ../../../ConvergenceAndUniformity.rst:261
+#: ../../../ConvergenceAndUniformity.rst:364
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:591
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "7"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:131
+#: ../../../ConvergenceAndUniformity.rst:168
+#: ../../../ConvergenceAndUniformity.rst:261
+#: ../../../ConvergenceAndUniformity.rst:364
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:591
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "8"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:131
+#: ../../../ConvergenceAndUniformity.rst:168
+#: ../../../ConvergenceAndUniformity.rst:261
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:591
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "9"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:133
+#: ../../../ConvergenceAndUniformity.rst:170
+#: ../../../ConvergenceAndUniformity.rst:263
+msgid "Thread 1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:133
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:263
+msgid "Entry1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:133
+#: ../../../ConvergenceAndUniformity.rst:263
+msgid "H1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:133
+#: ../../../ConvergenceAndUniformity.rst:263
+msgid "B1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:133
+#: ../../../ConvergenceAndUniformity.rst:263
+msgid "L1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:133
+#: ../../../ConvergenceAndUniformity.rst:263
+msgid "H3"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:133
+#: ../../../ConvergenceAndUniformity.rst:263
+msgid "L3"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:133
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:170
+#: ../../../ConvergenceAndUniformity.rst:172
+#: ../../../ConvergenceAndUniformity.rst:263
+#: ../../../ConvergenceAndUniformity.rst:265
+#: ../../../ConvergenceAndUniformity.rst:366
+#: ../../../ConvergenceAndUniformity.rst:368
+#: ../../../ConvergenceAndUniformity.rst:370
+#: ../../../ConvergenceAndUniformity.rst:571
+#: ../../../ConvergenceAndUniformity.rst:573
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:595
+#: ../../../ConvergenceAndUniformity.rst:657
+#: ../../../ConvergenceAndUniformity.rst:659
+#: ../../../ConvergenceAndUniformity.rst:672
+#: ../../../ConvergenceAndUniformity.rst:674
+msgid "Exit"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:172
+#: ../../../ConvergenceAndUniformity.rst:265
+msgid "Thread 2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:265
+msgid "H2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:265
+msgid "L2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:265
+msgid "H4"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:265
+msgid "B2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:265
+msgid "L4"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:265
+msgid "H5"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:265
+msgid "B3"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:135
+#: ../../../ConvergenceAndUniformity.rst:265
+msgid "L5"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:138
+msgid ""
+"In the above table, each row is a different thread, listing the dynamic "
+"instances produced by that thread from left to right. Each thread executes "
+"the same program that starts with an ``Entry`` node and ends with an "
+"``Exit`` node, but different threads may take different paths through the "
+"control flow of the program. The columns are numbered merely for "
+"convenience, and empty cells have no special meaning. Dynamic instances "
+"listed in the same column are converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:149
+msgid "Convergence"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:151
+msgid ""
+"*Convergence-before* is a strict partial order over dynamic instances that "
+"is defined as the transitive closure of:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:154
+msgid ""
+"If dynamic instance ``P`` is executed strictly before ``Q`` in the same "
+"thread, then ``P`` is *convergence-before* ``Q``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:156
+msgid ""
+"If dynamic instance ``P`` is executed strictly before ``Q1`` in the same "
+"thread, and ``Q1`` is *converged-with* ``Q2``, then ``P`` is *convergence-"
+"before* ``Q2``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:159
+msgid ""
+"If dynamic instance ``P1`` is *converged-with* ``P2``, and ``P2`` is "
+"executed strictly before ``Q`` in the same thread, then ``P1`` is "
+"*convergence-before* ``Q``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:170
+#: ../../../ConvergenceAndUniformity.rst:172
+#: ../../../ConvergenceAndUniformity.rst:174
+#: ../../../ConvergenceAndUniformity.rst:366
+#: ../../../ConvergenceAndUniformity.rst:368
+#: ../../../ConvergenceAndUniformity.rst:370
+#: ../../../ConvergenceAndUniformity.rst:571
+#: ../../../ConvergenceAndUniformity.rst:573
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:595
+#: ../../../ConvergenceAndUniformity.rst:657
+#: ../../../ConvergenceAndUniformity.rst:659
+#: ../../../ConvergenceAndUniformity.rst:672
+#: ../../../ConvergenceAndUniformity.rst:674
+msgid "Entry"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:170
+#: ../../../ConvergenceAndUniformity.rst:172
+#: ../../../ConvergenceAndUniformity.rst:174
+#: ../../../ConvergenceAndUniformity.rst:571
+#: ../../../ConvergenceAndUniformity.rst:674
+msgid "..."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:170
+#: ../../../ConvergenceAndUniformity.rst:366
+#: ../../../ConvergenceAndUniformity.rst:573
+#: ../../../ConvergenceAndUniformity.rst:595
+#: ../../../ConvergenceAndUniformity.rst:659
+#: ../../../ConvergenceAndUniformity.rst:674
+msgid "S2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:170
+msgid "T"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:172
+#: ../../../ConvergenceAndUniformity.rst:368
+#: ../../../ConvergenceAndUniformity.rst:573
+#: ../../../ConvergenceAndUniformity.rst:595
+#: ../../../ConvergenceAndUniformity.rst:659
+#: ../../../ConvergenceAndUniformity.rst:674
+msgid "Q2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:172
+msgid "R"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:172
+#: ../../../ConvergenceAndUniformity.rst:366
+#: ../../../ConvergenceAndUniformity.rst:571
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:657
+#: ../../../ConvergenceAndUniformity.rst:672
+msgid "S1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:174
+msgid "Thread 3"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:174
+msgid "P"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:174
+#: ../../../ConvergenceAndUniformity.rst:366
+#: ../../../ConvergenceAndUniformity.rst:571
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:657
+#: ../../../ConvergenceAndUniformity.rst:672
+msgid "Q1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:177
+msgid ""
+"The above table shows partial sequences of dynamic instances from different "
+"threads. Dynamic instances in the same column are assumed to be converged (i."
+"e., related to each other in the converged-with relation). The resulting "
+"convergence order includes the edges ``P -> Q2``, ``Q1 -> R``, ``P -> R``, "
+"``P -> T``, etc."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:183
+msgid ""
+"*Converged-with* is a transitive symmetric relation over dynamic instances "
+"produced by *different threads* for the *same static instance*."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:186
+msgid ""
+"It is impractical to provide any one definition for the *converged-with* "
+"relation, since different environments may wish to relate dynamic instances "
+"in different ways. The fact that *convergence-before* is a strict partial "
+"order is a constraint on the *converged-with* relation. It is trivially "
+"satisfied if different dynamic instances are never converged. Below, we "
+"provide a relation called :ref:`maximal converged-with<convergence-"
+"maximal>`, which satisifies *convergence-before* and is suitable for known "
+"targets."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:198
+msgid ""
+"The convergence-before relation is not directly observable. Program "
+"transforms are in general free to change the order of instructions, even "
+"though that obviously changes the convergence-before relation."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:203
+msgid ""
+"Converged dynamic instances need not be executed at the same time or even on "
+"the same resource. Converged dynamic instances of a convergent operation may "
+"appear to do so but that is an implementation detail."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:208
+msgid ""
+"The fact that ``P`` is convergence-before ``Q`` does not automatically imply "
+"that ``P`` happens-before ``Q`` in a memory model sense."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:215
+msgid "Maximal Convergence"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:217
+msgid ""
+"This section defines a constraint that may be used to produce a *maximal "
+"converged-with* relation without violating the strict *convergence-before* "
+"order. This maximal converged-with relation is reasonable for real targets "
+"and is compatible with convergent operations."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:223
+msgid ""
+"The maximal converged-with relation is defined in terms of cycle headers, "
+"with the assumption that threads converge at the header on every "
+"\"iteration\" of the cycle. Informally, two threads execute the same "
+"iteration of a cycle if they both previously executed the cycle header the "
+"same number of times after they entered that cycle. In general, this needs "
+"to account for the iterations of parent cycles as well."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:230
+msgid "**Maximal converged-with:**"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:232
+msgid ""
+"Dynamic instances ``X1`` and ``X2`` produced by different threads for the "
+"same static instance ``X`` are converged in the maximal converged-with "
+"relation if and only if:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:236
+msgid "``X`` is not contained in any cycle, or,"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:237
+msgid "For every cycle ``C`` with header ``H`` that contains ``X``:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:239
+msgid ""
+"every dynamic instance ``H1`` of ``H`` that precedes ``X1`` in the "
+"respective thread is convergence-before ``X2``, and,"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:241
+msgid ""
+"every dynamic instance ``H2`` of ``H`` that precedes ``X2`` in the "
+"respective thread is convergence-before ``X1``,"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:243
+msgid "without assuming that ``X1`` is converged with ``X2``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:247
+msgid ""
+"Cycle headers may not be unique to a given CFG if it is irreducible. Each "
+"cycle hierarchy for the same CFG results in a different maximal converged-"
+"with relation."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:251
+msgid ""
+"For brevity, the rest of the document restricts the term *converged* to mean "
+"\"related under the maximal converged-with relation for the given cycle "
+"hierarchy\"."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:255
+msgid ""
+"Maximal convergence can now be demonstrated in the earlier example as "
+"follows:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:265
+msgid "Entry2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:268
+msgid "``Entry1`` and ``Entry2`` are converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:269
+msgid "``H1`` and ``H2`` are converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:270
+msgid ""
+"``B1`` and ``B2`` are not converged due to ``H4`` which is not convergence-"
+"before ``B1``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:272
+msgid "``H3`` and ``H4`` are converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:273
+msgid ""
+"``H3`` is not converged with ``H5`` due to ``H4`` which is not convergence-"
+"before ``H3``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:275
+msgid "``L1`` and ``L2`` are converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:276
+msgid "``L3`` and ``L4`` are converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:277
+msgid ""
+"``L3`` is not converged with ``L5`` due to ``H5`` which is not convergence-"
+"before ``L3``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:283
+msgid "Dependence on Cycles Headers"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:285
+msgid ""
+"Contradictions in *convergence-before* are possible only between two nodes "
+"that are inside some cycle. The dynamic instances of such nodes may be "
+"interleaved in the same thread, and this interleaving may be different for "
+"different threads. Cycle headers serve as implicit *points of convergence* "
+"in the maximal converged-with relation. When a thread executes a node ``X`` "
+"once and then executes it again, it must have followed a closed path in the "
+"CFG that includes ``X``. Such a path must pass through the header of at "
+"least one cycle --- the smallest cycle that includes the entire closed path. "
+"In a given thread, two dynamic instances of ``X`` are either separated by "
+"the execution of at least one cycle header, or ``X`` itself is a cycle "
+"header."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:298
+msgid ""
+"Consider a sequence of nested cycles ``C1``, ``C2``, ..., ``Ck`` such that "
+"``C1`` is the outermost cycle and ``Ck`` is the innermost cycle, with "
+"headers ``H1``, ``H2``, ..., ``Hk`` respectively. When a thread enters the "
+"cycle ``Ck``, any of the following is possible:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:303
+msgid ""
+"The thread directly entered cycle ``Ck`` without having executed any of the "
+"headers ``H1`` to ``Hk``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:306
+msgid ""
+"The thread executed some or all of the nested headers one or more times."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:309
+msgid ""
+"The maximal converged-with relation captures the following intuition about "
+"cycles:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:312
+msgid ""
+"When two threads enter a top-level cycle ``C1``, they execute converged "
+"dynamic instances of every node that is a :ref:`child <cycle-parent-block>` "
+"of ``C1``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:316
+msgid ""
+"When two threads enter a nested cycle ``Ck``, they execute converged dynamic "
+"instances of every node that is a child of ``Ck``, until either thread exits "
+"``Ck``, if and only if they executed converged dynamic instances of the last "
+"nested header that either thread encountered."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:322
+msgid ""
+"Note that when a thread exits a nested cycle ``Ck``, it must follow a closed "
+"path outside ``Ck`` to reenter it. This requires executing the header of "
+"some outer cycle, as described earlier."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:326
+msgid ""
+"Consider two dynamic instances ``X1`` and ``X2`` produced by threads ``T1`` "
+"and ``T2`` for a node ``X`` that is a child of nested cycle ``Ck``. Maximal "
+"convergence relates ``X1`` and ``X2`` as follows:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:330
+msgid ""
+"If neither thread executed any header from ``H1`` to ``Hk``, then ``X1`` and "
+"``X2`` are converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:333
+msgid ""
+"Otherwise, if there are no converged dynamic instances ``Q1`` and ``Q2`` of "
+"any header ``Q`` from ``H1`` to ``Hk`` (where ``Q`` is possibly the same as "
+"``X``), such that ``Q1`` precedes ``X1`` and ``Q2`` precedes ``X2`` in the "
+"respective threads, then ``X1`` and ``X2`` are not converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:339
+msgid ""
+"Otherwise, consider the pair ``Q1`` and ``Q2`` of converged dynamic "
+"instances of a header ``Q`` from ``H1`` to ``Hk`` that occur most recently "
+"before ``X1`` and ``X2`` in the respective threads. Then ``X1`` and ``X2`` "
+"are converged if and only if there is no dynamic instance of any header from "
+"``H1`` to ``Hk`` that occurs between ``Q1`` and ``X1`` in thread ``T1``, or "
+"between ``Q2`` and ``X2`` in thread ``T2``. In other words, ``Q1`` and "
+"``Q2`` represent the last point of convergence, with no other header being "
+"executed before executing ``X``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:349
+msgid "**Example:**"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:354
+msgid ""
+"The above figure shows two nested irreducible cycles with headers ``R`` and "
+"``S``. The nodes ``Entry`` and ``Q`` have divergent branches. The table "
+"below shows the convergence between three threads taking different paths "
+"through the CFG. Dynamic instances listed in the same column are converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:364
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:591
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "10"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:366
+#: ../../../ConvergenceAndUniformity.rst:571
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:657
+#: ../../../ConvergenceAndUniformity.rst:672
+msgid "Thread1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:366
+#: ../../../ConvergenceAndUniformity.rst:571
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:657
+#: ../../../ConvergenceAndUniformity.rst:672
+msgid "P1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:366
+#: ../../../ConvergenceAndUniformity.rst:571
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:657
+#: ../../../ConvergenceAndUniformity.rst:672
+msgid "P3"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:366
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:657
+#: ../../../ConvergenceAndUniformity.rst:672
+msgid "Q3"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:366
+#: ../../../ConvergenceAndUniformity.rst:571
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:657
+#: ../../../ConvergenceAndUniformity.rst:672
+msgid "R1"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:368
+#: ../../../ConvergenceAndUniformity.rst:573
+#: ../../../ConvergenceAndUniformity.rst:595
+#: ../../../ConvergenceAndUniformity.rst:659
+#: ../../../ConvergenceAndUniformity.rst:674
+msgid "Thread2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:368
+#: ../../../ConvergenceAndUniformity.rst:573
+#: ../../../ConvergenceAndUniformity.rst:595
+#: ../../../ConvergenceAndUniformity.rst:659
+#: ../../../ConvergenceAndUniformity.rst:674
+msgid "P2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:368
+#: ../../../ConvergenceAndUniformity.rst:573
+#: ../../../ConvergenceAndUniformity.rst:595
+#: ../../../ConvergenceAndUniformity.rst:659
+#: ../../../ConvergenceAndUniformity.rst:674
+msgid "R2"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:368
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:657
+#: ../../../ConvergenceAndUniformity.rst:672
+msgid "S3"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:370
+msgid "Thread3"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:370
+#: ../../../ConvergenceAndUniformity.rst:593
+#: ../../../ConvergenceAndUniformity.rst:659
+msgid "R3"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:370
+#: ../../../ConvergenceAndUniformity.rst:573
+#: ../../../ConvergenceAndUniformity.rst:595
+#: ../../../ConvergenceAndUniformity.rst:659
+msgid "S4"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:373
+msgid "``P2`` and ``P3`` are not converged due to ``S1``"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:374
+msgid "``Q2`` and ``Q3`` are not converged due to ``S1``"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:375
+msgid "``S1`` and ``S3`` are not converged due to ``R2``"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:376
+msgid "``S1`` and ``S4`` are not converged due to ``R3``"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:378
+msgid ""
+"Informally, ``T1`` and ``T2`` execute the inner cycle a different number of "
+"times, without executing the header of the outer cycle. All threads converge "
+"in the outer cycle when they first execute the header of the outer cycle."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:386
+msgid "Uniformity"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:388
+msgid ""
+"The output of two converged dynamic instances is uniform if and only if it "
+"compares equal for those two dynamic instances."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:390
+msgid ""
+"The output of a static instance ``X`` is uniform *for a given set of "
+"threads* if and only if it is uniform for every pair of converged dynamic "
+"instances of ``X`` produced by those threads."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:394
+msgid "A non-uniform value is said to be *divergent*."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:396
+msgid ""
+"For a set ``S`` of threads, the uniformity of each output of a static "
+"instance is determined as follows:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:399
+msgid "The semantics of the instruction may specify the output to be uniform."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:401
+msgid ""
+"Otherwise, the output is divergent if the static instance is not :ref:`m-"
+"converged <convergence-m-converged>`."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:403
+msgid "Otherwise, if the static instance is m-converged:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:405
+msgid ""
+"If it is a PHI node, its output is uniform if and only if for every pair of "
+"converged dynamic instances produced by all threads in ``S``:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:409
+msgid ""
+"Both instances choose the same output from converged dynamic instances, and,"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:411
+msgid "That output is uniform for all threads in ``S``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:412
+msgid ""
+"Otherwise, the output is uniform if and only if the input operands are "
+"uniform for all threads in ``S``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:416
+msgid "Divergent Cycle Exits"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:418
+msgid ""
+"When a divergent branch occurs inside a cycle, it is possible that a "
+"diverged path continues to an exit of the cycle. This is called a divergent "
+"cycle exit. If the cycle is irreducible, the diverged path may re-enter and "
+"eventually reach a join within the cycle. Such a join should be examined for "
+"the :ref:`diverged entry <convergence-diverged-entry>` criterion."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:425
+msgid ""
+"Nodes along the diverged path that lie outside the cycle experience "
+"*temporal divergence*, when two threads executing convergently inside the "
+"cycle produce uniform values, but exit the cycle along the same divergent "
+"path after executing the header a different number of times (informally, on "
+"different iterations of the cycle). For a node ``N`` inside the cycle the "
+"outputs may be uniform for the two threads, but any use ``U`` outside the "
+"cycle receives a value from non-converged dynamic instances of ``N``. An "
+"output of ``U`` may be divergent, depending on the semantics of the "
+"instruction."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:438
+msgid "Static Uniformity Analysis"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:440
+msgid ""
+"Irreducible control flow results in different cycle hierarchies depending on "
+"the choice of headers during depth-first traversal. As a result, a static "
+"analysis cannot always determine the convergence of nodes in irreducible "
+"cycles, and any uniformity analysis is limited to those static instances "
+"whose convergence is independent of the cycle hierarchy:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:449
+msgid "**m-converged static instances:**"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:451
+msgid ""
+"A static instance ``X`` is *m-converged* for a given CFG if and only if the "
+"maximal converged-with relation for its dynamic instances is the same in "
+"every cycle hierarchy that can be constructed for that CFG."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:457
+msgid ""
+"In other words, two dynamic instances ``X1`` and ``X2`` of an m-converged "
+"static instance ``X`` are converged in some cycle hierarchy if and only if "
+"they are also converged in every other cycle hierarchy for the same CFG."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:462
+msgid ""
+"As noted earlier, for brevity, we restrict the term *converged* to mean "
+"\"related under the maximal converged-with relation for a given cycle "
+"hierarchy\"."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:467
+msgid ""
+"Each node ``X`` in a given CFG is reported to be m-converged if and only if "
+"every cycle that contains ``X`` satisfies the following necessary conditions:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:471
+msgid ""
+"Every divergent branch inside the cycle satisfies the :ref:`diverged entry "
+"criterion<convergence-diverged-entry>`, and,"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:473
+msgid ""
+"There are no :ref:`diverged paths reaching the cycle<convergence-diverged-"
+"outside>` from a divergent branch outside it."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:479
+msgid ""
+"A reducible cycle :ref:`trivially satisfies <convergence-reducible-cycle>` "
+"the above conditions. In particular, if the whole CFG is reducible, then all "
+"nodes in the CFG are m-converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:484
+msgid ""
+"The uniformity of each output of a static instance is determined using the "
+"criteria :ref:`described earlier <convergence-uniformity>`. The discovery of "
+"divergent outputs may cause their uses (including branches) to also become "
+"divergent. The analysis propagates this divergence until a fixed point is "
+"reached."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:491
+msgid ""
+"The convergence inferred using these criteria is a safe subset of the "
+"maximal converged-with relation for any cycle hierarchy. In particular, it "
+"is sufficient to determine if a static instance is m-converged for a given "
+"cycle hierarchy ``T``, even if that fact is not detected when examining some "
+"other cycle hierarchy ``T'``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:497
+msgid ""
+"This property allows compiler transforms to use the uniformity analysis "
+"without being affected by DFS choices made in the underlying cycle analysis. "
+"When two transforms use different instances of the uniformity analysis for "
+"the same CFG, a \"divergent value\" result in one analysis instance cannot "
+"contradict a \"uniform value\" result in the other."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:504
+msgid ""
+"Generic transforms such as SimplifyCFG, CSE, and loop transforms commonly "
+"change the program in ways that change the maximal converged-with relations. "
+"This also means that a value that was previously uniform can become "
+"divergent after such a transform. Uniformity has to be recomputed after such "
+"transforms."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:511
+msgid "Divergent Branch inside a Cycle"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:516
+msgid ""
+"The above figure shows a divergent branch ``Q`` inside an irreducible cyclic "
+"region. When two threads diverge at ``Q``, the convergence of dynamic "
+"instances within the cyclic region depends on the cycle hierarchy chosen:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:521
+msgid ""
+"In an implementation that detects a single cycle ``C`` with header ``P``, "
+"convergence inside the cycle is determined by ``P``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:524
+msgid ""
+"In an implementation that detects two nested cycles with headers ``R`` and "
+"``S``, convergence inside those cycles is determined by their respective "
+"headers."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:530
+msgid ""
+"A conservative approach would be to simply report all nodes inside "
+"irreducible cycles as having divergent outputs. But it is desirable to "
+"recognize m-converged nodes in the CFG in order to maximize uniformity. This "
+"section describes one such pattern of nodes derived from *closed paths*, "
+"which are a property of the CFG and do not depend on the cycle hierarchy."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:537
+msgid "**Diverged Entry Criterion:**"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:539
+msgid ""
+"The dynamic instances of all the nodes in a closed path ``P`` are m-"
+"converged only if for every divergent branch ``B`` and its join node ``J`` "
+"that lie on ``P``, there is no entry to ``P`` which lies on a diverged path "
+"from ``B`` to ``J``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:547
+msgid ""
+"Consider the closed path ``P -> Q -> R -> S`` in the above figure. ``P`` and "
+"``R`` are :ref:`entries to the closed path<cycle-closed-path>`. ``Q`` is a "
+"divergent branch and ``S`` is a join for that branch, with diverged paths "
+"``Q -> R -> S`` and ``Q -> S``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:553
+msgid ""
+"If a diverged entry ``R`` exists, then in some cycle hierarchy, ``R`` is the "
+"header of the smallest cycle ``C`` containing the closed path and a :ref:"
+"`child cycle<cycle-definition>` ``C'`` exists in the set ``C - R``, "
+"containing both branch ``Q`` and join ``S``. When threads diverge at ``Q``, "
+"one subset ``M`` continues inside cycle ``C'``, while the complement ``N`` "
+"exits ``C'`` and reaches ``R``. Dynamic instances of ``S`` executed by "
+"threads in set ``M`` are not converged with those executed in set ``N`` due "
+"to the presence of ``R``. Informally, threads that diverge at ``Q`` "
+"reconverge in the same iteration of the outer cycle ``C``, but they may have "
+"executed the inner cycle ``C'`` differently."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:569
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "11"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:573
+#: ../../../ConvergenceAndUniformity.rst:595
+#: ../../../ConvergenceAndUniformity.rst:659
+#: ../../../ConvergenceAndUniformity.rst:674
+msgid "P4"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:573
+#: ../../../ConvergenceAndUniformity.rst:595
+#: ../../../ConvergenceAndUniformity.rst:659
+msgid "Q4"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:576
+msgid "In the table above, ``S2`` is not converged with ``S1`` due to ``R1``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:580
+msgid ""
+"If ``R`` does not exist, or if any node other than ``R`` is the header of "
+"``C``, then no such child cycle ``C'`` is detected. Threads that diverge at "
+"``Q`` execute converged dynamic instances of ``S`` since they do not "
+"encounter the cycle header on any path from ``Q`` to ``S``. Informally, "
+"threads that diverge at ``Q`` reconverge at ``S`` in the same iteration of "
+"``C``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:602
+msgid ""
+"In general, the cycle ``C`` in the above statements is not expected to be "
+"the same cycle for different headers. Cycles and their headers are tightly "
+"coupled; for different headers in the same outermost cycle, the child cycles "
+"detected may be different. The property relevant to the above examples is "
+"that for every closed path, there is a cycle ``C`` that contains the path "
+"and whose header is on that path."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:610
+msgid ""
+"The diverged entry criterion must be checked for every closed path passing "
+"through a divergent branch ``B`` and its join ``J``. Since :ref:`every "
+"closed path passes through the header of some cycle<cycle-closed-path-"
+"header>`, this amounts to checking every cycle ``C`` that contains ``B`` and "
+"``J``. When the header of ``C`` dominates the join ``J``, there can be no "
+"entry to any path from the header to ``J``, which includes any diverged path "
+"from ``B`` to ``J``. This is also true for any closed paths passing through "
+"the header of an outer cycle that contains ``C``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:620
+msgid ""
+"Thus, the diverged entry criterion can be conservatively simplified as "
+"follows:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:623
+msgid ""
+"For a divergent branch ``B`` and its join node ``J``, the nodes in a cycle "
+"``C`` that contains both ``B`` and ``J`` are m-converged only if:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:627
+msgid "``B`` strictly dominates ``J``, or,"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:628
+msgid "The header ``H`` of ``C`` strictly dominates ``J``, or,"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:629
+msgid ""
+"Recursively, there is cycle ``C'`` inside ``C`` that satisfies the same "
+"condition."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:632
+msgid ""
+"When ``J`` is the same as ``H`` or ``B``, the trivial dominance is "
+"insufficient to make any statement about entries to diverged paths."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:638
+msgid "Diverged Paths reaching a Cycle"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:643
+msgid ""
+"The figure shows two cycle hierarchies with a divergent branch in ``Entry`` "
+"instead of ``Q``. For two threads that enter the closed path ``P -> Q -> R -"
+"> S`` at ``P`` and ``R`` respectively, the convergence of dynamic instances "
+"generated along the path depends on whether ``P`` or ``R`` is the header."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:649
+msgid "Convergence when ``P`` is the header."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:655
+#: ../../../ConvergenceAndUniformity.rst:670
+msgid "12"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:655
+msgid "13"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:664
+msgid "Convergence when ``R`` is the header."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:679
+msgid ""
+"Thus, when diverged paths reach different entries of an irreducible cycle "
+"from outside the cycle, the static analysis conservatively reports every "
+"node in the cycle as not m-converged."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:686
+msgid "Reducible Cycle"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:688
+msgid ""
+"If ``C`` is a reducible cycle with header ``H``, then in any DFS, ``H`` :ref:"
+"`must be the header of some cycle<cycle-reducible-headers>` ``C'`` that "
+"contains ``C``. Independent of the DFS, there is no entry to the subgraph "
+"``C`` other than ``H`` itself. Thus, we have the following:"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:694
+msgid ""
+"The diverged entry criterion is trivially satisfied for a divergent branch "
+"and its join, where both are inside subgraph ``C``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:696
+msgid ""
+"When diverged paths reach the subgraph ``C`` from outside, their convergence "
+"is always determined by the same header ``H``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:699
+msgid ""
+"Clearly, this can be determined only in a cycle hierarchy ``T`` where ``C`` "
+"is detected as a reducible cycle. No such conclusion can be made in a "
+"different cycle hierarchy ``T'`` where ``C`` is part of a larger cycle "
+"``C'`` with the same header, but this does not contradict the conclusion in "
+"``T``."
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:706
+msgid "Controlled Convergence"
+msgstr ""
+
+#: ../../../ConvergenceAndUniformity.rst:708
+msgid ""
+":ref:`Convergence control tokens <dynamic_instances_and_convergence_tokens>` "
+"provide an explicit semantics for determining which threads are converged at "
+"a given point in the program. The impact of this is incorporated in a :ref:"
+"`controlled maximal converged-with <controlled_maximal_converged_with>` "
+"relation over dynamic instances and a :ref:`controlled m-converged "
+"<controlled_m_converged>` property of static instances. The :ref:`uniformity "
+"analysis <uniformity-analysis>` implemented in LLVM includes this for "
+"targets that support convergence control tokens."
+msgstr ""
