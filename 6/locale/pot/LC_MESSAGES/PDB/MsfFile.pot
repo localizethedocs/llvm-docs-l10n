@@ -1,0 +1,166 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 6\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../PDB/MsfFile.rst:3
+msgid "The MSF File Format"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:11
+msgid "The Superblock"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:12
+msgid ""
+"At file offset 0 in an MSF file is the MSF *SuperBlock*, which is laid out "
+"as follows:"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:27
+msgid ""
+"**FileMagic** - Must be equal to ``\"Microsoft C / C++ MSF 7.00\\\\r\\"
+"\\n\"`` followed by the bytes ``1A 44 53 00 00 00``."
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:29
+msgid ""
+"**BlockSize** - The block size of the internal file system.  Valid values "
+"are 512, 1024, 2048, and 4096 bytes.  Certain aspects of the MSF file layout "
+"vary depending on the block sizes.  For the purposes of LLVM, we handle only "
+"block sizes of 4KiB, and all further discussion assumes a block size of 4KiB."
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:33
+msgid ""
+"**FreeBlockMapBlock** - The index of a block within the file, at which "
+"begins a bitfield representing the set of all blocks within the file which "
+"are \"free\" (i.e. the data within that block is not used).  This bitfield "
+"is spread across the MSF file at ``BlockSize`` intervals. **Important**: "
+"``FreeBlockMapBlock`` can only be ``1`` or ``2``!  This field is designed to "
+"support incremental and atomic updates of the underlying MSF file.  While "
+"writing to an MSF file, if the value of this field is `1`, you can write "
+"your new modified bitfield to page 2, and vice versa.  Only when you commit "
+"the file to disk do you need to swap the value in the SuperBlock to point to "
+"the new ``FreeBlockMapBlock``."
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:43
+msgid ""
+"**NumBlocks** - The total number of blocks in the file.  ``NumBlocks * "
+"BlockSize`` should equal the size of the file on disk."
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:45
+msgid ""
+"**NumDirectoryBytes** - The size of the stream directory, in bytes.  The "
+"stream directory contains information about each stream's size and the set "
+"of blocks that it occupies.  It will be described in more detail later."
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:48
+msgid ""
+"**BlockMapAddr** - The index of a block within the MSF file.  At this block "
+"is an array of ``ulittle32_t``'s listing the blocks that the stream "
+"directory resides on.  For large MSF files, the stream directory (which "
+"describes the block layout of each stream) may not fit entirely on a single "
+"block.  As a result, this extra layer of indirection is introduced, whereby "
+"this block contains the list of blocks that the stream directory occupies, "
+"and the stream directory itself can be stitched together accordingly.  The "
+"number of ``ulittle32_t``'s in this array is given by "
+"``ceil(NumDirectoryBytes / BlockSize)``."
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:58
+msgid "The Stream Directory"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:59
+msgid ""
+"The Stream Directory is the root of all access to the other streams in an "
+"MSF file.  Beginning at byte 0 of the stream directory is the following "
+"structure:"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:70
+msgid ""
+"And this structure occupies exactly ``SuperBlock->NumDirectoryBytes`` bytes. "
+"Note that each of the last two arrays is of variable length, and in "
+"particular that the second array is jagged."
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:74
+msgid ""
+"**Example:** Suppose a hypothetical PDB file with a 4KiB block size, and 4 "
+"streams of lengths {1000 bytes, 8000 bytes, 16000 bytes, 9000 bytes}."
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:77
+msgid "Stream 0: ceil(1000 / 4096) = 1 block"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:79
+msgid "Stream 1: ceil(8000 / 4096) = 2 blocks"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:81
+msgid "Stream 2: ceil(16000 / 4096) = 4 blocks"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:83
+msgid "Stream 3: ceil(9000 / 4096) = 3 blocks"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:85
+msgid ""
+"In total, 10 blocks are used.  Let's see what the stream directory might "
+"look like:"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:101
+msgid ""
+"In total, this occupies ``15 * 4 = 60`` bytes, so ``SuperBlock-"
+">NumDirectoryBytes`` would equal ``60``, and ``SuperBlock->BlockMapAddr`` "
+"would be an array of one ``ulittle32_t``, since ``60 <= SuperBlock-"
+">BlockSize``."
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:105
+msgid ""
+"Note also that the streams are discontiguous, and that part of stream 3 is "
+"in the middle of part of stream 2.  You cannot assume anything about the "
+"layout of the blocks!"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:110
+msgid "Alignment and Block Boundaries"
+msgstr ""
+
+#: ../../../PDB/MsfFile.rst:111
+msgid ""
+"As may be clear by now, it is possible for a single field (whether it be a "
+"high level record, a long string field, or even a single ``uint16``) to "
+"begin and end in separate blocks.  For example, if the block size is 4096 "
+"bytes, and a ``uint16`` field begins at the last byte of the current block, "
+"then it would need to end on the first byte of the next block.  Since blocks "
+"are not necessarily contiguously laid out in the file, this means that both "
+"the consumer and the producer of an MSF file must be prepared to split data "
+"apart accordingly.  In the aforementioned example, the high byte of the "
+"``uint16`` would be written to the last byte of block N, and the low byte "
+"would be written to the first byte of block N+1, which could be tens of "
+"thousands of bytes later (or even earlier!) in the file, depending on what "
+"the stream directory says."
+msgstr ""
