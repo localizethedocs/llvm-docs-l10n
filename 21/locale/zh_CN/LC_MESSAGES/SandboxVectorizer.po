@@ -1,0 +1,680 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 21\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../SandboxVectorizer.md:1
+msgid "The Sandbox Vectorizer"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:2
+msgid "Contents"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:7
+msgid ""
+"The Sandbox Vectorizer is a framework for building modular vectorization "
+"pipelines on top of [Sandbox IR](#SandboxIR) transactional IR, with a focus "
+"on ease of development and testing. The default pipeline currently "
+"implements a simple SLP-style bottom-up vectorization pipeline."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:10
+msgid "The transactional IR helps in several ways:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:11
+msgid "It enables a modular design where:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:12
+msgid ""
+"Each vectorization transformation/optimization can be implemented as a "
+"separate internal pass that uses actual IR as its input and output."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:13
+msgid ""
+"You can still make end-to-end profitability decisions (i.e., across multiple "
+"internal passes), even when the transformations are implemented as separate "
+"internal passes."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:14
+msgid ""
+"Each transformation/optimization internal pass can be tested in isolation "
+"with lit-tests, as opposed to end-to-end tests."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:15
+msgid ""
+"It enables a simpler design by enabling each internal pass commit its state "
+"to the IR itself rather than updating helper data-structures that live "
+"across the pipeline."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:16
+msgid ""
+"Its extensive callback interface helps remove the burden of manually "
+"maintaining the vectorizer's components while the IR is being modified."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:18
+msgid "Usage"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:20
+msgid ""
+"The Sandbox Vectorizer is currently under development and is not enabled by "
+"default. So in order to use it you have to explicitly run the pass with "
+"`opt` like so:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:27
+msgid "Internal Pass Pipeline"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:29
+msgid ""
+"The Sandbox Vectorizer is designed to be modular and as such it has its own "
+"internal pass-pipeline that operates on Sandbox IR. Each vectorization phase "
+"is implemented as a separate internal pass that runs by the Sandbox "
+"Vectorizer's internal pass manager. The Sandbox Vectorizer pass itself is an "
+"LLVM Function pass."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:33
+msgid ""
+"The following figure shows the basic structure of the Sandbox Vectorizer "
+"LLVM Function pass. The first component is the conversion of `LLVM IR to "
+"Sandbox IR` which converts the LLVM Function to a `sandboxir::Function`. "
+"From this point on the pass operates on Sandbox IR. The main entry point to "
+"the internal pass pipeline is the `Sandbox IR Function Pass Manger`, which "
+"runs all registered function passes. The following figure lists only a "
+"single Sandbox IR function pass, the `Seed Collection Pass` which goes over "
+"the instructions in the function and collects vectorization candidates, like "
+"Stores to consecutive memory addresses, and forms a [Region](#region). The "
+"`Seed Collection Pass` itself contains its own Region pass pipeline, which "
+"in the following example contains a `Transaction Save` pass, a `Bottom-Up "
+"Vectorization` pass, a `Pack Reuse` pass and a `Transaction Accept/Revert` "
+"pass."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:61
+msgid ""
+"You can specify your own custom pipeline with the `-sbvec-passes=` argument "
+"to `opt`. The pipeline shown above is equivalent to this:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:68
+msgid ""
+"If the user does not define a pipeline, the Sandbox Vectorizer will run its "
+"default pass-pipeline, which is set in the constructor of the "
+"`SandboxVectorizerPass`."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:70
+msgid "Sandbox Vectorizer Passes"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:72
+msgid ""
+"The passes in the vectorization pipeline can be found in `Transforms/"
+"Vectorize/SandboxVectorizer/Passes` and they are registered in `lib/"
+"Transforms/Vectorize/SandboxVectorizer/Passes/PassRegistry.def`."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:74
+msgid ""
+"There are two types of passes: [Transformation Passes](#transformation-"
+"passes) that do the actual vectorization-related transformations and "
+"optimizations, and [Helper Passes](#helper-passes) that are helping with "
+"things like managing the IR transactions, and test-specific things like "
+"building regions."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:76
+msgid "Transformation Passes"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "**Pass Name**"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "**File Name**"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "**Type**"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "**Description**"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`seed-collection`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "SeedCollection.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "Function"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid ""
+"Collects the instructions to start vectorizing from, creates a region and "
+"runs the region-pass pipeline"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`bottom-up-vec`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "BottomUpVec.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3 ../../../SandboxVectorizer.md:98
+msgid "Region"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid ""
+"An SLP-style bottom-up vectorizer. It can vectorize both scalars and vectors"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`pack-reuse`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "PackReuse.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "A pass that de-duplicates packs"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:84
+msgid "Helper Passes"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`tr-save`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "TransactionSave.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "Creates a checkpoint of the IR (i.e., saves state)"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`tr-accept`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "TransactionAlwaysAccept.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "Unconditionally accepts the IR state"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`tr-revert`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "TransactionAlwaysRevert.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "Unconditionally rejects the IR state"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`tr-accept-or-revert`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "TransactionAcceptOrRevert.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "Checks cost model and either accepts or reverts the IR"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`null`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "NullPass.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "A dummy test pass that just returns"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`print-region`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "PrintRegion.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "A test pass that prints the region's IR"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`print-instruction-count`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "PrintInstructionCount.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "A test pass that counts instructions"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`regions-from-metadata`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "RegionsFromMetadata.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid ""
+"Builds regions from IR metadata and runs a pipeline of region passes for "
+"each one of them. Used in lit tests for testing region passes in isolation"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`regions-from-bbs`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "RegionsFromBBs.h"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid ""
+"Builds a region for each BB, adding all BB instructions into each region. "
+"Used in lit tests for stress-testing region passes in isolation"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:100
+msgid ""
+"In a traditional compiler pass pipeline, transformations usually operate at "
+"a function level with function passes. This introduces an issue in passes "
+"like the vectorizer that operate on small sections of a function (that we "
+"refer to as \"Regions\") but apply a pipeline of transformations on each "
+"section horizontally, and evaluate profitability end-to-end on each region "
+"as shown below:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:119
+msgid ""
+"If transformations like `A`, `B`, etc. are implemented as function passes, "
+"then they will apply their transformations across the whole function, "
+"spanning multiple regions, as they have not been designed to stay within a "
+"region. The problem is that profitability evaluation will average out the "
+"profitability across all regions within the function, leading to a sub-"
+"optimal outcome."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:122
+msgid ""
+"This is the problem that the \"Region\" structure is solving. It provides a "
+"way of tagging the instructions within a Region with metadata and also "
+"provides the necessary APIs for iterating through the Region instructions "
+"and operating on them."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:125
+msgid ""
+"The Region allows us to implement the vectorization pipeline as a pipeline "
+"of Region passes, each one operating on a specific code section. At the end "
+"of the region pass pipeline we can evaluate profitability across multiple "
+"region passes in the pipeline (if needed) but within a Region, and either "
+"accept or revert the transformations."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:128
+msgid "Adding Instructions to the Region"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:130
+msgid ""
+"The Region grows automatically and is maintained transparently: Whenever you "
+"create a new instruction it is automatically added to the Region, and "
+"whenever an instruction is deleted it gets removed from the Region. The "
+"reasoning is that vectorization passes work: (i) by creating new vector "
+"instructions, (ii) by adding necessary packing/unpacking instructions, or "
+"(iii) by deleting the original instructions that got replaced by the "
+"vectorized ones."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:134
+msgid ""
+"Internally this is done with the help of the callback API of Sandbox IR. The "
+"current Region gets notified that either an instruction got created or "
+"removed and the Region is maintained accordingly."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:137
+msgid "Region Example"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:139
+msgid ""
+"The following example defines a Region (with `!0 = distinct !{!"
+"\"sandboxregion\"}`), containing two instructions: `%i1 = add i8 %v, 1` and "
+"`%i2 = add i8 %v, 2` in no particular order."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:151
+msgid ""
+"The Region class API allows you to iterate through the region instructions "
+"like with a range loop:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:158
+msgid "Region Auxiliary Vector"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:160
+msgid ""
+"On top of tagging instructions the Region has a second functionality: it "
+"also supports a way of defining an ordered list of instructions. This helps "
+"passes communicate such instruction lists from one pass to another, if "
+"needed, in an explicit way that is encoded in IR metadata. This removes the "
+"need for sharing helper data-structures across passes. The end result is "
+"that you can fully describe such ordered list of instructions in IR and can "
+"reproduce the pass behavior using just IR as input, allowing you to test it "
+"with lit tests."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:165
+msgid ""
+"The Region API for the auxiliary vector is straightforward. It provides the "
+"`getAux()` getter method that simply returns the auxiliary vector."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:168
+msgid ""
+"The auxiliary vector instructions are marked with `!sandboxaux` followed by "
+"an index, which in the following example are `!1`and `!2` which correspond "
+"to 0 and 1 respectively. So the following example defines one region (region "
+"`!0`) containing all three `add` instructions, two of which belong to the "
+"auxiliary vector: `[%i1 = add i8 %v, 1, %i2 = add i8 %v, 2]`."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:183
+msgid ""
+"The auxiliary vector is currently used by the Seed Collection pass to "
+"communicate a group of seed instructions to the Bottom-Up-Vectorizer pass."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:185
+msgid "Testing Sandbox Vectorizer Passes In Isolation"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:187
+msgid ""
+"One of the great things about the Sandbox Vectorizer is that it allows you "
+"to test each internal pass in isolation with lit-tests."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:189
+msgid ""
+"Testing Function passes is straightforward, just run `FUNCTION_PASS` in "
+"isolation with `-sbvec-passes`, like so:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:194
+msgid ""
+"Testing [Region](#region) passes is also possible, since a Region can be "
+"defined with IR using metadata, as described in [Region Example](#region-"
+"example). We need to run the `regions-from-metadata` helper pass before the "
+"Region pass to be tested. This helper pass parses the IR metadata looking "
+"for Region metadata, then it creates the corresponding Regions and finally "
+"runs a Region pass pipeline on each Region."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:198
+msgid "So here is what we need to do for a working lit-test of a Region pass:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:200
+msgid ""
+"Define the region with metadata as explained in [Region Example](#region-"
+"example)."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:201
+msgid "Define the pass pipeline which should include the following passes:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:202
+msgid ""
+"The `regions-from-metadata` pass that will form a region and will build a "
+"Region pass-manager."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:203
+msgid ""
+"The `REGION_PASS` being tested enclosed in `< >`, as the only pass in the "
+"region pass pipeline owned by the `regions-from-metadata` pass."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:205
+msgid "So overall the pipeline looks like:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:210
+msgid ""
+"The reason for enclosing the pass in `< >` is that `regions-from-metadata` "
+"is a Region pass manager function pass that accepts string arguments within "
+"`< >`. It will parse the string argument, looking for a comma-separated list "
+"of Region pass names, and will populate the pipeline with these passes. So "
+"in this case `REGION_PASS` is the only pass name found, so it will be the "
+"only pass added to the region pass pipeline."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:214
+msgid ""
+"For example, `'regions-from-metadata<region_pass1,region_pass2>'` would "
+"create regions from metadata, and for each one of them it would run the "
+"pipeline: `region_pass1` followed by `region_pass2`."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:216
+msgid "Stress-testing a Region Pass in Isolation"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:218
+msgid ""
+"A region pass can be stress-tested in isolation using with BB-sized Regions, "
+"using the `regions-from-bbs` helper pass. The pass will go through the BBs "
+"in the function, create a region including all BB instructions for each one "
+"of them. Then it will run the region pass pipeline for each BB-sized Region."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:222
+msgid "For example:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:227
+msgid "Components"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:229
+msgid ""
+"The Sandbox Vectorizer implements several components that are used by one or "
+"more internal passes. These components are designed as standalone "
+"components, which makes them easy to use when needed. They are the building "
+"blocks for the vectorization passes, providing things like vectorization "
+"legality checks."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:233
+msgid "Legality Analysis"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:235
+msgid ""
+"This is the main entry point for vectorization legality checks. It checks if "
+"a bundle of instructions is legal to vectorize and returns how the "
+"vectorizer should generate code for it, i.e., whether it should trivially "
+"widen it, whether it should reuse an existing vector, whether it should pack "
+"scalars into vectors and so on. Legality testing includes tests like "
+"checking the instruction types, the opcodes etc. but it also checks for "
+"dependency violations by querying the [Scheduler](#scheduler)."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:239
+msgid "The main API function is `LegalityAnalysis::canVectorize()`."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:241
+msgid "Scheduler"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:243
+msgid ""
+"This component is an lazy list-scheduler that relies on a [Dependency Graph "
+"(DAG)](#dependency-graph) for representing the dependencies. It is \"lazy\" "
+"in the sense that it does not operate on a whole BB, but instead only on the "
+"instructions spanning the bundle we are attempting to schedule. The main "
+"interface to the scheduler is `Scheduler::trySchedule()`."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:247
+msgid ""
+"Please note that the current implementation does not use a separate "
+"\"staging\" instruction list for the scheduled instructions. Instead it "
+"physically moves the instructions in the IR chain, which is fine since we "
+"are working with a transactional IR. This is not a requirement though for "
+"correct operation. A more traditional scheduler with a separate instruction "
+"list would also work fine."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:252
+msgid "Dependency Graph"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:254
+msgid ""
+"This is a lazily-built Directed Acyclic Graph (DAG) that encodes both memory "
+"and def-use dependencies. Each node of the graph points to a Sandbox IR "
+"Instruction. An edge between two nodes `A->B` suggests that `A`'s "
+"instruction should come before `B`'s instruction in the program. The DAG "
+"uses [Alias Analysis](#AliasAnalysis) for finding the memory dependencies. "
+"Note that even though the DAG Node provides an API for iterating over both "
+"memory and use-def dependencies, it actually relies on the LLVM IR use-def "
+"edges internally and won't replicate them to save memory."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:260
+msgid ""
+"The graph is built lazily, meaning that it won't be built for the whole BB "
+"in one go. Instead it will span only the range of instruction needed by the "
+"scheduler. As we keep scheduling more instructions, the graph will grow on-"
+"demand following the needs of the scheduler. The main interface function for "
+"the Dependency Graph is `DependencyGraph::extend()`."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:265
+msgid "InstrMaps"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:267
+msgid ""
+"Instruction Maps is a helper data structure that maintains a mapping between "
+"the original (often scalar) instructions and their corresponding vector "
+"instructions and the reverse. It is used by the `bottom-up-vec` region pass "
+"for tracing vector instructions back to the original instructions and the "
+"reverse."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:271
+msgid "Debugging"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:273
+msgid ""
+"There are a couple of useful `cl::opt` options for debugging the vectorizer, "
+"that are particularly useful for bisection debugging:"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "**Option**"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`-sbvec-allow-files=<regex>`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid ""
+"Enables the Sandbox Vectorizer as a whole only for source files matching the "
+"comma-separated list of regular expressions."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`-sbvec-passes=<pass-pipeline>`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid ""
+"Allows you to change the internal pass pipeline and skip any potentially "
+"broken passes."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`-sbvec-stop-at=<num>`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid ""
+"Will stop invoking the bottom-up-vectorizer if the invocation count is "
+"greater or equal to `<num>`."
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid "`-sbvec-stop-bndl=<num>`"
+msgstr ""
+
+#: ../../../SandboxVectorizer.md:3
+msgid ""
+"Limits the vectorization depth of the bottom-up vectorizer to `<num>`. This "
+"means that the vectorizer will emit a pack and stop vectorizing further."
+msgstr ""
