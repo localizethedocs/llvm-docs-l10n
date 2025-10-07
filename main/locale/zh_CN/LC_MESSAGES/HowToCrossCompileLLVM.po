@@ -1,0 +1,288 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:10+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../HowToCrossCompileLLVM.rst:3
+msgid "How to cross-compile Clang/LLVM using Clang/LLVM"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:6
+msgid "Introduction"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:8
+msgid ""
+"This document contains information about building LLVM and Clang on a host "
+"machine, targeting another platform."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:11
+msgid ""
+"For more information on how to use Clang as a cross-compiler, please check "
+"https://clang.llvm.org/docs/CrossCompilation.html."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:14
+msgid ""
+"This document describes cross-building a compiler in a single stage, using "
+"an existing ``clang`` install as the host compiler."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:18
+msgid ""
+"These instructions have been tested for targeting 32-bit ARM, AArch64, or 64-"
+"bit RISC-V from an x86_64 Linux host. But should be equally applicable to "
+"any other target."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:23
+msgid "Setting up a sysroot"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:25
+msgid ""
+"You will need a sysroot that contains essential build dependencies compiled "
+"for the target architecture. In this case, we will be using CMake and Ninja "
+"on a Linux host and compiling against a Debian sysroot. Detailed "
+"instructions on producing sysroots are outside of the scope of this "
+"documentation, but the following instructions should work on any Linux "
+"distribution with these pre-requisites:"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:32
+msgid ""
+"``binfmt_misc`` configured to execute ``qemu-user`` for binaries of the "
+"target architecture. This is done by installing the ``qemu-user-static`` and "
+"``binfmt-support`` packages on Debian-derived distributions."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:35
+msgid ""
+"Root access (setups involving ``proot`` or other tools to avoid this "
+"requirement may be possible, but aren't described here)."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:37
+msgid "The ``debootstrap`` tool. This is available in most distributions."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:39
+msgid ""
+"The following snippet will initialise sysroots for 32-bit Arm, AArch64, and "
+"64-bit RISC-V (just pick the target(s) you are interested in):"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:48
+msgid ""
+"The created sysroot may contain absolute symlinks, which will resolve to a "
+"location within the host when accessed during compilation, so we must "
+"convert any absolute symlinks to relative ones:"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:58
+msgid "Configuring CMake and building"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:60
+msgid ""
+"For more information on how to configure CMake for LLVM/Clang, see :doc:"
+"`CMake`. Following CMake's recommended practice, we will create a `toolchain "
+"file <https://cmake.org/cmake/help/book/mastering-cmake/chapter/"
+"Cross%20Compiling%20With%20CMake.html#toolchain-files>`_."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:65
+msgid ""
+"The following assumes you have a system install of ``clang`` and ``lld`` "
+"that will be used for cross compiling and that the listed commands are "
+"executed from within the root of a checkout of the ``llvm-project`` git "
+"repository."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:69
+msgid ""
+"First, set variables in your shell session that will be used throughout the "
+"build instructions:"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:78
+msgid ""
+"To customise details of the compilation target or choose a different "
+"architecture altogether, change the ``SYSROOT``, ``TARGET``, and ``CFLAGS`` "
+"variables to something matching your target. For example, for 64-bit RISC-V "
+"you might set ``SYSROOT=$HOME/sysroot-deb-riscv64-unstable``, "
+"``TARGET=riscv64-linux-gnu`` and ``CFLAGS=\"-march=rva20u64\"``. Refer to "
+"documentation such as your target's compiler documentation or processor "
+"manual for guidance on which ``CFLAGS`` settings may be appropriate. The "
+"specified ``TARGET`` should match the triple used within the sysroot (i.e. "
+"``$SYSROOT/usr/lib/$TARGET`` should exist)."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:88
+msgid "Then execute the following snippet to create a toolchain file:"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:109
+msgid "Then configure and build by invoking ``cmake``:"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:123
+msgid ""
+"These options from the toolchain file and ``cmake`` invocation above are "
+"important:"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:126
+msgid ""
+"``CMAKE_SYSTEM_NAME``: Perhaps surprisingly, explicitly setting this "
+"variable `causes CMake to set CMAKE_CROSSCOMPIILING <https://cmake.org/cmake/"
+"help/latest/variable/CMAKE_CROSSCOMPILING.html#variable:"
+"CMAKE_CROSSCOMPILING>`_."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:129
+msgid ""
+"``CMAKE_{C,CXX}_COMPILER_TARGET``: This will be used to set the ``--target`` "
+"argument to ``clang``. The triple should match the triple used within the "
+"sysroot (i.e. ``$SYSROOT/usr/lib/$TARGET`` should exist)."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:132
+msgid ""
+"``CMAKE_FIND_ROOT_PATH_MODE_*``: These `control the search behaviour for "
+"finding libraries, includes or binaries <https://cmake.org/cmake/help/book/"
+"mastering-cmake/chapter/Cross%20Compiling%20With%20CMake.html#finding-"
+"external-libraries-programs-and-other-files>`_. Setting these prevents files "
+"for the host being used in the build."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:136
+msgid ""
+"``LLVM_HOST_TRIPLE``: Specifies the target triple of the system the built "
+"LLVM will run on, which also implicitly sets other defaults such as "
+"``LLVM_DEFAULT_TARGET_TRIPLE``. For example, if you are using an x86_64 host "
+"to compile for RISC-V, this will be a RISC-V triple."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:140
+msgid ""
+"``CMAKE_SYSROOT``: The path to the sysroot containing libraries and headers "
+"for the target."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:142
+msgid ""
+"``CMAKE_INSTALL_PREFIX``: Setting this avoids installing binaries compiled "
+"for the target system into system directories for the host system. It is not "
+"required unless you are going to use the ``install`` target."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:146
+msgid ""
+"See `LLVM's build documentation <https://llvm.org/docs/CMake.html#frequently-"
+"used-cmake-variables>`_ for more guidance on CMake variables (e.g. "
+"``LLVM_TARGETS_TO_BUILD`` may be useful if your cross-compiled binaries only "
+"need to support compiling for one target)."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:152
+msgid "Working around a ninja dependency issue"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:154
+msgid ""
+"If you followed the instructions above to create a sysroot, you may run into "
+"a `longstanding problem related to path canonicalization in ninja <https://"
+"github.com/ninja-build/ninja/issues/1330>`_. GCC canonicalizes system "
+"headers in dependency files, so when ninja reads them it does not need to do "
+"so. Clang does not do this, and unfortunately ninja does not implement the "
+"canonicalization logic at all, meaning for some system headers with symlinks "
+"in the paths, it can incorrectly compute a non-existing path and consider it "
+"as always modified."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:163
+msgid ""
+"If you are suffering from this issue, you will find any attempt at an "
+"incremental build (including the suggested command to build the ``install`` "
+"target in the next section) results in recompiling everything.  ``ninja -C "
+"build/$TARGET -t deps`` shows files in ``$SYSROOT/include/*`` that do not "
+"exist (as the ``$SYSROOT/include`` folder does not exist) and you can "
+"further confirm these files are causing ``ninja`` to determine a rebuild is "
+"necessary with ``ninja -C build/$TARGET -d deps``."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:171
+msgid ""
+"A workaround is to create a symlink so that the incorrect ``$SYSROOT/include/"
+"*`` dependencies resolve to files within ``$SYSROOT/usr/include/*``. This "
+"works in practice for the simple cross-compilation use case described here, "
+"but is not a general solution."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:181
+msgid "Testing the just-built compiler"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:183
+msgid ""
+"Confirm the ``clang`` binary was built for the expected target architecture:"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:190
+msgid ""
+"If you have ``qemu-user`` installed you can test the produced target binary "
+"either by invoking ``qemu-{target}-static`` directly:"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:201
+msgid "Or, if binfmt_misc is configured (as was necessary for debootstrap):"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:212
+msgid "Installing and using"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:215
+msgid ""
+"Use of the ``install`` target requires that you have set "
+"``CMAKE_INSTALL_PREFIX`` otherwise it will attempt to install in directories "
+"under `/` on your host."
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:219
+msgid ""
+"If you want to transfer a copy of the built compiler to another machine, you "
+"can first install it to a location on the host via:"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:226
+msgid ""
+"This will install the LLVM/Clang headers, binaries, libraries, and other "
+"files to paths within ``CMAKE_INSTALL_PREFIX``. Then tar that directory for "
+"transfer to a device that runs the target architecture natively:"
+msgstr ""
+
+#: ../../../HowToCrossCompileLLVM.rst:234
+msgid ""
+"The generated toolchain is portable, but requires compatible versions of any "
+"shared libraries it links against. This means using a sysroot that is as "
+"similar to your target operating system as possible is desirable. Other "
+"`CMake variables <https://llvm.org/docs/CMake.html#frequently-used-cmake-"
+"variables>`_ may be helpful, for instance ``LLVM_STATIC_LINK_CXX_STDLIB``."
+msgstr ""

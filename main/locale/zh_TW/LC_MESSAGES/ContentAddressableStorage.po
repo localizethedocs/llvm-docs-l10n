@@ -1,0 +1,225 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:10+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../ContentAddressableStorage.md:1
+msgid "Content Addressable Storage"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:3
+msgid "Introduction to CAS"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:5
+msgid ""
+"Content Addressable Storage, or `CAS`, is a storage system that assigns "
+"unique addresses to the data stored. It is very useful for data deduplicaton "
+"and creating unique identifiers."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:9
+msgid ""
+"Unlike other kinds of storage systems, like file systems, CAS is immutable. "
+"It is more reliable to model a computation by representing the inputs and "
+"outputs of the computation using objects stored in CAS."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:13
+msgid "The basic unit of the CAS library is a CASObject, where it contains:"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:15
+msgid "Data: arbitrary data"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:16
+msgid "References: references to other CASObject"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:18
+msgid "It can be conceptually modeled as something like:"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:27
+msgid ""
+"With this abstraction, it is possible to compose `CASObject`s into a DAG "
+"that is capable of representing complicated data structures, while still "
+"allowing data deduplication. Note you can compare two DAGs by just comparing "
+"the CASObject hash of two root nodes."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:33
+msgid "LLVM CAS Library User Guide"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:35
+msgid ""
+"The CAS-like storage provided in LLVM is `llvm::cas::ObjectStore`. To "
+"reference a CASObject, there are few different abstractions provided with "
+"different trade-offs:"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:39
+msgid "ObjectRef"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:41
+msgid ""
+"`ObjectRef` is a lightweight reference to a CASObject stored in the CAS. "
+"This is the most commonly used abstraction and it is cheap to copy/pass "
+"along. It has following properties:"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:45
+msgid ""
+"`ObjectRef` is only meaningful within the `ObjectStore` that created the "
+"ref. `ObjectRef` created by different `ObjectStore` cannot be cross-"
+"referenced or compared."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:48
+msgid ""
+"`ObjectRef` doesn't guarantee the existence of the CASObject it points to. "
+"An explicit load is required before accessing the data stored in CASObject. "
+"This load can also fail, for reasons like (but not limited to): object does "
+"not exist, corrupted CAS storage, operation timeout, etc."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:52
+msgid ""
+"If two `ObjectRef` are equal, it is guaranteed that the object they point to "
+"are identical (if they exist). If they are not equal, the underlying objects "
+"are guaranteed to be not the same."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:56
+msgid "ObjectProxy"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:58
+msgid ""
+"`ObjectProxy` represents a loaded CASObject. With an `ObjectProxy`, the "
+"underlying stored data and references can be accessed without the need of "
+"error handling. The class APIs also provide convenient methods to access "
+"underlying data. The lifetime of the underlying data is equal to the "
+"lifetime of the instance of `ObjectStore` unless explicitly copied."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:64
+msgid "CASID"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:66
+msgid ""
+"`CASID` is the hash identifier for CASObjects. It owns the underlying "
+"storage for hash value so it can be expensive to copy and compare depending "
+"on the hash algorithm. `CASID` is generally only useful in rare situations "
+"like printing raw hash value or exchanging hash values between different CAS "
+"instances with the same hashing schema."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:72
+msgid "ObjectStore"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:74
+msgid ""
+"`ObjectStore` is the CAS-like object storage. It provides API to save and "
+"load CASObjects, for example:"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:83
+msgid ""
+"It also provides APIs to convert between `ObjectRef`, `ObjectProxy` and "
+"`CASID`."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:86
+msgid "ActionCache"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:88
+msgid ""
+"`ActionCache` is a key value storage can be used to associate two CASIDs. It "
+"is usually used with an `ObjectStore` to map an input CASObject to an output "
+"CASObject with their CASIDs."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:92
+msgid "`ActionCache` has APIs like following:"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:101
+msgid "CAS Library Implementation Guide"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:103
+msgid ""
+"The LLVM ObjectStore API was designed so that it is easy to add customized "
+"CAS implementations that are interchangeable with the builtin ones."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:107
+msgid ""
+"To add your own implementation, you just need to add a subclass to `llvm::"
+"cas::ObjectStore` and implement all its pure virtual methods. To be "
+"interchangeable with LLVM ObjectStore, the new CAS implementation needs to "
+"conform to following contracts:"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:112
+msgid ""
+"Different CASObjects stored in the ObjectStore need to have a different hash "
+"and result in a different `ObjectRef`. Similarly, the same CASObject should "
+"have the same hash and the same `ObjectRef`. Note: two different CASObjects "
+"with identical data but different references are considered different "
+"objects."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:116
+msgid ""
+"`ObjectRef`s are only comparable within the same `ObjectStore` instance, and "
+"can be used to determine the equality of the underlying CASObjects."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:118
+msgid ""
+"The loaded objects from the ObjectStore need to have a lifetime at least as "
+"long as the ObjectStore itself so it is always legal to access the loaded "
+"data without holding on the `ObjectProxy` until the `ObjectStore` is "
+"destroyed."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:123
+msgid ""
+"If not specified, the behavior can be implementation defined. For example, "
+"`ObjectRef` can be used to point to a loaded CASObject so `ObjectStore` "
+"never fails to load. It is also legal to use a stricter model than required. "
+"For example, the underlying value inside `ObjectRef` can be the unique "
+"indentities of the objects across multiple `ObjectStore` instances, but "
+"comparing such `ObjectRef` from different `ObjectStore` is still illegal."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:130
+msgid ""
+"For CAS library implementers, there is also an `ObjectHandle` class that is "
+"an internal representation of a loaded CASObject reference. `ObjectProxy` is "
+"just a pair of `ObjectHandle` and `ObjectStore`, and just like `ObjectRef`, "
+"`ObjectHandle` is only useful when paired with the `ObjectStore` that knows "
+"about the loaded CASObject."
+msgstr ""
