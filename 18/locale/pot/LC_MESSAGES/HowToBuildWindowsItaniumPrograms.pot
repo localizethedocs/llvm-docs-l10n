@@ -1,0 +1,392 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 18\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:3
+msgid "How to build Windows Itanium applications."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:6
+msgid "Introduction"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:8
+msgid ""
+"This document contains information describing how to create a Windows "
+"Itanium toolchain."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:10
+msgid ""
+"Windows Itanium allows you to deploy Itanium C++ ABI applications on top of "
+"the MS VS CRT. This environment can use the Windows SDK headers directly and "
+"does not required additional headers or additional runtime machinery (such "
+"as is used by mingw)."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:14
+msgid "Windows Itanium Stack:"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:16
+msgid "Uses the Itanium C++ abi."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:17
+msgid "libc++."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:18
+msgid "libc++-abi."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:19
+msgid "libunwind."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:20
+msgid "The MS VS CRT."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:21
+msgid "Is compatible with MS Windows SDK include headers."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:22
+msgid "COFF/PE file format."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:23
+msgid "LLD"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:25
+msgid ""
+"Note: compiler-rt is not used. This functionality is supplied by the MS VCRT."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:28
+msgid "Prerequisites"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:30
+msgid "The MS SDK is installed as part of MS Visual Studio."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:31
+msgid "Clang with support for the windows-itanium triple."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:32
+msgid "COFF LLD with support for the -autoimport switch."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:35
+msgid "Known issues:"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:37
+msgid ""
+"SJLJ exceptions, \"-fsjlj-exceptions\", are the only currently supported "
+"model."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:39
+msgid ""
+"link.exe (the MS linker) is unsuitable as it doesn't support auto-importing "
+"which is currently required to link correctly. However, if that limitation "
+"is removed then there are no other known issues with using link.exe."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:43
+msgid ""
+"Currently, there is a lack of a usable Windows compiler driver for Windows "
+"Itanium. A reasonable work-around is to build clang with a windows-msvc "
+"default target and then override the triple with e.g. \"-Xclang -triple -"
+"Xclang x86_64-unknown-windows-itanium\". The linker can be specified with: "
+"\"-fuse-ld=lld\"."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:48
+msgid ""
+"In the Itanium C++ ABI the first member of an object is a pointer to the "
+"vtable for its class. The vtable is often emitted into the object file with "
+"the key function and must be imported for classes marked dllimport. The "
+"pointers must be globally unique. Unfortunately, the COFF/PE file format "
+"does not provide a mechanism to store a runtime address from another DLL "
+"into this pointer (although runtime addresses are patched into the IAT). "
+"Therefore, the compiler must emit some code, that runs after IAT patching "
+"but before anything that might use the vtable pointers, and sets the vtable "
+"pointer to the address from the IAT. For the special case of the references "
+"to vtables for __cxxabiv1::__class_type_info from typeinto objects there is "
+"no declaration available to the compiler so this can't be done. To allow "
+"programs to link we currently rely on the -auto-import switch in LLD to auto-"
+"import references to __cxxabiv1::__class_type_info pointers (see: https://"
+"reviews.llvm.org/D43184 for a related discussion). This allows for linking; "
+"but, code that actually uses such fields will not work as they these will "
+"not be fixed up at runtime. See _pei386_runtime_relocator which handles the "
+"runtime component of the autoimporting scheme used for mingw and comments in "
+"https://reviews.llvm.org/D43184 and https://reviews.llvm.org/D89518 for more."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:67
+msgid "Assembling a Toolchain:"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:69
+msgid "The procedure is:"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:71
+msgid ""
+"# Build an LLVM toolchain with support for Windows Itanium. # Use the "
+"toolchain from step 1. to build libc++, libc++abi, and libunwind."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:74
+msgid "It is also possible to cross-compile from Linux."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:76
+msgid ""
+"One method of building the libraries in step 2. is to build them \"stand-"
+"alone\". A stand-alone build doesn't involve the rest of the LLVM tree. The "
+"steps are:"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:79
+msgid "``cd build-dir``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:80
+msgid ""
+"``cmake -DLLVM_PATH=<path to llvm checkout e.g. /llvm-project/> -"
+"DCMAKE_INSTALL_PREFIX=<install path> <other options> <path to project e.g. /"
+"llvm-project/libcxxabi>``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:81
+msgid "``<make program e.g. ninja>``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:82
+msgid "``<make program> install``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:84
+msgid ""
+"More information on standalone builds can be found in the build "
+"documentation for the respective libraries. The next section discuss the "
+"salient options and modifications required for building and installing the "
+"libraries using standalone builds. This assumes that we are building "
+"libunwind and ibc++ as DLLs and statically linking libc++abi into libc++. "
+"Other build configurations are possible, but they are not discussed here."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:91
+msgid "Common CMake configuration options:"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:93
+msgid "``-D_LIBCPP_ABI_FORCE_ITANIUM'``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:95
+msgid "Tell the libc++ headers that the Itanium C++ ABI is being used."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:97
+msgid ""
+"``-DCMAKE_C_FLAGS=\"-lmsvcrt -llegacy_stdio_definitions -"
+"D_NO_CRT_STDIO_INLINE\"``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:99
+msgid ""
+"Supply CRT definitions including stdio definitions that have been removed "
+"from the MS VS CRT. We don't want the stdio functions declared inline as "
+"they will cause multiple definition errors when the same symbols are pulled "
+"in from legacy_stdio_definitions.ib."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:103
+msgid "``-DCMAKE_INSTALL_PREFIX=<install path>``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:105
+msgid "Where to install the library and headers."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:108
+msgid "Building libunwind:"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:110
+msgid "``-DLIBUNWIND_ENABLE_SHARED=ON``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:111
+msgid "``-DLIBUNWIND_ENABLE_STATIC=OFF``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:113
+msgid "libunwind can be built as a DLL. It is not dependent on other projects."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:115
+msgid "``-DLIBUNWIND_USE_COMPILER_RT=OFF``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:117
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:154
+msgid "We use the MS runtime."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:119
+msgid ""
+"The CMake files will need to be edited to prevent them adding GNU specific "
+"libraries to the link line."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:122
+msgid "Building libc++abi:"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:124
+msgid "``-DLIBCXXABI_ENABLE_SHARED=OFF``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:125
+msgid "``-DLIBCXXABI_ENABLE_STATIC=ON``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:126
+msgid "``-DLIBCXX_ENABLE_SHARED=ON'``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:127
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:160
+msgid "``-DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=ON``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:129
+msgid ""
+"To break the symbol dependency between libc++abi and libc++ we build libc+"
+"+abi as a static library and then statically link it into the libc++ DLL. "
+"This necessitates setting the CMake file to ensure that the visibility "
+"macros (which expand to dllexport/import) are expanded as they will be "
+"needed when creating the final libc++ DLL later, see: https://reviews.llvm."
+"org/D90021."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:136
+msgid "``-DLIBCXXABI_LIBCXX_INCLUDES=<path to libcxx>/include``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:138
+msgid "Where to find the libc++ headers"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:141
+msgid "Building libc++:"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:143
+msgid "``-DLIBCXX_ENABLE_SHARED=ON``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:144
+msgid "``-DLIBCXX_ENABLE_STATIC=OFF``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:146
+msgid "We build libc++ as a DLL and statically link libc++abi into it."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:148
+msgid "``-DLIBCXX_INSTALL_HEADERS=ON``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:150
+msgid "Install the headers."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:152
+msgid "``-DLIBCXX_USE_COMPILER_RT=OFF``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:156
+msgid "``-DLIBCXX_HAS_WIN32_THREAD_API=ON``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:158
+msgid "Windows Itanium does not offer a POSIX-like layer over WIN32."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:161
+msgid "``-DLIBCXX_CXX_ABI=libcxxabi``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:162
+msgid "``-DLIBCXX_CXX_ABI_INCLUDE_PATHS=<libcxxabi src path>/include``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:163
+msgid "``-DLIBCXX_CXX_ABI_LIBRARY_PATH=<libcxxabi build path>/lib``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:165
+msgid "Use the static libc++abi library built earlier."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:167
+msgid "``-DLIBCXX_NO_VCRUNTIME=ON``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:169
+msgid ""
+"Remove any dependency on the VC runtime - we need libc++abi to supply the C+"
+"+ runtime."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:171
+msgid "``-DCMAKE_C_FLAGS=<path to installed unwind.lib>``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:173
+msgid ""
+"As we are statically linking against libcxxabi we need to link against the "
+"unwind import library to resolve unwind references from the libcxxabi "
+"objects."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:177
+msgid "``-DCMAKE_C_FLAGS+=' -UCLOCK_REALTIME'``"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:179
+msgid "Prevent the inclusion of sys/time that MS doesn't provide."
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:182
+msgid "Notes:"
+msgstr ""
+
+#: ../../../HowToBuildWindowsItaniumPrograms.rst:184
+msgid ""
+"An example build recipe is available here: https://reviews.llvm.org/D88124"
+msgstr ""
