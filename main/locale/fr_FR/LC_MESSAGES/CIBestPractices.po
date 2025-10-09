@@ -1,0 +1,181 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:10+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../CIBestPractices.rst:3
+msgid "LLVM CI Best Practices"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:6
+msgid "Overview"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:8
+msgid ""
+"This document contains a list of guidelines and best practices to use when "
+"working on LLVM's CI systems. These are intended to keep our actions "
+"reliable, consistent, and secure."
+msgstr ""
+
+#: ../../../CIBestPractices.rst:13
+msgid "GitHub Actions Best Practices"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:15
+msgid ""
+"This section contains information on best practices/guidelines when working "
+"on LLVM's GitHub actions workflows."
+msgstr ""
+
+#: ../../../CIBestPractices.rst:19
+msgid "Disabling Jobs In Forks"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:21
+msgid ""
+"There are many LLVM forks that exist, and we currently default to preventing "
+"actions from running outside of the LLVM organization to prevent them from "
+"running in forks. We default to this as actions running in forks are usually "
+"not desired and only run by accident. In addition, many of our workflows "
+"assume that they are operating within the main LLVM repository and break "
+"otherwise."
+msgstr ""
+
+#: ../../../CIBestPractices.rst:28
+msgid ""
+"Adhering to this best practice looks like adding the following to each of "
+"the jobs specified within a workflow:"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:37
+msgid ""
+"We choose to use ``github.repository_owner`` rather than ``github."
+"repository`` to enable these workflows to run in forks inside the LLVM "
+"organization, such as the ClangIR fork."
+msgstr ""
+
+#: ../../../CIBestPractices.rst:41
+msgid ""
+"There are some exceptions to this rule where ``github.repository`` might be "
+"used when it makes sense to limit a workflow to only running in the main "
+"monorepo repository. These include things like the issue subscriber and "
+"release tasks, which should not run anywhere else."
+msgstr ""
+
+#: ../../../CIBestPractices.rst:47
+msgid "Hash Pinning Dependencies"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:49
+msgid ""
+"GitHub Actions allows the use of actions from other repositories as steps in "
+"jobs. We take advantage of various actions for a variety of different tasks, "
+"but especially tasks like checking out the repository, and downloading/"
+"uploading build caches. These actions are typically versioned with just a "
+"release, which looks like the following:"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:61
+msgid ""
+"However, it is best practice to specify an exact commit SHA from which to "
+"pull the action, noting the version in a comment:"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:64
+msgid ""
+"We plan on revisiting this recommendation once GitHub's immutable actions "
+"have been rolled out as GA."
+msgstr ""
+
+#: ../../../CIBestPractices.rst:73
+msgid ""
+"This is beneficial for two reasons: reliability and security. Specifying an "
+"exact SHA rather than just a major version ensures we end up running the "
+"same action originally specified when the workflow was authored and/or "
+"updated, and that no breaking changes sneak in from new versions of a "
+"workflow being released. However, this effect could also be achieved by "
+"specifying an exact dot release. The biggest reason to prefer hash pinned "
+"dependencies is security. Release assets on GitHub are mutable, allowing an "
+"attacker to change the code within a specific version of an action after the "
+"fact, potentially stealing sensitive tokens and credentials. Hash pinning "
+"the dependencies prevents this as the hash would change with the code."
+msgstr ""
+
+#: ../../../CIBestPractices.rst:85
+msgid "Using Versioned Runner Images"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:87
+msgid ""
+"GitHub actions allows the use of either specifically versioned runner images "
+"(e.g., ``ubuntu-22.04``), or just the latest runner image (e.g., ``ubuntu-"
+"latest``). It is best practice to use explicitly versioned runner images. "
+"This prevents breakages when GitHub rolls the latest runner image to a new "
+"version with potentially breaking changes, instead allowing us to explicitly "
+"opt-in to using the new image when we have done sufficient testing to ensure "
+"that our existing workflows work as expected in the new environment."
+msgstr ""
+
+#: ../../../CIBestPractices.rst:97
+msgid "Top Level Read Permissions"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:99
+msgid ""
+"The top of every workflow should specify that the job only has read "
+"permissions:"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:107
+msgid ""
+"If specific jobs within the workflow need additional permissions, those "
+"permissions should be added within the specific job. This practice locks "
+"down all permissions by default and only enables them when needed, better "
+"enforcing the principle of least privilege."
+msgstr ""
+
+#: ../../../CIBestPractices.rst:113
+msgid "Ensuring Workflows Run on the Correct Events"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:115
+msgid ""
+"GitHub allows workflows to run on a multitude of events, and it is important "
+"to configure a workflow such that it triggers on the correct events. There "
+"are two main best practices around events that trigger workflows:"
+msgstr ""
+
+#: ../../../CIBestPractices.rst:119
+msgid ""
+"1. Workflows that are designed to run on pull requests should not be "
+"restricted by target branch. Restricting the target branch unnecessarily "
+"will prevent any stacked PRs from being tested. ``pull_request`` events "
+"should not contain a branches key."
+msgstr ""
+
+#: ../../../CIBestPractices.rst:124
+msgid ""
+"2. Workflows that are designed to also trigger on push events (e.g., for "
+"testing on ``main`` or one of the release branches) need to be restricted by "
+"branch. While pushes to a fork will not trigger a workflow run due to the "
+"``push`` event if the workflow already has its jobs disabled in forks "
+"(described above), stacked PRs will end up running jobs twice if the "
+"``push`` event does not have any branch restrictions. ``push`` events should "
+"have their branches restricted at the very least to ``main`` and the release "
+"branches as follows:"
+msgstr ""
