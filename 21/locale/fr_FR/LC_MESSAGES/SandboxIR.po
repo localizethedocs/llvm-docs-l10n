@@ -1,0 +1,208 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 21\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../SandboxIR.md:1
+msgid "Sandbox IR: A transactional layer over LLVM IR"
+msgstr ""
+
+#: ../../../SandboxIR.md:3
+msgid ""
+"Sandbox IR is an IR layer on top of LLVM IR that allows you to save/restore "
+"its state."
+msgstr ""
+
+#: ../../../SandboxIR.md:5
+msgid "Quick Start Notes"
+msgstr ""
+
+#: ../../../SandboxIR.md:7
+msgid "Within your LLVM pass:"
+msgstr ""
+
+#: ../../../SandboxIR.md:31
+msgid "Make sure you link against `SandboxIR` in `CMakeLists.txt`:"
+msgstr ""
+
+#: ../../../SandboxIR.md:40
+msgid "API"
+msgstr ""
+
+#: ../../../SandboxIR.md:41
+msgid ""
+"The Sandbox IR API is designed to feel like LLVM, replicating many common "
+"API classes and functions to mirror the LLVM API. The class hierarchy is "
+"similar (but in the `llvm::sandboxir` namespace). For example here is a "
+"small part of it:"
+msgstr ""
+
+#: ../../../SandboxIR.md:56
+msgid "Design"
+msgstr ""
+
+#: ../../../SandboxIR.md:58
+msgid "Sandbox IR Value <-> LLVM IR Value Mapping"
+msgstr ""
+
+#: ../../../SandboxIR.md:59
+msgid ""
+"Each LLVM IR Value maps to a single Sandbox IR Value. The reverse is also "
+"true in most cases, except for Sandbox IR Instructions that map to more than "
+"one LLVM IR Instruction. Such instructions can be defined in extensions of "
+"the base Sandbox IR."
+msgstr ""
+
+#: ../../../SandboxIR.md:63
+msgid ""
+"Forward mapping: Sandbox IR Value -> LLVM IR Value Each Sandbox IR Value "
+"contains an `llvm::Value *Val` member variable that points to the "
+"corresponding LLVM IR Value."
+msgstr ""
+
+#: ../../../SandboxIR.md:66
+msgid ""
+"Reverse mapping: LLVM IR Value -> Sandbox IR Value This mapping is stored in "
+"`sandboxir::Context::LLVMValueToValue`."
+msgstr ""
+
+#: ../../../SandboxIR.md:69
+msgid ""
+"For example `sandboxir::User::getOperand(OpIdx)` for a `sandboxir::User *U` "
+"works as follows:"
+msgstr ""
+
+#: ../../../SandboxIR.md:70
+msgid "First we find the LLVM User: `llvm::User *LLVMU = U->Val`."
+msgstr ""
+
+#: ../../../SandboxIR.md:71
+msgid ""
+"Next we get the LLVM Value operand: `llvm::Value *LLVMOp = LLVMU-"
+">getOperand(OpIdx)`"
+msgstr ""
+
+#: ../../../SandboxIR.md:72
+msgid ""
+"Finally we get the Sandbox IR operand that corresponds to `LLVMOp` by "
+"querying the map in the Sandbox IR context: `retrun Ctx.getValue(LLVMOp)`."
+msgstr ""
+
+#: ../../../SandboxIR.md:74
+msgid "Sandbox IR is Write-Through"
+msgstr ""
+
+#: ../../../SandboxIR.md:75
+msgid ""
+"Sandbox IR is designed to rely on LLVM IR for its state. So any change made "
+"to Sandbox IR objects directly updates the corresponding LLVM IR."
+msgstr ""
+
+#: ../../../SandboxIR.md:78
+msgid "This has the following benefits:"
+msgstr ""
+
+#: ../../../SandboxIR.md:79
+msgid "It minimizes the replication of state, and"
+msgstr ""
+
+#: ../../../SandboxIR.md:80
+msgid ""
+"It makes sure that Sandbox IR and LLVM IR are always in sync, which helps "
+"avoid bugs and removes the need for a lowering step."
+msgstr ""
+
+#: ../../../SandboxIR.md:81
+msgid ""
+"No need for serialization/de-serialization infrastructure as we can rely on "
+"LLVM IR for it."
+msgstr ""
+
+#: ../../../SandboxIR.md:82
+msgid "One can pass actual `llvm::Instruction`s to cost modeling APIs."
+msgstr ""
+
+#: ../../../SandboxIR.md:84
+msgid ""
+"Sandbox IR API functions that modify the IR state call the corresponding "
+"LLVM IR function that modifies the LLVM IR's state. For example, for "
+"`sandboxir::User::setOperand(OpIdx, sandboxir::Value *Op)`:"
+msgstr ""
+
+#: ../../../SandboxIR.md:86
+msgid ""
+"We get the corresponding LLVM User: `llvm::User *LLVMU = cast<llvm::"
+"User>(Val)`"
+msgstr ""
+
+#: ../../../SandboxIR.md:87
+msgid ""
+"Next we get the corresponding LLVM Operand: `llvm::Value *LLVMOp = Op->Val`"
+msgstr ""
+
+#: ../../../SandboxIR.md:88
+msgid "Finally we modify `LLVMU`'s operand: `LLVMU->setOperand(OpIdx, LLVMOp)"
+msgstr ""
+
+#: ../../../SandboxIR.md:90
+msgid "IR Change Tracking"
+msgstr ""
+
+#: ../../../SandboxIR.md:91
+msgid ""
+"Sandbox IR's state can be saved and restored. This is done with the help of "
+"the tracker component that is tightly coupled to the public Sandbox IR API "
+"functions. Please note that nested saves/restores are currently not "
+"supported."
+msgstr ""
+
+#: ../../../SandboxIR.md:95
+msgid ""
+"To save the state and enable tracking the user needs to call `sandboxir::"
+"Context::save()`. From this point on any change made to the Sandbox IR state "
+"will automatically create a change object and register it with the tracker, "
+"without any intervention from the user. The changes are accumulated in a "
+"vector within the tracker."
+msgstr ""
+
+#: ../../../SandboxIR.md:99
+msgid ""
+"To rollback to the saved state the user needs to call `sandboxir::Context::"
+"revert()`. Reverting back to the saved state is a matter of going over all "
+"the accumulated changes in reverse and undoing each individual change."
+msgstr ""
+
+#: ../../../SandboxIR.md:102
+msgid ""
+"To accept the changes made to the IR the user needs to call `sandboxir::"
+"Context::accept()`. Internally this will go through the changes and run any "
+"finalization required."
+msgstr ""
+
+#: ../../../SandboxIR.md:105
+msgid ""
+"Please note that after a call to `revert()` or `accept()` tracking will "
+"stop. To start tracking again, the user needs to call `save()`."
+msgstr ""
+
+#: ../../../SandboxIR.md:108
+msgid "Users of Sandbox IR"
+msgstr ""
+
+#: ../../../SandboxIR.md:109
+msgid "[The Sandbox Vectorizer](project:SandboxVectorizer.md)"
+msgstr ""
