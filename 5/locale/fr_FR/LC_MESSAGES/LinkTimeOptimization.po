@@ -1,0 +1,321 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:12+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../LinkTimeOptimization.rst:3
+msgid "LLVM Link Time Optimization: Design and Implementation"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:9
+msgid "Description"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:11
+msgid ""
+"LLVM features powerful intermodular optimizations which can be used at link "
+"time. Link Time Optimization (LTO) is another name for intermodular "
+"optimization when performed during the link stage. This document describes "
+"the interface and design between the LTO optimizer and the linker."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:17
+msgid "Design Philosophy"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:19
+msgid ""
+"The LLVM Link Time Optimizer provides complete transparency, while doing "
+"intermodular optimization, in the compiler tool chain. Its main goal is to "
+"let the developer take advantage of intermodular optimizations without "
+"making any significant changes to the developer's makefiles or build system. "
+"This is achieved through tight integration with the linker. In this model, "
+"the linker treats LLVM bitcode files like native object files and allows "
+"mixing and matching among them. The linker uses `libLTO`_, a shared object, "
+"to handle LLVM bitcode files. This tight integration between the linker and "
+"LLVM optimizer helps to do optimizations that are not possible in other "
+"models. The linker input allows the optimizer to avoid relying on "
+"conservative escape analysis."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:33
+msgid "Example of link time optimization"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:35
+msgid ""
+"The following example illustrates the advantages of LTO's integrated "
+"approach and clean interface. This example requires a system linker which "
+"supports LTO through the interface described in this document. Here, clang "
+"transparently invokes system linker."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:40
+msgid "Input source file ``a.c`` is compiled into LLVM bitcode form."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:41
+msgid "Input source file ``main.c`` is compiled into native object code."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:86
+msgid "To compile, run:"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:94
+msgid ""
+"In this example, the linker recognizes that ``foo2()`` is an externally "
+"visible symbol defined in LLVM bitcode file. The linker completes its usual "
+"symbol resolution pass and finds that ``foo2()`` is not used anywhere. This "
+"information is used by the LLVM optimizer and it removes ``foo2()``."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:100
+msgid ""
+"As soon as ``foo2()`` is removed, the optimizer recognizes that condition "
+"``i < 0`` is always false, which means ``foo3()`` is never used. Hence, the "
+"optimizer also removes ``foo3()``."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:104
+msgid "And this in turn, enables linker to remove ``foo4()``."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:106
+msgid ""
+"This example illustrates the advantage of tight integration with the linker. "
+"Here, the optimizer can not remove ``foo3()`` without the linker's input."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:111
+msgid "Alternative Approaches"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:118
+msgid "**Compiler driver invokes link time optimizer separately.**"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:114
+msgid ""
+"In this model the link time optimizer is not able to take advantage of "
+"information collected during the linker's normal symbol resolution phase. In "
+"the above example, the optimizer can not remove ``foo2()`` without the "
+"linker's input because it is externally visible. This in turn prohibits the "
+"optimizer from removing ``foo3()``."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:132
+msgid ""
+"**Use separate tool to collect symbol information from all object files.**"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:121
+msgid ""
+"In this model, a new, separate, tool or library replicates the linker's "
+"capability to collect information for link time optimization. Not only is "
+"this code duplication difficult to justify, but it also has several other "
+"disadvantages. For example, the linking semantics and the features provided "
+"by the linker on various platform are not unique. This means, this new tool "
+"needs to support all such features and platforms in one super tool or a "
+"separate tool per platform is required. This increases maintenance cost for "
+"link time optimizer significantly, which is not necessary. This approach "
+"also requires staying synchronized with linker developments on various "
+"platforms, which is not the main focus of the link time optimizer. Finally, "
+"this approach increases end user's build time due to the duplication of work "
+"done by this separate tool and the linker itself."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:135
+msgid "Multi-phase communication between ``libLTO`` and linker"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:137
+msgid ""
+"The linker collects information about symbol definitions and uses in various "
+"link objects which is more accurate than any information collected by other "
+"tools during typical build cycles. The linker collects this information by "
+"looking at the definitions and uses of symbols in native .o files and using "
+"symbol visibility information. The linker also uses user-supplied "
+"information, such as a list of exported symbols. LLVM optimizer collects "
+"control flow information, data flow information and knows much more about "
+"program structure from the optimizer's point of view. Our goal is to take "
+"advantage of tight integration between the linker and the optimizer by "
+"sharing this information during various linking phases."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:149
+msgid "Phase 1 : Read LLVM Bitcode Files"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:151
+msgid ""
+"The linker first reads all object files in natural order and collects symbol "
+"information. This includes native object files as well as LLVM bitcode "
+"files. To minimize the cost to the linker in the case that all .o files are "
+"native object files, the linker only calls ``lto_module_create()`` when a "
+"supplied object file is found to not be a native object file. If "
+"``lto_module_create()`` returns that the file is an LLVM bitcode file, the "
+"linker then iterates over the module using ``lto_module_get_symbol_name()`` "
+"and ``lto_module_get_symbol_attribute()`` to get all symbols defined and "
+"referenced. This information is added to the linker's global symbol table."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:162
+msgid ""
+"The lto* functions are all implemented in a shared object libLTO. This "
+"allows the LLVM LTO code to be updated independently of the linker tool. On "
+"platforms that support it, the shared object is lazily loaded."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:167
+msgid "Phase 2 : Symbol Resolution"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:169
+msgid ""
+"In this stage, the linker resolves symbols using global symbol table. It may "
+"report undefined symbol errors, read archive members, replace weak symbols, "
+"etc. The linker is able to do this seamlessly even though it does not know "
+"the exact content of input LLVM bitcode files. If dead code stripping is "
+"enabled then the linker collects the list of live symbols."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:176
+msgid "Phase 3 : Optimize Bitcode Files"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:178
+msgid ""
+"After symbol resolution, the linker tells the LTO shared object which "
+"symbols are needed by native object files. In the example above, the linker "
+"reports that only ``foo1()`` is used by native object files using "
+"``lto_codegen_add_must_preserve_symbol()``. Next the linker invokes the LLVM "
+"optimizer and code generators using ``lto_codegen_compile()`` which returns "
+"a native object file creating by merging the LLVM bitcode files and applying "
+"various optimization passes."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:187
+msgid "Phase 4 : Symbol Resolution after optimization"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:189
+msgid ""
+"In this phase, the linker reads optimized a native object file and updates "
+"the internal global symbol table to reflect any changes. The linker also "
+"collects information about any changes in use of external symbols by LLVM "
+"bitcode files. In the example above, the linker notes that ``foo4()`` is not "
+"used any more. If dead code stripping is enabled then the linker refreshes "
+"the live symbol information appropriately and performs dead code stripping."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:196
+msgid ""
+"After this phase, the linker continues linking as if it never saw LLVM "
+"bitcode files."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:202
+msgid "``libLTO``"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:204
+msgid ""
+"``libLTO`` is a shared object that is part of the LLVM tools, and is "
+"intended for use by a linker. ``libLTO`` provides an abstract C interface to "
+"use the LLVM interprocedural optimizer without exposing details of LLVM's "
+"internals. The intention is to keep the interface as stable as possible even "
+"when the LLVM optimizer continues to evolve. It should even be possible for "
+"a completely different compilation technology to provide a different libLTO "
+"that works with their object files and the standard linker tool."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:213
+msgid "``lto_module_t``"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:215
+msgid ""
+"A non-native object file is handled via an ``lto_module_t``. The following "
+"functions allow the linker to check if a file (on disk or in a memory "
+"buffer) is a file which libLTO can process:"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:226
+msgid ""
+"If the object file can be processed by ``libLTO``, the linker creates a "
+"``lto_module_t`` by using one of:"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:234
+msgid "and when done, the handle is released via"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:241
+msgid ""
+"The linker can introspect the non-native object file by getting the number "
+"of symbols and getting the name and attributes of each symbol via:"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:250
+msgid "The attributes of a symbol include the alignment, visibility, and kind."
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:253
+msgid "``lto_code_gen_t``"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:255
+msgid ""
+"Once the linker has loaded each non-native object files into an "
+"``lto_module_t``, it can request ``libLTO`` to process them all and generate "
+"a native object file. This is done in a couple of steps. First, a code "
+"generator is created with:"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:264
+msgid "Then, each non-native object file is added to the code generator with:"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:270
+msgid ""
+"The linker then has the option of setting some codegen options. Whether or "
+"not to generate DWARF debug info is set with:"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:277
+msgid "which kind of position independence is set with:"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:283
+msgid ""
+"And each symbol that is referenced by a native object file or otherwise must "
+"not be optimized away is set with:"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:290
+msgid ""
+"After all these settings are done, the linker requests that a native object "
+"file be created from the modules with the settings using:"
+msgstr ""
+
+#: ../../../LinkTimeOptimization.rst:297
+msgid ""
+"which returns a pointer to a buffer containing the generated native object "
+"file. The linker then parses that and links it with the rest of the native "
+"object files."
+msgstr ""
