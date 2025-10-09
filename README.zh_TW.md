@@ -6,6 +6,7 @@
 <p></p>
 <ul>
   <li><a href="./README.md"><code>en_US</code> : English</a></li>
+  <li><a href="./README.fr_FR.md"><code>fr_FR</code> : Français</a></li>
   <li><a href="./README.zh_CN.md"><code>zh_CN</code> : 简体中文</a></li>
   <li><a href="./README.zh_TW.md"><code>zh_TW</code> : 繁體中文</a></li>
 </ul>
@@ -241,6 +242,22 @@ The goal of this project is to translate the LLVM documentation into multiple la
     </tr>
   </thead>
   <tbody>
+    <!-- fr_FR -->
+    <tr>
+      <td rowspan="1" colspan="1" align="center" style="text-align: center;"><div><code>fr_FR</code></div></td>
+      <td rowspan="1" colspan="1" align="center" style="text-align: center;">
+        <div>
+          <div>French</div>
+          <div>Français</div>
+        </div>
+      </td>
+      <td rowspan="1" colspan="1" align="center" style="text-align: center;">
+        <div>
+          <div><a href="https://localizethedocs.crowdin.com/llvm-docs-l10n/fr" title="fr translation" target="_blank"><img alt="fr translation" src="https://img.shields.io/badge/dynamic/json?color=blue&label=fr&style=flat&logo=crowdin&query=%24.progress.0.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200032568-17.json" /></a></div>
+          <div><a href="https://localizethedocs.crowdin.com/llvm-docs-l10n/fr" title="fr proofreading" target="_blank"><img alt="fr proofreading" src="https://img.shields.io/badge/dynamic/json?color=green&label=fr&style=flat&logo=crowdin&query=%24.progress.0.data.approvalProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200032568-17.json" /></a></div>
+        </div>
+      </td>
+    </tr>
     <!-- zh_CN -->
     <tr>
       <td rowspan="1" colspan="1" align="center" style="text-align: center;"><div><code>zh_CN</code></div></td>
@@ -252,8 +269,8 @@ The goal of this project is to translate the LLVM documentation into multiple la
       </td>
       <td rowspan="1" colspan="1" align="center" style="text-align: center;">
         <div>
-          <div><a href="https://localizethedocs.crowdin.com/llvm-docs-l10n/zh-CN" title="zh-CN translation" target="_blank"><img alt="zh-CN translation" src="https://img.shields.io/badge/dynamic/json?color=blue&label=zh-CN&style=flat&logo=crowdin&query=%24.progress.0.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200032568-17.json" /></a></div>
-          <div><a href="https://localizethedocs.crowdin.com/llvm-docs-l10n/zh-CN" title="zh-CN proofreading" target="_blank"><img alt="zh-CN proofreading" src="https://img.shields.io/badge/dynamic/json?color=green&label=zh-CN&style=flat&logo=crowdin&query=%24.progress.0.data.approvalProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200032568-17.json" /></a></div>
+          <div><a href="https://localizethedocs.crowdin.com/llvm-docs-l10n/zh-CN" title="zh-CN translation" target="_blank"><img alt="zh-CN translation" src="https://img.shields.io/badge/dynamic/json?color=blue&label=zh-CN&style=flat&logo=crowdin&query=%24.progress.1.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200032568-17.json" /></a></div>
+          <div><a href="https://localizethedocs.crowdin.com/llvm-docs-l10n/zh-CN" title="zh-CN proofreading" target="_blank"><img alt="zh-CN proofreading" src="https://img.shields.io/badge/dynamic/json?color=green&label=zh-CN&style=flat&logo=crowdin&query=%24.progress.1.data.approvalProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200032568-17.json" /></a></div>
         </div>
       </td>
     </tr>
@@ -268,8 +285,8 @@ The goal of this project is to translate the LLVM documentation into multiple la
       </td>
       <td rowspan="1" colspan="1" align="center" style="text-align: center;">
         <div>
-          <div><a href="https://localizethedocs.crowdin.com/llvm-docs-l10n/zh-TW" title="zh-TW translation" target="_blank"><img alt="zh-TW translation" src="https://img.shields.io/badge/dynamic/json?color=blue&label=zh-TW&style=flat&logo=crowdin&query=%24.progress.1.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200032568-17.json" /></a></div>
-          <div><a href="https://localizethedocs.crowdin.com/llvm-docs-l10n/zh-TW" title="zh-TW proofreading" target="_blank"><img alt="zh-TW proofreading" src="https://img.shields.io/badge/dynamic/json?color=green&label=zh-TW&style=flat&logo=crowdin&query=%24.progress.1.data.approvalProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200032568-17.json" /></a></div>
+          <div><a href="https://localizethedocs.crowdin.com/llvm-docs-l10n/zh-TW" title="zh-TW translation" target="_blank"><img alt="zh-TW translation" src="https://img.shields.io/badge/dynamic/json?color=blue&label=zh-TW&style=flat&logo=crowdin&query=%24.progress.2.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200032568-17.json" /></a></div>
+          <div><a href="https://localizethedocs.crowdin.com/llvm-docs-l10n/zh-TW" title="zh-TW proofreading" target="_blank"><img alt="zh-TW proofreading" src="https://img.shields.io/badge/dynamic/json?color=green&label=zh-TW&style=flat&logo=crowdin&query=%24.progress.2.data.approvalProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200032568-17.json" /></a></div>
         </div>
       </td>
     </tr>
@@ -298,6 +315,13 @@ You can preview translations in <a href="https://projects.localizethedocs.org/ll
       <td rowspan="1" colspan="1" align="center" style="text-align: center;"><div><code>en_US</code></div></td>
       <td rowspan="1" colspan="1" align="left"   style="text-align: left;  ">
         <div><a href="https://projects.localizethedocs.org/llvm-docs-l10n/en-us">https://projects.localizethedocs.org/llvm-docs-l10n/en-us</a></div>
+      </td>
+    </tr>
+    <!-- fr_FR -->
+    <tr>
+      <td rowspan="1" colspan="1" align="center" style="text-align: center;"><div><code>fr_FR</code></div></td>
+      <td rowspan="1" colspan="1" align="left"   style="text-align: left;  ">
+        <div><a href="https://projects.localizethedocs.org/llvm-docs-l10n/fr-fr">https://projects.localizethedocs.org/llvm-docs-l10n/fr-fr</a></div>
       </td>
     </tr>
     <!-- zh_CN -->
