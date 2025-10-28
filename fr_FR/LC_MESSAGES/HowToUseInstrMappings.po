@@ -1,0 +1,107 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 10\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:13+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../HowToUseInstrMappings.rst:3
+msgid "How To Use Instruction Mappings"
+msgstr ""
+
+#: ../../../HowToUseInstrMappings.rst:9
+msgid "Introduction"
+msgstr ""
+
+#: ../../../HowToUseInstrMappings.rst:11
+msgid ""
+"This document contains information about adding instruction mapping support "
+"for a target. The motivation behind this feature comes from the need to "
+"switch between different instruction formats during various optimizations. "
+"One approach could be to use switch cases which list all the instructions "
+"along with formats they can transition to. However, it has large maintenance "
+"overhead because of the hardcoded instruction names. Also, whenever a new "
+"instruction is added in the .td files, all the relevant switch cases should "
+"be modified accordingly. Instead, the same functionality could be achieved "
+"with TableGen and some support from the .td files for a fraction of "
+"maintenance cost."
+msgstr ""
+
+#: ../../../HowToUseInstrMappings.rst:22
+msgid "``InstrMapping`` Class Overview"
+msgstr ""
+
+#: ../../../HowToUseInstrMappings.rst:24
+msgid ""
+"TableGen uses relationship models to map instructions with each other. These "
+"models are described using ``InstrMapping`` class as a base. Each model sets "
+"various fields of the ``InstrMapping`` class such that they can uniquely "
+"describe all the instructions using that model. TableGen parses all the "
+"relation models and uses the information to construct relation tables which "
+"relate instructions with each other. These tables are emitted in the "
+"``XXXInstrInfo.inc`` file along with the functions to query them. Following "
+"is the definition of ``InstrMapping`` class definied in Target.td file:"
+msgstr ""
+
+#: ../../../HowToUseInstrMappings.rst:61
+msgid "Sample Example"
+msgstr ""
+
+#: ../../../HowToUseInstrMappings.rst:63
+msgid ""
+"Let's say that we want to have a function ``int getPredOpcode(uint16_t "
+"Opcode, enum PredSense inPredSense)`` which takes a non-predicated "
+"instruction and returns its predicated true or false form depending on some "
+"input flag, ``inPredSense``. The first step in the process is to define a "
+"relationship model that relates predicated instructions to their non-"
+"predicated form by assigning appropriate values to the ``InstrMapping`` "
+"fields. For this relationship, non-predicated instructions are treated as "
+"key instruction since they are the one used to query the interface function."
+msgstr ""
+
+#: ../../../HowToUseInstrMappings.rst:107
+msgid ""
+"TableGen uses the above relationship model to emit relation table that maps "
+"non-predicated instructions with their predicated forms. It also outputs the "
+"interface function ``int getPredOpcode(uint16_t Opcode, enum PredSense "
+"inPredSense)`` to query the table. Here, Function ``getPredOpcode`` takes "
+"two arguments, opcode of the current instruction and PredSense of the "
+"desired instruction, and returns predicated form of the instruction, if "
+"found in the relation table. In order for an instruction to be added into "
+"the relation table, it needs to include relevant information in its "
+"definition. For example, consider following to be the current definitions of "
+"ADD, ADD_pt (true) and ADD_pf (false) instructions:"
+msgstr ""
+
+#: ../../../HowToUseInstrMappings.rst:136
+msgid ""
+"In this step, we modify these instructions to include the information "
+"required by the relationship model, <tt>getPredOpcode</tt>, so that they can "
+"be related."
+msgstr ""
+
+#: ../../../HowToUseInstrMappings.rst:166
+msgid ""
+"Please note that all the above instructions use ``PredRel`` as a base class. "
+"This is extremely important since TableGen uses it as a filter for selecting "
+"instructions for ``getPredOpcode`` model. Any instruction not derived from "
+"``PredRel`` is excluded from the analysis. ``BaseOpcode`` is another "
+"important field. Since it's selected as a ``RowFields`` of the model, it is "
+"required to have the same value for all 3 instructions in order to be "
+"related. Next, ``PredSense`` is used to determine their column positions by "
+"comparing its value with ``KeyCol`` and ``ValueCols``. If an instruction "
+"sets its ``PredSense`` value to something not used in the relation model, it "
+"will not be assigned a column in the relation table."
+msgstr ""
