@@ -1,0 +1,562 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../ReleaseNotes.rst:3
+msgid "LLVM 3.9 Release Notes"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:9
+msgid "Introduction"
+msgstr "簡介"
+
+#: ../../../ReleaseNotes.rst:11
+msgid ""
+"This document contains the release notes for the LLVM Compiler "
+"Infrastructure, release 3.9.  Here we describe the status of LLVM, including "
+"major improvements from the previous release, improvements in various "
+"subprojects of LLVM, and some of the current users of the code.  All LLVM "
+"releases may be downloaded from the `LLVM releases web site <http://llvm.org/"
+"releases/>`_."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:17
+msgid ""
+"For more information about LLVM, including information about the latest "
+"release, please check out the `main LLVM web site <http://llvm.org/>`_.  If "
+"you have questions or comments, the `LLVM Developer's Mailing List <http://"
+"lists.llvm.org/mailman/listinfo/llvm-dev>`_ is a good place to send them."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:24
+msgid "Non-comprehensive list of changes in this release"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:25
+msgid ""
+"The LLVMContext gains a new runtime check (see LLVMContext::"
+"discardValueNames()) that can be set to discard Value names (other than "
+"GlobalValue). This is intended to be used in release builds by clients that "
+"are interested in saving CPU/memory as much as possible."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:30
+msgid ""
+"There is no longer a \"global context\" available in LLVM, except for the C "
+"API."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:32
+msgid ""
+"The autoconf build system has been removed in favor of CMake. LLVM 3.9 "
+"requires CMake 3.4.3 or later to build. For information about using CMake "
+"please see the documentation on :doc:`CMake`. For information about the "
+"CMake language there is also a :doc:`CMakePrimer` document available."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:37
+msgid ""
+"C API functions LLVMParseBitcode, LLVMParseBitcodeInContext, "
+"LLVMGetBitcodeModuleInContext and LLVMGetBitcodeModule having been removed. "
+"LLVMGetTargetMachineData has been removed (use LLVMGetDataLayout instead)."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:42
+msgid "The C API function LLVMLinkModules has been removed."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:44
+msgid "The C API function LLVMAddTargetData has been removed."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:46
+msgid ""
+"The C API function LLVMGetDataLayout is deprecated in favor of "
+"LLVMGetDataLayoutStr."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:49
+msgid ""
+"The C API enum LLVMAttribute and associated API is deprecated in favor of "
+"the new LLVMAttributeRef API. The deprecated functions are "
+"LLVMAddFunctionAttr, LLVMAddTargetDependentFunctionAttr, "
+"LLVMRemoveFunctionAttr, LLVMGetFunctionAttr, LLVMAddAttribute, "
+"LLVMRemoveAttribute, LLVMGetAttribute, LLVMAddInstrAttribute, "
+"LLVMRemoveInstrAttribute and LLVMSetInstrParamAlignment."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:56
+msgid ""
+"``TargetFrameLowering::eliminateCallFramePseudoInstr`` now returns an "
+"iterator to the next instruction instead of ``void``. Targets that "
+"previously did ``MBB.erase(I); return;`` now probably want ``return MBB."
+"erase(I);``."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:60
+msgid ""
+"``SelectionDAGISel::Select`` now returns ``void``. Out-of-tree targets will "
+"need to be updated to replace the argument node and remove any dead nodes in "
+"cases where they currently return an ``SDNode *`` from this interface."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:64
+msgid ""
+"Added the MemorySSA analysis, which hopes to replace "
+"MemoryDependenceAnalysis. It should provide higher-quality results than "
+"MemDep, and be algorithmically faster than MemDep. Currently, GVNHoist "
+"(which is off by default) makes use of MemorySSA."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:69
+msgid ""
+"The minimum density for lowering switches with jump tables has been reduced "
+"from 40% to 10% for functions which are not marked ``optsize`` (that is, "
+"compiled with ``-Os``)."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:74
+msgid "GCC ABI Tag"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:76
+msgid ""
+"Recently, many of the Linux distributions (e.g. `Fedora <http://"
+"developerblog.redhat.com/2015/02/10/gcc-5-in-fedora/>`_, `Debian <https://"
+"wiki.debian.org/GCC5>`_, `Ubuntu <https://wiki.ubuntu.com/GCC5>`_) have "
+"moved on to use the new `GCC ABI <https://gcc.gnu.org/onlinedocs/gcc/"
+"C_002b_002b-Attributes.html>`_ to work around `C++11 incompatibilities in "
+"libstdc++ <https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi."
+"html>`_. This caused `incompatibility problems <https://gcc.gnu.org/ml/gcc-"
+"patches/2015-04/msg00153.html>`_ with other compilers (e.g. Clang), which "
+"needed to be fixed, but due to the experimental nature of GCC's own "
+"implementation, it took a long time for it to land in LLVM (`D18035 <https://"
+"reviews.llvm.org/D18035>`_ and `D17567 <https://reviews.llvm.org/D17567>`_), "
+"not in time for the 3.8 release."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:86
+msgid ""
+"Those patches are now present in the 3.9.0 release and should be working in "
+"the majority of cases, as they have been tested thoroughly. However, some "
+"bugs were `filed in GCC <https://gcc.gnu.org/bugzilla/show_bug.cgi?"
+"id=71712>`_ and have not yet been fixed, so there may be corner cases not "
+"covered by either GCC or Clang. Bug fixes to those problems should be "
+"reported in Bugzilla (either LLVM or GCC), and patches to LLVM's trunk are "
+"very likely to be back-ported to future 3.9.x releases (depends on how "
+"destructive it is)."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:94
+msgid ""
+"Unfortunately, these patches won't be back-ported to 3.8.x or earlier, so we "
+"strongly recommend people to use 3.9.x when GCC ABI cases are at stake."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:97
+msgid ""
+"For a more in-depth view of the issue, check our `Bugzilla entry <https://"
+"llvm.org/bugs/show_bug.cgi?id=23529>`_."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:100
+msgid "Changes to the LLVM IR"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:102
+msgid ""
+"New intrinsics ``llvm.masked.load``, ``llvm.masked.store``, ``llvm.masked."
+"gather`` and ``llvm.masked.scatter`` were introduced to the LLVM IR to allow "
+"selective memory access for vector data types."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:106
+msgid ""
+"The new ``notail`` attribute prevents optimization passes from adding "
+"``tail`` or ``musttail`` markers to a call. It is used to prevent tail call "
+"optimization from being performed on the call."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:111
+msgid "Changes to LLVM's IPO model"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:113
+msgid ""
+"LLVM no longer does inter-procedural analysis and optimization (except "
+"inlining) on functions with comdat linkage.  Doing IPO over such functions "
+"is unsound because the implementation the linker chooses at link-time may be "
+"differently optimized than the one what was visible during optimization, and "
+"may have arbitrarily different observable behavior.  See `PR26774 <http://"
+"llvm.org/PR26774>`_ for more details."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:121
+msgid "Support for ThinLTO"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:123
+msgid ""
+"LLVM now supports ThinLTO compilation, which can be invoked by compiling and "
+"linking with ``-flto=thin``. The gold linker plugin, as well as linkers that "
+"use the new ThinLTO API in libLTO (like ld64), will transparently execute "
+"the ThinLTO backends in parallel threads. For more information on ThinLTO "
+"and the LLVM implementation, see the `ThinLTO blog post <http://blog.llvm."
+"org/2016/06/thinlto-scalable-and-incremental-lto.html>`_."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:131
+msgid "Changes to the ARM Targets"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:133
+msgid "**During this release the AArch64 backend has:**"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:135
+msgid ""
+"Gained support for Qualcomm's Kryo and Broadcom's Vulcan CPUs, including "
+"scheduling models."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:137
+msgid "Landed a scheduling model for Samsung's Exynos M1."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:138
+msgid "Seen a lot of work on GlobalISel."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:139
+msgid ""
+"Learned a few more useful combines (fadd and fmul into fmadd, adjustments to "
+"the stack pointer for callee-save stack memory and local stack memory etc)."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:141
+msgid "Gained support for the Swift calling convention."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:142
+msgid ""
+"Switched to using SubtargetFeatures rather than testing for specific CPUs "
+"and to using TableGen for handling system instruction operands."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:144
+msgid ""
+"Like ARM, AArch64 is now using the TargetParser, so no more StringSwitches "
+"matching CPU, FPU or feature names will be accepted in normal code."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:146
+msgid "Clang can now self-host itself using LLD on AArch64."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:147 ../../../ReleaseNotes.rst:165
+msgid "Gained a big batch of tests from Halide."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:149
+msgid ""
+"Furthermore, LLDB now supports AArch64 compact unwind tables, as used on "
+"iOS, tvos and watchos."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:152
+msgid "**During this release the ARM target has:**"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:154
+msgid "ARMv8.2-A can now be targeted directly via Clang flags."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:155
+msgid "Adding preliminary support for Cortex-R8."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:156
+msgid "LLDB can now parse EABI attributes for an ELF input."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:157
+msgid "Initial ARM/Thumb support was added to LLD."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:158
+msgid "The ExecutionEngine now supports COFF/ARM."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:159
+msgid "Swift calling convention was ported to ARM."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:160
+msgid ""
+"A large number of codegen fixes around ARMv8, DSP, correct sub-target "
+"support, relocations, EABI, EHABI, Windows on ARM, atomics.."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:162
+msgid "Improved assembler support for Linux/Android/Chromium sub-projects."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:163
+msgid "Initial support for MUSL (libc) on ARM."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:164
+msgid "Support for Thumb1 targets in libunwind."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:169
+msgid "Changes to the MIPS Target"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:171
+msgid "**During this release the MIPS target has:**"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:173
+msgid ""
+"Enabled the Integrated Assembler by default for all ``mips-*`` and ``mipsel-"
+"*`` triples."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:175
+msgid ""
+"Significantly improved the Integrated Assembler support for the n64 ABI."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:176
+msgid ""
+"Added the Clang frontend ``-mcompact-branches={never,optimal,always}`` "
+"option that controls how LLVM generates compact branches for MIPS targets."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:178
+msgid ""
+"Improved performance and code size for stack pointer adjustments in "
+"functions with large frames."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:180
+msgid ""
+"Implemented many instructions from the microMIPS32R6 ISA and added CodeGen "
+"support for most of them."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:182
+msgid ""
+"Added support for the triple used by Debian Stretch for little endian "
+"MIPS64, ie. ``mips64el-linux-gnuabi64``."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:184
+msgid "Removed EABI which was neither tested nor properly supported."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:185
+msgid "Gained the ability to self-host on MIPS32R6."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:186
+msgid ""
+"Gained the ability to self-host on MIPS64R2 and MIPS64R6 when using the n64 "
+"ABI."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:188
+msgid "Added support for the ``LA`` macro in PIC mode for o32."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:189
+msgid "Added support for safestack in compiler-rt."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:190
+msgid "Added support for the MIPS n64 ABI in LLD."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:191
+msgid "Added LLD support for TLS relocations for both o32 and n64 MIPS ABIs."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:193
+msgid ""
+"**The MIPS target has also fixed various bugs including the following "
+"notable fixes:**"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:196
+msgid ""
+"Delay slots are no longer filled multiple times when either ``-save-temps`` "
+"or ``-via-file-asm`` are used."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:198
+msgid ""
+"Updated n32 and n64 to follow the standard ELF conventions for label "
+"prefixes (``.L``), whereas o32 still uses its own (``$``)."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:200
+msgid ""
+"Properly sign-extend values to GPR width for instructions that expect 32-bit "
+"values on 64-bit ISAs."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:202
+msgid ""
+"Several fixes for the delay-slot filler pass, including correct forbidden-"
+"slot hazard handling."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:204
+msgid ""
+"Fixed several errors caught by the machine verifier when turned on for MIPS."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:205
+msgid "Fixed broken predicate for ``SELECT`` patterns in MIPS64."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:206
+msgid ""
+"Fixed wrong truncation of memory address for ``LL``/``SC`` seqeuences in "
+"MIPS64."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:208
+msgid ""
+"Fixed the o32, n32 and n64 handling of ``.cprestore`` directives when inside "
+"a ``.set noat`` region by the Integrated Assembler."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:210
+msgid "Fixed the ordering of ``HI``/``LO`` pairs in the relocation table."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:211
+msgid "Fixed the generated ELF ``EFlags`` when Octeon is the target."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:215
+msgid "Changes to the PowerPC Target"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:217
+msgid "Moved some optimizations from O3 to O2 (D18562)"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:219
+msgid "Enable sibling call optimization on ppc64 ELFv1/ELFv2 abi"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:222
+msgid "Changes to the X86 Target"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:224
+msgid ""
+"LLVM now supports the Intel CPU codenamed Skylake Server with AVX-512 "
+"extensions using ``-march=skylake-avx512``. The switch enables the ISA "
+"extensions AVX-512{F, CD, VL, BW, DQ}."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:228
+msgid ""
+"LLVM now supports the Intel CPU codenamed Knights Landing with AVX-512 "
+"extensions using ``-march=knl``. The switch enables the ISA extensions "
+"AVX-512{F, CD, ER, PF}."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:232
+msgid ""
+"LLVM will now prefer ``PUSH`` instructions rather than ``%esp``-relative "
+"``MOV`` instructions for function calls at all optimization levels greater "
+"than ``-O0``. Previously this transformation only occurred at ``-Os``."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:237
+msgid "Changes to the AMDGPU Target"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:239
+msgid ""
+"Added backend support for OpenGL shader image, buffer storage, atomic "
+"counter, and compute shader extensions (supported since Mesa 12)"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:242
+msgid "Mesa 11.0.x is no longer supported"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:246
+msgid "External Open Source Projects Using LLVM 3.9"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:248
+msgid ""
+"An exciting aspect of LLVM is that it is used as an enabling technology for "
+"a lot of other language and tools projects. This section lists some of the "
+"projects that have already been updated to work with LLVM 3.9."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:253
+msgid "LDC - the LLVM-based D compiler"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:255
+msgid ""
+"`D <http://dlang.org>`_ is a language with C-like syntax and static typing. "
+"It pragmatically combines efficiency, control, and modeling power, with "
+"safety and programmer productivity. D supports powerful concepts like "
+"Compile-Time Function Execution (CTFE) and Template Meta-Programming, "
+"provides an innovative approach to concurrency and offers many classical "
+"paradigms."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:261
+msgid ""
+"`LDC <http://wiki.dlang.org/LDC>`_ uses the frontend from the reference "
+"compiler combined with LLVM as backend to produce efficient native code. LDC "
+"targets x86/x86_64 systems like Linux, OS X, FreeBSD and Windows and also "
+"Linux on ARM and PowerPC (32/64 bit). Ports to other architectures like "
+"AArch64 and MIPS64 are underway."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:269
+msgid "Additional Information"
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:271
+msgid ""
+"A wide variety of additional information is available on the `LLVM web page "
+"<http://llvm.org/>`_, in particular in the `documentation <http://llvm.org/"
+"docs/>`_ section.  The web page also contains versions of the API "
+"documentation which is up-to-date with the Subversion version of the source "
+"code.  You can access versions of these documents specific to this release "
+"by going into the ``llvm/docs/`` directory in the LLVM tree."
+msgstr ""
+
+#: ../../../ReleaseNotes.rst:278
+msgid ""
+"If you have any questions or comments about LLVM, please feel free to "
+"contact us via the `mailing lists <http://llvm.org/docs/#maillist>`_."
+msgstr ""
