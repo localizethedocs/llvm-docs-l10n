@@ -1,0 +1,410 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 15\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../tutorial/BuildingAJIT1.rst:3
+msgid "Building a JIT: Starting out with KaleidoscopeJIT"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:9
+msgid "Chapter 1 Introduction"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:11
+msgid ""
+"**Warning: This tutorial is currently being updated to account for ORC API "
+"changes. Only Chapters 1 and 2 are up-to-date.**"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:14
+msgid ""
+"**Example code from Chapters 3 to 5 will compile and run, but has not been "
+"updated**"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:17
+msgid ""
+"Welcome to Chapter 1 of the \"Building an ORC-based JIT in LLVM\" tutorial. "
+"This tutorial runs through the implementation of a JIT compiler using LLVM's "
+"On-Request-Compilation (ORC) APIs. It begins with a simplified version of "
+"the KaleidoscopeJIT class used in the `Implementing a language with LLVM "
+"<LangImpl01.html>`_ tutorials and then introduces new features like "
+"concurrent compilation, optimization, lazy compilation and remote execution."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:25
+msgid ""
+"The goal of this tutorial is to introduce you to LLVM's ORC JIT APIs, show "
+"how these APIs interact with other parts of LLVM, and to teach you how to "
+"recombine them to build a custom JIT that is suited to your use-case."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:29
+msgid "The structure of the tutorial is:"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:31
+msgid ""
+"Chapter #1: Investigate the simple KaleidoscopeJIT class. This will "
+"introduce some of the basic concepts of the ORC JIT APIs, including the idea "
+"of an ORC *Layer*."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:35
+msgid ""
+"`Chapter #2 <BuildingAJIT2.html>`_: Extend the basic KaleidoscopeJIT by "
+"adding a new layer that will optimize IR and generated code."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:38
+msgid ""
+"`Chapter #3 <BuildingAJIT3.html>`_: Further extend the JIT by adding a "
+"Compile-On-Demand layer to lazily compile IR."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:41
+msgid ""
+"`Chapter #4 <BuildingAJIT4.html>`_: Improve the laziness of our JIT by "
+"replacing the Compile-On-Demand layer with a custom layer that uses the ORC "
+"Compile Callbacks API directly to defer IR-generation until functions are "
+"called."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:46
+msgid ""
+"`Chapter #5 <BuildingAJIT5.html>`_: Add process isolation by JITing code "
+"into a remote process with reduced privileges using the JIT Remote APIs."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:49
+msgid ""
+"To provide input for our JIT we will use a lightly modified version of the "
+"Kaleidoscope REPL from `Chapter 7 <LangImpl07.html>`_ of the \"Implementing "
+"a language in LLVM tutorial\"."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:53
+msgid ""
+"Finally, a word on API generations: ORC is the 3rd generation of LLVM JIT "
+"API. It was preceded by MCJIT, and before that by the (now deleted) legacy "
+"JIT. These tutorials don't assume any experience with these earlier APIs, "
+"but readers acquainted with them will see many familiar elements. Where "
+"appropriate we will make this connection with the earlier APIs explicit to "
+"help people who are transitioning from them to ORC."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:61
+msgid "JIT API Basics"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:63
+msgid ""
+"The purpose of a JIT compiler is to compile code \"on-the-fly\" as it is "
+"needed, rather than compiling whole programs to disk ahead of time as a "
+"traditional compiler does. To support that aim our initial, bare-bones JIT "
+"API will have just two functions:"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:68
+msgid ""
+"``Error addModule(std::unique_ptr<Module> M)``: Make the given IR module "
+"available for execution."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:70
+msgid ""
+"``Expected<JITEvaluatedSymbol> lookup()``: Search for pointers to symbols "
+"(functions or variables) that have been added to the JIT."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:73
+msgid ""
+"A basic use-case for this API, executing the 'main' function from a module, "
+"will look like:"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:83
+msgid ""
+"The APIs that we build in these tutorials will all be variations on this "
+"simple theme. Behind this API we will refine the implementation of the JIT "
+"to add support for concurrent compilation, optimization and lazy "
+"compilation. Eventually we will extend the API itself to allow higher-level "
+"program representations (e.g. ASTs) to be added to the JIT."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:90
+msgid "KaleidoscopeJIT"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:92
+msgid ""
+"In the previous section we described our API, now we examine a simple "
+"implementation of it: The KaleidoscopeJIT class [1]_ that was used in the "
+"`Implementing a language with LLVM <LangImpl01.html>`_ tutorials. We will "
+"use the REPL code from `Chapter 7 <LangImpl07.html>`_ of that tutorial to "
+"supply the input for our JIT: Each time the user enters an expression the "
+"REPL will add a new IR module containing the code for that expression to the "
+"JIT. If the expression is a top-level expression like '1+1' or 'sin(x)', the "
+"REPL will also use the lookup method of our JIT class find and execute the "
+"code for the expression. In later chapters of this tutorial we will modify "
+"the REPL to enable new interactions with our JIT class, but for now we will "
+"take this setup for granted and focus our attention on the implementation of "
+"our JIT itself."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:104
+msgid ""
+"Our KaleidoscopeJIT class is defined in the KaleidoscopeJIT.h header. After "
+"the usual include guards and #includes [2]_, we get to the definition of our "
+"class:"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:149
+msgid ""
+"Our class begins with six member variables: An ExecutionSession member, "
+"``ES``, which provides context for our running JIT'd code (including the "
+"string pool, global mutex, and error reporting facilities); An "
+"RTDyldObjectLinkingLayer, ``ObjectLayer``, that can be used to add object "
+"files to our JIT (though we will not use it directly); An IRCompileLayer, "
+"``CompileLayer``, that can be used to add LLVM Modules to our JIT (and which "
+"builds on the ObjectLayer), A DataLayout and MangleAndInterner, ``DL`` and "
+"``Mangle``, that will be used for symbol mangling (more on that later); and "
+"finally an LLVMContext that clients will use when building IR files for the "
+"JIT."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:159
+msgid ""
+"Next up we have our class constructor, which takes a "
+"`JITTargetMachineBuilder`` that will be used by our IRCompiler, and a "
+"``DataLayout`` that we will use to initialize our DL member. The constructor "
+"begins by initializing our ObjectLayer.  The ObjectLayer requires a "
+"reference to the ExecutionSession, and a function object that will build a "
+"JIT memory manager for each module that is added (a JIT memory manager "
+"manages memory allocations, memory permissions, and registration of "
+"exception handlers for JIT'd code). For this we use a lambda that returns a "
+"SectionMemoryManager, an off-the-shelf utility that provides all the basic "
+"memory management functionality required for this chapter. Next we "
+"initialize our CompileLayer. The CompileLayer needs three things: (1) A "
+"reference to the ExecutionSession, (2) A reference to our object layer, and "
+"(3) a compiler instance to use to perform the actual compilation from IR to "
+"object files. We use the off-the-shelf ConcurrentIRCompiler utility as our "
+"compiler, which we construct using this constructor's "
+"JITTargetMachineBuilder argument. The ConcurrentIRCompiler utility will use "
+"the JITTargetMachineBuilder to build llvm TargetMachines (which are not "
+"thread safe) as needed for compiles. After this, we initialize our "
+"supporting members: ``DL``, ``Mangler`` and ``Ctx`` with the input "
+"DataLayout, the ExecutionSession and DL member, and a new default "
+"constructed LLVMContext respectively. Now that our members have been "
+"initialized, so the one thing that remains to do is to tweak the "
+"configuration of the *JITDylib* that we will store our code in. We want to "
+"modify this dylib to contain not only the symbols that we add to it, but "
+"also the symbols from our REPL process as well. We do this by attaching a "
+"``DynamicLibrarySearchGenerator`` instance using the "
+"``DynamicLibrarySearchGenerator::GetForCurrentProcess`` method."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:205
+msgid ""
+"Next we have a named constructor, ``Create``, which will build a "
+"KaleidoscopeJIT instance that is configured to generate code for our host "
+"process. It does this by first generating a JITTargetMachineBuilder instance "
+"using that classes' detectHost method and then using that instance to "
+"generate a datalayout for the target process. Each of these operations can "
+"fail, so each returns its result wrapped in an Expected value [3]_ that we "
+"must check for error before continuing. If both operations succeed we can "
+"unwrap their results (using the dereference operator) and pass them into "
+"KaleidoscopeJIT's constructor on the last line of the function."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:215
+msgid ""
+"Following the named constructor we have the ``getDataLayout()`` and "
+"``getContext()`` methods. These are used to make data structures created and "
+"managed by the JIT (especially the LLVMContext) available to the REPL code "
+"that will build our IR modules."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:231
+msgid ""
+"Now we come to the first of our JIT API methods: addModule. This method is "
+"responsible for adding IR to the JIT and making it available for execution. "
+"In this initial implementation of our JIT we will make our modules "
+"\"available for execution\" by adding them to the CompileLayer, which will "
+"it turn store the Module in the main JITDylib. This process will create new "
+"symbol table entries in the JITDylib for each definition in the module, and "
+"will defer compilation of the module until any of its definitions is looked "
+"up. Note that this is not lazy compilation: just referencing a definition, "
+"even if it is never used, will be enough to trigger compilation. In later "
+"chapters we will teach our JIT to defer compilation of functions until "
+"they're actually called.  To add our Module we must first wrap it in a "
+"ThreadSafeModule instance, which manages the lifetime of the Module's "
+"LLVMContext (our Ctx member) in a thread-friendly way. In our example, all "
+"modules will share the Ctx member, which will exist for the duration of the "
+"JIT. Once we switch to concurrent compilation in later chapters we will use "
+"a new context per module."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:247
+msgid ""
+"Our last method is ``lookup``, which allows us to look up addresses for "
+"function and variable definitions added to the JIT based on their symbol "
+"names. As noted above, lookup will implicitly trigger compilation for any "
+"symbol that has not already been compiled. Our lookup method calls through "
+"to `ExecutionSession::lookup`, passing in a list of dylibs to search (in our "
+"case just the main dylib), and the symbol name to search for, with a twist: "
+"We have to *mangle* the name of the symbol we're searching for first. The "
+"ORC JIT components use mangled symbols internally the same way a static "
+"compiler and linker would, rather than using plain IR symbol names. This "
+"allows JIT'd code to interoperate easily with precompiled code in the "
+"application or shared libraries. The kind of mangling will depend on the "
+"DataLayout, which in turn depends on the target platform. To allow us to "
+"remain portable and search based on the un-mangled name, we just re-produce "
+"this mangling ourselves using our ``Mangle`` member function object."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:262
+msgid ""
+"This brings us to the end of Chapter 1 of Building a JIT. You now have a "
+"basic but fully functioning JIT stack that you can use to take LLVM IR and "
+"make it executable within the context of your JIT process. In the next "
+"chapter we'll look at how to extend this JIT to produce better quality code, "
+"and in the process take a deeper look at the ORC layer concept."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:268
+msgid "`Next: Extending the KaleidoscopeJIT <BuildingAJIT2.html>`_"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:271
+msgid "Full Code Listing"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:273
+msgid ""
+"Here is the complete code listing for our running example. To build this "
+"example, use:"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:283
+msgid "Here is the code:"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:288
+msgid ""
+"Actually we use a cut-down version of KaleidoscopeJIT that makes a "
+"simplifying assumption: symbols cannot be re-defined. This will make it "
+"impossible to re-define symbols in the REPL, but will make our symbol lookup "
+"logic simpler. Re-introducing support for symbol redefinition is left as an "
+"exercise for the reader. (The KaleidoscopeJIT.h used in the original "
+"tutorials will be a helpful reference)."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:296
+msgid "File"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:296
+msgid "Reason for inclusion"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:298
+msgid "JITSymbol.h"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:298
+msgid "Defines the lookup result type JITEvaluatedSymbol"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:301
+msgid "CompileUtils.h"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:301
+msgid "Provides the SimpleCompiler class."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:303
+msgid "Core.h"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:303
+msgid "Core utilities such as ExecutionSession and JITDylib."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:306
+msgid "ExecutionUtils.h"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:306
+msgid "Provides the DynamicLibrarySearchGenerator class."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:309
+msgid "IRCompileLayer.h"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:309
+msgid "Provides the IRCompileLayer class."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:311
+msgid "JITTargetMachineBuilder.h"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:311
+msgid "Provides the JITTargetMachineBuilder class."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:313
+msgid "RTDyldObjectLinkingLayer.h"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:313
+msgid "Provides the RTDyldObjectLinkingLayer class."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:315
+msgid "SectionMemoryManager.h"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:315
+msgid "Provides the SectionMemoryManager class."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:317
+msgid "DataLayout.h"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:317
+msgid "Provides the DataLayout class."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:319
+msgid "LLVMContext.h"
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:319
+msgid "Provides the LLVMContext class."
+msgstr ""
+
+#: ../../../tutorial/BuildingAJIT1.rst:322
+msgid ""
+"See the ErrorHandling section in the LLVM Programmer's Manual (https://llvm."
+"org/docs/ProgrammersManual.html#error-handling)"
+msgstr ""
