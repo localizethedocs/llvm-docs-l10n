@@ -1,0 +1,187 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 18\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../GitBisecting.rst:3
+msgid "Bisecting LLVM code"
+msgstr ""
+
+#: ../../../GitBisecting.rst:6
+msgid "Introduction"
+msgstr ""
+
+#: ../../../GitBisecting.rst:8
+msgid ""
+"``git bisect`` is a useful tool for finding which revision caused a bug."
+msgstr ""
+
+#: ../../../GitBisecting.rst:10
+msgid ""
+"This document describes how to use ``git bisect``. In particular, while LLVM "
+"has a mostly linear history, it has a few merge commits that added projects "
+"-- and these merged the linear history of those projects. As a consequence, "
+"the LLVM repository has multiple roots: One \"normal\" root, and then one "
+"for each toplevel project that was developed out-of-tree and then merged "
+"later. As of early 2020, the only such merged project is MLIR, but flang "
+"will likely be merged in a similar way soon."
+msgstr ""
+
+#: ../../../GitBisecting.rst:19
+msgid "Basic operation"
+msgstr ""
+
+#: ../../../GitBisecting.rst:21
+msgid ""
+"See https://git-scm.com/docs/git-bisect for a good overview. In summary:"
+msgstr ""
+
+#: ../../../GitBisecting.rst:29
+msgid ""
+"git will check out a revision in between. Try to reproduce your problem at "
+"that revision, and run ``git bisect good`` or ``git bisect bad``."
+msgstr ""
+
+#: ../../../GitBisecting.rst:32
+msgid ""
+"If you can't repro at the current commit (maybe the build is broken), run "
+"``git bisect skip`` and git will pick a nearby alternate commit."
+msgstr ""
+
+#: ../../../GitBisecting.rst:35
+msgid ""
+"(To abort a bisect, run ``git bisect reset``, and if git complains about not "
+"being able to reset, do the usual ``git checkout -f main; git reset --hard "
+"origin/main`` dance and try again)."
+msgstr ""
+
+#: ../../../GitBisecting.rst:40
+msgid "``git bisect run``"
+msgstr ""
+
+#: ../../../GitBisecting.rst:42
+msgid ""
+"A single bisect step often requires first building clang, and then compiling "
+"a large code base with just-built clang. This can take a long time, so it's "
+"good if it can happen completely automatically. ``git bisect run`` can do "
+"this for you if you write a run script that reproduces the problem "
+"automatically. Writing the script can take 10-20 minutes, but it's almost "
+"always worth it -- you can do something else while the bisect runs (such as "
+"writing this document)."
+msgstr ""
+
+#: ../../../GitBisecting.rst:50
+msgid ""
+"Here's an example run script. It assumes that you're in ``llvm-project`` and "
+"that you have a sibling ``llvm-build-project`` build directory where you "
+"configured CMake to use Ninja. You have a file ``repro.c`` in the current "
+"directory that makes clang crash at trunk, but it worked fine at revision "
+"``f00ba``."
+msgstr ""
+
+#: ../../../GitBisecting.rst:64
+msgid ""
+"To make sure your run script works, it's a good idea to run ``./run.sh`` by "
+"hand and tweak the script until it works, then run ``git bisect good`` or "
+"``git bisect bad`` manually once based on the result of the script (check "
+"``echo $?`` after your script ran), and only then run ``git bisect run ./run."
+"sh``. Don't forget to mark your run script as executable -- ``git bisect "
+"run`` doesn't check for that, it just assumes the run script failed each "
+"time."
+msgstr ""
+
+#: ../../../GitBisecting.rst:71
+msgid ""
+"Once your run script works, run ``git bisect run ./run.sh`` and a few hours "
+"later you'll know which commit caused the regression."
+msgstr ""
+
+#: ../../../GitBisecting.rst:74
+msgid ""
+"(This is a very simple run script. Often, you want to use just-built clang "
+"to build a different project and then run a built executable of that project "
+"in the run script.)"
+msgstr ""
+
+#: ../../../GitBisecting.rst:79
+msgid "Bisecting across multiple roots"
+msgstr ""
+
+#: ../../../GitBisecting.rst:81
+msgid "Here's how LLVM's history currently looks:"
+msgstr ""
+
+#: ../../../GitBisecting.rst:89
+msgid "``A`` is the first commit in LLVM ever, ``97724f18c79c``."
+msgstr ""
+
+#: ../../../GitBisecting.rst:91
+msgid "``B`` is the first commit in MLIR, ``aed0d21a62db``."
+msgstr ""
+
+#: ../../../GitBisecting.rst:93
+msgid ""
+"``D`` is the merge commit that merged MLIR into the main LLVM repository, "
+"``0f0d0ed1c78f``."
+msgstr ""
+
+#: ../../../GitBisecting.rst:96
+msgid ""
+"``C`` is the last commit in MLIR before it got merged, ``0f0d0ed1c78f^2``. "
+"(The ``^n`` modifier selects the n'th parent of a merge commit.)"
+msgstr ""
+
+#: ../../../GitBisecting.rst:99
+msgid ""
+"``git bisect`` goes through all parent revisions. Due to the way MLIR was "
+"merged, at every revision at ``C`` or earlier, *only* the ``mlir/`` "
+"directory exists, and nothing else does."
+msgstr ""
+
+#: ../../../GitBisecting.rst:103
+msgid ""
+"As of early 2020, there is no flag to ``git bisect`` to tell it to not "
+"descend into all reachable commits. Ideally, we'd want to tell it to only "
+"follow the first parent of ``D``."
+msgstr ""
+
+#: ../../../GitBisecting.rst:107
+msgid ""
+"The best workaround is to pass a list of directories to ``git bisect``: If "
+"you know the bug is due to a change in llvm, clang, or compiler-rt, use"
+msgstr ""
+
+#: ../../../GitBisecting.rst:114
+msgid "That way, the commits in ``mlir`` are never evaluated."
+msgstr ""
+
+#: ../../../GitBisecting.rst:116
+msgid ""
+"Alternatively, ``git bisect skip aed0d21a6 aed0d21a6..0f0d0ed1c78f`` "
+"explicitly skips all commits on that branch. It takes 1.5 minutes to run on "
+"a fast machine, and makes ``git bisect log`` output unreadable. "
+"(``aed0d21a6`` is listed twice because git ranges exclude the revision "
+"listed on the left, so it needs to be ignored explicitly.)"
+msgstr ""
+
+#: ../../../GitBisecting.rst:123
+msgid "More Resources"
+msgstr ""
+
+#: ../../../GitBisecting.rst:125
+msgid "https://git-scm.com/book/en/v2/Git-Tools-Revision-Selection"
+msgstr ""
