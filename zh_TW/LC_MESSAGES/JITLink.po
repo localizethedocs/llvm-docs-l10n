@@ -1,0 +1,1562 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 17\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../JITLink.rst:3
+msgid "JITLink and ORC's ObjectLinkingLayer"
+msgstr ""
+
+#: ../../../JITLink.rst:9
+msgid "Introduction"
+msgstr "簡介"
+
+#: ../../../JITLink.rst:11
+msgid ""
+"This document aims to provide a high-level overview of the design and API of "
+"the JITLink library. It assumes some familiarity with linking and "
+"relocatable object files, but should not require deep expertise. If you know "
+"what a section, symbol, and relocation are you should find this document "
+"accessible. If it is not, please submit a patch (:doc:`Contributing`) or "
+"file a bug (:doc:`HowToSubmitABug`)."
+msgstr ""
+
+#: ../../../JITLink.rst:18
+msgid ""
+"JITLink is a library for :ref:`jit_linking`. It was built to support the ORC "
+"JIT APIs and is most commonly accessed via ORC's ObjectLinkingLayer API. "
+"JITLink was developed with the aim of supporting the full set of features "
+"provided by each object format; including static initializers, exception "
+"handling, thread local variables, and language runtime registration. "
+"Supporting these features enables ORC to execute code generated from source "
+"languages which rely on these features (e.g. C++ requires object format "
+"support for static initializers to support static constructors, eh-frame "
+"registration for exceptions, and TLV support for thread locals; Swift and "
+"Objective-C require language runtime registration for many features). For "
+"some object format features support is provided entirely within JITLink, and "
+"for others it is provided in cooperation with the (prototype) ORC runtime."
+msgstr ""
+
+#: ../../../JITLink.rst:31
+msgid ""
+"JITLink aims to support the following features, some of which are still "
+"under development:"
+msgstr ""
+
+#: ../../../JITLink.rst:34
+msgid ""
+"Cross-process and cross-architecture linking of single relocatable objects "
+"into a target *executor* process."
+msgstr ""
+
+#: ../../../JITLink.rst:37
+msgid "Support for all object format features."
+msgstr ""
+
+#: ../../../JITLink.rst:39
+msgid "Open linker data structures (``LinkGraph``) and pass system."
+msgstr ""
+
+#: ../../../JITLink.rst:42
+msgid "JITLink and ObjectLinkingLayer"
+msgstr ""
+
+#: ../../../JITLink.rst:44
+msgid ""
+"``ObjectLinkingLayer`` is ORCs wrapper for JITLink. It is an ORC layer that "
+"allows objects to be added to a ``JITDylib``, or emitted from some higher "
+"level program representation. When an object is emitted, "
+"``ObjectLinkingLayer`` uses JITLink to construct a ``LinkGraph`` (see :ref:"
+"`constructing_linkgraphs`) and calls JITLink's ``link`` function to link the "
+"graph into the executor process."
+msgstr ""
+
+#: ../../../JITLink.rst:50
+msgid ""
+"The ``ObjectLinkingLayer`` class provides a plugin API, "
+"``ObjectLinkingLayer::Plugin``, which users can subclass in order to inspect "
+"and modify ``LinkGraph`` instances at link time, and react to important JIT "
+"events (such as an object being emitted into target memory). This enables "
+"many features and optimizations that were not possible under MCJIT or "
+"RuntimeDyld."
+msgstr ""
+
+#: ../../../JITLink.rst:57
+msgid "ObjectLinkingLayer Plugins"
+msgstr ""
+
+#: ../../../JITLink.rst:59
+msgid ""
+"The ``ObjectLinkingLayer::Plugin`` class  provides the following  methods:"
+msgstr ""
+
+#: ../../../JITLink.rst:61
+msgid ""
+"``modifyPassConfig`` is called each time a LinkGraph is about to be linked. "
+"It can be overridden to install JITLink *Passes* to run during the link "
+"process."
+msgstr ""
+
+#: ../../../JITLink.rst:70
+msgid ""
+"``notifyLoaded`` is called before the link begins, and can be overridden to "
+"set up any initial state for the given ``MaterializationResponsibility`` if "
+"needed."
+msgstr ""
+
+#: ../../../JITLink.rst:78
+msgid ""
+"``notifyEmitted`` is called after the link is complete and code has been "
+"emitted to the executor process. It can be overridden to finalize state for "
+"the ``MaterializationResponsibility`` if needed."
+msgstr ""
+
+#: ../../../JITLink.rst:86
+msgid ""
+"``notifyFailed`` is called if the link fails at any point. It can be "
+"overridden to react to the failure (e.g. to deallocate any already allocated "
+"resources)."
+msgstr ""
+
+#: ../../../JITLink.rst:94
+msgid ""
+"``notifyRemovingResources`` is called when a request is made to remove any "
+"resources associated with the ``ResourceKey`` *K* for the "
+"``MaterializationResponsibility``."
+msgstr ""
+
+#: ../../../JITLink.rst:102
+msgid ""
+"``notifyTransferringResources`` is called if/when a request is made to "
+"transfer tracking of any resources associated with ``ResourceKey`` *SrcKey* "
+"to *DstKey*."
+msgstr ""
+
+#: ../../../JITLink.rst:111
+msgid ""
+"Plugin authors are required to implement the ``notifyFailed``, "
+"``notifyRemovingResources``, and ``notifyTransferringResources`` methods in "
+"order to safely manage resources in the case of resource removal or "
+"transfer, or link failure. If no resources are managed by the plugin then "
+"these methods can be implemented as no-ops returning ``Error::success()``."
+msgstr ""
+
+#: ../../../JITLink.rst:117
+msgid ""
+"Plugin instances are added to an ``ObjectLinkingLayer`` by calling the "
+"``addPlugin`` method [1]_. E.g."
+msgstr ""
+
+#: ../../../JITLink.rst:180
+msgid "LinkGraph"
+msgstr ""
+
+#: ../../../JITLink.rst:182
+msgid ""
+"JITLink maps all relocatable object formats to a generic ``LinkGraph`` type "
+"that is designed to make linking fast and easy (``LinkGraph`` instances can "
+"also be created manually. See :ref:`constructing_linkgraphs`)."
+msgstr ""
+
+#: ../../../JITLink.rst:186
+msgid ""
+"Relocatable object formats (e.g. COFF, ELF, MachO) differ in their details, "
+"but share a common goal: to represent machine level code and data with "
+"annotations that allow them to be relocated in a virtual address space. To "
+"this end they usually contain names (symbols) for content defined inside the "
+"file or externally, chunks of content that must be moved as a unit (sections "
+"or subsections, depending on the format), and annotations describing how to "
+"patch content based on the final address of some target symbol/section "
+"(relocations)."
+msgstr ""
+
+#: ../../../JITLink.rst:195
+msgid ""
+"At a high level, the ``LinkGraph`` type represents these concepts as a "
+"decorated graph. Nodes in the graph represent symbols and content, and edges "
+"represent relocations. Each of the elements of the graph is listed here:"
+msgstr ""
+
+#: ../../../JITLink.rst:199
+msgid ""
+"``Addressable`` -- A node in the link graph that can be assigned an address "
+"in the executor process's virtual address space."
+msgstr ""
+
+#: ../../../JITLink.rst:202
+msgid ""
+"Absolute and external symbols are represented using plain ``Addressable`` "
+"instances. Content defined inside the object file is represented using the "
+"``Block`` subclass."
+msgstr ""
+
+#: ../../../JITLink.rst:206
+msgid ""
+"``Block`` -- An ``Addressable`` node that has ``Content`` (or is marked as "
+"zero-filled), a parent ``Section``, a ``Size``, an ``Alignment`` (and an "
+"``AlignmentOffset``), and a list of ``Edge`` instances."
+msgstr ""
+
+#: ../../../JITLink.rst:210
+msgid ""
+"Blocks provide a container for binary content which must remain contiguous "
+"in the target address space (a *layout unit*). Many interesting low level "
+"operations on ``LinkGraph`` instances involve inspecting or mutating block "
+"content or edges."
+msgstr ""
+
+#: ../../../JITLink.rst:215
+msgid ""
+"``Content`` is represented as an ``llvm::StringRef``, and accessible via the "
+"``getContent`` method. Content is only available for content blocks, and not "
+"for zero-fill blocks (use ``isZeroFill`` to check, and prefer ``getSize`` "
+"when only the block size is needed as it works for both zero-fill and "
+"content blocks)."
+msgstr ""
+
+#: ../../../JITLink.rst:221
+msgid ""
+"``Section`` is represented as a ``Section&`` reference, and accessible via "
+"the ``getSection`` method. The ``Section`` class is described in more detail "
+"below."
+msgstr ""
+
+#: ../../../JITLink.rst:225
+msgid ""
+"``Size`` is represented as a ``size_t``, and is accessible via the "
+"``getSize`` method for both content and zero-filled blocks."
+msgstr ""
+
+#: ../../../JITLink.rst:228
+msgid ""
+"``Alignment`` is represented as a ``uint64_t``, and available via the "
+"``getAlignment`` method. It represents the minimum alignment requirement (in "
+"bytes) of the start of the block."
+msgstr ""
+
+#: ../../../JITLink.rst:232
+msgid ""
+"``AlignmentOffset`` is represented as a ``uint64_t``, and accessible via the "
+"``getAlignmentOffset`` method. It represents the offset from the alignment "
+"required for the start of the block. This is required to support blocks "
+"whose minimum alignment requirement comes from data at some non-zero offset "
+"inside the block. E.g. if a block consists of a single byte (with byte "
+"alignment) followed by a uint64_t (with 8-byte alignment), then the block "
+"will have 8-byte alignment with an alignment offset of 7."
+msgstr ""
+
+#: ../../../JITLink.rst:240
+msgid ""
+"list of ``Edge`` instances. An iterator range for this list is returned by "
+"the ``edges`` method. The ``Edge`` class is described in more detail below."
+msgstr ""
+
+#: ../../../JITLink.rst:243
+msgid ""
+"``Symbol`` -- An offset from an ``Addressable`` (often a ``Block``), with an "
+"optional ``Name``, a ``Linkage``, a ``Scope``, a ``Callable`` flag, and a "
+"``Live`` flag."
+msgstr ""
+
+#: ../../../JITLink.rst:247
+msgid ""
+"Symbols make it possible to name content (blocks and addressables are "
+"anonymous), or target content with an ``Edge``."
+msgstr ""
+
+#: ../../../JITLink.rst:250
+msgid ""
+"``Name`` is represented as an ``llvm::StringRef`` (equal to ``llvm::"
+"StringRef()`` if the symbol has no name), and accessible via the ``getName`` "
+"method."
+msgstr ""
+
+#: ../../../JITLink.rst:254
+msgid ""
+"``Linkage`` is one of *Strong* or *Weak*, and is accessible via the "
+"``getLinkage`` method. The ``JITLinkContext`` can use this flag to determine "
+"whether this symbol definition should be kept or dropped."
+msgstr ""
+
+#: ../../../JITLink.rst:258
+msgid ""
+"``Scope`` is one of *Default*, *Hidden*, or *Local*, and is accessible via "
+"the ``getScope`` method. The ``JITLinkContext`` can use this to determine "
+"who should be able to see the symbol. A symbol with default scope should be "
+"globally visible. A symbol with hidden scope should be visible to other "
+"definitions within the same simulated dylib (e.g. ORC ``JITDylib``) or "
+"executable, but not from elsewhere. A symbol with local scope should only be "
+"visible within the current ``LinkGraph``."
+msgstr ""
+
+#: ../../../JITLink.rst:266
+msgid ""
+"``Callable`` is a boolean which is set to true if this symbol can be called, "
+"and is accessible via the ``isCallable`` method. This can be used to "
+"automate the introduction of call-stubs for lazy compilation."
+msgstr ""
+
+#: ../../../JITLink.rst:270
+msgid ""
+"``Live`` is a boolean that can be set to mark this symbol as root for dead-"
+"stripping purposes (see :ref:`generic_link_algorithm`). JITLink's dead-"
+"stripping algorithm will propagate liveness flags through the graph to all "
+"reachable symbols before deleting any symbols (and blocks) that are not "
+"marked live."
+msgstr ""
+
+#: ../../../JITLink.rst:276
+msgid ""
+"``Edge`` -- A quad of an ``Offset`` (implicitly from the start of the "
+"containing ``Block``), a ``Kind`` (describing the relocation type), a "
+"``Target``, and an ``Addend``."
+msgstr ""
+
+#: ../../../JITLink.rst:280
+msgid ""
+"Edges represent relocations, and occasionally other relationships, between "
+"blocks and symbols."
+msgstr ""
+
+#: ../../../JITLink.rst:283
+msgid ""
+"``Offset``, accessible via ``getOffset``, is an offset from the start of the "
+"``Block`` containing the ``Edge``."
+msgstr ""
+
+#: ../../../JITLink.rst:286
+msgid ""
+"``Kind``, accessible via ``getKind`` is a relocation type -- it describes "
+"what kinds of changes (if any) should be made to block content at the given "
+"``Offset`` based on the address of the ``Target``."
+msgstr ""
+
+#: ../../../JITLink.rst:290
+msgid ""
+"``Target``, accessible via ``getTarget``, is a pointer to a ``Symbol``, "
+"representing whose address is relevant to the fixup calculation specified by "
+"the edge's ``Kind``."
+msgstr ""
+
+#: ../../../JITLink.rst:294
+msgid ""
+"``Addend``, accessible via ``getAddend``, is a constant whose interpretation "
+"is determined by the edge's ``Kind``."
+msgstr ""
+
+#: ../../../JITLink.rst:297
+msgid ""
+"``Section`` -- A set of ``Symbol`` instances, plus a set of ``Block`` "
+"instances, with a ``Name``, a set of ``ProtectionFlags``, and an ``Ordinal``."
+msgstr ""
+
+#: ../../../JITLink.rst:300
+msgid ""
+"Sections make it easy to iterate over the symbols or blocks associated with "
+"a particular section in the source object file."
+msgstr ""
+
+#: ../../../JITLink.rst:303
+msgid ""
+"``blocks()`` returns an iterator over the set of blocks defined in the "
+"section (as ``Block*`` pointers)."
+msgstr ""
+
+#: ../../../JITLink.rst:306
+msgid ""
+"``symbols()`` returns an iterator over the set of symbols defined in the "
+"section (as ``Symbol*`` pointers)."
+msgstr ""
+
+#: ../../../JITLink.rst:309
+msgid ""
+"``Name`` is represented as an ``llvm::StringRef``, and is accessible via the "
+"``getName`` method."
+msgstr ""
+
+#: ../../../JITLink.rst:312
+msgid ""
+"``ProtectionFlags`` are represented as a sys::Memory::ProtectionFlags enum, "
+"and accessible via the ``getProtectionFlags`` method. These flags describe "
+"whether the section is readable, writable, executable, or some combination "
+"of these. The most common combinations are ``RW-`` for writable data, ``R--"
+"`` for constant data, and ``R-X`` for code."
+msgstr ""
+
+#: ../../../JITLink.rst:318
+msgid ""
+"``SectionOrdinal``, accessible via ``getOrdinal``, is a number used to order "
+"the section relative to others.  It is usually used to preserve section "
+"order within a segment (a set of sections with the same memory protections) "
+"when laying out memory."
+msgstr ""
+
+#: ../../../JITLink.rst:323
+msgid ""
+"For the graph-theorists: The ``LinkGraph`` is bipartite, with one set of "
+"``Symbol`` nodes and one set of ``Addressable`` nodes. Each ``Symbol`` node "
+"has one (implicit) edge to its target ``Addressable``. Each ``Block`` has a "
+"set of edges (possibly empty, represented as ``Edge`` instances) back to "
+"elements of the ``Symbol`` set. For convenience and performance of common "
+"algorithms, symbols and blocks are further grouped into ``Sections``."
+msgstr ""
+
+#: ../../../JITLink.rst:330
+msgid ""
+"The ``LinkGraph`` itself provides operations for constructing, removing, and "
+"iterating over sections, symbols, and blocks. It also provides metadata and "
+"utilities relevant to the linking process:"
+msgstr ""
+
+#: ../../../JITLink.rst:334
+msgid "Graph element operations"
+msgstr ""
+
+#: ../../../JITLink.rst:336
+msgid "``sections`` returns an iterator over all sections in the graph."
+msgstr ""
+
+#: ../../../JITLink.rst:338
+msgid ""
+"``findSectionByName`` returns a pointer to the section with the given name "
+"(as a ``Section*``) if it exists, otherwise returns a nullptr."
+msgstr ""
+
+#: ../../../JITLink.rst:341
+msgid ""
+"``blocks`` returns an iterator over all blocks in the graph (across all "
+"sections)."
+msgstr ""
+
+#: ../../../JITLink.rst:344
+msgid ""
+"``defined_symbols`` returns an iterator over all defined symbols in the "
+"graph (across all sections)."
+msgstr ""
+
+#: ../../../JITLink.rst:347
+msgid ""
+"``external_symbols`` returns an iterator over all external symbols in the "
+"graph."
+msgstr ""
+
+#: ../../../JITLink.rst:350
+msgid ""
+"``absolute_symbols`` returns an iterator over all absolute symbols in the "
+"graph."
+msgstr ""
+
+#: ../../../JITLink.rst:353
+msgid ""
+"``createSection`` creates a section with a given name and protection flags."
+msgstr ""
+
+#: ../../../JITLink.rst:355
+msgid ""
+"``createContentBlock`` creates a block with the given initial content, "
+"parent section, address, alignment, and alignment offset."
+msgstr ""
+
+#: ../../../JITLink.rst:358
+msgid ""
+"``createZeroFillBlock`` creates a zero-fill block with the given size, "
+"parent section, address, alignment, and alignment offset."
+msgstr ""
+
+#: ../../../JITLink.rst:361
+msgid ""
+"``addExternalSymbol`` creates a new addressable and symbol with a given "
+"name, size, and linkage."
+msgstr ""
+
+#: ../../../JITLink.rst:364
+msgid ""
+"``addAbsoluteSymbol`` creates a new addressable and symbol with a given "
+"name, address, size, linkage, scope, and liveness."
+msgstr ""
+
+#: ../../../JITLink.rst:367
+msgid ""
+"``addCommonSymbol`` convenience function for creating a zero-filled block "
+"and weak symbol with a given name, scope, section, initial address, size, "
+"alignment and liveness."
+msgstr ""
+
+#: ../../../JITLink.rst:371
+msgid ""
+"``addAnonymousSymbol`` creates a new anonymous symbol for a given block, "
+"offset, size, callable-ness, and liveness."
+msgstr ""
+
+#: ../../../JITLink.rst:374
+msgid ""
+"``addDefinedSymbol`` creates a new symbol for a given block with a name, "
+"offset, size, linkage, scope, callable-ness and liveness."
+msgstr ""
+
+#: ../../../JITLink.rst:377
+msgid ""
+"``makeExternal`` transforms a formerly defined symbol into an external one "
+"by creating a new addressable and pointing the symbol at it. The existing "
+"block is not deleted, but can be manually removed (if unreferenced) by "
+"calling ``removeBlock``. All edges to the symbol remain valid, but the "
+"symbol must now be defined outside this ``LinkGraph``."
+msgstr ""
+
+#: ../../../JITLink.rst:383
+msgid ""
+"``removeExternalSymbol`` removes an external symbol and its target "
+"addressable. The target addressable must not be referenced by any other "
+"symbols."
+msgstr ""
+
+#: ../../../JITLink.rst:387
+msgid ""
+"``removeAbsoluteSymbol`` removes an absolute symbol and its target "
+"addressable. The target addressable must not be referenced by any other "
+"symbols."
+msgstr ""
+
+#: ../../../JITLink.rst:391
+msgid ""
+"``removeDefinedSymbol`` removes a defined symbol, but *does not* remove its "
+"target block."
+msgstr ""
+
+#: ../../../JITLink.rst:394
+msgid "``removeBlock`` removes the given block."
+msgstr ""
+
+#: ../../../JITLink.rst:396
+msgid ""
+"``splitBlock`` split a given block in two at a given index (useful where it "
+"is known that a block contains decomposable records, e.g. CFI records in an "
+"eh-frame section)."
+msgstr ""
+
+#: ../../../JITLink.rst:400
+msgid "Graph utility operations"
+msgstr ""
+
+#: ../../../JITLink.rst:402
+msgid ""
+"``getName`` returns the name of this graph, which is usually based on the "
+"name of the input object file."
+msgstr ""
+
+#: ../../../JITLink.rst:405
+msgid "``getTargetTriple`` returns an `llvm::Triple` for the executor process."
+msgstr ""
+
+#: ../../../JITLink.rst:407
+msgid ""
+"``getPointerSize`` returns the size of a pointer (in bytes) in the executor "
+"process."
+msgstr ""
+
+#: ../../../JITLink.rst:410
+msgid "``getEndinaness`` returns the endianness of the executor process."
+msgstr ""
+
+#: ../../../JITLink.rst:412
+msgid ""
+"``allocateString`` copies data from a given ``llvm::Twine`` into the link "
+"graph's internal allocator. This can be used to ensure that content created "
+"inside a pass outlives that pass's execution."
+msgstr ""
+
+#: ../../../JITLink.rst:419
+msgid "Generic Link Algorithm"
+msgstr ""
+
+#: ../../../JITLink.rst:421
+msgid ""
+"JITLink provides a generic link algorithm which can be extended / modified "
+"at certain points by the introduction of JITLink :ref:`passes`."
+msgstr ""
+
+#: ../../../JITLink.rst:424
+msgid ""
+"At the end of each phase the linker packages its state into a *continuation* "
+"and calls the ``JITLinkContext`` object to perform a (potentially high-"
+"latency) asynchronous operation: allocating memory, resolving external "
+"symbols, and finally transferring linked memory to the executing process."
+msgstr ""
+
+#: ../../../JITLink.rst:429
+msgid "Phase 1"
+msgstr ""
+
+#: ../../../JITLink.rst:431
+msgid ""
+"This phase is called immediately by the ``link`` function as soon as the "
+"initial configuration (including the pass pipeline setup) is complete."
+msgstr ""
+
+#: ../../../JITLink.rst:434
+msgid "Run pre-prune passes."
+msgstr ""
+
+#: ../../../JITLink.rst:436
+msgid ""
+"These passes are called on the graph before it is pruned. At this stage "
+"``LinkGraph`` nodes still have their original vmaddrs. A mark-live pass "
+"(supplied by the ``JITLinkContext``) will be run at the end of this sequence "
+"to mark the initial set of live symbols."
+msgstr ""
+
+#: ../../../JITLink.rst:441
+msgid ""
+"Notable use cases: marking nodes live, accessing/copying graph data that "
+"will be pruned (e.g. metadata that's important for the JIT, but not needed "
+"for the link process)."
+msgstr ""
+
+#: ../../../JITLink.rst:445
+msgid "Prune (dead-strip) the ``LinkGraph``."
+msgstr ""
+
+#: ../../../JITLink.rst:447
+msgid ""
+"Removes all symbols and blocks not reachable from the initial set of live "
+"symbols."
+msgstr ""
+
+#: ../../../JITLink.rst:450
+msgid ""
+"This allows JITLink to remove unreachable symbols / content, including "
+"overridden weak and redundant ODR definitions."
+msgstr ""
+
+#: ../../../JITLink.rst:453
+msgid "Run post-prune passes."
+msgstr ""
+
+#: ../../../JITLink.rst:455
+msgid ""
+"These passes are run on the graph after dead-stripping, but before memory is "
+"allocated or nodes assigned their final target vmaddrs."
+msgstr ""
+
+#: ../../../JITLink.rst:458
+msgid ""
+"Passes run at this stage benefit from pruning, as dead functions and data "
+"have been stripped from the graph. However new content can still be added to "
+"the graph, as target and working memory have not been allocated yet."
+msgstr ""
+
+#: ../../../JITLink.rst:462
+msgid ""
+"Notable use cases: Building Global Offset Table (GOT), Procedure Linkage "
+"Table (PLT), and Thread Local Variable (TLV) entries."
+msgstr ""
+
+#: ../../../JITLink.rst:465
+msgid "Asynchronously allocate memory."
+msgstr ""
+
+#: ../../../JITLink.rst:467
+msgid ""
+"Calls the ``JITLinkContext``'s ``JITLinkMemoryManager`` to allocate both "
+"working and target memory for the graph. As part of this process the "
+"``JITLinkMemoryManager`` will update the the addresses of all nodes defined "
+"in the graph to their assigned target address."
+msgstr ""
+
+#: ../../../JITLink.rst:472
+msgid ""
+"Note: This step only updates the addresses of nodes defined in this graph. "
+"External symbols will still have null addresses."
+msgstr ""
+
+#: ../../../JITLink.rst:475
+msgid "Phase 2"
+msgstr ""
+
+#: ../../../JITLink.rst:477
+msgid "Run post-allocation passes."
+msgstr ""
+
+#: ../../../JITLink.rst:479
+msgid ""
+"These passes are run on the graph after working and target memory have been "
+"allocated, but before the ``JITLinkContext`` is notified of the final "
+"addresses of the symbols in the graph. This gives these passes a chance to "
+"set up data structures associated with target addresses before any JITLink "
+"clients (especially ORC queries for symbol resolution) can attempt to access "
+"them."
+msgstr ""
+
+#: ../../../JITLink.rst:486
+msgid ""
+"Notable use cases: Setting up mappings between target addresses and JIT data "
+"structures, such as a mapping between ``__dso_handle`` and ``JITDylib*``."
+msgstr ""
+
+#: ../../../JITLink.rst:490
+msgid "Notify the ``JITLinkContext`` of the assigned symbol addresses."
+msgstr ""
+
+#: ../../../JITLink.rst:492
+msgid ""
+"Calls ``JITLinkContext::notifyResolved`` on the link graph, allowing clients "
+"to react to the symbol address assignments made for this graph. In ORC this "
+"is used to notify any pending queries for *resolved* symbols, including "
+"pending queries from concurrently running JITLink instances that have "
+"reached the next step and are waiting on the address of a symbol in this "
+"graph to proceed with their link."
+msgstr ""
+
+#: ../../../JITLink.rst:499
+msgid "Identify external symbols and resolve their addresses asynchronously."
+msgstr ""
+
+#: ../../../JITLink.rst:501
+msgid ""
+"Calls the ``JITLinkContext`` to resolve the target address of any external "
+"symbols in the graph."
+msgstr ""
+
+#: ../../../JITLink.rst:504
+msgid "Phase 3"
+msgstr ""
+
+#: ../../../JITLink.rst:506
+msgid "Apply external symbol resolution results."
+msgstr ""
+
+#: ../../../JITLink.rst:508
+msgid ""
+"This updates the addresses of all external symbols. At this point all nodes "
+"in the graph have their final target addresses, however node content still "
+"points back to the original data in the object file."
+msgstr ""
+
+#: ../../../JITLink.rst:512
+msgid "Run pre-fixup passes."
+msgstr ""
+
+#: ../../../JITLink.rst:514
+msgid ""
+"These passes are called on the graph after all nodes have been assigned "
+"their final target addresses, but before node content is copied into working "
+"memory and fixed up. Passes run at this stage can make late optimizations to "
+"the graph and content based on address layout."
+msgstr ""
+
+#: ../../../JITLink.rst:519
+msgid ""
+"Notable use cases: GOT and PLT relaxation, where GOT and PLT accesses are "
+"bypassed for fixup targets that are directly accessible under the assigned "
+"memory layout."
+msgstr ""
+
+#: ../../../JITLink.rst:523
+msgid "Copy block content to working memory and apply fixups."
+msgstr ""
+
+#: ../../../JITLink.rst:525
+msgid ""
+"Copies all block content into allocated working memory (following the target "
+"layout) and applies fixups. Graph blocks are updated to point at the fixed "
+"up content."
+msgstr ""
+
+#: ../../../JITLink.rst:529
+msgid "Run post-fixup passes."
+msgstr ""
+
+#: ../../../JITLink.rst:531
+msgid ""
+"These passes are called on the graph after fixups have been applied and "
+"blocks updated to point to the fixed up content."
+msgstr ""
+
+#: ../../../JITLink.rst:534
+msgid ""
+"Post-fixup passes can inspect blocks contents to see the exact bytes that "
+"will be copied to the assigned target addresses."
+msgstr ""
+
+#: ../../../JITLink.rst:537
+msgid "Finalize memory asynchronously."
+msgstr ""
+
+#: ../../../JITLink.rst:539
+msgid ""
+"Calls the ``JITLinkMemoryManager`` to copy working memory to the executor "
+"process and apply the requested permissions."
+msgstr ""
+
+#: ../../../JITLink.rst:542
+msgid "Phase 3."
+msgstr ""
+
+#: ../../../JITLink.rst:544
+msgid "Notify the context that the graph has been emitted."
+msgstr ""
+
+#: ../../../JITLink.rst:546
+msgid ""
+"Calls ``JITLinkContext::notifyFinalized`` and hands off the "
+"``JITLinkMemoryManager::FinalizedAlloc`` object for this graph's memory "
+"allocation. This allows the context to track/hold memory allocations and "
+"react to the newly emitted definitions. In ORC this is used to update the "
+"``ExecutionSession`` instance's dependence graph, which may result in these "
+"symbols (and possibly others) becoming *Ready* if all of their dependencies "
+"have also been emitted."
+msgstr ""
+
+#: ../../../JITLink.rst:557
+msgid "Passes"
+msgstr ""
+
+#: ../../../JITLink.rst:559
+msgid ""
+"JITLink passes are ``std::function<Error(LinkGraph&)>`` instances. They are "
+"free to inspect and modify the given ``LinkGraph`` subject to the "
+"constraints of whatever phase they are running in (see :ref:"
+"`generic_link_algorithm`). If a pass returns ``Error::success()`` then "
+"linking continues. If a pass returns a failure value then linking is stopped "
+"and the ``JITLinkContext`` is notified that the link failed."
+msgstr ""
+
+#: ../../../JITLink.rst:566
+msgid ""
+"Passes may be used by both JITLink backends (e.g. MachO/x86-64 implements "
+"GOT and PLT construction as a pass), and external clients like "
+"``ObjectLinkingLayer::Plugin``."
+msgstr ""
+
+#: ../../../JITLink.rst:570
+msgid ""
+"In combination with the open ``LinkGraph`` API, JITLink passes enable the "
+"implementation of powerful new features. For example:"
+msgstr ""
+
+#: ../../../JITLink.rst:573
+msgid ""
+"Relaxation optimizations -- A pre-fixup pass can inspect GOT accesses and "
+"PLT calls and identify situations where the addresses of the entry target "
+"and the access are close enough to be accessed directly. In this case the "
+"pass can rewrite the instruction stream of the containing block and update "
+"the fixup edges to make the access direct."
+msgstr ""
+
+#: ../../../JITLink.rst:579
+msgid "Code for this looks like:"
+msgstr ""
+
+#: ../../../JITLink.rst:601
+msgid ""
+"Metadata registration -- Post allocation passes can be used to record the "
+"address range of sections in the target. This can be used to register the "
+"metadata (e.g exception handling frames, language metadata) in the target "
+"once memory has been finalized."
+msgstr ""
+
+#: ../../../JITLink.rst:617
+msgid ""
+"Record call sites for later mutation -- A post-allocation pass can record "
+"the call sites of all calls to a particular function, allowing those call "
+"sites to be updated later at runtime (e.g. for instrumentation, or to enable "
+"the function to be lazily compiled but still called directly after "
+"compilation)."
+msgstr ""
+
+#: ../../../JITLink.rst:640
+msgid "Memory Management with JITLinkMemoryManager"
+msgstr ""
+
+#: ../../../JITLink.rst:642
+msgid ""
+"JIT linking requires allocation of two kinds of memory: working memory in "
+"the JIT process and target memory in the execution process (these processes "
+"and memory allocations may be one and the same, depending on how the user "
+"wants to build their JIT). It also requires that these allocations conform "
+"to the requested code model in the target process (e.g. MachO/x86-64's Small "
+"code model requires that all code and data for a simulated dylib is "
+"allocated within 4Gb). Finally, it is natural to make the memory manager "
+"responsible for transferring memory to the target address space and applying "
+"memory protections, since the memory manager must know how to communicate "
+"with the executor, and since sharing and protection assignment can often be "
+"efficiently managed (in the common case of running across processes on the "
+"same machine for security) via the host operating system's virtual memory "
+"management APIs."
+msgstr ""
+
+#: ../../../JITLink.rst:655
+msgid ""
+"To satisfy these requirements ``JITLinkMemoryManager`` adopts the following "
+"design: The memory manager itself has just two virtual methods for "
+"asynchronous operations (each with convenience overloads for calling "
+"synchronously):"
+msgstr ""
+
+#: ../../../JITLink.rst:676
+msgid ""
+"The ``allocate`` method takes a ``JITLinkDylib*`` representing the target "
+"simulated dylib, a reference to the ``LinkGraph`` that must be allocated "
+"for, and a callback to run once an ``InFlightAlloc`` has been constructed. "
+"``JITLinkMemoryManager`` implementations can (optionally) use the ``JD`` "
+"argument to manage a per-simulated-dylib memory pool (since code model "
+"constraints are typically imposed on a per-dylib basis, and not across "
+"dylibs) [2]_. The ``LinkGraph`` describes the object file that we need to "
+"allocate memory for. The allocator must allocate working memory for all of "
+"the Blocks defined in the graph, assign address space for each Block within "
+"the executing processes memory, and update the Blocks' addresses to reflect "
+"this assignment. Block content should be copied to working memory, but does "
+"not need to be transferred to executor memory yet (that will be done once "
+"the content is fixed up). ``JITLinkMemoryManager`` implementations can take "
+"full responsibility for these steps, or use the ``BasicLayout`` utility to "
+"reduce the task to allocating working and executor memory for *segments*: "
+"chunks of memory defined by permissions, alignments, content sizes, and zero-"
+"fill sizes. Once the allocation step is complete the memory manager should "
+"construct an ``InFlightAlloc`` object to represent the allocation, and then "
+"pass this object to the ``OnAllocated`` callback."
+msgstr ""
+
+#: ../../../JITLink.rst:696
+msgid "The ``InFlightAlloc`` object has two virtual methods:"
+msgstr ""
+
+#: ../../../JITLink.rst:709
+msgid ""
+"The linking process will call the ``finalize`` method on the "
+"``InFlightAlloc`` object if linking succeeds up to the finalization step, "
+"otherwise it will call ``abandon`` to indicate that some error occurred "
+"during linking. A call to the ``InFlightAlloc::finalize`` method should "
+"cause content for the allocation to be transferred from working to executor "
+"memory, and permissions to be run. A call to ``abandon`` should result in "
+"both kinds of memory being deallocated."
+msgstr ""
+
+#: ../../../JITLink.rst:716
+msgid ""
+"On successful finalization, the ``InFlightAlloc::finalize`` method should "
+"construct a ``FinalizedAlloc`` object (an opaque uint64_t id that the "
+"``JITLinkMemoryManager`` can use to identify executor memory for "
+"deallocation) and pass it to the ``OnFinalized`` callback."
+msgstr ""
+
+#: ../../../JITLink.rst:721
+msgid ""
+"Finalized allocations (represented by ``FinalizedAlloc`` objects) can be "
+"deallocated by calling the ``JITLinkMemoryManager::dealloc`` method. This "
+"method takes a vector of ``FinalizedAlloc`` objects, since it is common to "
+"deallocate multiple objects at the same time and this allows us to batch "
+"these requests for transmission to the executing process."
+msgstr ""
+
+#: ../../../JITLink.rst:727
+msgid ""
+"JITLink provides a simple in-process implementation of this interface: "
+"``InProcessMemoryManager``. It allocates pages once and re-uses them as both "
+"working and target memory."
+msgstr ""
+
+#: ../../../JITLink.rst:731
+msgid ""
+"ORC provides a cross-process-capable ``MapperJITLinkMemoryManager`` that can "
+"use shared memory or ORC-RPC-based communication to transfer content to the "
+"executing process."
+msgstr ""
+
+#: ../../../JITLink.rst:736
+msgid "JITLinkMemoryManager and Security"
+msgstr ""
+
+#: ../../../JITLink.rst:738
+msgid ""
+"JITLink's ability to link JIT'd code for a separate executor process can be "
+"used to improve the security of a JIT system: The executor process can be "
+"sandboxed, run within a VM, or even run on a fully separate machine."
+msgstr ""
+
+#: ../../../JITLink.rst:742
+msgid ""
+"JITLink's memory manager interface is flexible enough to allow for a range "
+"of trade-offs between performance and security. For example, on a system "
+"where code pages must be signed (preventing code from being updated), the "
+"memory manager can deallocate working memory pages after linking to free "
+"memory in the process running JITLink. Alternatively, on a system that "
+"allows RWX pages, the memory manager may use the same pages for both working "
+"and target memory by marking them as RWX, allowing code to be modified in "
+"place without further overhead. Finally, if RWX pages are not permitted but "
+"dual-virtual-mappings of physical memory pages are, then the memory manager "
+"can dual map physical pages as RW- in the JITLink process and R-X in the "
+"executor process, allowing modification from the JITLink process but not "
+"from the executor (at the cost of extra administrative overhead for the dual "
+"mapping)."
+msgstr ""
+
+#: ../../../JITLink.rst:756
+msgid "Error Handling"
+msgstr ""
+
+#: ../../../JITLink.rst:758
+msgid ""
+"JITLink makes extensive use of the ``llvm::Error`` type (see the error "
+"handling section of :doc:`ProgrammersManual` for details). The link process "
+"itself, all passes, the memory manager interface, and operations on the "
+"``JITLinkContext`` are all permitted to fail. Link graph construction "
+"utilities (especially parsers for object formats) are encouraged to validate "
+"input, and validate fixups (e.g. with range checks) before application."
+msgstr ""
+
+#: ../../../JITLink.rst:765
+msgid ""
+"Any error will halt the link process and notify the context of failure. In "
+"ORC, reported failures are propagated to queries pending on definitions "
+"provided by the failing link, and also through edges of the dependence graph "
+"to any queries waiting on dependent symbols."
+msgstr ""
+
+#: ../../../JITLink.rst:773
+msgid "Connection to the ORC Runtime"
+msgstr ""
+
+#: ../../../JITLink.rst:775
+msgid ""
+"The ORC Runtime (currently under development) aims to provide runtime "
+"support for advanced JIT features, including object format features that "
+"require non-trivial action in the executor (e.g. running initializers, "
+"managing thread local storage, registering with language runtimes, etc.)."
+msgstr ""
+
+#: ../../../JITLink.rst:780
+msgid ""
+"ORC Runtime support for object format features typically requires "
+"cooperation between the runtime (which executes in the executor process) and "
+"JITLink (which runs in the JIT process and can inspect LinkGraphs to "
+"determine what actions must be taken in the executor). For example: "
+"Execution of MachO static initializers in the ORC runtime is performed by "
+"the ``jit_dlopen`` function, which calls back to the JIT process to ask for "
+"the list of address ranges of ``__mod_init`` sections to walk. This list is "
+"collated by the ``MachOPlatformPlugin``, which installs a pass to record "
+"this information for each object as it is linked into the target."
+msgstr ""
+
+#: ../../../JITLink.rst:793
+msgid "Constructing LinkGraphs"
+msgstr ""
+
+#: ../../../JITLink.rst:795
+msgid ""
+"Clients usually access and manipulate ``LinkGraph`` instances that were "
+"created for them by an ``ObjectLinkingLayer`` instance, but they can be "
+"created manually:"
+msgstr ""
+
+#: ../../../JITLink.rst:798
+msgid "By directly constructing and populating a ``LinkGraph`` instance."
+msgstr ""
+
+#: ../../../JITLink.rst:800
+msgid ""
+"By using the ``createLinkGraph`` family of functions to create a "
+"``LinkGraph`` from an in-memory buffer containing an object file. This is "
+"how ``ObjectLinkingLayer`` usually creates ``LinkGraphs``."
+msgstr ""
+
+#: ../../../JITLink.rst:805
+msgid "``createLinkGraph_<Object-Format>_<Architecture>`` can be used when"
+msgstr ""
+
+#: ../../../JITLink.rst:805
+msgid "both the object format and architecture are known ahead of time."
+msgstr ""
+
+#: ../../../JITLink.rst:807
+msgid ""
+"``createLinkGraph_<Object-Format>`` can be used when the object format is "
+"known ahead of time, but the architecture is not. In this case the "
+"architecture will be determined by inspection of the object header."
+msgstr ""
+
+#: ../../../JITLink.rst:811
+msgid ""
+"``createLinkGraph`` can be used when neither the object format nor the "
+"architecture are known ahead of time. In this case the object header will be "
+"inspected to determine both the format and architecture."
+msgstr ""
+
+#: ../../../JITLink.rst:818
+msgid "JIT Linking"
+msgstr ""
+
+#: ../../../JITLink.rst:820
+msgid ""
+"The JIT linker concept was introduced in LLVM's earlier generation of JIT "
+"APIs, MCJIT. In MCJIT the *RuntimeDyld* component enabled re-use of LLVM as "
+"an in-memory compiler by adding an in-memory link step to the end of the "
+"usual compiler pipeline. Rather than dumping relocatable objects to disk as "
+"a compiler usually would, MCJIT passed them to RuntimeDyld to be linked into "
+"a target process."
+msgstr ""
+
+#: ../../../JITLink.rst:827
+msgid ""
+"This approach to linking differs from standard *static* or *dynamic* linking:"
+msgstr ""
+
+#: ../../../JITLink.rst:829
+msgid ""
+"A *static linker* takes one or more relocatable object files as input and "
+"links them into an executable or dynamic library on disk."
+msgstr ""
+
+#: ../../../JITLink.rst:832
+msgid ""
+"A *dynamic linker* applies relocations to executables and dynamic libraries "
+"that have been loaded into memory."
+msgstr ""
+
+#: ../../../JITLink.rst:835
+msgid ""
+"A *JIT linker* takes a single relocatable object file at a time and links it "
+"into a target process, usually using a context object to allow the linked "
+"code to resolve symbols in the target."
+msgstr ""
+
+#: ../../../JITLink.rst:840
+msgid "RuntimeDyld"
+msgstr ""
+
+#: ../../../JITLink.rst:842
+msgid ""
+"In order to keep RuntimeDyld's implementation simple MCJIT imposed some "
+"restrictions on compiled code:"
+msgstr ""
+
+#: ../../../JITLink.rst:845
+msgid ""
+"It had to use the Large code model, and often restricted available "
+"relocation models in order to limit the kinds of relocations that had to be "
+"supported."
+msgstr ""
+
+#: ../../../JITLink.rst:848
+msgid ""
+"It required strong linkage and default visibility on all symbols -- behavior "
+"for other linkages/visibilities was not well defined."
+msgstr ""
+
+#: ../../../JITLink.rst:851
+msgid ""
+"It constrained and/or prohibited the use of features requiring runtime "
+"support, e.g. static initializers or thread local storage."
+msgstr ""
+
+#: ../../../JITLink.rst:854
+msgid ""
+"As a result of these restrictions not all language features supported by "
+"LLVM worked under MCJIT, and objects to be loaded under the JIT had to be "
+"compiled to target it (precluding the use of precompiled code from other "
+"sources under the JIT)."
+msgstr ""
+
+#: ../../../JITLink.rst:859
+msgid ""
+"RuntimeDyld also provided very limited visibility into the linking process "
+"itself: Clients could access conservative estimates of section size "
+"(RuntimeDyld bundled stub size and padding estimates into the section size "
+"value) and the final relocated bytes, but could not access RuntimeDyld's "
+"internal object representations."
+msgstr ""
+
+#: ../../../JITLink.rst:865
+msgid ""
+"Eliminating these restrictions and limitations was one of the primary "
+"motivations for the development of JITLink."
+msgstr ""
+
+#: ../../../JITLink.rst:869
+msgid "The llvm-jitlink tool"
+msgstr ""
+
+#: ../../../JITLink.rst:871
+msgid ""
+"The ``llvm-jitlink`` tool is a command line wrapper for the JITLink library. "
+"It loads some set of relocatable object files and then links them using "
+"JITLink. Depending on the options used it will then execute them, or "
+"validate the linked memory."
+msgstr ""
+
+#: ../../../JITLink.rst:876
+msgid ""
+"The ``llvm-jitlink`` tool was originally designed to aid JITLink development "
+"by providing a simple environment for testing."
+msgstr ""
+
+#: ../../../JITLink.rst:880
+msgid "Basic usage"
+msgstr ""
+
+#: ../../../JITLink.rst:882
+msgid ""
+"By default, ``llvm-jitlink`` will link the set of objects passed on the "
+"command line, then search for a \"main\" function and execute it:"
+msgstr ""
+
+#: ../../../JITLink.rst:899
+msgid ""
+"Multiple objects may be specified, and arguments may be provided to the "
+"JIT'd main function using the -args option:"
+msgstr ""
+
+#: ../../../JITLink.rst:927
+msgid ""
+"Alternative entry points may be specified using the ``-entry <entry point "
+"name>`` option."
+msgstr ""
+
+#: ../../../JITLink.rst:930
+msgid "Other options can be found by calling ``llvm-jitlink -help``."
+msgstr ""
+
+#: ../../../JITLink.rst:933
+msgid "llvm-jitlink as a regression testing utility"
+msgstr ""
+
+#: ../../../JITLink.rst:935
+msgid ""
+"One of the primary aims of ``llvm-jitlink`` was to enable readable "
+"regression tests for JITLink. To do this it supports two options:"
+msgstr ""
+
+#: ../../../JITLink.rst:938
+msgid ""
+"The ``-noexec`` option tells llvm-jitlink to stop after looking up the entry "
+"point, and before attempting to execute it. Since the linked code is not "
+"executed, this can be used to link for other targets even if you do not have "
+"access to the target being linked (the ``-define-abs`` or ``-phony-"
+"externals`` options can be used to supply any missing definitions in this "
+"case)."
+msgstr ""
+
+#: ../../../JITLink.rst:944
+msgid ""
+"The ``-check <check-file>`` option can be used to run a set of ``jitlink-"
+"check`` expressions against working memory. It is typically used in "
+"conjunction with ``-noexec``, since the aim is to validate JIT'd memory "
+"rather than to run the code and ``-noexec`` allows us to link for any "
+"supported target architecture from the current process. In ``-check`` mode, "
+"``llvm-jitlink`` will scan the given check-file for lines of the form ``# "
+"jitlink-check: <expr>``. See examples of this usage in ``llvm/test/"
+"ExecutionEngine/JITLink``."
+msgstr ""
+
+#: ../../../JITLink.rst:953
+msgid "Remote execution via llvm-jitlink-executor"
+msgstr ""
+
+#: ../../../JITLink.rst:955
+msgid ""
+"By default ``llvm-jitlink`` will link the given objects into its own "
+"process, but this can be overridden by two options:"
+msgstr ""
+
+#: ../../../JITLink.rst:958
+msgid ""
+"The ``-oop-executor[=/path/to/executor]`` option tells ``llvm-jitlink`` to "
+"execute the given executor (which defaults to ``llvm-jitlink-executor``) and "
+"communicate with it via file descriptors which it passes to the executor as "
+"the first argument with the format ``filedescs=<in-fd>,<out-fd>``."
+msgstr ""
+
+#: ../../../JITLink.rst:963
+msgid ""
+"The ``-oop-executor-connect=<host>:<port>`` option tells ``llvm-jitlink`` to "
+"connect to an already running executor via TCP on the given host and port. "
+"To use this option you will need to start ``llvm-jitlink-executor`` manually "
+"with ``listen=<host>:<port>`` as the first argument."
+msgstr ""
+
+#: ../../../JITLink.rst:969
+msgid "Harness mode"
+msgstr ""
+
+#: ../../../JITLink.rst:971
+msgid ""
+"The ``-harness`` option allows a set of input objects to be designated as a "
+"test harness, with the regular object files implicitly treated as objects to "
+"be tested. Definitions of symbols in the harness set override definitions in "
+"the test set, and external references from the harness cause automatic scope "
+"promotion of local symbols in the test set (these modifications to the usual "
+"linker rules are accomplished via an ``ObjectLinkingLayer::Plugin`` "
+"installed by ``llvm-jitlink`` when it sees the ``-harness`` option)."
+msgstr ""
+
+#: ../../../JITLink.rst:979
+msgid ""
+"With these modifications in place we can selectively test functions in an "
+"object file by mocking those function's callees. For example, suppose we "
+"have an object file, ``test_code.o``, compiled from the following C source "
+"(which we need not have access to):"
+msgstr ""
+
+#: ../../../JITLink.rst:998
+msgid ""
+"If we want to know how ``function_to_test`` behaves when we change the "
+"behavior of ``function_to_mock`` we can test it by writing a test harness:"
+msgstr ""
+
+#: ../../../JITLink.rst:1015
+msgid ""
+"Under normal circumstances these objects could not be linked together: "
+"``function_to_test`` is static and could not be resolved outside ``test_code."
+"o``, the two ``function_to_mock`` functions would result in a duplicate "
+"definition error, and ``irrelevant_external`` is undefined. However, using "
+"``-harness`` and ``-phony-externals`` we can run this code with:"
+msgstr ""
+
+#: ../../../JITLink.rst:1029
+msgid ""
+"The ``-harness`` option may be of interest to people who want to perform "
+"some very late testing on build products to verify that compiled code "
+"behaves as expected. On basic C test cases this is relatively "
+"straightforward. Mocks for more complicated languages (e.g. C++) are much "
+"trickier: Any code involving classes tends to have a lot of non-trivial "
+"surface area (e.g. vtables) that would require great care to mock."
+msgstr ""
+
+#: ../../../JITLink.rst:1037
+msgid "Tips for JITLink backend developers"
+msgstr ""
+
+#: ../../../JITLink.rst:1039
+msgid ""
+"Make liberal use of assert and ``llvm::Error``. Do *not* assume that the "
+"input object is well formed: Return any errors produced by libObject (or "
+"your own object parsing code) and validate as you construct. Think carefully "
+"about the distinction between contract (which should be validated with "
+"asserts and llvm_unreachable) and environmental errors (which should "
+"generate ``llvm::Error`` instances)."
+msgstr ""
+
+#: ../../../JITLink.rst:1046
+msgid ""
+"Don't assume you're linking in-process. Use libSupport's sized, endian-"
+"specific types when reading/writing content in the ``LinkGraph``."
+msgstr ""
+
+#: ../../../JITLink.rst:1049
+msgid ""
+"As a \"minimum viable\" JITLink wrapper, the ``llvm-jitlink`` tool is an "
+"invaluable resource for developers bringing in a new JITLink backend. A "
+"standard workflow is to start by throwing an unsupported object at the tool "
+"and seeing what error is returned, then fixing that (you can often make a "
+"reasonable guess at what should be done based on existing code for other "
+"formats or architectures)."
+msgstr ""
+
+#: ../../../JITLink.rst:1056
+msgid ""
+"In debug builds of LLVM, the ``-debug-only=jitlink`` option dumps logs from "
+"the JITLink library during the link process. These can be useful for "
+"spotting some bugs at a glance. The ``-debug-only=llvm_jitlink`` option "
+"dumps logs from the ``llvm-jitlink`` tool, which can be useful for debugging "
+"both testcases (it is often less verbose than ``-debug-only=jitlink``) and "
+"the tool itself."
+msgstr ""
+
+#: ../../../JITLink.rst:1062
+msgid ""
+"The ``-oop-executor`` and ``-oop-executor-connect`` options are helpful for "
+"testing handling of cross-process and cross-architecture use cases."
+msgstr ""
+
+#: ../../../JITLink.rst:1066
+msgid "Roadmap"
+msgstr ""
+
+#: ../../../JITLink.rst:1068
+msgid ""
+"JITLink is under active development. Work so far has focused on the MachO "
+"implementation. In LLVM 12 there is limited support for ELF on x86-64."
+msgstr ""
+
+#: ../../../JITLink.rst:1071
+msgid "Major outstanding projects include:"
+msgstr ""
+
+#: ../../../JITLink.rst:1073
+msgid "Refactor architecture support to maximize sharing across formats."
+msgstr ""
+
+#: ../../../JITLink.rst:1075
+msgid ""
+"All formats should be able to share the bulk of the architecture specific "
+"code (especially relocations) for each supported architecture."
+msgstr ""
+
+#: ../../../JITLink.rst:1078
+msgid "Refactor ELF link graph construction."
+msgstr ""
+
+#: ../../../JITLink.rst:1080
+msgid ""
+"ELF's link graph construction is currently implemented in the `ELF_x86_64."
+"cpp` file, and tied to the x86-64 relocation parsing code. The bulk of the "
+"code is generic and should be split into an ELFLinkGraphBuilder base class "
+"along the same lines as the existing generic MachOLinkGraphBuilder."
+msgstr ""
+
+#: ../../../JITLink.rst:1085
+msgid "Implement support for arm32."
+msgstr ""
+
+#: ../../../JITLink.rst:1087
+msgid "Implement support for other new architectures."
+msgstr ""
+
+#: ../../../JITLink.rst:1090
+msgid "JITLink Availability and Feature Status"
+msgstr ""
+
+#: ../../../JITLink.rst:1092
+msgid ""
+"The following table describes the status of the JITlink backends for various "
+"format / architecture combinations (as of July 2023)."
+msgstr ""
+
+#: ../../../JITLink.rst:1095
+msgid "Support levels:"
+msgstr ""
+
+#: ../../../JITLink.rst:1097
+msgid ""
+"None: No backend. JITLink will return an \"architecture not supported\" "
+"error. Represented by empty cells in the table below."
+msgstr ""
+
+#: ../../../JITLink.rst:1099
+msgid ""
+"Skeleton: A backend exists, but does not support commonly used relocations. "
+"Even simple programs are likely to trigger an \"unsupported relocation\" "
+"error. Backends in this state may be easy to improve by implementing new "
+"relocations. Consider getting involved!"
+msgstr ""
+
+#: ../../../JITLink.rst:1103
+msgid ""
+"Basic: The backend supports simple programs, isn't ready for general use yet."
+msgstr ""
+
+#: ../../../JITLink.rst:1104
+msgid ""
+"Usable: The backend is useable for general use for at least one code and "
+"relocation model."
+msgstr ""
+
+#: ../../../JITLink.rst:1106
+msgid ""
+"Good: The backend supports almost all relocations. Advanced features like "
+"native thread local storage may not be available yet."
+msgstr ""
+
+#: ../../../JITLink.rst:1108
+msgid ""
+"Complete: The backend supports all relocations and object format features."
+msgstr ""
+
+#: ../../../JITLink.rst:1110
+msgid "Availability and Status"
+msgstr ""
+
+#: ../../../JITLink.rst:1115
+msgid "Architecture"
+msgstr ""
+
+#: ../../../JITLink.rst:1116
+msgid "ELF"
+msgstr ""
+
+#: ../../../JITLink.rst:1117
+msgid "COFF"
+msgstr ""
+
+#: ../../../JITLink.rst:1118
+msgid "MachO"
+msgstr ""
+
+#: ../../../JITLink.rst:1119
+msgid "arm32"
+msgstr ""
+
+#: ../../../JITLink.rst:1120
+msgid "Skeleton"
+msgstr ""
+
+#: ../../../JITLink.rst:1123
+msgid "arm64"
+msgstr ""
+
+#: ../../../JITLink.rst:1124 ../../../JITLink.rst:1132
+#: ../../../JITLink.rst:1145
+msgid "Usable"
+msgstr ""
+
+#: ../../../JITLink.rst:1126 ../../../JITLink.rst:1128
+#: ../../../JITLink.rst:1136 ../../../JITLink.rst:1144
+#: ../../../JITLink.rst:1146
+msgid "Good"
+msgstr ""
+
+#: ../../../JITLink.rst:1127
+msgid "LoongArch"
+msgstr ""
+
+#: ../../../JITLink.rst:1131
+msgid "PowerPC 64"
+msgstr ""
+
+#: ../../../JITLink.rst:1135
+msgid "RISC-V"
+msgstr ""
+
+#: ../../../JITLink.rst:1139
+msgid "x86-32"
+msgstr ""
+
+#: ../../../JITLink.rst:1140
+msgid "Basic"
+msgstr ""
+
+#: ../../../JITLink.rst:1143
+msgid "x86-64"
+msgstr ""
+
+#: ../../../JITLink.rst:1148
+msgid ""
+"See ``llvm/examples/OrcV2Examples/LLJITWithObjectLinkingLayerPlugin`` for a "
+"full worked example."
+msgstr ""
+
+#: ../../../JITLink.rst:1151
+msgid ""
+"If not for *hidden* scoped symbols we could eliminate the ``JITLinkDylib*`` "
+"argument to ``JITLinkMemoryManager::allocate`` and treat every object as a "
+"separate simulated dylib for the purposes of memory layout. Hidden symbols "
+"break this by generating in-range accesses to external symbols, requiring "
+"the access and symbol to be allocated within range of one another. That "
+"said, providing a pre-reserved address range pool for each simulated dylib "
+"guarantees that the relaxation optimizations will kick in for all intra-"
+"dylib references, which is good for performance (at the cost of whatever "
+"overhead is introduced by reserving the address-range up-front)."
+msgstr ""
