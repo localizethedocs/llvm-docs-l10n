@@ -1,0 +1,376 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 14\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:12+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:3
+msgid "How to set up LLVM-style RTTI for your class hierarchy"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:5
+msgid "Contents"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:8
+msgid "Background"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:10
+msgid ""
+"LLVM avoids using C++'s built in RTTI. Instead, it  pervasively uses its own "
+"hand-rolled form of RTTI which is much more efficient and flexible, although "
+"it requires a bit more work from you as a class author."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:14
+msgid ""
+"A description of how to use LLVM-style RTTI from a client's perspective is "
+"given in the `Programmer's Manual <ProgrammersManual.html#isa>`_. This "
+"document, in contrast, discusses the steps you need to take as a class "
+"hierarchy author to make LLVM-style RTTI available to your clients."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:19
+msgid ""
+"Before diving in, make sure that you are familiar with the Object Oriented "
+"Programming concept of \"`is-a`_\"."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:25
+msgid "Basic Setup"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:27
+msgid ""
+"This section describes how to set up the most basic form of LLVM-style RTTI "
+"(which is sufficient for 99.9% of the cases). We will set up LLVM-style RTTI "
+"for this class hierarchy:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:53
+msgid ""
+"The most basic working setup for LLVM-style RTTI requires the following "
+"steps:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:56
+msgid ""
+"In the header where you declare ``Shape``, you will want to ``#include "
+"\"llvm/Support/Casting.h\"``, which declares LLVM's RTTI templates. That way "
+"your clients don't even have to think about it."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:64
+msgid ""
+"In the base class, introduce an enum which discriminates all of the "
+"different concrete classes in the hierarchy, and stash the enum value "
+"somewhere in the base class."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:68
+msgid "Here is the code after introducing this change:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:88
+msgid ""
+"You will usually want to keep the ``Kind`` member encapsulated and private, "
+"but let the enum ``ShapeKind`` be public along with providing a "
+"``getKind()`` method. This is convenient for clients so that they can do a "
+"``switch`` over the enum."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:93
+msgid ""
+"A common naming convention is that these enums are \"kind\"s, to avoid "
+"ambiguity with the words \"type\" or \"class\" which have overloaded "
+"meanings in many contexts within LLVM. Sometimes there will be a natural "
+"name for it, like \"opcode\". Don't bikeshed over this; when in doubt use "
+"``Kind``."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:98
+msgid ""
+"You might wonder why the ``Kind`` enum doesn't have an entry for ``Shape``. "
+"The reason for this is that since ``Shape`` is abstract (``computeArea() = 0;"
+"``), you will never actually have non-derived instances of exactly that "
+"class (only subclasses). See `Concrete Bases and Deeper Hierarchies`_ for "
+"information on how to deal with non-abstract bases. It's worth mentioning "
+"here that unlike ``dynamic_cast<>``, LLVM-style RTTI can be used (and is "
+"often used) for classes that don't have v-tables."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:107
+msgid ""
+"Next, you need to make sure that the ``Kind`` gets initialized to the value "
+"corresponding to the dynamic type of the class. Typically, you will want to "
+"have it be an argument to the constructor of the base class, and then pass "
+"in the respective ``XXXKind`` from subclass constructors."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:112
+msgid "Here is the code after that change:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:149
+msgid ""
+"Finally, you need to inform LLVM's RTTI templates how to dynamically "
+"determine the type of a class (i.e. whether the ``isa<>``/``dyn_cast<>`` "
+"should succeed). The default \"99.9% of use cases\" way to accomplish this "
+"is through a small static member function ``classof``. In order to have "
+"proper context for an explanation, we will display this code first, and then "
+"below describe each part:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:196
+msgid ""
+"The job of ``classof`` is to dynamically determine whether an object of a "
+"base class is in fact of a particular derived class.  In order to downcast a "
+"type ``Base`` to a type ``Derived``, there needs to be a ``classof`` in "
+"``Derived`` which will accept an object of type ``Base``."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:201
+msgid "To be concrete, consider the following code:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:210
+msgid ""
+"The code of the ``isa<>`` test in this code will eventually boil down---"
+"after template instantiation and some other machinery---to a check roughly "
+"like ``Circle::classof(S)``. For more information, see :ref:`classof-"
+"contract`."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:215
+msgid ""
+"The argument to ``classof`` should always be an *ancestor* class because the "
+"implementation has logic to allow and optimize away upcasts/up-``isa<>``'s "
+"automatically. It is as though every class ``Foo`` automatically has a "
+"``classof`` like:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:232
+msgid ""
+"Note that this is the reason that we did not need to introduce a ``classof`` "
+"into ``Shape``: all relevant classes derive from ``Shape``, and ``Shape`` "
+"itself is abstract (has no entry in the ``Kind`` enum), so this notional "
+"inferred ``classof`` is all we need. See `Concrete Bases and Deeper "
+"Hierarchies`_ for more information about how to extend this example to more "
+"general hierarchies."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:239
+msgid ""
+"Although for this small example setting up LLVM-style RTTI seems like a lot "
+"of \"boilerplate\", if your classes are doing anything interesting then this "
+"will end up being a tiny fraction of the code."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:244
+msgid "Concrete Bases and Deeper Hierarchies"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:246
+msgid ""
+"For concrete bases (i.e. non-abstract interior nodes of the inheritance "
+"tree), the ``Kind`` check inside ``classof`` needs to be a bit more "
+"complicated. The situation differs from the example above in that"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:250
+msgid ""
+"Since the class is concrete, it must itself have an entry in the ``Kind`` "
+"enum because it is possible to have objects with this class as a dynamic "
+"type."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:254
+msgid ""
+"Since the class has children, the check inside ``classof`` must take them "
+"into account."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:257
+msgid ""
+"Say that ``SpecialSquare`` and ``OtherSpecialSquare`` derive from "
+"``Square``, and so ``ShapeKind`` becomes:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:269
+msgid "Then in ``Square``, we would need to modify the ``classof`` like so:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:281
+msgid ""
+"The reason that we need to test a range like this instead of just equality "
+"is that both ``SpecialSquare`` and ``OtherSpecialSquare`` \"is-a\" "
+"``Square``, and so ``classof`` needs to return ``true`` for them."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:285
+msgid ""
+"This approach can be made to scale to arbitrarily deep hierarchies. The "
+"trick is that you arrange the enum values so that they correspond to a "
+"preorder traversal of the class hierarchy tree. With that arrangement, all "
+"subclass tests can be done with two comparisons as shown above. If you just "
+"list the class hierarchy like a list of bullet points, you'll get the "
+"ordering right::"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:299
+msgid "A Bug to be Aware Of"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:301
+msgid ""
+"The example just given opens the door to bugs where the ``classof``\\s are "
+"not updated to match the ``Kind`` enum when adding (or removing) classes to "
+"(from) the hierarchy."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:305
+msgid ""
+"Continuing the example above, suppose we add a ``SomewhatSpecialSquare`` as "
+"a subclass of ``Square``, and update the ``ShapeKind`` enum like so:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:318
+msgid ""
+"Now, suppose that we forget to update ``Square::classof()``, so it still "
+"looks like:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:330
+msgid ""
+"As the comment indicates, this code contains a bug. A straightforward and "
+"non-clever way to avoid this is to introduce an explicit ``SK_LastSquare`` "
+"entry in the enum when adding the first subclass(es). For example, we could "
+"rewrite the example at the beginning of `Concrete Bases and Deeper "
+"Hierarchies`_ as:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:355
+msgid "Then, adding new subclasses is easy:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:368
+msgid "Notice that ``Square::classof`` does not need to be changed."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:373
+msgid "The Contract of ``classof``"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:375
+msgid ""
+"To be more precise, let ``classof`` be inside a class ``C``.  Then the "
+"contract for ``classof`` is \"return ``true`` if the dynamic type of the "
+"argument is-a ``C``\".  As long as your implementation fulfills this "
+"contract, you can tweak and optimize it as much as you want."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:380
+msgid ""
+"For example, LLVM-style RTTI can work fine in the presence of multiple-"
+"inheritance by defining an appropriate ``classof``. An example of this in "
+"practice is `Decl <https://clang.llvm.org/doxygen/classclang_1_1Decl.html>`_ "
+"vs. `DeclContext <https://clang.llvm.org/doxygen/classclang_1_1DeclContext."
+"html>`_ inside Clang. The ``Decl`` hierarchy is done very similarly to the "
+"example setup demonstrated in this tutorial. The key part is how to then "
+"incorporate ``DeclContext``: all that is needed is in ``bool DeclContext::"
+"classof(const Decl *)``, which asks the question \"Given a ``Decl``, how can "
+"I determine if it is-a ``DeclContext``?\". It answers this with a simple "
+"switch over the set of ``Decl`` \"kinds\", and returning true for ones that "
+"are known to be ``DeclContext``'s."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:394
+msgid "Todo"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:396
+msgid ""
+"Touch on some of the more advanced features, like ``isa_impl`` and "
+"``simplify_type``. However, those two need reference documentation in the "
+"form of doxygen comments as well. We need the doxygen so that we can say "
+"\"for full details, see https://llvm.org/doxygen/...\""
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:402
+msgid "Rules of Thumb"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:404
+msgid ""
+"The ``Kind`` enum should have one entry per concrete class, ordered "
+"according to a preorder traversal of the inheritance tree."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:406
+msgid ""
+"The argument to ``classof`` should be a ``const Base *``, where ``Base`` is "
+"some ancestor in the inheritance hierarchy. The argument should *never* be a "
+"derived class or the class itself: the template machinery for ``isa<>`` "
+"already handles this case and optimizes it."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:410
+msgid ""
+"For each class in the hierarchy that has no children, implement a "
+"``classof`` that checks only against its ``Kind``."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:412
+msgid ""
+"For each class in the hierarchy that has children, implement a ``classof`` "
+"that checks a range of the first child's ``Kind`` and the last child's "
+"``Kind``."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:417
+msgid "RTTI for Open Class Hierarchies"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:419
+msgid ""
+"Sometimes it is not possible to know all types in a hierarchy ahead of time. "
+"For example, in the shapes hierarchy described above the authors may have "
+"wanted their code to work for user defined shapes too. To support use cases "
+"that require open hierarchies LLVM provides the ``RTTIRoot`` and "
+"``RTTIExtends`` utilities."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:425
+msgid ""
+"The ``RTTIRoot`` class describes an interface for performing RTTI checks. "
+"The ``RTTIExtends`` class template provides an implementation of this "
+"interface for classes derived from ``RTTIRoot``. ``RTTIExtends`` uses the "
+"\"`Curiously Recurring Template Idiom`_\", taking the class being defined as "
+"its first template argument and the parent class as the second argument. Any "
+"class that uses ``RTTIExtends`` must define a ``static char ID`` member, the "
+"address of which will be used to identify the type."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:433
+msgid ""
+"This open-hierarchy RTTI support should only be used if your use case "
+"requires it. Otherwise the standard LLVM RTTI system should be preferred."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.rst:439
+msgid "E.g."
+msgstr ""
