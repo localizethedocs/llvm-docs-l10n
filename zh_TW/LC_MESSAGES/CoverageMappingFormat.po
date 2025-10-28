@@ -1,0 +1,1110 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 16\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:13+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../CoverageMappingFormat.rst:6
+msgid "LLVM Code Coverage Mapping Format"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:12
+msgid "Introduction"
+msgstr "簡介"
+
+#: ../../../CoverageMappingFormat.rst:14
+msgid ""
+"LLVM's code coverage mapping format is used to provide code coverage "
+"analysis using LLVM's and Clang's instrumentation based profiling (Clang's "
+"``-fprofile-instr-generate`` option)."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:18
+msgid ""
+"This document is aimed at those who would like to know how LLVM's code "
+"coverage mapping works under the hood. A prior knowledge of how Clang's "
+"profile guided optimization works is useful, but not required. For those "
+"interested in using LLVM to provide code coverage analysis for their own "
+"programs, see the `Clang documentation <https://clang.llvm.org/docs/"
+"SourceBasedCodeCoverage.html>`."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:24
+msgid ""
+"We start by briefly describing LLVM's code coverage mapping format and the "
+"way that Clang and LLVM's code coverage tool work with this format. After "
+"the basics are down, more advanced features of the coverage mapping format "
+"are discussed - such as the data structures, LLVM IR representation and the "
+"binary encoding."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:31
+msgid "High Level Overview"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:33
+msgid ""
+"LLVM's code coverage mapping format is designed to be a self contained data "
+"format that can be embedded into the LLVM IR and into object files. It's "
+"described in this document as a **mapping** format because its goal is to "
+"store the data that is required for a code coverage tool to map between the "
+"specific source ranges in a file and the execution counts obtained after "
+"running the instrumented version of the program."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:40
+msgid "The mapping data is used in two places in the code coverage process:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:42
+msgid ""
+"When clang compiles a source file with ``-fcoverage-mapping``, it generates "
+"the mapping information that describes the mapping between the source ranges "
+"and the profiling instrumentation counters. This information gets embedded "
+"into the LLVM IR and conveniently ends up in the final executable file when "
+"the program is linked."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:48
+msgid ""
+"It is also used by *llvm-cov* - the mapping information is extracted from an "
+"object file and is used to associate the execution counts (the values of the "
+"profile instrumentation counters), and the source ranges in a file. After "
+"that, the tool is able to generate various code coverage reports for the "
+"program."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:54
+msgid ""
+"The coverage mapping format aims to be a \"universal format\" that would be "
+"suitable for usage by any frontend, and not just by Clang. It also aims to "
+"provide the frontend the possibility of generating the minimal coverage "
+"mapping data in order to reduce the size of the IR and object files - for "
+"example, instead of emitting mapping information for each statement in a "
+"function, the frontend is allowed to group the statements with the same "
+"execution count into regions of code, and emit the mapping information only "
+"for those regions."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:63
+msgid "Advanced Concepts"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:65
+msgid ""
+"The remainder of this guide is meant to give you insight into the way the "
+"coverage mapping format works."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:68
+msgid ""
+"The coverage mapping format operates on a per-function level as the profile "
+"instrumentation counters are associated with a specific function. For each "
+"function that requires code coverage, the frontend has to create coverage "
+"mapping data that can map between the source code ranges and the profile "
+"instrumentation counters for that function."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:75 ../../../CoverageMappingFormat.rst:534
+msgid "Mapping Region"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:77
+msgid ""
+"The function's coverage mapping data contains an array of mapping regions. A "
+"mapping region stores the `source code range`_ that is covered by this "
+"region, the `file id <coverage file id_>`_, the `coverage mapping counter`_ "
+"and the region's kind. There are several kinds of mapping regions:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:83
+msgid ""
+"Code regions associate portions of source code and `coverage mapping "
+"counters`_. They make up the majority of the mapping regions. They are used "
+"by the code coverage tool to compute the execution counts for lines, "
+"highlight the regions of code that were never executed, and to obtain the "
+"various code coverage statistics for a function. For example:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:90
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"main(int argc, const char *argv[]) </span><span style='background-color:"
+"#4A789C'>{    </span> <span class='c1'>// Code Region from 1:40 to 9:2</"
+"span> <span style='background-color:"
+"#4A789C'>                                            </span> <span "
+"style='background-color:#4A789C'>  if (argc &gt; 1) </span><span "
+"style='background-color:#85C1F5'>{                         </span>   <span "
+"class='c1'>// Code Region from 3:17 to 5:4</span> <span style='background-"
+"color:#85C1F5'>    printf(\"%s\\n\", argv[1]);              </span> <span "
+"style='background-color:#85C1F5'>  }</span><span style='background-color:"
+"#4A789C'> else </span><span style='background-color:"
+"#F6D55D'>{                                </span>   <span class='c1'>// Code "
+"Region from 5:10 to 7:4</span> <span style='background-color:#F6D55D'>    "
+"printf(\"\\n\");                         </span> <span style='background-"
+"color:#F6D55D'>  }</span><span style='background-color:"
+"#4A789C'>                                         </span> <span "
+"style='background-color:#4A789C'>  return 0;                                 "
+"</span> <span style='background-color:#4A789C'>}</span> </pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:90
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"main(int argc, const char *argv[]) </span><span style='background-color:"
+"#4A789C'>{    </span> <span class='c1'>// Code Region from 1:40 to 9:2</"
+"span>\n"
+"<span style='background-color:"
+"#4A789C'>                                            </span>\n"
+"<span style='background-color:#4A789C'>  if (argc &gt; 1) </span><span "
+"style='background-color:#85C1F5'>{                         </span>   <span "
+"class='c1'>// Code Region from 3:17 to 5:4</span>\n"
+"<span style='background-color:#85C1F5'>    printf(\"%s\\n\", "
+"argv[1]);              </span>\n"
+"<span style='background-color:#85C1F5'>  }</span><span style='background-"
+"color:#4A789C'> else </span><span style='background-color:"
+"#F6D55D'>{                                </span>   <span class='c1'>// Code "
+"Region from 5:10 to 7:4</span>\n"
+"<span style='background-color:#F6D55D'>    "
+"printf(\"\\n\");                         </span>\n"
+"<span style='background-color:#F6D55D'>  }</span><span style='background-"
+"color:#4A789C'>                                         </span>\n"
+"<span style='background-color:#4A789C'>  return "
+"0;                                 </span>\n"
+"<span style='background-color:#4A789C'>}</span>\n"
+"</pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:100
+msgid ""
+"Skipped regions are used to represent source ranges that were skipped by "
+"Clang's preprocessor. They don't associate with `coverage mapping "
+"counters`_, as the frontend knows that they are never executed. They are "
+"used by the code coverage tool to mark the skipped lines inside a function "
+"as non-code lines that don't have execution counts. For example:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:107
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"main() </span><span style='background-color:#4A789C'>{               </span> "
+"<span class='c1'>// Code Region from 1:12 to 6:2</span> <span "
+"style='background-color:#85C1F5'>#ifdef DEBUG             </span>   <span "
+"class='c1'>// Skipped Region from 2:1 to 4:2</span> <span style='background-"
+"color:#85C1F5'>  printf(\"Hello world\"); </span> <span style='background-"
+"color:#85C1F5'>#</span><span style='background-color:"
+"#4A789C'>endif                     </span> <span style='background-color:"
+"#4A789C'>  return 0;                </span> <span style='background-color:"
+"#4A789C'>}</span> </pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:107
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"main() </span><span style='background-color:#4A789C'>{               </span> "
+"<span class='c1'>// Code Region from 1:12 to 6:2</span>\n"
+"<span style='background-color:#85C1F5'>#ifdef DEBUG             </span>   "
+"<span class='c1'>// Skipped Region from 2:1 to 4:2</span>\n"
+"<span style='background-color:#85C1F5'>  printf(\"Hello world\"); </span>\n"
+"<span style='background-color:#85C1F5'>#</span><span style='background-color:"
+"#4A789C'>endif                     </span>\n"
+"<span style='background-color:#4A789C'>  return 0;                </span>\n"
+"<span style='background-color:#4A789C'>}</span>\n"
+"</pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:114
+msgid ""
+"Expansion regions are used to represent Clang's macro expansions. They have "
+"an additional property - *expanded file id*. This property can be used by "
+"the code coverage tool to find the mapping regions that are created as a "
+"result of this macro expansion, by checking if their file id matches the "
+"expanded file id. They don't associate with `coverage mapping counters`_, as "
+"the code coverage tool can determine the execution count for this region by "
+"looking up the execution count of the first region with a corresponding file "
+"id. For example:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:124
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"func(int x) </span><span style='background-color:"
+"#4A789C'>{                             </span> <span style='background-color:"
+"#4A789C'>  #define MAX(x,y) </span><span style='background-color:"
+"#85C1F5'>((x) &gt; (y)? </span><span style='background-color:#F6D55D'>(x)</"
+"span><span style='background-color:#85C1F5'> : </span><span "
+"style='background-color:#F4BA70'>(y)</span><span style='background-color:"
+"#85C1F5'>)</span><span style='background-color:#4A789C'>     </span> <span "
+"style='background-color:#4A789C'>  return </span><span style='background-"
+"color:#7FCA9F'>MAX</span><span style='background-color:#4A789C'>(x, "
+"42);                          </span> <span class='c1'>// Expansion Region "
+"from 3:10 to 3:13</span> <span style='background-color:#4A789C'>}</span> </"
+"pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:124
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"func(int x) </span><span style='background-color:"
+"#4A789C'>{                             </span>\n"
+"<span style='background-color:#4A789C'>  #define MAX(x,y) </span><span "
+"style='background-color:#85C1F5'>((x) &gt; (y)? </span><span "
+"style='background-color:#F6D55D'>(x)</span><span style='background-color:"
+"#85C1F5'> : </span><span style='background-color:#F4BA70'>(y)</span><span "
+"style='background-color:#85C1F5'>)</span><span style='background-color:"
+"#4A789C'>     </span>\n"
+"<span style='background-color:#4A789C'>  return </span><span "
+"style='background-color:#7FCA9F'>MAX</span><span style='background-color:"
+"#4A789C'>(x, 42);                          </span> <span class='c1'>// "
+"Expansion Region from 3:10 to 3:13</span>\n"
+"<span style='background-color:#4A789C'>}</span>\n"
+"</pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:129
+msgid ""
+"Branch regions associate instrumentable branch conditions in the source code "
+"with a `coverage mapping counter`_ to track how many times an individual "
+"condition evaluated to 'true' and another `coverage mapping counter`_ to "
+"track how many times that condition evaluated to false.  Instrumentable "
+"branch conditions may comprise larger boolean expressions using boolean "
+"logical operators.  The 'true' and 'false' cases reflect unique branch paths "
+"that can be traced back to the source code. For example:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:138
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"func(int x, int y) { <span>  if (<span style='background-color:#4A789C'>(x "
+"&gt; 1)</span> || <span style='background-color:#4A789C'>(y &gt; 3)</span>) "
+"{</span>  <span class='c1'>// Branch Region from 3:6 to 3:12</span> "
+"<span>                             </span><span class='c1'>// Branch Region "
+"from 3:17 to 3:23</span> <span>    printf(\"%d\\n\", x);              </"
+"span> <span>  } else {                                </span> <span>    "
+"printf(\"\\n\");                         </span> <span>  }</span> <span>  "
+"return 0;                                 </span> <span>}</span> </pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:138
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"func(int x, int y) {\n"
+"<span>  if (<span style='background-color:#4A789C'>(x &gt; 1)</span> || "
+"<span style='background-color:#4A789C'>(y &gt; 3)</span>) {</span>  <span "
+"class='c1'>// Branch Region from 3:6 to 3:12</span>\n"
+"<span>                             </span><span class='c1'>// Branch Region "
+"from 3:17 to 3:23</span>\n"
+"<span>    printf(\"%d\\n\", x);              </span>\n"
+"<span>  } else {                                </span>\n"
+"<span>    printf(\"\\n\");                         </span>\n"
+"<span>  }</span>\n"
+"<span>  return 0;                                 </span>\n"
+"<span>}</span>\n"
+"</pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:152
+msgid "Source Range:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:154
+msgid ""
+"The source range record contains the starting and ending location of a "
+"certain mapping region. Both locations include the line and the column "
+"numbers."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:160
+msgid "File ID:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:162
+msgid ""
+"The file id an integer value that tells us in which source file or macro "
+"expansion is this region located. It enables Clang to produce mapping "
+"information for the code defined inside macros, like this example "
+"demonstrates:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:167
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>void "
+"func(const char *str) </span><span style='background-color:"
+"#4A789C'>{        </span> <span class='c1'>// Code Region from 1:28 to 6:2 "
+"with file id 0</span> <span style='background-color:#4A789C'>  #define PUT </"
+"span><span style='background-color:#85C1F5'>printf(\"%s\\n\", str)</"
+"span><span style='background-color:#4A789C'>   </span> <span class='c1'>// 2 "
+"Code Regions from 2:15 to 2:34 with file ids 1 and 2</span> <span "
+"style='background-color:#4A789C'>  if(*str)                          </span> "
+"<span style='background-color:#4A789C'>    </span><span style='background-"
+"color:#F6D55D'>PUT</span><span style='background-color:"
+"#4A789C'>;                            </span> <span class='c1'>// Expansion "
+"Region from 4:5 to 4:8 with file id 0 that expands a macro with file id 1</"
+"span> <span style='background-color:#4A789C'>  </span><span "
+"style='background-color:#F6D55D'>PUT</span><span style='background-color:"
+"#4A789C'>;                              </span> <span class='c1'>// "
+"Expansion Region from 5:3 to 5:6 with file id 0 that expands a macro with "
+"file id 2</span> <span style='background-color:#4A789C'>}</span> </pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:167
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>void "
+"func(const char *str) </span><span style='background-color:"
+"#4A789C'>{        </span> <span class='c1'>// Code Region from 1:28 to 6:2 "
+"with file id 0</span>\n"
+"<span style='background-color:#4A789C'>  #define PUT </span><span "
+"style='background-color:#85C1F5'>printf(\"%s\\n\", str)</span><span "
+"style='background-color:#4A789C'>   </span> <span class='c1'>// 2 Code "
+"Regions from 2:15 to 2:34 with file ids 1 and 2</span>\n"
+"<span style='background-color:#4A789C'>  if(*str)                          </"
+"span>\n"
+"<span style='background-color:#4A789C'>    </span><span style='background-"
+"color:#F6D55D'>PUT</span><span style='background-color:"
+"#4A789C'>;                            </span> <span class='c1'>// Expansion "
+"Region from 4:5 to 4:8 with file id 0 that expands a macro with file id 1</"
+"span>\n"
+"<span style='background-color:#4A789C'>  </span><span style='background-"
+"color:#F6D55D'>PUT</span><span style='background-color:"
+"#4A789C'>;                              </span> <span class='c1'>// "
+"Expansion Region from 5:3 to 5:6 with file id 0 that expands a macro with "
+"file id 2</span>\n"
+"<span style='background-color:#4A789C'>}</span>\n"
+"</pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:179
+#: ../../../CoverageMappingFormat.rst:562
+msgid "Counter:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:181
+msgid ""
+"A coverage mapping counter can represents a reference to the profile "
+"instrumentation counter. The execution count for a region with such counter "
+"is determined by looking up the value of the corresponding profile "
+"instrumentation counter."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:186
+msgid ""
+"It can also represent a binary arithmetical expression that operates on "
+"coverage mapping counters or other expressions. The execution count for a "
+"region with an expression counter is determined by evaluating the "
+"expression's arguments and then adding them together or subtracting them "
+"from one another. In the example below, a subtraction expression is used to "
+"compute the execution count for the compound statement that follows the "
+"*else* keyword:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:194
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"main(int argc, const char *argv[]) </span><span style='background-color:"
+"#4A789C'>{   </span> <span class='c1'>// Region's counter is a reference to "
+"the profile counter #0</span> <span style='background-color:"
+"#4A789C'>                                           </span> <span "
+"style='background-color:#4A789C'>  if (argc &gt; 1) </span><span "
+"style='background-color:#85C1F5'>{                        </span>   <span "
+"class='c1'>// Region's counter is a reference to the profile counter #1</"
+"span> <span style='background-color:#85C1F5'>    printf(\"%s\\n\", "
+"argv[1]);             </span><span>   </span> <span style='background-color:"
+"#85C1F5'>  }</span><span style='background-color:#4A789C'> else </span><span "
+"style='background-color:#F6D55D'>{                               </span>   "
+"<span class='c1'>// Region's counter is an expression (reference to the "
+"profile counter #0 - reference to the profile counter #1)</span> <span "
+"style='background-color:#F6D55D'>    printf(\"\\n\");                        "
+"</span> <span style='background-color:#F6D55D'>  }</span><span "
+"style='background-color:#4A789C'>                                        </"
+"span> <span style='background-color:#4A789C'>  return "
+"0;                                </span> <span style='background-color:"
+"#4A789C'>}</span> </pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:194
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"main(int argc, const char *argv[]) </span><span style='background-color:"
+"#4A789C'>{   </span> <span class='c1'>// Region's counter is a reference to "
+"the profile counter #0</span>\n"
+"<span style='background-color:"
+"#4A789C'>                                           </span>\n"
+"<span style='background-color:#4A789C'>  if (argc &gt; 1) </span><span "
+"style='background-color:#85C1F5'>{                        </span>   <span "
+"class='c1'>// Region's counter is a reference to the profile counter #1</"
+"span>\n"
+"<span style='background-color:#85C1F5'>    printf(\"%s\\n\", "
+"argv[1]);             </span><span>   </span>\n"
+"<span style='background-color:#85C1F5'>  }</span><span style='background-"
+"color:#4A789C'> else </span><span style='background-color:"
+"#F6D55D'>{                               </span>   <span class='c1'>// "
+"Region's counter is an expression (reference to the profile counter #0 - "
+"reference to the profile counter #1)</span>\n"
+"<span style='background-color:#F6D55D'>    "
+"printf(\"\\n\");                        </span>\n"
+"<span style='background-color:#F6D55D'>  }</span><span style='background-"
+"color:#4A789C'>                                        </span>\n"
+"<span style='background-color:#4A789C'>  return "
+"0;                                </span>\n"
+"<span style='background-color:#4A789C'>}</span>\n"
+"</pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:205
+msgid ""
+"Finally, a coverage mapping counter can also represent an execution count of "
+"of zero. The zero counter is used to provide coverage mapping for "
+"unreachable statements and expressions, like in the example below:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:209
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"main() </span><span style='background-color:#4A789C'>{                  </"
+"span> <span style='background-color:#4A789C'>  return 0;                   </"
+"span> <span style='background-color:#4A789C'>  </span><span "
+"style='background-color:#85C1F5'>printf(\"Hello world!\\n\")</span><span "
+"style='background-color:#4A789C'>;   </span> <span class='c1'>// Unreachable "
+"region's counter is zero</span> <span style='background-color:#4A789C'>}</"
+"span> </pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:209
+msgid ""
+":raw-html:`<pre class='highlight' style='line-height:initial;'><span>int "
+"main() </span><span style='background-color:#4A789C'>{                  </"
+"span>\n"
+"<span style='background-color:#4A789C'>  return 0;                   </"
+"span>\n"
+"<span style='background-color:#4A789C'>  </span><span style='background-"
+"color:#85C1F5'>printf(\"Hello world!\\n\")</span><span style='background-"
+"color:#4A789C'>;   </span> <span class='c1'>// Unreachable region's counter "
+"is zero</span>\n"
+"<span style='background-color:#4A789C'>}</span>\n"
+"</pre>`"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:215
+msgid ""
+"The zero counters allow the code coverage tool to display proper line "
+"execution counts for the unreachable lines and highlight the unreachable "
+"code. Without them, the tool would think that those lines and regions were "
+"still executed, as it doesn't possess the frontend's knowledge."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:220
+msgid ""
+"Note that branch regions are created to track branch conditions in the "
+"source code and refer to two coverage mapping counters, one to track the "
+"number of times the branch condition evaluated to \"true\", and one to track "
+"the number of times the branch condition evaluated to \"false\"."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:226
+msgid "LLVM IR Representation"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:228
+msgid ""
+"The coverage mapping data is stored in the LLVM IR using a global constant "
+"structure variable called *__llvm_coverage_mapping* with the *IPSK_covmap* "
+"section specifier (i.e. \".lcovmap$M\" on Windows and \"__llvm_covmap\" "
+"elsewhere)."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:232
+msgid "For example, let’s consider a C file and how it gets compiled to LLVM:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:245
+msgid "The coverage mapping variable generated by Clang has 2 fields:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:247
+msgid "Coverage mapping header."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:249
+msgid ""
+"An optionally compressed list of filenames present in the translation unit."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:251
+msgid ""
+"The variable has 8-byte alignment because ld64 cannot always pack symbols "
+"from different object files tightly (the word-level alignment assumption is "
+"baked in too deeply)."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:269
+msgid "The current version of the format is version 6."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:271
+msgid "There is one difference between versions 6 and 5:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:273
+msgid ""
+"The first entry in the filename list is the compilation directory. When the "
+"filename is relative, the compilation directory is combined with the "
+"relative path to get an absolute path. This can reduce size by omitting the "
+"duplicate prefix in filenames."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:278
+msgid "There is one difference between versions 5 and 4:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:280
+msgid ""
+"The notion of branch region has been introduced along with a corresponding "
+"region kind.  Branch regions encode two counters, one to track how many "
+"times a \"true\" branch condition is taken, and one to track how many times "
+"a \"false\" branch condition is taken."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:285
+msgid "There are two differences between versions 4 and 3:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:287
+msgid ""
+"Function records are now named symbols, and are marked *linkonce_odr*. This "
+"allows linkers to merge duplicate function records. Merging of duplicate "
+"*dummy* records (emitted for functions included-but-not-used in a "
+"translation unit) reduces size bloat in the coverage mapping data. As part "
+"of this change, region mapping information for a function is now included "
+"within the function record, instead of being affixed to the coverage header."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:294
+msgid ""
+"The filename list for a translation unit may optionally be zlib-compressed."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:296
+msgid ""
+"The only difference between versions 3 and 2 is that a special encoding for "
+"column end locations was introduced to indicate gap regions."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:299
+msgid "In version 1, the function record for *foo* was defined as follows:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:309
+msgid "In version 2, the function record for *foo* was defined as follows:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:319
+msgid "Coverage Mapping Header:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:321
+msgid "The coverage mapping header has the following fields:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:323
+msgid ""
+"The number of function records affixed to the coverage header. Always 0, but "
+"present for backwards compatibility."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:325
+msgid ""
+"The length of the string in the third field of *__llvm_coverage_mapping* "
+"that contains the encoded translation unit filenames."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:327
+msgid ""
+"The length of the string in the third field of *__llvm_coverage_mapping* "
+"that contains any encoded coverage mapping data affixed to the coverage "
+"header. Always 0, but present for backwards compatibility."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:329
+msgid "The format version. The current version is 4 (encoded as a 3)."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:334
+msgid "Function record:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:336
+msgid "A function record is a structure of the following type:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:342
+msgid ""
+"It contains the function name's MD5, the length of the encoded mapping data "
+"for that function, the function's structural hash value, the hash of the "
+"filenames in the function's translation unit, and the encoded mapping data."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:347
+msgid "Dissecting the sample:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:349
+msgid ""
+"Here's an overview of the encoded data that was stored in the IR for the "
+"`coverage mapping sample`_ that was shown earlier:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:352
+msgid ""
+"The IR contains the following string constant that represents the encoded "
+"coverage mapping data for the sample translation unit:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:359
+msgid ""
+"The string contains values that are encoded in the LEB128 format, which is "
+"used throughout for storing integers. It also contains a compressed payload."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:362
+msgid ""
+"The first three LEB128-encoded numbers in the sample specify the number of "
+"filenames, the length of the uncompressed filenames, and the length of the "
+"compressed payload (or 0 if compression is disabled). In this sample, there "
+"is 1 filename that is 21 bytes in length (uncompressed), and stored in 29 "
+"bytes (compressed)."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:368
+msgid ""
+"The coverage mapping from the first function record is encoded in this "
+"string:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:374
+msgid "This string consists of the following bytes:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:377
+#: ../../../CoverageMappingFormat.rst:383
+#: ../../../CoverageMappingFormat.rst:385
+#: ../../../CoverageMappingFormat.rst:388
+msgid "``0x01``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:377
+msgid ""
+"The number of file ids used by this function. There is only one file id used "
+"by the mapping data in this function."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:379
+#: ../../../CoverageMappingFormat.rst:381
+msgid "``0x00``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:379
+msgid ""
+"An index into the filenames array which corresponds to the file \"/Users/"
+"alex/test.c\"."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:381
+msgid ""
+"The number of counter expressions used by this function. This function "
+"doesn't use any expressions."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:383
+msgid ""
+"The number of mapping regions that are stored in an array for the function's "
+"file id #0."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:385
+msgid ""
+"The coverage mapping counter for the first region in this function. The "
+"value of 1 tells us that it's a coverage mapping counter that is a reference "
+"to the profile instrumentation counter with an index of 0."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:388
+msgid "The starting line of the first mapping region in this function."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:390
+msgid "``0x0C``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:390
+msgid "The starting column of the first mapping region in this function."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:392
+#: ../../../CoverageMappingFormat.rst:394
+msgid "``0x02``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:392
+msgid "The ending line of the first mapping region in this function."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:394
+msgid "The ending column of the first mapping region in this function."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:397
+msgid ""
+"The length of the substring that contains the encoded coverage mapping data "
+"for the second function record is also 9. It's structured like the mapping "
+"data for the first function record."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:401
+msgid ""
+"The two trailing bytes are zeroes and are used to pad the coverage mapping "
+"data to give it the 8 byte alignment."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:405
+msgid "Encoding"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:407
+msgid ""
+"The per-function coverage mapping data is encoded as a stream of bytes, with "
+"a simple structure. The structure consists of the encoding `types "
+"<cvmtypes_>`_ like variable-length unsigned integers, that are used to "
+"encode `File ID Mapping`_, `Counter Expressions`_ and the `Mapping Regions`_."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:413
+msgid "The format of the structure follows:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:415
+msgid "``[file id mapping, counter expressions, mapping regions]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:417
+msgid ""
+"The translation unit filenames are encoded using the same encoding `types "
+"<cvmtypes_>`_ as the per-function coverage mapping data, with the following "
+"structure:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:421
+msgid ""
+"``[numFilenames : LEB128, filename0 : string, filename1 : string, ...]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:426
+msgid "Types"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:428
+msgid ""
+"This section describes the basic types that are used by the encoding format "
+"and can appear after ``:`` in the ``[foo : type]`` description."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:434
+msgid "LEB128"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:436
+msgid ""
+"LEB128 is an unsigned integer value that is encoded using DWARF's LEB128 "
+"encoding, optimizing for the case where values are small (1 byte for values "
+"less than 128)."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:443
+msgid "Strings"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:445
+msgid "``[length : LEB128, characters...]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:447
+msgid ""
+"String values are encoded with a `LEB value <LEB128_>`_ for the length of "
+"the string and a sequence of bytes for its characters."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:453
+msgid "File ID Mapping"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:455
+msgid ""
+"``[numIndices : LEB128, filenameIndex0 : LEB128, filenameIndex1 : "
+"LEB128, ...]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:457
+msgid ""
+"File id mapping in a function's coverage mapping stream contains the indices "
+"into the translation unit's filenames array."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:461
+msgid "Counter"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:463
+#: ../../../CoverageMappingFormat.rst:570
+msgid "``[value : LEB128]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:465
+msgid ""
+"A `coverage mapping counter`_ is stored in a single `LEB value <LEB128_>`_. "
+"It is composed of two things --- the `tag <counter-tag_>`_ which is stored "
+"in the lowest 2 bits, and the `counter data`_ which is stored in the "
+"remaining bits."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:473
+msgid "Tag:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:475
+msgid ""
+"The counter's tag encodes the counter's kind and, if the counter is an "
+"expression, the expression's kind. The possible tag values are:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:479
+msgid "0 - The counter is zero."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:481
+msgid "1 - The counter is a reference to the profile instrumentation counter."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:483
+msgid "2 - The counter is a subtraction expression."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:485
+msgid "3 - The counter is an addition expression."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:490
+msgid "Data:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:492
+msgid "The counter's data is interpreted in the following manner:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:494
+msgid ""
+"When the counter is a reference to the profile instrumentation counter, then "
+"the counter's data is the id of the profile counter."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:496
+msgid ""
+"When the counter is an expression, then the counter's data is the index into "
+"the array of counter expressions."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:502
+msgid "Counter Expressions"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:504
+msgid ""
+"``[numExpressions : LEB128, expr0LHS : LEB128, expr0RHS : LEB128, expr1LHS : "
+"LEB128, expr1RHS : LEB128, ...]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:506
+msgid ""
+"Counter expressions consist of two counters as they represent binary "
+"arithmetic operations. The expression's kind is determined from the `tag "
+"<counter-tag_>`_ of the counter that references this expression."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:514
+msgid "Mapping Regions"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:516
+msgid "``[numRegionArrays : LEB128, regionsForFile0, regionsForFile1, ...]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:518
+msgid ""
+"The mapping regions are stored in an array of sub-arrays where every region "
+"in a particular sub-array has the same file id."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:521
+msgid ""
+"The file id for a sub-array of regions is the index of that sub-array in the "
+"main array e.g. The first sub-array will have the file id of 0."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:526
+msgid "Sub-Array of Regions"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:528
+msgid "``[numRegions : LEB128, region0, region1, ...]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:530
+msgid ""
+"The mapping regions for a specific file id are stored in an array that is "
+"sorted in an ascending order by the region's starting location."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:536
+msgid "``[header, source range]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:538
+msgid ""
+"The mapping region record contains two sub-records --- the `header`_, which "
+"stores the counter and/or the region's kind, and the `source range`_ that "
+"contains the starting and ending location of this region."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:546
+msgid "Header"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:548
+msgid "``[counter]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:550
+msgid "or"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:552
+msgid "``[pseudo-counter]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:554
+msgid ""
+"The header encodes the region's counter and the region's kind. A branch "
+"region will encode two counters."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:557
+msgid ""
+"The value of the counter's tag distinguishes between the counters and pseudo-"
+"counters --- if the tag is zero, than this header contains a pseudo-counter, "
+"otherwise this header contains an ordinary counter."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:564
+msgid ""
+"A mapping region whose header has a counter with a non-zero tag is a code "
+"region."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:568
+msgid "Pseudo-Counter:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:572
+msgid ""
+"A pseudo-counter is stored in a single `LEB value <LEB128_>`_, just like the "
+"ordinary counter. It has the following interpretation:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:575
+msgid "bits 0-1: tag, which is always 0."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:577
+msgid ""
+"bit 2: expansionRegionTag. If this bit is set, then this mapping region is "
+"an expansion region."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:580
+msgid ""
+"remaining bits: data. If this region is an expansion region, then the data "
+"contains the expanded file id of that region."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:583
+msgid ""
+"Otherwise, the data contains the region's kind. The possible region kind "
+"values are:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:586
+msgid "0 - This mapping region is a code region with a counter of zero."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:587
+msgid "2 - This mapping region is a skipped region."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:588
+msgid "4 - This mapping region is a branch region."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:593
+msgid "Source Range"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:595
+msgid ""
+"``[deltaLineStart : LEB128, columnStart : LEB128, numLines : LEB128, "
+"columnEnd : LEB128]``"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:597
+msgid "The source range record contains the following fields:"
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:599
+msgid ""
+"*deltaLineStart*: The difference between the starting line of the current "
+"mapping region and the starting line of the previous mapping region."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:602
+msgid ""
+"If the current mapping region is the first region in the current sub-array, "
+"then it stores the starting line of that region."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:605
+msgid "*columnStart*: The starting column of the mapping region."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:607
+msgid ""
+"*numLines*: The difference between the ending line and the starting line of "
+"the current mapping region."
+msgstr ""
+
+#: ../../../CoverageMappingFormat.rst:610
+msgid ""
+"*columnEnd*: The ending column of the mapping region. If the high bit is "
+"set, the current mapping region is a gap area. A count for a gap area is "
+"only used as the line execution count if there are no other regions on a "
+"line."
+msgstr ""
