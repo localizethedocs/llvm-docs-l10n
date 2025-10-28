@@ -1,0 +1,4714 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../ProgrammersManual.rst:3
+msgid "LLVM Programmer's Manual"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:9
+msgid "This is always a work in progress."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:14
+msgid "Introduction"
+msgstr "簡介"
+
+#: ../../../ProgrammersManual.rst:16
+msgid ""
+"This document is meant to highlight some of the important classes and "
+"interfaces available in the LLVM source-base.  This manual is not intended "
+"to explain what LLVM is, how it works, and what LLVM code looks like.  It "
+"assumes that you know the basics of LLVM and are interested in writing "
+"transformations or otherwise analyzing or manipulating the code."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:22
+msgid ""
+"This document should get you oriented so that you can find your way in the "
+"continuously growing source code that makes up the LLVM infrastructure.  "
+"Note that this manual is not intended to serve as a replacement for reading "
+"the source code, so if you think there should be a method in one of these "
+"classes to do something, but it's not listed, check the source.  Links to "
+"the `doxygen <http://llvm.org/doxygen/>`__ sources are provided to make this "
+"as easy as possible."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:30
+msgid ""
+"The first section of this document describes general information that is "
+"useful to know when working in the LLVM infrastructure, and the second "
+"describes the Core LLVM classes.  In the future this manual will be extended "
+"with information describing how to use extension libraries, such as "
+"dominator information, CFG traversal routines, and useful utilities like the "
+"``InstVisitor`` (`doxygen <http://llvm.org/doxygen/InstVisitor_8h-source."
+"html>`__) template."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:40
+msgid "General Information"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:42
+msgid ""
+"This section contains general information that is useful if you are working "
+"in the LLVM source-base, but that isn't specific to any particular API."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:48
+msgid "The C++ Standard Template Library"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:50
+msgid ""
+"LLVM makes heavy use of the C++ Standard Template Library (STL), perhaps "
+"much more than you are used to, or have seen before.  Because of this, you "
+"might want to do a little background reading in the techniques used and "
+"capabilities of the library.  There are many good pages that discuss the "
+"STL, and several books on the subject that you can get, so it will not be "
+"discussed in this document."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:56
+msgid "Here are some useful links:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:58
+msgid ""
+"`cppreference.com <http://en.cppreference.com/w/>`_ - an excellent reference "
+"for the STL and other parts of the standard C++ library."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:62
+msgid ""
+"`C++ In a Nutshell <http://www.tempest-sw.com/cpp/>`_ - This is an O'Reilly "
+"book in the making.  It has a decent Standard Library Reference that rivals "
+"Dinkumware's, and is unfortunately no longer free since the book has been "
+"published."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:67
+msgid ""
+"`C++ Frequently Asked Questions <http://www.parashift.com/c++-faq-lite/>`_."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:69
+msgid ""
+"`SGI's STL Programmer's Guide <http://www.sgi.com/tech/stl/>`_ - Contains a "
+"useful `Introduction to the STL <http://www.sgi.com/tech/stl/"
+"stl_introduction.html>`_."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:73
+msgid ""
+"`Bjarne Stroustrup's C++ Page <http://www.research.att.com/%7Ebs/C++.html>`_."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:76
+msgid ""
+"`Bruce Eckel's Thinking in C++, 2nd ed. Volume 2 Revision 4.0 (even better, "
+"get the book) <http://www.mindview.net/Books/TICPP/ThinkingInCPP2e.html>`_."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:80
+msgid ""
+"You are also encouraged to take a look at the :doc:`LLVM Coding Standards "
+"<CodingStandards>` guide which focuses on how to write maintainable code "
+"more than where to put your curly braces."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:87
+msgid "Other useful references"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:89
+msgid ""
+"`Using static and shared libraries across platforms <http://www.fortran-2000."
+"com/ArnaudRecipes/sharedlib.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:95
+msgid "Important and useful LLVM APIs"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:97
+msgid ""
+"Here we highlight some LLVM APIs that are generally useful and good to know "
+"about when writing transformations."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:103
+msgid "The ``isa<>``, ``cast<>`` and ``dyn_cast<>`` templates"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:105
+msgid ""
+"The LLVM source-base makes extensive use of a custom form of RTTI.  These "
+"templates have many similarities to the C++ ``dynamic_cast<>`` operator, but "
+"they don't have some drawbacks (primarily stemming from the fact that "
+"``dynamic_cast<>`` only works on classes that have a v-table).  Because they "
+"are used so often, you must know what they do and how they work.  All of "
+"these templates are defined in the ``llvm/Support/Casting.h`` (`doxygen "
+"<http://llvm.org/doxygen/Casting_8h-source.html>`__) file (note that you "
+"very rarely have to include this file directly)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:118
+msgid "``isa<>``:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:115
+msgid ""
+"The ``isa<>`` operator works exactly like the Java \"``instanceof``\" "
+"operator. It returns true or false depending on whether a reference or "
+"pointer points to an instance of the specified class.  This can be very "
+"useful for constraint checking of various sorts (example below)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:139
+msgid "``cast<>``:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:121
+msgid ""
+"The ``cast<>`` operator is a \"checked cast\" operation.  It converts a "
+"pointer or reference from a base class to a derived class, causing an "
+"assertion failure if it is not really an instance of the right type.  This "
+"should be used in cases where you have some information that makes you "
+"believe that something is of the right type.  An example of the ``isa<>`` "
+"and ``cast<>`` template is:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:138
+msgid ""
+"Note that you should **not** use an ``isa<>`` test followed by a ``cast<>``, "
+"for that use the ``dyn_cast<>`` operator."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:165
+msgid "``dyn_cast<>``:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:142
+msgid ""
+"The ``dyn_cast<>`` operator is a \"checking cast\" operation.  It checks to "
+"see if the operand is of the specified type, and if so, returns a pointer to "
+"it (this operator does not work with references).  If the operand is not of "
+"the correct type, a null pointer is returned.  Thus, this works very much "
+"like the ``dynamic_cast<>`` operator in C++, and should be used in the same "
+"circumstances.  Typically, the ``dyn_cast<>`` operator is used in an ``if`` "
+"statement or some other flow control statement like this:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:156
+msgid ""
+"This form of the ``if`` statement effectively combines together a call to "
+"``isa<>`` and a call to ``cast<>`` into one statement, which is very "
+"convenient."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:160
+msgid ""
+"Note that the ``dyn_cast<>`` operator, like C++'s ``dynamic_cast<>`` or "
+"Java's ``instanceof`` operator, can be abused.  In particular, you should "
+"not use big chained ``if/then/else`` blocks to check for lots of different "
+"variants of classes.  If you find yourself wanting to do this, it is much "
+"cleaner and more efficient to use the ``InstVisitor`` class to dispatch over "
+"the instruction type directly."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:171
+msgid "``cast_or_null<>``:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:168
+msgid ""
+"The ``cast_or_null<>`` operator works just like the ``cast<>`` operator, "
+"except that it allows for a null pointer as an argument (which it then "
+"propagates).  This can sometimes be useful, allowing you to combine several "
+"null checks into one."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:177
+msgid "``dyn_cast_or_null<>``:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:174
+msgid ""
+"The ``dyn_cast_or_null<>`` operator works just like the ``dyn_cast<>`` "
+"operator, except that it allows for a null pointer as an argument (which it "
+"then propagates).  This can sometimes be useful, allowing you to combine "
+"several null checks into one."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:179
+msgid ""
+"These five templates can be used with any classes, whether they have a v-"
+"table or not.  If you want to add support for these templates, see the "
+"document :doc:`How to set up LLVM-style RTTI for your class hierarchy "
+"<HowToSetUpLLVMStyleRTTI>`"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:187
+msgid "Passing strings (the ``StringRef`` and ``Twine`` classes)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:189
+msgid ""
+"Although LLVM generally does not do much string manipulation, we do have "
+"several important APIs which take strings.  Two important examples are the "
+"Value class -- which has names for instructions, functions, etc. -- and the "
+"``StringMap`` class which is used extensively in LLVM and Clang."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:194
+msgid ""
+"These are generic classes, and they need to be able to accept strings which "
+"may have embedded null characters.  Therefore, they cannot simply take a "
+"``const char *``, and taking a ``const std::string&`` requires clients to "
+"perform a heap allocation which is usually unnecessary.  Instead, many LLVM "
+"APIs use a ``StringRef`` or a ``const Twine&`` for passing strings "
+"efficiently."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:203
+msgid "The ``StringRef`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:205
+msgid ""
+"The ``StringRef`` data type represents a reference to a constant string (a "
+"character array and a length) and supports the common operations available "
+"on ``std::string``, but does not require heap allocation."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:209
+msgid ""
+"It can be implicitly constructed using a C style null-terminated string, an "
+"``std::string``, or explicitly with a character pointer and length.  For "
+"example, the ``StringRef`` find function is declared as:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:217
+msgid "and clients can call it using any one of:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:225
+msgid ""
+"Similarly, APIs which need to return a string may return a ``StringRef`` "
+"instance, which can be used directly or converted to an ``std::string`` "
+"using the ``str`` member function.  See ``llvm/ADT/StringRef.h`` (`doxygen "
+"<http://llvm.org/doxygen/classllvm_1_1StringRef_8h-source.html>`__) for more "
+"information."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:231
+msgid ""
+"You should rarely use the ``StringRef`` class directly, because it contains "
+"pointers to external memory it is not generally safe to store an instance of "
+"the class (unless you know that the external storage will not be freed). "
+"``StringRef`` is small and pervasive enough in LLVM that it should always be "
+"passed by value."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:238
+msgid "The ``Twine`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:240
+msgid ""
+"The ``Twine`` (`doxygen <http://llvm.org/doxygen/classllvm_1_1Twine."
+"html>`__) class is an efficient way for APIs to accept concatenated "
+"strings.  For example, a common LLVM paradigm is to name one instruction "
+"based on the name of another instruction with a suffix, for example:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:249
+msgid ""
+"The ``Twine`` class is effectively a lightweight `rope <http://en.wikipedia."
+"org/wiki/Rope_(computer_science)>`_ which points to temporary (stack "
+"allocated) objects.  Twines can be implicitly constructed as the result of "
+"the plus operator applied to strings (i.e., a C strings, an ``std::string``, "
+"or a ``StringRef``).  The twine delays the actual concatenation of strings "
+"until it is actually required, at which point it can be efficiently rendered "
+"directly into a character array.  This avoids unnecessary heap allocation "
+"involved in constructing the temporary results of string concatenation.  See "
+"``llvm/ADT/Twine.h`` (`doxygen <http://llvm.org/doxygen/Twine_8h_source."
+"html>`__) and :ref:`here <dss_twine>` for more information."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:261
+msgid ""
+"As with a ``StringRef``, ``Twine`` objects point to external memory and "
+"should almost never be stored or mentioned directly.  They are intended "
+"solely for use when defining a function which should be able to efficiently "
+"accept concatenated strings."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:269
+msgid "Formatting strings (the ``formatv`` function)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:270
+msgid ""
+"While LLVM doesn't necessarily do a lot of string manipulation and parsing, "
+"it does do a lot of string formatting.  From diagnostic messages, to llvm "
+"tool outputs such as ``llvm-readobj`` to printing verbose disassembly "
+"listings and LLDB runtime logging, the need for string formatting is "
+"pervasive."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:275
+msgid ""
+"The ``formatv`` is similar in spirit to ``printf``, but uses a different "
+"syntax which borrows heavily from Python and C#.  Unlike ``printf`` it "
+"deduces the type to be formatted at compile time, so it does not need a "
+"format specifier such as ``%d``.  This reduces the mental overhead of trying "
+"to construct portable format strings, especially for platform-specific types "
+"like ``size_t`` or pointer types. Unlike both ``printf`` and Python, it "
+"additionally fails to compile if LLVM does not know how to format the type.  "
+"These two properties ensure that the function is both safer and simpler to "
+"use than traditional formatting methods such as the ``printf`` family of "
+"functions."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:286
+msgid "Simple formatting"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:288
+msgid ""
+"A call to ``formatv`` involves a single **format string** consisting of 0 or "
+"more **replacement sequences**, followed by a variable length list of "
+"**replacement values**. A replacement sequence is a string of the form "
+"``{N[[,align]:style]}``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:292
+msgid ""
+"``N`` refers to the 0-based index of the argument from the list of "
+"replacement values.  Note that this means it is possible to reference the "
+"same parameter multiple times, possibly with different style and/or "
+"alignment options, in any order."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:296
+msgid ""
+"``align`` is an optional string specifying the width of the field to format "
+"the value into, and the alignment of the value within the field.  It is "
+"specified as an optional **alignment style** followed by a positive integral "
+"**field width**.  The alignment style can be one of the characters ``-`` "
+"(left align), ``=`` (center align), or ``+`` (right align).  The default is "
+"right aligned."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:302
+msgid ""
+"``style`` is an optional string consisting of a type specific that controls "
+"the formatting of the value.  For example, to format a floating point value "
+"as a percentage, you can use the style option ``P``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:307
+msgid "Custom formatting"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:309
+msgid "There are two ways to customize the formatting behavior for a type."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:311
+msgid ""
+"Provide a template specialization of ``llvm::format_provider<T>`` for your "
+"type ``T`` with the appropriate static format method."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:329
+msgid ""
+"This is a useful extensibility mechanism for adding support for formatting "
+"your own custom types with your own custom Style options.  But it does not "
+"help when you want to extend the mechanism for formatting a type that the "
+"library already knows how to format.  For that, we need something else."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:334
+msgid ""
+"Provide a **format adapter** inheriting from ``llvm::FormatAdapter<T>``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:352
+msgid ""
+"If the type is detected to be derived from ``FormatAdapter<T>``, ``formatv`` "
+"will call the ``format`` method on the argument passing in the specified "
+"style.  This allows one to provide custom formatting of any type, including "
+"one which already has a builtin format provider."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:359
+msgid "``formatv`` Examples"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:360
+msgid ""
+"Below is intended to provide an incomplete set of examples demonstrating the "
+"usage of ``formatv``.  More information can be found by reading the doxygen "
+"documentation or by looking at the unit test suite."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:397
+msgid "Error handling"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:399
+msgid ""
+"Proper error handling helps us identify bugs in our code, and helps end-"
+"users understand errors in their tool usage. Errors fall into two broad "
+"categories: *programmatic* and *recoverable*, with different strategies for "
+"handling and reporting."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:405
+msgid "Programmatic Errors"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:407
+msgid ""
+"Programmatic errors are violations of program invariants or API contracts, "
+"and represent bugs within the program itself. Our aim is to document "
+"invariants, and to abort quickly at the point of failure (providing some "
+"basic diagnostic) when invariants are broken at runtime."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:412
+msgid ""
+"The fundamental tools for handling programmatic errors are assertions and "
+"the llvm_unreachable function. Assertions are used to express invariant "
+"conditions, and should include a message describing the invariant:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:420
+msgid ""
+"The llvm_unreachable function can be used to document areas of control flow "
+"that should never be entered if the program invariants hold:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:435
+msgid "Recoverable Errors"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:437
+msgid ""
+"Recoverable errors represent an error in the program's environment, for "
+"example a resource failure (a missing file, a dropped network connection, "
+"etc.), or malformed input. These errors should be detected and communicated "
+"to a level of the program where they can be handled appropriately. Handling "
+"the error may be as simple as reporting the issue to the user, or it may "
+"involve attempts at recovery."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:444
+msgid ""
+"Recoverable errors are modeled using LLVM's ``Error`` scheme. This scheme "
+"represents errors using function return values, similar to classic C integer "
+"error codes, or C++'s ``std::error_code``. However, the ``Error`` class is "
+"actually a lightweight wrapper for user-defined error types, allowing "
+"arbitrary information to be attached to describe the error. This is similar "
+"to the way C++ exceptions allow throwing of user-defined types."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:451
+msgid "Success values are created by calling ``Error::success()``, E.g.:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:461
+msgid ""
+"Success values are very cheap to construct and return - they have minimal "
+"impact on program performance."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:464
+msgid ""
+"Failure values are constructed using ``make_error<T>``, where ``T`` is any "
+"class that inherits from the ErrorInfo utility, E.g.:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:494
+msgid ""
+"Error values can be implicitly converted to bool: true for error, false for "
+"success, enabling the following idiom:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:507
+msgid ""
+"For functions that can fail but need to return a value the ``Expected<T>`` "
+"utility can be used. Values of this type can be constructed with either a "
+"``T``, or an ``Error``. Expected<T> values are also implicitly convertible "
+"to boolean, but with the opposite convention to ``Error``: true for success, "
+"false for error. If success, the ``T`` value can be accessed via the "
+"dereference operator. If failure, the ``Error`` value can be extracted using "
+"the ``takeError()`` method. Idiomatic usage looks like:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:536
+msgid ""
+"If an ``Expected<T>`` value is in success mode then the ``takeError()`` "
+"method will return a success value. Using this fact, the above function can "
+"be rewritten as:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:553
+msgid ""
+"This second form is often more readable for functions that involve multiple "
+"``Expected<T>`` values as it limits the indentation required."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:556
+msgid ""
+"All ``Error`` instances, whether success or failure, must be either checked "
+"or moved from (via ``std::move`` or a return) before they are destructed. "
+"Accidentally discarding an unchecked error will cause a program abort at the "
+"point where the unchecked value's destructor is run, making it easy to "
+"identify and fix violations of this rule."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:562
+msgid ""
+"Success values are considered checked once they have been tested (by "
+"invoking the boolean conversion operator):"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:572
+msgid ""
+"In contrast, the following code will always cause an abort, even if "
+"``canFail`` returns a success value:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:581
+msgid ""
+"Failure values are considered checked once a handler for the error type has "
+"been activated:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:595
+msgid ""
+"The ``handleErrors`` function takes an error as its first argument, followed "
+"by a variadic list of \"handlers\", each of which must be a callable type (a "
+"function, lambda, or class with a call operator) with one argument. The "
+"``handleErrors`` function will visit each handler in the sequence and check "
+"its argument type against the dynamic type of the error, running the first "
+"handler that matches. This is the same decision process that is used decide "
+"which catch clause to run for a C++ exception."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:603
+msgid ""
+"Since the list of handlers passed to ``handleErrors`` may not cover every "
+"error type that can occur, the ``handleErrors`` function also returns an "
+"Error value that must be checked or propagated. If the error value that is "
+"passed to ``handleErrors`` does not match any of the handlers it will be "
+"returned from handleErrors. Idiomatic use of ``handleErrors`` thus looks "
+"like:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:622
+msgid ""
+"In cases where you truly know that the handler list is exhaustive the "
+"``handleAllErrors`` function can be used instead. This is identical to "
+"``handleErrors`` except that it will terminate the program if an unhandled "
+"error is passed in, and can therefore return void. The ``handleAllErrors`` "
+"function should generally be avoided: the introduction of a new error type "
+"elsewhere in the program can easily turn a formerly exhaustive list of "
+"errors into a non-exhaustive list, risking unexpected program termination. "
+"Where possible, use handleErrors and propagate unknown errors up the stack "
+"instead."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:631
+msgid ""
+"For tool code, where errors can be handled by printing an error message then "
+"exiting with an error code, the :ref:`ExitOnError <err_exitonerr>` utility "
+"may be a better choice than handleErrors, as it simplifies control flow when "
+"calling fallible functions."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:637
+msgid "StringError"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:639
+msgid ""
+"Many kinds of errors have no recovery strategy, the only action that can be "
+"taken is to report them to the user so that the user can attempt to fix the "
+"environment. In this case representing the error as a string makes perfect "
+"sense. LLVM provides the ``StringError`` class for this purpose. It takes "
+"two arguments: A string error message, and an equivalent ``std::error_code`` "
+"for interoperability:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:651
+msgid ""
+"If you're certain that the error you're building will never need to be "
+"converted to a ``std::error_code`` you can use the "
+"``inconvertibleErrorCode()`` function:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:658
+msgid ""
+"This should be done only after careful consideration. If any attempt is made "
+"to convert this error to a ``std::error_code`` it will trigger immediate "
+"program termination. Unless you are certain that your errors will not need "
+"interoperability you should look for an existing ``std::error_code`` that "
+"you can convert to, and even (as painful as it is) consider introducing a "
+"new one as a stopgap measure."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:666
+msgid "Interoperability with std::error_code and ErrorOr"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:668
+msgid ""
+"Many existing LLVM APIs use ``std::error_code`` and its partner "
+"``ErrorOr<T>`` (which plays the same role as ``Expected<T>``, but wraps a "
+"``std::error_code`` rather than an ``Error``). The infectious nature of "
+"error types means that an attempt to change one of these functions to return "
+"``Error`` or ``Expected<T>`` instead often results in an avalanche of "
+"changes to callers, callers of callers, and so on. (The first such attempt, "
+"returning an ``Error`` from MachOObjectFile's constructor, was abandoned "
+"after the diff reached 3000 lines, impacted half a dozen libraries, and was "
+"still growing)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:677
+msgid ""
+"To solve this problem, the ``Error``/``std::error_code`` interoperability "
+"requirement was introduced. Two pairs of functions allow any ``Error`` value "
+"to be converted to a ``std::error_code``, any ``Expected<T>`` to be "
+"converted to an ``ErrorOr<T>``, and vice versa:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:691
+msgid ""
+"Using these APIs it is easy to make surgical patches that update individual "
+"functions from ``std::error_code`` to ``Error``, and from ``ErrorOr<T>`` to "
+"``Expected<T>``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:696
+msgid "Returning Errors from error handlers"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:698
+msgid ""
+"Error recovery attempts may themselves fail. For that reason, "
+"``handleErrors`` actually recognises three different forms of handler "
+"signature:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:713
+msgid ""
+"Any error returned from a handler will be returned from the ``handleErrors`` "
+"function so that it can be handled itself, or propagated up the stack."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:719
+msgid "Using ExitOnError to simplify tool code"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:721
+msgid ""
+"Library code should never call ``exit`` for a recoverable error, however in "
+"tool code (especially command line tools) this can be a reasonable approach. "
+"Calling ``exit`` upon encountering an error dramatically simplifies control "
+"flow as the error no longer needs to be propagated up the stack. This allows "
+"code to be written in straight-line style, as long as each fallible call is "
+"wrapped in a check and call to exit. The ``ExitOnError`` class supports this "
+"pattern by providing call operators that inspect ``Error`` values, stripping "
+"the error away in the success case and logging to ``stderr`` then exiting in "
+"the failure case."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:730
+msgid ""
+"To use this class, declare a global ``ExitOnError`` variable in your program:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:736
+msgid ""
+"Calls to fallible functions can then be wrapped with a call to "
+"``ExitOnErr``, turning them into non-failing calls:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:749
+msgid ""
+"On failure, the error's log message will be written to ``stderr``, "
+"optionally preceded by a string \"banner\" that can be set by calling the "
+"setBanner method. A mapping can also be supplied from ``Error`` values to "
+"exit codes using the ``setExitCodeMapper`` method:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:765
+msgid ""
+"Use ``ExitOnError`` in your tool code where possible as it can greatly "
+"improve readability."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:769
+msgid "Fallible constructors"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:771
+msgid ""
+"Some classes require resource acquisition or other complex initialization "
+"that can fail during construction. Unfortunately constructors can't return "
+"errors, and having clients test objects after they're constructed to ensure "
+"that they're valid is error prone as it's all too easy to forget the test. "
+"To work around this, use the named constructor idiom and return an "
+"``Expected<T>``:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:803
+msgid ""
+"Here, the named constructor passes an ``Error`` by reference into the actual "
+"constructor, which the constructor can then use to return errors. The "
+"``ErrorAsOutParameter`` utility sets the ``Error`` value's checked flag on "
+"entry to the constructor so that the error can be assigned to, then resets "
+"it on exit to force the client (the named constructor) to check the error."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:809
+msgid ""
+"By using this idiom, clients attempting to construct a Foo receive either a "
+"well-formed Foo or an Error, never an object in an invalid state."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:813
+msgid "Propagating and consuming errors based on types"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:815
+msgid ""
+"In some contexts, certain types of error are known to be benign. For "
+"example, when walking an archive, some clients may be happy to skip over "
+"badly formatted object files rather than terminating the walk immediately. "
+"Skipping badly formatted objects could be achieved using an elaborate "
+"handler method, but the Error.h header provides two utilities that make this "
+"idiom much cleaner: the type inspection method, ``isA``, and the "
+"``consumeError`` function:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:841
+msgid "Concatenating Errors with joinErrors"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:843
+msgid ""
+"In the archive walking example above ``BadFileFormat`` errors are simply "
+"consumed and ignored. If the client had wanted report these errors after "
+"completing the walk over the archive they could use the ``joinErrors`` "
+"utility:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:865
+msgid ""
+"The ``joinErrors`` routine builds a special error type called ``ErrorList``, "
+"which holds a list of user defined errors. The ``handleErrors`` routine "
+"recognizes this type and will attempt to handle each of the contained erorrs "
+"in order. If all contained errors can be handled, ``handleErrors`` will "
+"return ``Error::success()``, otherwise ``handleErrors`` will concatenate the "
+"remaining errors and return the resulting ``ErrorList``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:873
+msgid "Building fallible iterators and iterator ranges"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:875
+msgid ""
+"The archive walking examples above retrieve archive members by index, "
+"however this requires considerable boiler-plate for iteration and error "
+"checking. We can clean this up by using ``Error`` with the \"fallible "
+"iterator\" pattern. The usual C++ iterator patterns do not allow for failure "
+"on increment, but we can incorporate support for it by having iterators hold "
+"an Error reference through which they can report failure. In this pattern, "
+"if an increment operation fails the failure is recorded via the Error "
+"reference and the iterator value is set to the end of the range in order to "
+"terminate the loop. This ensures that the dereference operation is safe "
+"anywhere that an ordinary iterator dereference would be safe (i.e. when the "
+"iterator is not equal to end). Where this pattern is followed (as in the "
+"``llvm::object::Archive`` class) the result is much cleaner iteration idiom:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:901
+msgid ""
+"More information on Error and its related utilities can be found in the "
+"Error.h header file."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:905
+msgid "Passing functions and other callable objects"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:907
+msgid ""
+"Sometimes you may want a function to be passed a callback object. In order "
+"to support lambda expressions and other function objects, you should not use "
+"the traditional C approach of taking a function pointer and an opaque cookie:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:915
+msgid "Instead, use one of the following approaches:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:918
+msgid "Function template"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:920
+msgid ""
+"If you don't mind putting the definition of your function into a header "
+"file, make it a function template that is templated on the callable type."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:931
+msgid "The ``function_ref`` class template"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:933
+msgid ""
+"The ``function_ref`` (`doxygen <http://llvm.org/docs/doxygen/html/"
+"classllvm_1_1function__ref_3_01Ret_07Params_8_8_8_08_4.html>`__) class "
+"template represents a reference to a callable object, templated over the "
+"type of the callable. This is a good choice for passing a callback to a "
+"function, if you don't need to hold onto the callback after the function "
+"returns. In this way, ``function_ref`` is to ``std::function`` as "
+"``StringRef`` is to ``std::string``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:941
+msgid ""
+"``function_ref<Ret(Param1, Param2, ...)>`` can be implicitly constructed "
+"from any callable object that can be called with arguments of type "
+"``Param1``, ``Param2``, ..., and returns a value that can be converted to "
+"type ``Ret``. For example:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:954
+msgid "can be called using:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:964
+msgid ""
+"Note that a ``function_ref`` object contains pointers to external memory, so "
+"it is not generally safe to store an instance of the class (unless you know "
+"that the external storage will not be freed). If you need this ability, "
+"consider using ``std::function``. ``function_ref`` is small enough that it "
+"should always be passed by value."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:973
+msgid "The ``DEBUG()`` macro and ``-debug`` option"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:975
+msgid ""
+"Often when working on your pass you will put a bunch of debugging printouts "
+"and other code into your pass.  After you get it working, you want to remove "
+"it, but you may need it again in the future (to work out new bugs that you "
+"run across)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:979
+msgid ""
+"Naturally, because of this, you don't want to delete the debug printouts, "
+"but you don't want them to always be noisy.  A standard compromise is to "
+"comment them out, allowing you to enable them if you need them in the future."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:983
+msgid ""
+"The ``llvm/Support/Debug.h`` (`doxygen <http://llvm.org/doxygen/Debug_8h-"
+"source.html>`__) file provides a macro named ``DEBUG()`` that is a much "
+"nicer solution to this problem.  Basically, you can put arbitrary code into "
+"the argument of the ``DEBUG`` macro, and it is only executed if "
+"'``opt``' (or any other tool) is run with the '``-debug``' command line "
+"argument:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:994 ../../../ProgrammersManual.rst:1034
+msgid "Then you can run your pass like this:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1003
+msgid ""
+"Using the ``DEBUG()`` macro instead of a home-brewed solution allows you to "
+"not have to create \"yet another\" command line option for the debug output "
+"for your pass.  Note that ``DEBUG()`` macros are disabled for non-asserts "
+"builds, so they do not cause a performance impact at all (for the same "
+"reason, they should also not contain side-effects!)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1009
+msgid ""
+"One additional nice thing about the ``DEBUG()`` macro is that you can enable "
+"or disable it directly in gdb.  Just use \"``set DebugFlag=0``\" or \"``set "
+"DebugFlag=1``\" from the gdb if the program is running.  If the program "
+"hasn't been started yet, you can always just run it with ``-debug``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1017
+msgid ""
+"Fine grained debug info with ``DEBUG_TYPE`` and the ``-debug-only`` option"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1019
+msgid ""
+"Sometimes you may find yourself in a situation where enabling ``-debug`` "
+"just turns on **too much** information (such as when working on the code "
+"generator). If you want to enable debug information with more fine-grained "
+"control, you should define the ``DEBUG_TYPE`` macro and use the ``-debug-"
+"only`` option as follows:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1051
+msgid ""
+"Of course, in practice, you should only set ``DEBUG_TYPE`` at the top of a "
+"file, to specify the debug type for the entire module. Be careful that you "
+"only do this after including Debug.h and not around any #include of headers. "
+"Also, you should use names more meaningful than \"foo\" and \"bar\", because "
+"there is no system in place to ensure that names do not conflict. If two "
+"different modules use the same string, they will all be turned on when the "
+"name is specified. This allows, for example, all debug information for "
+"instruction scheduling to be enabled with ``-debug-only=InstrSched``, even "
+"if the source lives in multiple files. The name must not include a comma (,) "
+"as that is used to separate the arguments of the ``-debug-only`` option."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1062
+msgid ""
+"For performance reasons, -debug-only is not available in optimized build "
+"(``--enable-optimized``) of LLVM."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1065
+msgid ""
+"The ``DEBUG_WITH_TYPE`` macro is also available for situations where you "
+"would like to set ``DEBUG_TYPE``, but only for one specific ``DEBUG`` "
+"statement.  It takes an additional first parameter, which is the type to "
+"use.  For example, the preceding example could be written as:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1078
+msgid "The ``Statistic`` class & ``-stats`` option"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1080
+msgid ""
+"The ``llvm/ADT/Statistic.h`` (`doxygen <http://llvm.org/doxygen/Statistic_8h-"
+"source.html>`__) file provides a class named ``Statistic`` that is used as a "
+"unified way to keep track of what the LLVM compiler is doing and how "
+"effective various optimizations are.  It is useful to see what optimizations "
+"are contributing to making a particular program run faster."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1087
+msgid ""
+"Often you may run your pass on some big program, and you're interested to "
+"see how many times it makes a certain transformation.  Although you can do "
+"this with hand inspection, or some ad-hoc method, this is a real pain and "
+"not very useful for big programs.  Using the ``Statistic`` class makes it "
+"very easy to keep track of this information, and the calculated information "
+"is presented in a uniform manner with the rest of the passes being executed."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1094
+msgid ""
+"There are many examples of ``Statistic`` uses, but the basics of using it "
+"are as follows:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1097
+msgid "Define your statistic like this:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1104
+msgid ""
+"The ``STATISTIC`` macro defines a static variable, whose name is specified "
+"by the first argument.  The pass name is taken from the ``DEBUG_TYPE`` "
+"macro, and the description is taken from the second argument.  The variable "
+"defined (\"NumXForms\" in this case) acts like an unsigned integer."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1109
+msgid "Whenever you make a transformation, bump the counter:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1115
+msgid ""
+"That's all you have to do.  To get '``opt``' to print out the statistics "
+"gathered, use the '``-stats``' option:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1123
+msgid ""
+"Note that in order to use the '``-stats``' option, LLVM must be compiled "
+"with assertions enabled."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1126
+msgid ""
+"When running ``opt`` on a C file from the SPEC benchmark suite, it gives a "
+"report that looks like this:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1157
+msgid ""
+"Obviously, with so many optimizations, having a unified framework for this "
+"stuff is very nice.  Making your pass fit well into the framework makes it "
+"more maintainable and useful."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1164
+msgid "Viewing graphs while debugging code"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1166
+msgid ""
+"Several of the important data structures in LLVM are graphs: for example "
+"CFGs made out of LLVM :ref:`BasicBlocks <BasicBlock>`, CFGs made out of "
+"LLVM :ref:`MachineBasicBlocks <MachineBasicBlock>`, and :ref:`Instruction "
+"Selection DAGs <SelectionDAG>`.  In many cases, while debugging various "
+"parts of the compiler, it is nice to instantly visualize these graphs."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1172
+msgid ""
+"LLVM provides several callbacks that are available in a debug build to do "
+"exactly that.  If you call the ``Function::viewCFG()`` method, for example, "
+"the current LLVM tool will pop up a window containing the CFG for the "
+"function where each basic block is a node in the graph, and each node "
+"contains the instructions in the block.  Similarly, there also exists "
+"``Function::viewCFGOnly()`` (does not include the instructions), the "
+"``MachineFunction::viewCFG()`` and ``MachineFunction::viewCFGOnly()``, and "
+"the ``SelectionDAG::viewGraph()`` methods.  Within GDB, for example, you can "
+"usually use something like ``call DAG.viewGraph()`` to pop up a window.  "
+"Alternatively, you can sprinkle calls to these functions in your code in "
+"places you want to debug."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1183
+msgid ""
+"Getting this to work requires a small amount of setup.  On Unix systems with "
+"X11, install the `graphviz <http://www.graphviz.org>`_ toolkit, and make "
+"sure 'dot' and 'gv' are in your path.  If you are running on Mac OS X, "
+"download and install the Mac OS X `Graphviz program <http://www.pixelglow."
+"com/graphviz/>`_ and add ``/Applications/Graphviz.app/Contents/MacOS/`` (or "
+"wherever you install it) to your path. The programs need not be present when "
+"configuring, building or running LLVM and can simply be installed when "
+"needed during an active debug session."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1193
+msgid ""
+"``SelectionDAG`` has been extended to make it easier to locate *interesting* "
+"nodes in large complex graphs.  From gdb, if you ``call DAG."
+"setGraphColor(node, \"color\")``, then the next ``call DAG.viewGraph()`` "
+"would highlight the node in the specified color (choices of colors can be "
+"found at `colors <http://www.graphviz.org/doc/info/colors.html>`_.) More "
+"complex node attributes can be provided with ``call DAG.setGraphAttrs(node, "
+"\"attributes\")`` (choices can be found at `Graph attributes <http://www."
+"graphviz.org/doc/info/attrs.html>`_.) If you want to restart and clear all "
+"the current graph attributes, then you can ``call DAG.clearGraphAttrs()``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1203
+msgid ""
+"Note that graph visualization features are compiled out of Release builds to "
+"reduce file size.  This means that you need a Debug+Asserts or "
+"Release+Asserts build to use these features."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1210
+msgid "Picking the Right Data Structure for a Task"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1212
+msgid ""
+"LLVM has a plethora of data structures in the ``llvm/ADT/`` directory, and "
+"we commonly use STL data structures.  This section describes the trade-offs "
+"you should consider when you pick one."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1216
+msgid ""
+"The first step is a choose your own adventure: do you want a sequential "
+"container, a set-like container, or a map-like container?  The most "
+"important thing when choosing a container is the algorithmic properties of "
+"how you plan to access the container.  Based on that, you should use:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1222
+msgid ""
+"a :ref:`map-like <ds_map>` container if you need efficient look-up of a "
+"value based on another value.  Map-like containers also support efficient "
+"queries for containment (whether a key is in the map).  Map-like containers "
+"generally do not support efficient reverse mapping (values to keys).  If you "
+"need that, use two maps.  Some map-like containers also support efficient "
+"iteration through the keys in sorted order.  Map-like containers are the "
+"most expensive sort, only use them if you need one of these capabilities."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1230
+msgid ""
+"a :ref:`set-like <ds_set>` container if you need to put a bunch of stuff "
+"into a container that automatically eliminates duplicates.  Some set-like "
+"containers support efficient iteration through the elements in sorted order. "
+"Set-like containers are more expensive than sequential containers."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1235
+msgid ""
+"a :ref:`sequential <ds_sequential>` container provides the most efficient "
+"way to add elements and keeps track of the order they are added to the "
+"collection. They permit duplicates and support efficient iteration, but do "
+"not support efficient look-up based on a key."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1240
+msgid ""
+"a :ref:`string <ds_string>` container is a specialized sequential container "
+"or reference structure that is used for character or byte arrays."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1243
+msgid ""
+"a :ref:`bit <ds_bit>` container provides an efficient way to store and "
+"perform set operations on sets of numeric id's, while automatically "
+"eliminating duplicates.  Bit containers require a maximum of 1 bit for each "
+"identifier you want to store."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1248
+msgid ""
+"Once the proper category of container is determined, you can fine tune the "
+"memory use, constant factors, and cache behaviors of access by intelligently "
+"picking a member of the category.  Note that constant factors and cache "
+"behavior can be a big deal.  If you have a vector that usually only contains "
+"a few elements (but could contain many), for example, it's much better to "
+"use :ref:`SmallVector <dss_smallvector>` than :ref:`vector <dss_vector>`.  "
+"Doing so avoids (relatively) expensive malloc/free calls, which dwarf the "
+"cost of adding the elements to the container."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1260
+msgid "Sequential Containers (std::vector, std::list, etc)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1262
+msgid ""
+"There are a variety of sequential containers available for you, based on "
+"your needs.  Pick the first in this section that will do what you want."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1268
+msgid "llvm/ADT/ArrayRef.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1270
+msgid ""
+"The ``llvm::ArrayRef`` class is the preferred class to use in an interface "
+"that accepts a sequential list of elements in memory and just reads from "
+"them.  By taking an ``ArrayRef``, the API can be passed a fixed size array, "
+"an ``std::vector``, an ``llvm::SmallVector`` and anything else that is "
+"contiguous in memory."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1279
+msgid "Fixed Size Arrays"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1281
+msgid ""
+"Fixed size arrays are very simple and very fast.  They are good if you know "
+"exactly how many elements you have, or you have a (low) upper bound on how "
+"many you have."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1288
+msgid "Heap Allocated Arrays"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1290
+msgid ""
+"Heap allocated arrays (``new[]`` + ``delete[]``) are also simple.  They are "
+"good if the number of elements is variable, if you know how many elements "
+"you will need before the array is allocated, and if the array is usually "
+"large (if not, consider a :ref:`SmallVector <dss_smallvector>`).  The cost "
+"of a heap allocated array is the cost of the new/delete (aka malloc/free).  "
+"Also note that if you are allocating an array of a type with a constructor, "
+"the constructor and destructors will be run for every element in the array "
+"(re-sizable vectors only construct those elements actually used)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1302
+msgid "llvm/ADT/TinyPtrVector.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1304
+msgid ""
+"``TinyPtrVector<Type>`` is a highly specialized collection class that is "
+"optimized to avoid allocation in the case when a vector has zero or one "
+"elements.  It has two major restrictions: 1) it can only hold values of "
+"pointer type, and 2) it cannot hold a null pointer."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1309
+msgid "Since this container is highly specialized, it is rarely used."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1314
+msgid "llvm/ADT/SmallVector.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1316
+msgid ""
+"``SmallVector<Type, N>`` is a simple class that looks and smells just like "
+"``vector<Type>``: it supports efficient iteration, lays out elements in "
+"memory order (so you can do pointer arithmetic between elements), supports "
+"efficient push_back/pop_back operations, supports efficient random access to "
+"its elements, etc."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1322
+msgid ""
+"The advantage of SmallVector is that it allocates space for some number of "
+"elements (N) **in the object itself**.  Because of this, if the SmallVector "
+"is dynamically smaller than N, no malloc is performed.  This can be a big "
+"win in cases where the malloc/free call is far more expensive than the code "
+"that fiddles around with the elements."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1328
+msgid ""
+"This is good for vectors that are \"usually small\" (e.g. the number of "
+"predecessors/successors of a block is usually less than 8).  On the other "
+"hand, this makes the size of the SmallVector itself large, so you don't want "
+"to allocate lots of them (doing so will waste a lot of space).  As such, "
+"SmallVectors are most useful when on the stack."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1334
+msgid ""
+"SmallVector also provides a nice portable and efficient replacement for "
+"``alloca``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1339
+msgid "Prefer to use ``SmallVectorImpl<T>`` as a parameter type."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1341
+msgid ""
+"In APIs that don't care about the \"small size\" (most?), prefer to use the "
+"``SmallVectorImpl<T>`` class, which is basically just the \"vector "
+"header\" (and methods) without the elements allocated after it. Note that "
+"``SmallVector<T, N>`` inherits from ``SmallVectorImpl<T>`` so the conversion "
+"is implicit and costs nothing. E.g."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1360
+msgid ""
+"Even though it has \"``Impl``\" in the name, this is so widely used that it "
+"really isn't \"private to the implementation\" anymore. A name like "
+"``SmallVectorHeader`` would be more appropriate."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1367
+msgid "<vector>"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1369
+msgid ""
+"``std::vector`` is well loved and respected.  It is useful when SmallVector "
+"isn't: when the size of the vector is often large (thus the small "
+"optimization will rarely be a benefit) or if you will be allocating many "
+"instances of the vector itself (which would waste space for elements that "
+"aren't in the container).  vector is also useful when interfacing with code "
+"that expects vectors :)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1376
+msgid "One worthwhile note about std::vector: avoid code like this:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1385
+msgid "Instead, write this as:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1395
+msgid ""
+"Doing so will save (at least) one heap allocation and free per iteration of "
+"the loop."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1401
+msgid "<deque>"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1403
+msgid ""
+"``std::deque`` is, in some senses, a generalized version of ``std::vector``. "
+"Like ``std::vector``, it provides constant time random access and other "
+"similar properties, but it also provides efficient access to the front of "
+"the list.  It does not guarantee continuity of elements within memory."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1408
+msgid ""
+"In exchange for this extra flexibility, ``std::deque`` has significantly "
+"higher constant factor costs than ``std::vector``.  If possible, use ``std::"
+"vector`` or something cheaper."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1415
+msgid "<list>"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1417
+msgid ""
+"``std::list`` is an extremely inefficient class that is rarely useful.  It "
+"performs a heap allocation for every element inserted into it, thus having "
+"an extremely high constant factor, particularly for small data types. ``std::"
+"list`` also only supports bidirectional iteration, not random access "
+"iteration."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1423
+msgid ""
+"In exchange for this high cost, std::list supports efficient access to both "
+"ends of the list (like ``std::deque``, but unlike ``std::vector`` or "
+"``SmallVector``).  In addition, the iterator invalidation characteristics of "
+"std::list are stronger than that of a vector class: inserting or removing an "
+"element into the list does not invalidate iterator or pointers to other "
+"elements in the list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1433
+msgid "llvm/ADT/ilist.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1435
+msgid ""
+"``ilist<T>`` implements an 'intrusive' doubly-linked list.  It is intrusive, "
+"because it requires the element to store and provide access to the prev/next "
+"pointers for the list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1439
+msgid ""
+"``ilist`` has the same drawbacks as ``std::list``, and additionally requires "
+"an ``ilist_traits`` implementation for the element type, but it provides "
+"some novel characteristics.  In particular, it can efficiently store "
+"polymorphic objects, the traits class is informed when an element is "
+"inserted or removed from the list, and ``ilist``\\ s are guaranteed to "
+"support a constant-time splice operation."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1446
+msgid ""
+"These properties are exactly what we want for things like ``Instruction``\\ "
+"s and basic blocks, which is why these are implemented with ``ilist``\\ s."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1449
+msgid "Related classes of interest are explained in the following subsections:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1451
+msgid ":ref:`ilist_traits <dss_ilist_traits>`"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1453
+msgid ":ref:`iplist <dss_iplist>`"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1455
+msgid ":ref:`llvm/ADT/ilist_node.h <dss_ilist_node>`"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1457
+msgid ":ref:`Sentinels <dss_ilist_sentinel>`"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1462
+msgid "llvm/ADT/PackedVector.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1464
+msgid ""
+"Useful for storing a vector of values using only a few number of bits for "
+"each value.  Apart from the standard operations of a vector-like container, "
+"it can also perform an 'or' set operation."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1468
+msgid "For example:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1493
+msgid "ilist_traits"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1495
+msgid ""
+"``ilist_traits<T>`` is ``ilist<T>``'s customization mechanism. ``iplist<T>`` "
+"(and consequently ``ilist<T>``) publicly derive from this traits class."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1501
+msgid "iplist"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1503
+msgid ""
+"``iplist<T>`` is ``ilist<T>``'s base and as such supports a slightly "
+"narrower interface.  Notably, inserters from ``T&`` are absent."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1506
+msgid ""
+"``ilist_traits<T>`` is a public base of this class and can be used for a "
+"wide variety of customizations."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1512
+msgid "llvm/ADT/ilist_node.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1514
+msgid ""
+"``ilist_node<T>`` implements the forward and backward links that are "
+"expected by the ``ilist<T>`` (and analogous containers) in the default "
+"manner."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1517
+msgid ""
+"``ilist_node<T>``\\ s are meant to be embedded in the node type ``T``, "
+"usually ``T`` publicly derives from ``ilist_node<T>``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1523
+msgid "Sentinels"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1525
+msgid ""
+"``ilist``\\ s have another specialty that must be considered.  To be a good "
+"citizen in the C++ ecosystem, it needs to support the standard container "
+"operations, such as ``begin`` and ``end`` iterators, etc.  Also, the "
+"``operator--`` must work correctly on the ``end`` iterator in the case of "
+"non-empty ``ilist``\\ s."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1531
+msgid ""
+"The only sensible solution to this problem is to allocate a so-called "
+"*sentinel* along with the intrusive list, which serves as the ``end`` "
+"iterator, providing the back-link to the last element.  However conforming "
+"to the C++ convention it is illegal to ``operator++`` beyond the sentinel "
+"and it also must not be dereferenced."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1537
+msgid ""
+"These constraints allow for some implementation freedom to the ``ilist`` how "
+"to allocate and store the sentinel.  The corresponding policy is dictated by "
+"``ilist_traits<T>``.  By default a ``T`` gets heap-allocated whenever the "
+"need for a sentinel arises."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1542
+msgid ""
+"While the default policy is sufficient in most cases, it may break down when "
+"``T`` does not provide a default constructor.  Also, in the case of many "
+"instances of ``ilist``\\ s, the memory overhead of the associated sentinels "
+"is wasted.  To alleviate the situation with numerous and voluminous ``T``-"
+"sentinels, sometimes a trick is employed, leading to *ghostly sentinels*."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1548
+msgid ""
+"Ghostly sentinels are obtained by specially-crafted ``ilist_traits<T>`` "
+"which superpose the sentinel with the ``ilist`` instance in memory.  Pointer "
+"arithmetic is used to obtain the sentinel, which is relative to the "
+"``ilist``'s ``this`` pointer.  The ``ilist`` is augmented by an extra "
+"pointer, which serves as the back-link of the sentinel.  This is the only "
+"field in the ghostly sentinel which can be legally accessed."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1558
+msgid "Other Sequential Container options"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1560
+msgid "Other STL containers are available, such as ``std::string``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1562
+msgid ""
+"There are also various STL adapter classes such as ``std::queue``, ``std::"
+"priority_queue``, ``std::stack``, etc.  These provide simplified access to "
+"an underlying container but don't affect the cost of the container itself."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1569
+msgid "String-like containers"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1571
+msgid ""
+"There are a variety of ways to pass around and use strings in C and C++, and "
+"LLVM adds a few new options to choose from.  Pick the first option on this "
+"list that will do what you need, they are ordered according to their "
+"relative cost."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1575
+msgid ""
+"Note that it is generally preferred to *not* pass strings around as ``const "
+"char*``'s.  These have a number of problems, including the fact that they "
+"cannot represent embedded nul (\"\\0\") characters, and do not have a length "
+"available efficiently.  The general replacement for '``const char*``' is "
+"StringRef."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1581
+msgid ""
+"For more information on choosing string containers for APIs, please see :ref:"
+"`Passing Strings <string_apis>`."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1587
+msgid "llvm/ADT/StringRef.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1589
+msgid ""
+"The StringRef class is a simple value class that contains a pointer to a "
+"character and a length, and is quite related to the :ref:`ArrayRef "
+"<dss_arrayref>` class (but specialized for arrays of characters).  Because "
+"StringRef carries a length with it, it safely handles strings with embedded "
+"nul characters in it, getting the length does not require a strlen call, and "
+"it even has very convenient APIs for slicing and dicing the character range "
+"that it represents."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1597
+msgid ""
+"StringRef is ideal for passing simple strings around that are known to be "
+"live, either because they are C string literals, std::string, a C array, or "
+"a SmallVector.  Each of these cases has an efficient implicit conversion to "
+"StringRef, which doesn't result in a dynamic strlen being executed."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1602
+msgid ""
+"StringRef has a few major limitations which make more powerful string "
+"containers useful:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1605
+msgid ""
+"You cannot directly convert a StringRef to a 'const char*' because there is "
+"no way to add a trailing nul (unlike the .c_str() method on various stronger "
+"classes)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1609
+msgid ""
+"StringRef doesn't own or keep alive the underlying string bytes. As such it "
+"can easily lead to dangling pointers, and is not suitable for embedding in "
+"datastructures in most cases (instead, use an std::string or something like "
+"that)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1614
+msgid ""
+"For the same reason, StringRef cannot be used as the return value of a "
+"method if the method \"computes\" the result string.  Instead, use std::"
+"string."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1617
+msgid ""
+"StringRef's do not allow you to mutate the pointed-to string bytes and it "
+"doesn't allow you to insert or remove bytes from the range.  For editing "
+"operations like this, it interoperates with the :ref:`Twine <dss_twine>` "
+"class."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1622
+msgid ""
+"Because of its strengths and limitations, it is very common for a function "
+"to take a StringRef and for a method on an object to return a StringRef that "
+"points into some string that it owns."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1629
+msgid "llvm/ADT/Twine.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1631
+msgid ""
+"The Twine class is used as an intermediary datatype for APIs that want to "
+"take a string that can be constructed inline with a series of "
+"concatenations.  Twine works by forming recursive instances of the Twine "
+"datatype (a simple value object) on the stack as temporary objects, linking "
+"them together into a tree which is then linearized when the Twine is "
+"consumed.  Twine is only safe to use as the argument to a function, and "
+"should always be a const reference, e.g.:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1646
+msgid ""
+"This example forms a string like \"blarg.42\" by concatenating the values "
+"together, and does not form intermediate strings containing \"blarg\" or "
+"\"blarg.\"."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1649
+msgid ""
+"Because Twine is constructed with temporary objects on the stack, and "
+"because these instances are destroyed at the end of the current statement, "
+"it is an inherently dangerous API.  For example, this simple variant "
+"contains undefined behavior and will probably crash:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1663
+msgid ""
+"... because the temporaries are destroyed before the call.  That said, "
+"Twine's are much more efficient than intermediate std::string temporaries, "
+"and they work really well with StringRef.  Just be aware of their "
+"limitations."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1670
+msgid "llvm/ADT/SmallString.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1672
+msgid ""
+"SmallString is a subclass of :ref:`SmallVector <dss_smallvector>` that adds "
+"some convenience APIs like += that takes StringRef's.  SmallString avoids "
+"allocating memory in the case when the preallocated space is enough to hold "
+"its data, and it calls back to general heap allocation when required.  Since "
+"it owns its data, it is very safe to use and supports full mutation of the "
+"string."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1678
+msgid ""
+"Like SmallVector's, the big downside to SmallString is their sizeof.  While "
+"they are optimized for small strings, they themselves are not particularly "
+"small. This means that they work great for temporary scratch buffers on the "
+"stack, but should not generally be put into the heap: it is very rare to see "
+"a SmallString as the member of a frequently-allocated heap data structure or "
+"returned by-value."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1688
+msgid "std::string"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1690
+msgid ""
+"The standard C++ std::string class is a very general class that (like "
+"SmallString) owns its underlying data.  sizeof(std::string) is very "
+"reasonable so it can be embedded into heap data structures and returned by-"
+"value.  On the other hand, std::string is highly inefficient for inline "
+"editing (e.g. concatenating a bunch of stuff together) and because it is "
+"provided by the standard library, its performance characteristics depend a "
+"lot of the host standard library (e.g. libc++ and MSVC provide a highly "
+"optimized string class, GCC contains a really slow implementation)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1699
+msgid ""
+"The major disadvantage of std::string is that almost every operation that "
+"makes them larger can allocate memory, which is slow.  As such, it is better "
+"to use SmallVector or Twine as a scratch buffer, but then use std::string to "
+"persist the result."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1707
+msgid "Set-Like Containers (std::set, SmallSet, SetVector, etc)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1709
+msgid ""
+"Set-like containers are useful when you need to canonicalize multiple values "
+"into a single representation.  There are several different choices for how "
+"to do this, providing various trade-offs."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1716 ../../../ProgrammersManual.rst:1962
+msgid "A sorted 'vector'"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1718
+msgid ""
+"If you intend to insert a lot of elements, then do a lot of queries, a great "
+"approach is to use a vector (or other sequential container) with std::"
+"sort+std::unique to remove duplicates.  This approach works really well if "
+"your usage pattern has these two distinct phases (insert then query), and "
+"can be coupled with a good choice of :ref:`sequential container "
+"<ds_sequential>`."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1724
+msgid ""
+"This combination provides the several nice properties: the result data is "
+"contiguous in memory (good for cache locality), has few allocations, is easy "
+"to address (iterators in the final vector are just indices or pointers), and "
+"can be efficiently queried with a standard binary search (e.g. ``std::"
+"lower_bound``; if you want the whole range of elements comparing equal, use "
+"``std::equal_range``)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1734
+msgid "llvm/ADT/SmallSet.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1736
+msgid ""
+"If you have a set-like data structure that is usually small and whose "
+"elements are reasonably small, a ``SmallSet<Type, N>`` is a good choice.  "
+"This set has space for N elements in place (thus, if the set is dynamically "
+"smaller than N, no malloc traffic is required) and accesses them with a "
+"simple linear search. When the set grows beyond N elements, it allocates a "
+"more expensive representation that guarantees efficient access (for most "
+"types, it falls back to :ref:`std::set <dss_set>`, but for pointers it uses "
+"something far better, :ref:`SmallPtrSet <dss_smallptrset>`."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1745
+msgid ""
+"The magic of this class is that it handles small sets extremely efficiently, "
+"but gracefully handles extremely large sets without loss of efficiency.  The "
+"drawback is that the interface is quite small: it supports insertion, "
+"queries and erasing, but does not support iteration."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1753
+msgid "llvm/ADT/SmallPtrSet.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1755
+msgid ""
+"``SmallPtrSet`` has all the advantages of ``SmallSet`` (and a ``SmallSet`` "
+"of pointers is transparently implemented with a ``SmallPtrSet``), but also "
+"supports iterators.  If more than N insertions are performed, a single "
+"quadratically probed hash table is allocated and grows as needed, providing "
+"extremely efficient access (constant time insertion/deleting/queries with "
+"low constant factors) and is very stingy with malloc traffic."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1762
+msgid ""
+"Note that, unlike :ref:`std::set <dss_set>`, the iterators of "
+"``SmallPtrSet`` are invalidated whenever an insertion occurs.  Also, the "
+"values visited by the iterators are not visited in sorted order."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1769
+msgid "llvm/ADT/StringSet.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1771
+msgid ""
+"``StringSet`` is a thin wrapper around :ref:`StringMap\\<char\\> "
+"<dss_stringmap>`, and it allows efficient storage and retrieval of unique "
+"strings."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1774
+msgid ""
+"Functionally analogous to ``SmallSet<StringRef>``, ``StringSet`` also "
+"supports iteration. (The iterator dereferences to a "
+"``StringMapEntry<char>``, so you need to call ``i->getKey()`` to access the "
+"item of the StringSet.)  On the other hand, ``StringSet`` doesn't support "
+"range-insertion and copy-construction, which :ref:`SmallSet <dss_smallset>` "
+"and :ref:`SmallPtrSet <dss_smallptrset>` do support."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1784
+msgid "llvm/ADT/DenseSet.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1786
+msgid ""
+"DenseSet is a simple quadratically probed hash table.  It excels at "
+"supporting small values: it uses a single allocation to hold all of the "
+"pairs that are currently inserted in the set.  DenseSet is a great way to "
+"unique small values that are not simple pointers (use :ref:`SmallPtrSet "
+"<dss_smallptrset>` for pointers).  Note that DenseSet has the same "
+"requirements for the value type that :ref:`DenseMap <dss_densemap>` has."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1796
+msgid "llvm/ADT/SparseSet.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1798
+msgid ""
+"SparseSet holds a small number of objects identified by unsigned keys of "
+"moderate size.  It uses a lot of memory, but provides operations that are "
+"almost as fast as a vector.  Typical keys are physical registers, virtual "
+"registers, or numbered basic blocks."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1803
+msgid ""
+"SparseSet is useful for algorithms that need very fast clear/find/insert/"
+"erase and fast iteration over small sets.  It is not intended for building "
+"composite data structures."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1810
+msgid "llvm/ADT/SparseMultiSet.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1812
+msgid ""
+"SparseMultiSet adds multiset behavior to SparseSet, while retaining "
+"SparseSet's desirable attributes. Like SparseSet, it typically uses a lot of "
+"memory, but provides operations that are almost as fast as a vector.  "
+"Typical keys are physical registers, virtual registers, or numbered basic "
+"blocks."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1817
+msgid ""
+"SparseMultiSet is useful for algorithms that need very fast clear/find/"
+"insert/erase of the entire collection, and iteration over sets of elements "
+"sharing a key. It is often a more efficient choice than using composite data "
+"structures (e.g. vector-of-vectors, map-of-vectors). It is not intended for "
+"building composite data structures."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1826
+msgid "llvm/ADT/FoldingSet.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1828
+msgid ""
+"FoldingSet is an aggregate class that is really good at uniquing expensive-"
+"to-create or polymorphic objects.  It is a combination of a chained hash "
+"table with intrusive links (uniqued objects are required to inherit from "
+"FoldingSetNode) that uses :ref:`SmallVector <dss_smallvector>` as part of "
+"its ID process."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1834
+msgid ""
+"Consider a case where you want to implement a \"getOrCreateFoo\" method for "
+"a complex object (for example, a node in the code generator).  The client "
+"has a description of **what** it wants to generate (it knows the opcode and "
+"all the operands), but we don't want to 'new' a node, then try inserting it "
+"into a set only to find out it already exists, at which point we would have "
+"to delete it and return the node that already exists."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1841
+msgid ""
+"To support this style of client, FoldingSet perform a query with a "
+"FoldingSetNodeID (which wraps SmallVector) that can be used to describe the "
+"element that we want to query for.  The query either returns the element "
+"matching the ID or it returns an opaque ID that indicates where insertion "
+"should take place.  Construction of the ID usually does not require heap "
+"traffic."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1847
+msgid ""
+"Because FoldingSet uses intrusive links, it can support polymorphic objects "
+"in the set (for example, you can have SDNode instances mixed with "
+"LoadSDNodes). Because the elements are individually allocated, pointers to "
+"the elements are stable: inserting or removing elements does not invalidate "
+"any pointers to other elements."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1856
+msgid "<set>"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1858
+msgid ""
+"``std::set`` is a reasonable all-around set class, which is decent at many "
+"things but great at nothing.  std::set allocates memory for each element "
+"inserted (thus it is very malloc intensive) and typically stores three "
+"pointers per element in the set (thus adding a large amount of per-element "
+"space overhead).  It offers guaranteed log(n) performance, which is not "
+"particularly fast from a complexity standpoint (particularly if the elements "
+"of the set are expensive to compare, like strings), and has extremely high "
+"constant factors for lookup, insertion and removal."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1867
+msgid ""
+"The advantages of std::set are that its iterators are stable (deleting or "
+"inserting an element from the set does not affect iterators or pointers to "
+"other elements) and that iteration over the set is guaranteed to be in "
+"sorted order. If the elements in the set are large, then the relative "
+"overhead of the pointers and malloc traffic is not a big deal, but if the "
+"elements of the set are small, std::set is almost never a good choice."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1877
+msgid "llvm/ADT/SetVector.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1879
+msgid ""
+"LLVM's ``SetVector<Type>`` is an adapter class that combines your choice of "
+"a set-like container along with a :ref:`Sequential Container "
+"<ds_sequential>` The important property that this provides is efficient "
+"insertion with uniquing (duplicate elements are ignored) with iteration "
+"support.  It implements this by inserting elements into both a set-like "
+"container and the sequential container, using the set-like container for "
+"uniquing and the sequential container for iteration."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1887
+msgid ""
+"The difference between SetVector and other sets is that the order of "
+"iteration is guaranteed to match the order of insertion into the SetVector.  "
+"This property is really important for things like sets of pointers.  Because "
+"pointer values are non-deterministic (e.g. vary across runs of the program "
+"on different machines), iterating over the pointers in the set will not be "
+"in a well-defined order."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1894
+msgid ""
+"The drawback of SetVector is that it requires twice as much space as a "
+"normal set and has the sum of constant factors from the set-like container "
+"and the sequential container that it uses.  Use it **only** if you need to "
+"iterate over the elements in a deterministic order.  SetVector is also "
+"expensive to delete elements out of (linear time), unless you use its "
+"\"pop_back\" method, which is faster."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1901
+msgid ""
+"``SetVector`` is an adapter class that defaults to using ``std::vector`` and "
+"a size 16 ``SmallSet`` for the underlying containers, so it is quite "
+"expensive. However, ``\"llvm/ADT/SetVector.h\"`` also provides a "
+"``SmallSetVector`` class, which defaults to using a ``SmallVector`` and "
+"``SmallSet`` of a specified size. If you use this, and if your sets are "
+"dynamically smaller than ``N``, you will save a lot of heap traffic."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1911
+msgid "llvm/ADT/UniqueVector.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1913
+msgid ""
+"UniqueVector is similar to :ref:`SetVector <dss_setvector>` but it retains a "
+"unique ID for each element inserted into the set.  It internally contains a "
+"map and a vector, and it assigns a unique ID for each value inserted into "
+"the set."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1917
+msgid ""
+"UniqueVector is very expensive: its cost is the sum of the cost of "
+"maintaining both the map and vector, it has high complexity, high constant "
+"factors, and produces a lot of malloc traffic.  It should be avoided."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1924
+msgid "llvm/ADT/ImmutableSet.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1926
+msgid ""
+"ImmutableSet is an immutable (functional) set implementation based on an AVL "
+"tree.  Adding or removing elements is done through a Factory object and "
+"results in the creation of a new ImmutableSet object.  If an ImmutableSet "
+"already exists with the given contents, then the existing one is returned; "
+"equality is compared with a FoldingSetNodeID.  The time and space complexity "
+"of add or remove operations is logarithmic in the size of the original set."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1933
+msgid ""
+"There is no method for returning an element of the set, you can only check "
+"for membership."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1939
+msgid "Other Set-Like Container Options"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1941
+msgid ""
+"The STL provides several other options, such as std::multiset and the "
+"various \"hash_set\" like containers (whether from C++ TR1 or from the SGI "
+"library).  We never use hash_set and unordered_set because they are "
+"generally very expensive (each insertion requires a malloc) and very non-"
+"portable."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1946
+msgid ""
+"std::multiset is useful if you're not interested in elimination of "
+"duplicates, but has all the drawbacks of :ref:`std::set <dss_set>`.  A "
+"sorted vector (where you don't delete duplicate entries) or some other "
+"approach is almost always better."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1954
+msgid "Map-Like Containers (std::map, DenseMap, etc)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1956
+msgid ""
+"Map-like containers are useful when you want to associate data to a key.  As "
+"usual, there are a lot of different ways to do this. :)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1964
+msgid ""
+"If your usage pattern follows a strict insert-then-query approach, you can "
+"trivially use the same approach as :ref:`sorted vectors for set-like "
+"containers <dss_sortedvectorset>`.  The only difference is that your query "
+"function (which uses std::lower_bound to get efficient log(n) lookup) should "
+"only compare the key, not both the key and value.  This yields the same "
+"advantages as sorted vectors for sets."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1974
+msgid "llvm/ADT/StringMap.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1976
+msgid ""
+"Strings are commonly used as keys in maps, and they are difficult to support "
+"efficiently: they are variable length, inefficient to hash and compare when "
+"long, expensive to copy, etc.  StringMap is a specialized container designed "
+"to cope with these issues.  It supports mapping an arbitrary range of bytes "
+"to an arbitrary other object."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1982
+msgid ""
+"The StringMap implementation uses a quadratically-probed hash table, where "
+"the buckets store a pointer to the heap allocated entries (and some other "
+"stuff). The entries in the map must be heap allocated because the strings "
+"are variable length.  The string data (key) and the element object (value) "
+"are stored in the same allocation with the string data immediately after the "
+"element object. This container guarantees the \"``(char*)(&Value+1)``\" "
+"points to the key string for a value."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1990
+msgid ""
+"The StringMap is very fast for several reasons: quadratic probing is very "
+"cache efficient for lookups, the hash value of strings in buckets is not "
+"recomputed when looking up an element, StringMap rarely has to touch the "
+"memory for unrelated objects when looking up a value (even when hash "
+"collisions happen), hash table growth does not recompute the hash values for "
+"strings already in the table, and each pair in the map is store in a single "
+"allocation (the string data is stored in the same allocation as the Value of "
+"a pair)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:1998
+msgid ""
+"StringMap also provides query methods that take byte ranges, so it only ever "
+"copies a string if a value is inserted into the table."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2001
+msgid ""
+"StringMap iteratation order, however, is not guaranteed to be deterministic, "
+"so any uses which require that should instead use a std::map."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2007
+msgid "llvm/ADT/IndexedMap.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2009
+msgid ""
+"IndexedMap is a specialized container for mapping small dense integers (or "
+"values that can be mapped to small dense integers) to some other type.  It "
+"is internally implemented as a vector with a mapping function that maps the "
+"keys to the dense integer range."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2014
+msgid ""
+"This is useful for cases like virtual registers in the LLVM code generator: "
+"they have a dense mapping that is offset by a compile-time constant (the "
+"first virtual register ID)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2021
+msgid "llvm/ADT/DenseMap.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2023
+msgid ""
+"DenseMap is a simple quadratically probed hash table.  It excels at "
+"supporting small keys and values: it uses a single allocation to hold all of "
+"the pairs that are currently inserted in the map.  DenseMap is a great way "
+"to map pointers to pointers, or map other small types to each other."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2028
+msgid ""
+"There are several aspects of DenseMap that you should be aware of, however. "
+"The iterators in a DenseMap are invalidated whenever an insertion occurs, "
+"unlike map.  Also, because DenseMap allocates space for a large number of "
+"key/value pairs (it starts with 64 by default), it will waste a lot of space "
+"if your keys or values are large.  Finally, you must implement a partial "
+"specialization of DenseMapInfo for the key that you want, if it isn't "
+"already supported.  This is required to tell DenseMap about two special "
+"marker values (which can never be inserted into the map) that it needs "
+"internally."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2037
+msgid ""
+"DenseMap's find_as() method supports lookup operations using an alternate "
+"key type.  This is useful in cases where the normal key type is expensive to "
+"construct, but cheap to compare against.  The DenseMapInfo is responsible "
+"for defining the appropriate comparison and hashing methods for each "
+"alternate key type used."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2046
+msgid "llvm/IR/ValueMap.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2048
+msgid ""
+"ValueMap is a wrapper around a :ref:`DenseMap <dss_densemap>` mapping "
+"``Value*``\\ s (or subclasses) to another type.  When a Value is deleted or "
+"RAUW'ed, ValueMap will update itself so the new version of the key is mapped "
+"to the same value, just as if the key were a WeakVH.  You can configure "
+"exactly how this happens, and what else happens on these two events, by "
+"passing a ``Config`` parameter to the ValueMap template."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2058
+msgid "llvm/ADT/IntervalMap.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2060
+msgid ""
+"IntervalMap is a compact map for small keys and values.  It maps key "
+"intervals instead of single keys, and it will automatically coalesce "
+"adjacent intervals. When the map only contains a few intervals, they are "
+"stored in the map object itself to avoid allocations."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2065
+msgid ""
+"The IntervalMap iterators are quite big, so they should not be passed around "
+"as STL iterators.  The heavyweight iterators allow a smaller data structure."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2071
+msgid "<map>"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2073
+msgid ""
+"std::map has similar characteristics to :ref:`std::set <dss_set>`: it uses a "
+"single allocation per pair inserted into the map, it offers log(n) lookup "
+"with an extremely large constant factor, imposes a space penalty of 3 "
+"pointers per pair in the map, etc."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2078
+msgid ""
+"std::map is most useful when your keys or values are very large, if you need "
+"to iterate over the collection in sorted order, or if you need stable "
+"iterators into the map (i.e. they don't get invalidated if an insertion or "
+"deletion of another element takes place)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2086
+msgid "llvm/ADT/MapVector.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2088
+msgid ""
+"``MapVector<KeyT,ValueT>`` provides a subset of the DenseMap interface.  The "
+"main difference is that the iteration order is guaranteed to be the "
+"insertion order, making it an easy (but somewhat expensive) solution for non-"
+"deterministic iteration over maps of pointers."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2093
+msgid ""
+"It is implemented by mapping from key to an index in a vector of key,value "
+"pairs.  This provides fast lookup and iteration, but has two main drawbacks: "
+"the key is stored twice and removing elements takes linear time.  If it is "
+"necessary to remove elements, it's best to remove them in bulk using "
+"``remove_if()``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2102
+msgid "llvm/ADT/IntEqClasses.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2104
+msgid ""
+"IntEqClasses provides a compact representation of equivalence classes of "
+"small integers.  Initially, each integer in the range 0..n-1 has its own "
+"equivalence class.  Classes can be joined by passing two class "
+"representatives to the join(a, b) method.  Two integers are in the same "
+"class when findLeader() returns the same representative."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2110
+msgid ""
+"Once all equivalence classes are formed, the map can be compressed so each "
+"integer 0..n-1 maps to an equivalence class number in the range 0..m-1, "
+"where m is the total number of equivalence classes.  The map must be "
+"uncompressed before it can be edited again."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2118
+msgid "llvm/ADT/ImmutableMap.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2120
+msgid ""
+"ImmutableMap is an immutable (functional) map implementation based on an AVL "
+"tree.  Adding or removing elements is done through a Factory object and "
+"results in the creation of a new ImmutableMap object.  If an ImmutableMap "
+"already exists with the given key set, then the existing one is returned; "
+"equality is compared with a FoldingSetNodeID.  The time and space complexity "
+"of add or remove operations is logarithmic in the size of the original map."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2130
+msgid "Other Map-Like Container Options"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2132
+msgid ""
+"The STL provides several other options, such as std::multimap and the "
+"various \"hash_map\" like containers (whether from C++ TR1 or from the SGI "
+"library).  We never use hash_set and unordered_set because they are "
+"generally very expensive (each insertion requires a malloc) and very non-"
+"portable."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2137
+msgid ""
+"std::multimap is useful if you want to map a key to multiple values, but has "
+"all the drawbacks of std::map.  A sorted vector or some other approach is "
+"almost always better."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2144
+msgid "Bit storage containers (BitVector, SparseBitVector)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2146
+msgid ""
+"Unlike the other containers, there are only two bit storage containers, and "
+"choosing when to use each is relatively straightforward."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2149
+msgid ""
+"One additional option is ``std::vector<bool>``: we discourage its use for "
+"two reasons 1) the implementation in many common compilers (e.g.  commonly "
+"available versions of GCC) is extremely inefficient and 2) the C++ standards "
+"committee is likely to deprecate this container and/or change it "
+"significantly somehow.  In any case, please don't use it."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2158
+msgid "BitVector"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2160
+msgid ""
+"The BitVector container provides a dynamic size set of bits for "
+"manipulation. It supports individual bit setting/testing, as well as set "
+"operations.  The set operations take time O(size of bitvector), but "
+"operations are performed one word at a time, instead of one bit at a time.  "
+"This makes the BitVector very fast for set operations compared to other "
+"containers.  Use the BitVector when you expect the number of set bits to be "
+"high (i.e. a dense set)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2170
+msgid "SmallBitVector"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2172
+msgid ""
+"The SmallBitVector container provides the same interface as BitVector, but "
+"it is optimized for the case where only a small number of bits, less than 25 "
+"or so, are needed.  It also transparently supports larger bit counts, but "
+"slightly less efficiently than a plain BitVector, so SmallBitVector should "
+"only be used when larger counts are rare."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2178
+msgid ""
+"At this time, SmallBitVector does not support set operations (and, or, xor), "
+"and its operator[] does not provide an assignable lvalue."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2184
+msgid "SparseBitVector"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2186
+msgid ""
+"The SparseBitVector container is much like BitVector, with one major "
+"difference: Only the bits that are set, are stored.  This makes the "
+"SparseBitVector much more space efficient than BitVector when the set is "
+"sparse, as well as making set operations O(number of set bits) instead of "
+"O(size of universe).  The downside to the SparseBitVector is that setting "
+"and testing of random bits is O(N), and on large SparseBitVectors, this can "
+"be slower than BitVector.  In our implementation, setting or testing bits in "
+"sorted order (either forwards or reverse) is O(1) worst case.  Testing and "
+"setting bits within 128 bits (depends on size) of the current bit is also "
+"O(1).  As a general statement, testing/setting bits in a SparseBitVector is "
+"O(distance away from last set bit)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2200
+msgid "Debugging"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2202
+msgid ""
+"A handful of `GDB pretty printers <https://sourceware.org/gdb/onlinedocs/gdb/"
+"Pretty-Printing.html>`__ are provided for some of the core LLVM libraries. "
+"To use them, execute the following (or add it to your ``~/.gdbinit``)::"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2209
+msgid ""
+"It also might be handy to enable the `print pretty <http://ftp.gnu.org/old-"
+"gnu/Manuals/gdb/html_node/gdb_57.html>`__ option to avoid data structures "
+"being printed as a big block of text."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2216
+msgid "Helpful Hints for Common Operations"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2218
+msgid ""
+"This section describes how to perform some very simple transformations of "
+"LLVM code.  This is meant to give examples of common idioms used, showing "
+"the practical side of LLVM transformations."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2222
+msgid ""
+"Because this is a \"how-to\" section, you should also read about the main "
+"classes that you will be working with.  The :ref:`Core LLVM Class Hierarchy "
+"Reference <coreclasses>` contains details and descriptions of the main "
+"classes that you should know about."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2230
+msgid "Basic Inspection and Traversal Routines"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2232
+msgid ""
+"The LLVM compiler infrastructure have many different data structures that "
+"may be traversed.  Following the example of the C++ standard template "
+"library, the techniques used to traverse these various data structures are "
+"all basically the same.  For a enumerable sequence of values, the "
+"``XXXbegin()`` function (or method) returns an iterator to the start of the "
+"sequence, the ``XXXend()`` function returns an iterator pointing to one past "
+"the last valid element of the sequence, and there is some ``XXXiterator`` "
+"data type that is common between the two operations."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2241
+msgid ""
+"Because the pattern for iteration is common across many different aspects of "
+"the program representation, the standard template library algorithms may be "
+"used on them, and it is easier to remember how to iterate.  First we show a "
+"few common examples of the data structures that need to be traversed.  Other "
+"data structures are traversed in very similar ways."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2250
+msgid "Iterating over the ``BasicBlock`` in a ``Function``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2252
+msgid ""
+"It's quite common to have a ``Function`` instance that you'd like to "
+"transform in some way; in particular, you'd like to manipulate its "
+"``BasicBlock``\\ s.  To facilitate this, you'll need to iterate over all of "
+"the ``BasicBlock``\\ s that constitute the ``Function``.  The following is "
+"an example that prints the name of a ``BasicBlock`` and the number of "
+"``Instruction``\\ s it contains:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2267
+msgid ""
+"Note that i can be used as if it were a pointer for the purposes of invoking "
+"member functions of the ``Instruction`` class.  This is because the "
+"indirection operator is overloaded for the iterator classes.  In the above "
+"code, the expression ``i->size()`` is exactly equivalent to ``(*i).size()`` "
+"just like you'd expect."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2276
+msgid "Iterating over the ``Instruction`` in a ``BasicBlock``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2278
+msgid ""
+"Just like when dealing with ``BasicBlock``\\ s in ``Function``\\ s, it's "
+"easy to iterate over the individual instructions that make up "
+"``BasicBlock``\\ s.  Here's a code snippet that prints out each instruction "
+"in a ``BasicBlock``:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2291
+msgid ""
+"However, this isn't really the best way to print out the contents of a "
+"``BasicBlock``!  Since the ostream operators are overloaded for virtually "
+"anything you'll care about, you could have just invoked the print routine on "
+"the basic block itself: ``errs() << *blk << \"\\n\";``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2299
+msgid "Iterating over the ``Instruction`` in a ``Function``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2301
+msgid ""
+"If you're finding that you commonly iterate over a ``Function``'s "
+"``BasicBlock``\\ s and then that ``BasicBlock``'s ``Instruction``\\ s, "
+"``InstIterator`` should be used instead.  You'll need to include ``llvm/IR/"
+"InstIterator.h`` (`doxygen <http://llvm.org/doxygen/InstIterator_8h."
+"html>`__) and then instantiate ``InstIterator``\\ s explicitly in your "
+"code.  Here's a small example that shows how to dump all instructions in a "
+"function to the standard error stream:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2317
+msgid ""
+"Easy, isn't it?  You can also use ``InstIterator``\\ s to fill a work list "
+"with its initial contents.  For example, if you wanted to initialize a work "
+"list to contain all instructions in a ``Function`` F, all you would need to "
+"do is something like:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2330
+msgid ""
+"The STL set ``worklist`` would now contain all instructions in the "
+"``Function`` pointed to by F."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2336
+msgid "Turning an iterator into a class pointer (and vice-versa)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2338
+msgid ""
+"Sometimes, it'll be useful to grab a reference (or pointer) to a class "
+"instance when all you've got at hand is an iterator.  Well, extracting a "
+"reference or a pointer from an iterator is very straight-forward.  Assuming "
+"that ``i`` is a ``BasicBlock::iterator`` and ``j`` is a ``BasicBlock::"
+"const_iterator``:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2349
+msgid ""
+"However, the iterators you'll be working with in the LLVM framework are "
+"special: they will automatically convert to a ptr-to-instance type whenever "
+"they need to. Instead of dereferencing the iterator and then taking the "
+"address of the result, you can simply assign the iterator to the proper "
+"pointer type and you get the dereference and address-of operation as a "
+"result of the assignment (behind the scenes, this is a result of overloading "
+"casting mechanisms).  Thus the second line of the last example,"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2361
+msgid "is semantically equivalent to"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2367
+msgid ""
+"It's also possible to turn a class pointer into the corresponding iterator, "
+"and this is a constant time operation (very efficient).  The following code "
+"snippet illustrates use of the conversion constructors provided by LLVM "
+"iterators.  By using these, you can explicitly grab the iterator of "
+"something without actually obtaining it via iteration over some structure:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2381
+msgid ""
+"Unfortunately, these implicit conversions come at a cost; they prevent these "
+"iterators from conforming to standard iterator conventions, and thus from "
+"being usable with standard algorithms and containers.  For example, they "
+"prevent the following code, where ``B`` is a ``BasicBlock``, from compiling:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2390
+msgid ""
+"Because of this, these implicit conversions may be removed some day, and "
+"``operator*`` changed to return a pointer instead of a reference."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2396
+msgid "Finding call sites: a slightly more complex example"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2398
+msgid ""
+"Say that you're writing a FunctionPass and would like to count all the "
+"locations in the entire module (that is, across every ``Function``) where a "
+"certain function (i.e., some ``Function *``) is already in scope.  As you'll "
+"learn later, you may want to use an ``InstVisitor`` to accomplish this in a "
+"much more straight-forward manner, but this example will allow us to explore "
+"how you'd do it if you didn't have ``InstVisitor`` around.  In pseudo-code, "
+"this is what we want to do:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2415
+msgid ""
+"And the actual code is (remember, because we're writing a ``FunctionPass``, "
+"our ``FunctionPass``-derived class simply has to override the "
+"``runOnFunction`` method):"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2448
+msgid "Treating calls and invokes the same way"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2450
+msgid ""
+"You may have noticed that the previous example was a bit oversimplified in "
+"that it did not deal with call sites generated by 'invoke' instructions.  In "
+"this, and in other situations, you may find that you want to treat "
+"``CallInst``\\ s and ``InvokeInst``\\ s the same way, even though their most-"
+"specific common base class is ``Instruction``, which includes lots of less "
+"closely-related things. For these cases, LLVM provides a handy wrapper class "
+"called ``CallSite`` (`doxygen <http://llvm.org/doxygen/classllvm_1_1CallSite."
+"html>`__) It is essentially a wrapper around an ``Instruction`` pointer, "
+"with some methods that provide functionality common to ``CallInst``\\ s and "
+"``InvokeInst``\\ s."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2460
+msgid ""
+"This class has \"value semantics\": it should be passed by value, not by "
+"reference and it should not be dynamically allocated or deallocated using "
+"``operator new`` or ``operator delete``.  It is efficiently copyable, "
+"assignable and constructable, with costs equivalents to that of a bare "
+"pointer.  If you look at its definition, it has only a single pointer member."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2469
+msgid "Iterating over def-use & use-def chains"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2471
+msgid ""
+"Frequently, we might have an instance of the ``Value`` class (`doxygen "
+"<http://llvm.org/doxygen/classllvm_1_1Value.html>`__) and we want to "
+"determine which ``User`` s use the ``Value``.  The list of all ``User``\\ s "
+"of a particular ``Value`` is called a *def-use* chain.  For example, let's "
+"say we have a ``Function*`` named ``F`` to a particular function ``foo``.  "
+"Finding all of the instructions that *use* ``foo`` is as simple as iterating "
+"over the *def-use* chain of ``F``:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2489
+msgid ""
+"Alternatively, it's common to have an instance of the ``User`` Class "
+"(`doxygen <http://llvm.org/doxygen/classllvm_1_1User.html>`__) and need to "
+"know what ``Value``\\ s are used by it.  The list of all ``Value``\\ s used "
+"by a ``User`` is known as a *use-def* chain.  Instances of class "
+"``Instruction`` are common ``User`` s, so we might want to iterate over all "
+"of the values that a particular instruction uses (that is, the operands of "
+"the particular ``Instruction``):"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2505
+msgid ""
+"Declaring objects as ``const`` is an important tool of enforcing mutation "
+"free algorithms (such as analyses, etc.).  For this purpose above iterators "
+"come in constant flavors as ``Value::const_use_iterator`` and ``Value::"
+"const_op_iterator``.  They automatically arise when calling ``use/"
+"op_begin()`` on ``const Value*``\\ s or ``const User*``\\ s respectively. "
+"Upon dereferencing, they return ``const Use*``\\ s.  Otherwise the above "
+"patterns remain unchanged."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2516
+msgid "Iterating over predecessors & successors of blocks"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2518
+msgid ""
+"Iterating over the predecessors and successors of a block is quite easy with "
+"the routines defined in ``\"llvm/IR/CFG.h\"``.  Just use code like this to "
+"iterate over all predecessors of BB:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2532
+msgid ""
+"Similarly, to iterate over successors use ``succ_iterator/succ_begin/"
+"succ_end``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2537
+msgid "Making simple changes"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2539
+msgid ""
+"There are some primitive transformation operations present in the LLVM "
+"infrastructure that are worth knowing about.  When performing "
+"transformations, it's fairly common to manipulate the contents of basic "
+"blocks.  This section describes some of the common methods for doing so and "
+"gives example code."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2547
+msgid "Creating and inserting new ``Instruction``\\ s"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2549
+msgid "*Instantiating Instructions*"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2551
+msgid ""
+"Creation of ``Instruction``\\ s is straight-forward: simply call the "
+"constructor for the kind of instruction to instantiate and provide the "
+"necessary parameters. For example, an ``AllocaInst`` only *requires* a "
+"(const-ptr-to) ``Type``.  Thus:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2559
+msgid ""
+"will create an ``AllocaInst`` instance that represents the allocation of one "
+"integer in the current stack frame, at run time.  Each ``Instruction`` "
+"subclass is likely to have varying default parameters which change the "
+"semantics of the instruction, so refer to the `doxygen documentation for the "
+"subclass of Instruction <http://llvm.org/doxygen/classllvm_1_1Instruction."
+"html>`_ that you're interested in instantiating."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2566
+msgid "*Naming values*"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2568
+msgid ""
+"It is very useful to name the values of instructions when you're able to, as "
+"this facilitates the debugging of your transformations.  If you end up "
+"looking at generated LLVM machine code, you definitely want to have logical "
+"names associated with the results of instructions!  By supplying a value for "
+"the ``Name`` (default) parameter of the ``Instruction`` constructor, you "
+"associate a logical name with the result of the instruction's execution at "
+"run time.  For example, say that I'm writing a transformation that "
+"dynamically allocates space for an integer on the stack, and that integer is "
+"going to be used as some kind of index by some other code.  To accomplish "
+"this, I place an ``AllocaInst`` at the first point in the first "
+"``BasicBlock`` of some ``Function``, and I'm intending to use it within the "
+"same ``Function``.  I might do:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2584
+msgid ""
+"where ``indexLoc`` is now the logical name of the instruction's execution "
+"value, which is a pointer to an integer on the run time stack."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2587
+msgid "*Inserting instructions*"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2589
+msgid ""
+"There are essentially three ways to insert an ``Instruction`` into an "
+"existing sequence of instructions that form a ``BasicBlock``:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2592
+msgid "Insertion into an explicit instruction list"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2594
+msgid ""
+"Given a ``BasicBlock* pb``, an ``Instruction* pi`` within that "
+"``BasicBlock``, and a newly-created instruction we wish to insert before "
+"``*pi``, we do the following:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2606
+msgid ""
+"Appending to the end of a ``BasicBlock`` is so common that the "
+"``Instruction`` class and ``Instruction``-derived classes provide "
+"constructors which take a pointer to a ``BasicBlock`` to be appended to.  "
+"For example code that looked like:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2618
+msgid "becomes:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2625
+msgid ""
+"which is much cleaner, especially if you are creating long instruction "
+"streams."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2628
+msgid "Insertion into an implicit instruction list"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2630
+msgid ""
+"``Instruction`` instances that are already in ``BasicBlock``\\ s are "
+"implicitly associated with an existing instruction list: the instruction "
+"list of the enclosing basic block.  Thus, we could have accomplished the "
+"same thing as the above code without being given a ``BasicBlock`` by doing:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2642
+msgid ""
+"In fact, this sequence of steps occurs so frequently that the "
+"``Instruction`` class and ``Instruction``-derived classes provide "
+"constructors which take (as a default parameter) a pointer to an "
+"``Instruction`` which the newly-created ``Instruction`` should precede.  "
+"That is, ``Instruction`` constructors are capable of inserting the newly-"
+"created instance into the ``BasicBlock`` of a provided instruction, "
+"immediately before that instruction.  Using an ``Instruction`` constructor "
+"with a ``insertBefore`` (default) parameter, the above code becomes:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2656
+msgid ""
+"which is much cleaner, especially if you're creating a lot of instructions "
+"and adding them to ``BasicBlock``\\ s."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2659
+msgid "Insertion using an instance of ``IRBuilder``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2661
+msgid ""
+"Inserting several ``Instruction``\\ s can be quite laborious using the "
+"previous methods. The ``IRBuilder`` is a convenience class that can be used "
+"to add several instructions to the end of a ``BasicBlock`` or before a "
+"particular ``Instruction``. It also supports constant folding and renaming "
+"named registers (see ``IRBuilder``'s template arguments)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2667
+msgid ""
+"The example below demonstrates a very simple use of the ``IRBuilder`` where "
+"three instructions are inserted before the instruction ``pi``. The first two "
+"instructions are Call instructions and third instruction multiplies the "
+"return value of the two calls."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2680
+msgid ""
+"The example below is similar to the above example except that the created "
+"``IRBuilder`` inserts instructions at the end of the ``BasicBlock`` ``pb``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2691
+msgid ""
+"See :doc:`tutorial/LangImpl03` for a practical use of the ``IRBuilder``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2697 ../../../ProgrammersManual.rst:2728
+msgid "Deleting Instructions"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2699
+msgid ""
+"Deleting an instruction from an existing sequence of instructions that form "
+"a BasicBlock_ is very straight-forward: just call the instruction's "
+"``eraseFromParent()`` method.  For example:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2708
+msgid ""
+"This unlinks the instruction from its containing basic block and deletes "
+"it.  If you'd just like to unlink the instruction from its containing basic "
+"block but not delete it, you can use the ``removeFromParent()`` method."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2715
+msgid "Replacing an Instruction with another Value"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2718
+msgid "Replacing individual instructions"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2720
+msgid ""
+"Including \"`llvm/Transforms/Utils/BasicBlockUtils.h <http://llvm.org/"
+"doxygen/BasicBlockUtils_8h-source.html>`_\" permits use of two very useful "
+"replace functions: ``ReplaceInstWithValue`` and ``ReplaceInstWithInst``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2730
+msgid "``ReplaceInstWithValue``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2732
+msgid ""
+"This function replaces all uses of a given instruction with a value, and "
+"then removes the original instruction.  The following example illustrates "
+"the replacement of the result of a particular ``AllocaInst`` that allocates "
+"memory for a single integer with a null pointer to an integer."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2745
+msgid "``ReplaceInstWithInst``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2747
+msgid ""
+"This function replaces a particular instruction with another instruction, "
+"inserting the new instruction into the basic block at the location where the "
+"old instruction was, and replacing any uses of the old instruction with the "
+"new instruction.  The following example illustrates the replacement of one "
+"``AllocaInst`` with another."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2763
+msgid "Replacing multiple uses of Users and Values"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2765
+msgid ""
+"You can use ``Value::replaceAllUsesWith`` and ``User::replaceUsesOfWith`` to "
+"change more than one use at a time.  See the doxygen documentation for the "
+"`Value Class <http://llvm.org/doxygen/classllvm_1_1Value.html>`_ and `User "
+"Class <http://llvm.org/doxygen/classllvm_1_1User.html>`_, respectively, for "
+"more information."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2774
+msgid "Deleting GlobalVariables"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2776
+msgid ""
+"Deleting a global variable from a module is just as easy as deleting an "
+"Instruction.  First, you must have a pointer to the global variable that you "
+"wish to delete.  You use this pointer to erase it from its parent, the "
+"module. For example:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2791
+msgid "How to Create Types"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2793
+msgid ""
+"In generating IR, you may need some complex types.  If you know these types "
+"statically, you can use ``TypeBuilder<...>::get()``, defined in ``llvm/"
+"Support/TypeBuilder.h``, to retrieve them.  ``TypeBuilder`` has two forms "
+"depending on whether you're building types for cross-compilation or native "
+"library use.  ``TypeBuilder<T, true>`` requires that ``T`` be independent of "
+"the host environment, meaning that it's built out of types from the ``llvm::"
+"types`` (`doxygen <http://llvm.org/doxygen/namespacellvm_1_1types.html>`__) "
+"namespace and pointers, functions, arrays, etc. built of those.  "
+"``TypeBuilder<T, false>`` additionally allows native C types whose size may "
+"depend on the host compiler. For example,"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2808
+msgid "is easier to read and write than the equivalent"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2816
+msgid ""
+"See the `class comment <http://llvm.org/doxygen/TypeBuilder_8h-source."
+"html#l00001>`_ for more details."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2822
+msgid "Threads and LLVM"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2824
+msgid ""
+"This section describes the interaction of the LLVM APIs with multithreading, "
+"both on the part of client applications, and in the JIT, in the hosted "
+"application."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2828
+msgid ""
+"Note that LLVM's support for multithreading is still relatively young.  Up "
+"through version 2.5, the execution of threaded hosted applications was "
+"supported, but not threaded client access to the APIs.  While this use case "
+"is now supported, clients *must* adhere to the guidelines specified below to "
+"ensure proper operation in multithreaded mode."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2834
+msgid ""
+"Note that, on Unix-like platforms, LLVM requires the presence of GCC's "
+"atomic intrinsics in order to support threaded operation.  If you need a "
+"multhreading-capable LLVM on a platform without a suitably modern system "
+"compiler, consider compiling LLVM and LLVM-GCC in single-threaded mode, and "
+"using the resultant compiler to build a copy of LLVM with multithreading "
+"support."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2844
+msgid "Ending Execution with ``llvm_shutdown()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2846
+msgid ""
+"When you are done using the LLVM APIs, you should call ``llvm_shutdown()`` "
+"to deallocate memory used for internal structures."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2852
+msgid "Lazy Initialization with ``ManagedStatic``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2854
+msgid ""
+"``ManagedStatic`` is a utility class in LLVM used to implement static "
+"initialization of static resources, such as the global type tables.  In a "
+"single-threaded environment, it implements a simple lazy initialization "
+"scheme. When LLVM is compiled with support for multi-threading, however, it "
+"uses double-checked locking to implement thread-safe lazy initialization."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2863
+msgid "Achieving Isolation with ``LLVMContext``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2865
+msgid ""
+"``LLVMContext`` is an opaque class in the LLVM API which clients can use to "
+"operate multiple, isolated instances of LLVM concurrently within the same "
+"address space.  For instance, in a hypothetical compile-server, the "
+"compilation of an individual translation unit is conceptually independent "
+"from all the others, and it would be desirable to be able to compile "
+"incoming translation units concurrently on independent server threads.  "
+"Fortunately, ``LLVMContext`` exists to enable just this kind of scenario!"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2873
+msgid ""
+"Conceptually, ``LLVMContext`` provides isolation.  Every LLVM entity "
+"(``Module``\\ s, ``Value``\\ s, ``Type``\\ s, ``Constant``\\ s, etc.) in "
+"LLVM's in-memory IR belongs to an ``LLVMContext``.  Entities in different "
+"contexts *cannot* interact with each other: ``Module``\\ s in different "
+"contexts cannot be linked together, ``Function``\\ s cannot be added to "
+"``Module``\\ s in different contexts, etc.  What this means is that is is "
+"safe to compile on multiple threads simultaneously, as long as no two "
+"threads operate on entities within the same context."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2882
+msgid ""
+"In practice, very few places in the API require the explicit specification "
+"of a ``LLVMContext``, other than the ``Type`` creation/lookup APIs.  Because "
+"every ``Type`` carries a reference to its owning context, most other "
+"entities can determine what context they belong to by looking at their own "
+"``Type``.  If you are adding new entities to LLVM IR, please try to maintain "
+"this interface design."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2892
+msgid "Threads and the JIT"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2894
+msgid ""
+"LLVM's \"eager\" JIT compiler is safe to use in threaded programs.  Multiple "
+"threads can call ``ExecutionEngine::getPointerToFunction()`` or "
+"``ExecutionEngine::runFunction()`` concurrently, and multiple threads can "
+"run code output by the JIT concurrently.  The user must still ensure that "
+"only one thread accesses IR in a given ``LLVMContext`` while another thread "
+"might be modifying it.  One way to do that is to always hold the JIT lock "
+"while accessing IR outside the JIT (the JIT *modifies* the IR by adding "
+"``CallbackVH``\\ s). Another way is to only call ``getPointerToFunction()`` "
+"from the ``LLVMContext``'s thread."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2904
+msgid ""
+"When the JIT is configured to compile lazily (using ``ExecutionEngine::"
+"DisableLazyCompilation(false)``), there is currently a `race condition "
+"<http://llvm.org/bugs/show_bug.cgi?id=5184>`_ in updating call sites after a "
+"function is lazily-jitted.  It's still possible to use the lazy JIT in a "
+"threaded program if you ensure that only one thread at a time can call any "
+"particular lazy stub and that the JIT lock guards any IR access, but we "
+"suggest using only the eager JIT in threaded programs."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2915
+msgid "Advanced Topics"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2917
+msgid ""
+"This section describes some of the advanced or obscure API's that most "
+"clients do not need to be aware of.  These API's tend manage the inner "
+"workings of the LLVM system, and only need to be accessed in unusual "
+"circumstances."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2924
+msgid "The ``ValueSymbolTable`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2926
+msgid ""
+"The ``ValueSymbolTable`` (`doxygen <http://llvm.org/doxygen/"
+"classllvm_1_1ValueSymbolTable.html>`__) class provides a symbol table that "
+"the :ref:`Function <c_Function>` and Module_ classes use for naming value "
+"definitions.  The symbol table can provide a name for any Value_."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2931
+msgid ""
+"Note that the ``SymbolTable`` class should not be directly accessed by most "
+"clients.  It should only be used when iteration over the symbol table names "
+"themselves are required, which is very special purpose.  Note that not all "
+"LLVM Value_\\ s have names, and those without names (i.e. they have an empty "
+"name) do not exist in the symbol table."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2937
+msgid ""
+"Symbol tables support iteration over the values in the symbol table with "
+"``begin/end/iterator`` and supports querying to see if a specific name is in "
+"the symbol table (with ``lookup``).  The ``ValueSymbolTable`` class exposes "
+"no public mutator methods, instead, simply call ``setName`` on a value, "
+"which will autoinsert it into the appropriate symbol table."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2946
+msgid "The ``User`` and owned ``Use`` classes' memory layout"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2948
+msgid ""
+"The ``User`` (`doxygen <http://llvm.org/doxygen/classllvm_1_1User.html>`__) "
+"class provides a basis for expressing the ownership of ``User`` towards "
+"other `Value instance <http://llvm.org/doxygen/classllvm_1_1Value.html>`_\\ "
+"s.  The ``Use`` (`doxygen <http://llvm.org/doxygen/classllvm_1_1Use."
+"html>`__) helper class is employed to do the bookkeeping and to facilitate "
+"*O(1)* addition and removal."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2958
+msgid "Interaction and relationship between ``User`` and ``Use`` objects"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2960
+msgid ""
+"A subclass of ``User`` can choose between incorporating its ``Use`` objects "
+"or refer to them out-of-line by means of a pointer.  A mixed variant (some "
+"``Use`` s inline others hung off) is impractical and breaks the invariant "
+"that the ``Use`` objects belonging to the same ``User`` form a contiguous "
+"array."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2965
+msgid "We have 2 different layouts in the ``User`` (sub)classes:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2967
+msgid "Layout a)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2969
+msgid ""
+"The ``Use`` object(s) are inside (resp. at fixed offset) of the ``User`` "
+"object and there are a fixed number of them."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2972
+msgid "Layout b)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2974
+msgid ""
+"The ``Use`` object(s) are referenced by a pointer to an array from the "
+"``User`` object and there may be a variable number of them."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2977
+msgid ""
+"As of v2.4 each layout still possesses a direct pointer to the start of the "
+"array of ``Use``\\ s.  Though not mandatory for layout a), we stick to this "
+"redundancy for the sake of simplicity.  The ``User`` object also stores the "
+"number of ``Use`` objects it has. (Theoretically this information can also "
+"be calculated given the scheme presented below.)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2983
+msgid ""
+"Special forms of allocation operators (``operator new``) enforce the "
+"following memory layouts:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2986
+msgid ""
+"Layout a) is modelled by prepending the ``User`` object by the ``Use[]`` "
+"array."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:2995
+msgid "Layout b) is modelled by pointing at the ``Use[]`` array."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3008
+msgid ""
+"*(In the above figures* '``P``' *stands for the* ``Use**`` *that is stored "
+"in each* ``Use`` *object in the member* ``Use::Prev`` *)*"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3014
+msgid "The waymarking algorithm"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3016
+msgid ""
+"Since the ``Use`` objects are deprived of the direct (back)pointer to their "
+"``User`` objects, there must be a fast and exact method to recover it.  This "
+"is accomplished by the following scheme:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3020
+msgid ""
+"A bit-encoding in the 2 LSBits (least significant bits) of the ``Use::Prev`` "
+"allows to find the start of the ``User`` object:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3023
+msgid "``00`` --- binary digit 0"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3025
+msgid "``01`` --- binary digit 1"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3027
+msgid "``10`` --- stop and calculate (``s``)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3029
+msgid "``11`` --- full stop (``S``)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3031
+msgid ""
+"Given a ``Use*``, all we have to do is to walk till we get a stop and we "
+"either have a ``User`` immediately behind or we have to walk to the next "
+"stop picking up digits and calculating the offset:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3047
+msgid ""
+"Only the significant number of bits need to be stored between the stops, so "
+"that the *worst case is 20 memory accesses* when there are 1000 ``Use`` "
+"objects associated with a ``User``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3054
+msgid "Reference implementation"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3056
+msgid "The following literate Haskell fragment demonstrates the concept:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3078
+msgid "Printing <test> gives: ``\"1s100000s11010s10100s1111s1010s110s11s1S\"``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3080
+msgid ""
+"The reverse algorithm computes the length of the string just by examining a "
+"certain prefix:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3095
+msgid "Now, as expected, printing <pref test> gives ``40``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3097
+msgid "We can *quickCheck* this with following property:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3108
+msgid "As expected <quickCheck identityProp> gives:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3115
+msgid "Let's be a bit more exhaustive:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3123
+msgid "And here is the result of <deepCheck identityProp>:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3133
+msgid "Tagging considerations"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3135
+msgid ""
+"To maintain the invariant that the 2 LSBits of each ``Use**`` in ``Use`` "
+"never change after being set up, setters of ``Use::Prev`` must re-tag the "
+"new ``Use**`` on every modification.  Accordingly getters must strip the tag "
+"bits."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3139
+msgid ""
+"For layout b) instead of the ``User`` we find a pointer (``User*`` with "
+"LSBit set).  Following this pointer brings us to the ``User``.  A portable "
+"trick ensures that the first bytes of ``User`` (if interpreted as a pointer) "
+"never has the LSBit set. (Portability is relying on the fact that all known "
+"compilers place the ``vptr`` in the first word of the instances.)"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3148
+msgid "Designing Type Hiercharies and Polymorphic Interfaces"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3150
+msgid ""
+"There are two different design patterns that tend to result in the use of "
+"virtual dispatch for methods in a type hierarchy in C++ programs. The first "
+"is a genuine type hierarchy where different types in the hierarchy model a "
+"specific subset of the functionality and semantics, and these types nest "
+"strictly within each other. Good examples of this can be seen in the "
+"``Value`` or ``Type`` type hierarchies."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3157
+msgid ""
+"A second is the desire to dispatch dynamically across a collection of "
+"polymorphic interface implementations. This latter use case can be modeled "
+"with virtual dispatch and inheritance by defining an abstract interface base "
+"class which all implementations derive from and override. However, this "
+"implementation strategy forces an **\"is-a\"** relationship to exist that is "
+"not actually meaningful. There is often not some nested hierarchy of useful "
+"generalizations which code might interact with and move up and down. "
+"Instead, there is a singular interface which is dispatched across a range of "
+"implementations."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3167
+msgid ""
+"The preferred implementation strategy for the second use case is that of "
+"generic programming (sometimes called \"compile-time duck typing\" or "
+"\"static polymorphism\"). For example, a template over some type parameter "
+"``T`` can be instantiated across any particular implementation that conforms "
+"to the interface or *concept*. A good example here is the highly generic "
+"properties of any type which models a node in a directed graph. LLVM models "
+"these primarily through templates and generic programming. Such templates "
+"include the ``LoopInfoBase`` and ``DominatorTreeBase``. When this type of "
+"polymorphism truly needs **dynamic** dispatch you can generalize it using a "
+"technique called *concept-based polymorphism*. This pattern emulates the "
+"interfaces and behaviors of templates using a very limited form of virtual "
+"dispatch for type erasure inside its implementation. You can find examples "
+"of this technique in the ``PassManager.h`` system, and there is a more "
+"detailed introduction to it by Sean Parent in several of his talks and "
+"papers:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3182
+msgid ""
+"`Inheritance Is The Base Class of Evil <http://channel9.msdn.com/Events/"
+"GoingNative/2013/Inheritance-Is-The-Base-Class-of-Evil>`_ - The GoingNative "
+"2013 talk describing this technique, and probably the best place to start."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3186
+msgid ""
+"`Value Semantics and Concepts-based Polymorphism <http://www.youtube.com/"
+"watch?v=_BpMYeUFXv8>`_ - The C++Now! 2012 talk describing this technique in "
+"more detail."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3189
+msgid ""
+"`Sean Parent's Papers and Presentations <http://github.com/sean-parent/sean-"
+"parent.github.com/wiki/Papers-and-Presentations>`_ - A Github project full "
+"of links to slides, video, and sometimes code."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3193
+msgid ""
+"When deciding between creating a type hierarchy (with either tagged or "
+"virtual dispatch) and using templates or concepts-based polymorphism, "
+"consider whether there is some refinement of an abstract base class which is "
+"a semantically meaningful type on an interface boundary. If anything more "
+"refined than the root abstract interface is meaningless to talk about as a "
+"partial extension of the semantic model, then your use case likely fits "
+"better with polymorphism and you should avoid using virtual dispatch. "
+"However, there may be some exigent circumstances that require one technique "
+"or the other to be used."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3202
+msgid ""
+"If you do need to introduce a type hierarchy, we prefer to use explicitly "
+"closed type hierarchies with manual tagged dispatch and/or RTTI rather than "
+"the open inheritance model and virtual dispatch that is more common in C++ "
+"code. This is because LLVM rarely encourages library consumers to extend its "
+"core types, and leverages the closed and tag-dispatched nature of its "
+"hierarchies to generate significantly more efficient code. We have also "
+"found that a large amount of our usage of type hierarchies fits better with "
+"tag-based pattern matching rather than dynamic dispatch across a common "
+"interface. Within LLVM we have built custom helpers to facilitate this "
+"design. See this document's section on :ref:`isa and dyn_cast <isa>` and "
+"our :doc:`detailed document <HowToSetUpLLVMStyleRTTI>` which describes how "
+"you can implement this pattern for use with the LLVM helpers."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3218
+msgid "ABI Breaking Checks"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3220
+msgid ""
+"Checks and asserts that alter the LLVM C++ ABI are predicated on the "
+"preprocessor symbol `LLVM_ENABLE_ABI_BREAKING_CHECKS` -- LLVM libraries "
+"built with `LLVM_ENABLE_ABI_BREAKING_CHECKS` are not ABI compatible LLVM "
+"libraries built without it defined.  By default, turning on assertions also "
+"turns on `LLVM_ENABLE_ABI_BREAKING_CHECKS` so a default +Asserts build is "
+"not ABI compatible with a default -Asserts build.  Clients that want ABI "
+"compatibility between +Asserts and -Asserts builds should use the CMake or "
+"autoconf build systems to set `LLVM_ENABLE_ABI_BREAKING_CHECKS` "
+"independently of `LLVM_ENABLE_ASSERTIONS`."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3234
+msgid "The Core LLVM Class Hierarchy Reference"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3236
+msgid "``#include \"llvm/IR/Type.h\"``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3238
+msgid "header source: `Type.h <http://llvm.org/doxygen/Type_8h-source.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3240
+msgid ""
+"doxygen info: `Type Clases <http://llvm.org/doxygen/classllvm_1_1Type.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3242
+msgid ""
+"The Core LLVM classes are the primary means of representing the program "
+"being inspected or transformed.  The core LLVM classes are defined in header "
+"files in the ``include/llvm/IR`` directory, and implemented in the ``lib/"
+"IR`` directory. It's worth noting that, for historical reasons, this library "
+"is called ``libLLVMCore.so``, not ``libLLVMIR.so`` as you might expect."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3251
+msgid "The Type class and Derived Types"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3253
+msgid ""
+"``Type`` is a superclass of all type classes.  Every ``Value`` has a "
+"``Type``. ``Type`` cannot be instantiated directly but only through its "
+"subclasses. Certain primitive types (``VoidType``, ``LabelType``, "
+"``FloatType`` and ``DoubleType``) have hidden subclasses.  They are hidden "
+"because they offer no useful functionality beyond what the ``Type`` class "
+"offers except to distinguish themselves from other subclasses of ``Type``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3260
+msgid ""
+"All other types are subclasses of ``DerivedType``.  Types can be named, but "
+"this is not a requirement.  There exists exactly one instance of a given "
+"shape at any one time.  This allows type equality to be performed with "
+"address equality of the Type Instance.  That is, given two ``Type*`` values, "
+"the types are identical if the pointers are identical."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3269
+msgid "Important Public Methods"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3271
+msgid "``bool isIntegerTy() const``: Returns true for any integer type."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3273
+msgid ""
+"``bool isFloatingPointTy()``: Return true if this is one of the five "
+"floating point types."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3276
+msgid ""
+"``bool isSized()``: Return true if the type has known size.  Things that "
+"don't have a size are abstract types, labels and void."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3282
+msgid "Important Derived Types"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3292
+msgid "``IntegerType``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3285
+msgid ""
+"Subclass of DerivedType that represents integer types of any bit width.  Any "
+"bit width between ``IntegerType::MIN_INT_BITS`` (1) and ``IntegerType::"
+"MAX_INT_BITS`` (~8 million) can be represented."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3289
+msgid ""
+"``static const IntegerType* get(unsigned NumBits)``: get an integer type of "
+"a specific bit width."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3292
+msgid "``unsigned getBitWidth() const``: Get the bit width of an integer type."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3301
+msgid "``SequentialType``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3295
+msgid "This is subclassed by ArrayType and VectorType."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3297
+msgid ""
+"``const Type * getElementType() const``: Returns the type of each of the "
+"elements in the sequential type."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3300
+msgid ""
+"``uint64_t getNumElements() const``: Returns the number of elements in the "
+"sequential type."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3305
+msgid "``ArrayType``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3304
+msgid ""
+"This is a subclass of SequentialType and defines the interface for array "
+"types."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3308
+msgid "``PointerType``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3308
+msgid "Subclass of Type for pointer types."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3314
+msgid "``VectorType``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3311
+msgid ""
+"Subclass of SequentialType for vector types.  A vector type is similar to an "
+"ArrayType but is distinguished because it is a first class type whereas "
+"ArrayType is not.  Vector types are used for vector operations and are "
+"usually small vectors of an integer or floating point type."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3317
+msgid "``StructType``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3317
+msgid "Subclass of DerivedTypes for struct types."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3333
+msgid "``FunctionType``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3322
+msgid "Subclass of DerivedTypes for function types."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3324
+msgid "``bool isVarArg() const``: Returns true if it's a vararg function."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3326
+msgid ""
+"``const Type * getReturnType() const``: Returns the return type of the "
+"function."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3329
+msgid ""
+"``const Type * getParamType (unsigned i)``: Returns the type of the ith "
+"parameter."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3332
+msgid ""
+"``const unsigned getNumParams() const``: Returns the number of formal "
+"parameters."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3338
+msgid "The ``Module`` class"
+msgstr "``Module`` 類別"
+
+#: ../../../ProgrammersManual.rst:3340
+msgid "``#include \"llvm/IR/Module.h\"``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3342
+msgid ""
+"header source: `Module.h <http://llvm.org/doxygen/Module_8h-source.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3344
+msgid ""
+"doxygen info: `Module Class <http://llvm.org/doxygen/classllvm_1_1Module."
+"html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3346
+msgid ""
+"The ``Module`` class represents the top level structure present in LLVM "
+"programs.  An LLVM module is effectively either a translation unit of the "
+"original program or a combination of several translation units merged by the "
+"linker.  The ``Module`` class keeps track of a list of :ref:`Function "
+"<c_Function>`\\ s, a list of GlobalVariable_\\ s, and a SymbolTable_. "
+"Additionally, it contains a few helpful member functions that try to make "
+"common operations easy."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3357
+msgid "Important Public Members of the ``Module`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3359
+msgid "``Module::Module(std::string name = \"\")``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3361
+msgid ""
+"Constructing a Module_ is easy.  You can optionally provide a name for it "
+"(probably based on the name of the translation unit)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Module::iterator`` - Typedef for function list iterator"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Module::const_iterator`` - Typedef for const_iterator."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``begin()``, ``end()``, ``size()``, ``empty()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3368
+msgid ""
+"These are forwarding methods that make it easy to access the contents of a "
+"``Module`` object's :ref:`Function <c_Function>` list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3371
+msgid "``Module::FunctionListType &getFunctionList()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3373
+msgid ""
+"Returns the list of :ref:`Function <c_Function>`\\ s.  This is necessary to "
+"use when you need to update the list or perform a complex action that "
+"doesn't have a forwarding method."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Module::global_iterator`` - Typedef for global variable list iterator"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Module::const_global_iterator`` - Typedef for const_iterator."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid ""
+"``global_begin()``, ``global_end()``, ``global_size()``, ``global_empty()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3383
+msgid ""
+"These are forwarding methods that make it easy to access the contents of a "
+"``Module`` object's GlobalVariable_ list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3386
+msgid "``Module::GlobalListType &getGlobalList()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3388
+msgid ""
+"Returns the list of GlobalVariable_\\ s.  This is necessary to use when you "
+"need to update the list or perform a complex action that doesn't have a "
+"forwarding method."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3394 ../../../ProgrammersManual.rst:3870
+msgid "``SymbolTable *getSymbolTable()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3396
+msgid "Return a reference to the SymbolTable_ for this ``Module``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3400
+msgid "``Function *getFunction(StringRef Name) const``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3402
+msgid ""
+"Look up the specified function in the ``Module`` SymbolTable_.  If it does "
+"not exist, return ``null``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3405
+msgid ""
+"``Function *getOrInsertFunction(const std::string &Name, const FunctionType "
+"*T)``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3408
+msgid ""
+"Look up the specified function in the ``Module`` SymbolTable_.  If it does "
+"not exist, add an external declaration for the function and return it."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3411
+msgid "``std::string getTypeName(const Type *Ty)``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3413
+msgid ""
+"If there is at least one entry in the SymbolTable_ for the specified Type_, "
+"return it.  Otherwise return the empty string."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3416
+msgid "``bool addTypeName(const std::string &Name, const Type *Ty)``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3418
+msgid ""
+"Insert an entry in the SymbolTable_ mapping ``Name`` to ``Ty``.  If there is "
+"already an entry for this name, true is returned and the SymbolTable_ is not "
+"modified."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3425
+msgid "The ``Value`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3427
+msgid "``#include \"llvm/IR/Value.h\"``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3429
+msgid ""
+"header source: `Value.h <http://llvm.org/doxygen/Value_8h-source.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3431
+msgid ""
+"doxygen info: `Value Class <http://llvm.org/doxygen/classllvm_1_1Value."
+"html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3433
+msgid ""
+"The ``Value`` class is the most important class in the LLVM Source base.  It "
+"represents a typed value that may be used (among other things) as an operand "
+"to an instruction.  There are many different types of ``Value``\\ s, such as "
+"Constant_\\ s, Argument_\\ s.  Even Instruction_\\ s and :ref:`Function "
+"<c_Function>`\\ s are ``Value``\\ s."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3439
+msgid ""
+"A particular ``Value`` may be used many times in the LLVM representation for "
+"a program.  For example, an incoming argument to a function (represented "
+"with an instance of the Argument_ class) is \"used\" by every instruction in "
+"the function that references the argument.  To keep track of this "
+"relationship, the ``Value`` class keeps a list of all of the ``User``\\ s "
+"that is using it (the User_ class is a base class for all nodes in the LLVM "
+"graph that can refer to ``Value``\\ s). This use list is how LLVM represents "
+"def-use information in the program, and is accessible through the ``use_*`` "
+"methods, shown below."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3448
+msgid ""
+"Because LLVM is a typed representation, every LLVM ``Value`` is typed, and "
+"this Type_ is available through the ``getType()`` method.  In addition, all "
+"LLVM values can be named.  The \"name\" of the ``Value`` is a symbolic "
+"string printed in the LLVM code:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3459
+msgid ""
+"The name of this instruction is \"foo\". **NOTE** that the name of any value "
+"may be missing (an empty string), so names should **ONLY** be used for "
+"debugging (making the source code easier to read, debugging printouts), they "
+"should not be used to keep track of values or map between them.  For this "
+"purpose, use a ``std::map`` of pointers to the ``Value`` itself instead."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3465
+msgid ""
+"One important aspect of LLVM is that there is no distinction between an SSA "
+"variable and the operation that produces it.  Because of this, any reference "
+"to the value produced by an instruction (or the value available as an "
+"incoming argument, for example) is represented as a direct pointer to the "
+"instance of the class that represents this value.  Although this may take "
+"some getting used to, it simplifies the representation and makes it easier "
+"to manipulate."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3475
+msgid "Important Public Members of the ``Value`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Value::use_iterator`` - Typedef for iterator over the use-list"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid ""
+"``Value::const_use_iterator`` - Typedef for const_iterator over the use-list"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``unsigned use_size()`` - Returns the number of users of the value."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``bool use_empty()`` - Returns true if there are no users."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid ""
+"``use_iterator use_begin()`` - Get an iterator to the start of the use-list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid ""
+"``use_iterator use_end()`` - Get an iterator to the end of the use-list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``User *use_back()`` - Returns the last element in the list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3487
+msgid ""
+"These methods are the interface to access the def-use information in LLVM. "
+"As with all other iterators in LLVM, the naming conventions follow the "
+"conventions defined by the STL_."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3491
+msgid "``Type *getType() const`` This method returns the Type of the Value."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``bool hasName() const``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``std::string getName() const``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``void setName(const std::string &Name)``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3498
+msgid ""
+"This family of methods is used to access and assign a name to a ``Value``, "
+"be aware of the :ref:`precaution above <nameWarning>`."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3501
+msgid "``void replaceAllUsesWith(Value *V)``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3503
+msgid ""
+"This method traverses the use list of a ``Value`` changing all User_\\ s of "
+"the current value to refer to \"``V``\" instead.  For example, if you detect "
+"that an instruction always produces a constant value (for example through "
+"constant folding), you can replace all uses of the instruction with the "
+"constant like this:"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3516
+msgid "The ``User`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3518
+msgid "``#include \"llvm/IR/User.h\"``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3520
+msgid "header source: `User.h <http://llvm.org/doxygen/User_8h-source.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3522
+msgid ""
+"doxygen info: `User Class <http://llvm.org/doxygen/classllvm_1_1User.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3524 ../../../ProgrammersManual.rst:3945
+msgid "Superclass: Value_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3526
+msgid ""
+"The ``User`` class is the common base class of all LLVM nodes that may refer "
+"to ``Value``\\ s.  It exposes a list of \"Operands\" that are all of the "
+"``Value``\\ s that the User is referring to.  The ``User`` class itself is a "
+"subclass of ``Value``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3531
+msgid ""
+"The operands of a ``User`` point directly to the LLVM ``Value`` that it "
+"refers to.  Because LLVM uses Static Single Assignment (SSA) form, there can "
+"only be one definition referred to, allowing this direct connection.  This "
+"connection provides the use-def information in LLVM."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3539
+msgid "Important Public Members of the ``User`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3541
+msgid ""
+"The ``User`` class exposes the operand list in two ways: through an index "
+"access interface and through an iterator based interface."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Value *getOperand(unsigned i)``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``unsigned getNumOperands()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3547
+msgid ""
+"These two methods expose the operands of the ``User`` in a convenient form "
+"for direct access."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``User::op_iterator`` - Typedef for iterator over the operand list"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid ""
+"``op_iterator op_begin()`` - Get an iterator to the start of the operand "
+"list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid ""
+"``op_iterator op_end()`` - Get an iterator to the end of the operand list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3555
+msgid ""
+"Together, these methods make up the iterator based interface to the operands "
+"of a ``User``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3562
+msgid "The ``Instruction`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3564
+msgid "``#include \"llvm/IR/Instruction.h\"``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3566
+msgid ""
+"header source: `Instruction.h <http://llvm.org/doxygen/Instruction_8h-source."
+"html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3569
+msgid ""
+"doxygen info: `Instruction Class <http://llvm.org/doxygen/"
+"classllvm_1_1Instruction.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3572
+msgid "Superclasses: User_, Value_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3574
+msgid ""
+"The ``Instruction`` class is the common base class for all LLVM "
+"instructions. It provides only a few methods, but is a very commonly used "
+"class.  The primary data tracked by the ``Instruction`` class itself is the "
+"opcode (instruction type) and the parent BasicBlock_ the ``Instruction`` is "
+"embedded into.  To represent a specific type of instruction, one of many "
+"subclasses of ``Instruction`` are used."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3581
+msgid ""
+"Because the ``Instruction`` class subclasses the User_ class, its operands "
+"can be accessed in the same way as for other ``User``\\ s (with the "
+"``getOperand()``/``getNumOperands()`` and ``op_begin()``/``op_end()`` "
+"methods). An important file for the ``Instruction`` class is the ``llvm/"
+"Instruction.def`` file.  This file contains some meta-data about the various "
+"different types of instructions in LLVM.  It describes the enum values that "
+"are used as opcodes (for example ``Instruction::Add`` and ``Instruction::"
+"ICmp``), as well as the concrete sub-classes of ``Instruction`` that "
+"implement the instruction (for example BinaryOperator_ and CmpInst_).  "
+"Unfortunately, the use of macros in this file confuses doxygen, so these "
+"enum values don't show up correctly in the `doxygen output <http://llvm.org/"
+"doxygen/classllvm_1_1Instruction.html>`_."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3596
+msgid "Important Subclasses of the ``Instruction`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3600
+msgid "``BinaryOperator``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3602
+msgid ""
+"This subclasses represents all two operand instructions whose operands must "
+"be the same type, except for the comparison instructions."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3607
+msgid ""
+"``CastInst`` This subclass is the parent of the 12 casting instructions.  It "
+"provides common operations on cast instructions."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3613
+msgid "``CmpInst``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3615
+msgid ""
+"This subclass respresents the two comparison instructions, `ICmpInst "
+"<LangRef.html#i_icmp>`_ (integer opreands), and `FCmpInst <LangRef."
+"html#i_fcmp>`_ (floating point operands)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3621
+msgid "``TerminatorInst``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3623
+msgid ""
+"This subclass is the parent of all terminator instructions (those which can "
+"terminate a block)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3629
+msgid "Important Public Members of the ``Instruction`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3631
+msgid "``BasicBlock *getParent()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3633
+msgid "Returns the BasicBlock_ that this ``Instruction`` is embedded into."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3636
+msgid "``bool mayWriteToMemory()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3638
+msgid ""
+"Returns true if the instruction writes to memory, i.e. it is a ``call``, "
+"``free``, ``invoke``, or ``store``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3641
+msgid "``unsigned getOpcode()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3643
+msgid "Returns the opcode for the ``Instruction``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3645
+msgid "``Instruction *clone() const``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3647
+msgid ""
+"Returns another instance of the specified instruction, identical in all ways "
+"to the original except that the instruction has no parent (i.e. it's not "
+"embedded into a BasicBlock_), and it has no name."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3654
+msgid "The ``Constant`` class and subclasses"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3656
+msgid ""
+"Constant represents a base class for different types of constants.  It is "
+"subclassed by ConstantInt, ConstantArray, etc. for representing the various "
+"types of Constants.  GlobalValue_ is also a subclass, which represents the "
+"address of a global variable or function."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3664
+msgid "Important Subclasses of Constant"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3666
+msgid ""
+"ConstantInt : This subclass of Constant represents an integer constant of "
+"any width."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3669
+msgid ""
+"``const APInt& getValue() const``: Returns the underlying value of this "
+"constant, an APInt value."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3672
+msgid ""
+"``int64_t getSExtValue() const``: Converts the underlying APInt value to an "
+"int64_t via sign extension.  If the value (not the bit width) of the APInt "
+"is too large to fit in an int64_t, an assertion will result.  For this "
+"reason, use of this method is discouraged."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3677
+msgid ""
+"``uint64_t getZExtValue() const``: Converts the underlying APInt value to a "
+"uint64_t via zero extension.  IF the value (not the bit width) of the APInt "
+"is too large to fit in a uint64_t, an assertion will result.  For this "
+"reason, use of this method is discouraged."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3682
+msgid ""
+"``static ConstantInt* get(const APInt& Val)``: Returns the ConstantInt "
+"object that represents the value provided by ``Val``.  The type is implied "
+"as the IntegerType that corresponds to the bit width of ``Val``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3686
+msgid ""
+"``static ConstantInt* get(const Type *Ty, uint64_t Val)``: Returns the "
+"ConstantInt object that represents the value provided by ``Val`` for integer "
+"type ``Ty``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3690
+msgid "ConstantFP : This class represents a floating point constant."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3692
+msgid ""
+"``double getValue() const``: Returns the underlying value of this constant."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3694
+msgid "ConstantArray : This represents a constant array."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3696 ../../../ProgrammersManual.rst:3701
+msgid ""
+"``const std::vector<Use> &getValues() const``: Returns a vector of component "
+"constants that makeup this array."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3699
+msgid "ConstantStruct : This represents a constant struct."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3704
+msgid ""
+"GlobalValue : This represents either a global variable or a function.  In "
+"either case, the value is a constant fixed address (after linking)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3710
+msgid "The ``GlobalValue`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3712
+msgid "``#include \"llvm/IR/GlobalValue.h\"``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3714
+msgid ""
+"header source: `GlobalValue.h <http://llvm.org/doxygen/GlobalValue_8h-source."
+"html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3717
+msgid ""
+"doxygen info: `GlobalValue Class <http://llvm.org/doxygen/"
+"classllvm_1_1GlobalValue.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3720
+msgid "Superclasses: Constant_, User_, Value_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3722
+msgid ""
+"Global values ( GlobalVariable_\\ s or :ref:`Function <c_Function>`\\ s) are "
+"the only LLVM values that are visible in the bodies of all :ref:`Function "
+"<c_Function>`\\ s.  Because they are visible at global scope, they are also "
+"subject to linking with other globals defined in different translation "
+"units. To control the linking process, ``GlobalValue``\\ s know their "
+"linkage rules. Specifically, ``GlobalValue``\\ s know whether they have "
+"internal or external linkage, as defined by the ``LinkageTypes`` enumeration."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3730
+msgid ""
+"If a ``GlobalValue`` has internal linkage (equivalent to being ``static`` in "
+"C), it is not visible to code outside the current translation unit, and does "
+"not participate in linking.  If it has external linkage, it is visible to "
+"external code, and does participate in linking.  In addition to linkage "
+"information, ``GlobalValue``\\ s keep track of which Module_ they are "
+"currently part of."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3736
+msgid ""
+"Because ``GlobalValue``\\ s are memory objects, they are always referred to "
+"by their **address**.  As such, the Type_ of a global is always a pointer to "
+"its contents.  It is important to remember this when using the "
+"``GetElementPtrInst`` instruction because this pointer must be dereferenced "
+"first.  For example, if you have a ``GlobalVariable`` (a subclass of "
+"``GlobalValue)`` that is an array of 24 ints, type ``[24 x i32]``, then the "
+"``GlobalVariable`` is a pointer to that array.  Although the address of the "
+"first element of this array and the value of the ``GlobalVariable`` are the "
+"same, they have different types.  The ``GlobalVariable``'s type is ``[24 x "
+"i32]``.  The first element's type is ``i32.`` Because of this, accessing a "
+"global value requires you to dereference the pointer with "
+"``GetElementPtrInst`` first, then its elements can be accessed. This is "
+"explained in the `LLVM Language Reference Manual <LangRef.html#globalvars>`_."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3753
+msgid "Important Public Members of the ``GlobalValue`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``bool hasInternalLinkage() const``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``bool hasExternalLinkage() const``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``void setInternalLinkage(bool HasInternalLinkage)``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3759
+msgid ""
+"These methods manipulate the linkage characteristics of the ``GlobalValue``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3761
+msgid "``Module *getParent()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3763
+msgid ""
+"This returns the Module_ that the GlobalValue is currently embedded into."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3769
+msgid "The ``Function`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3771
+msgid "``#include \"llvm/IR/Function.h\"``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3773
+msgid ""
+"header source: `Function.h <http://llvm.org/doxygen/Function_8h-source."
+"html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3775
+msgid ""
+"doxygen info: `Function Class <http://llvm.org/doxygen/classllvm_1_1Function."
+"html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3778 ../../../ProgrammersManual.rst:3887
+msgid "Superclasses: GlobalValue_, Constant_, User_, Value_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3780
+msgid ""
+"The ``Function`` class represents a single procedure in LLVM.  It is "
+"actually one of the more complex classes in the LLVM hierarchy because it "
+"must keep track of a large amount of data.  The ``Function`` class keeps "
+"track of a list of BasicBlock_\\ s, a list of formal Argument_\\ s, and a "
+"SymbolTable_."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3785
+msgid ""
+"The list of BasicBlock_\\ s is the most commonly used part of ``Function`` "
+"objects.  The list imposes an implicit ordering of the blocks in the "
+"function, which indicate how the code will be laid out by the backend.  "
+"Additionally, the first BasicBlock_ is the implicit entry node for the "
+"``Function``.  It is not legal in LLVM to explicitly branch to this initial "
+"block.  There are no implicit exit nodes, and in fact there may be multiple "
+"exit nodes from a single ``Function``.  If the BasicBlock_ list is empty, "
+"this indicates that the ``Function`` is actually a function declaration: the "
+"actual body of the function hasn't been linked in yet."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3795
+msgid ""
+"In addition to a list of BasicBlock_\\ s, the ``Function`` class also keeps "
+"track of the list of formal Argument_\\ s that the function receives.  This "
+"container manages the lifetime of the Argument_ nodes, just like the "
+"BasicBlock_ list does for the BasicBlock_\\ s."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3800
+msgid ""
+"The SymbolTable_ is a very rarely used LLVM feature that is only used when "
+"you have to look up a value by name.  Aside from that, the SymbolTable_ is "
+"used internally to make sure that there are not conflicts between the names "
+"of Instruction_\\ s, BasicBlock_\\ s, or Argument_\\ s in the function body."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3805
+msgid ""
+"Note that ``Function`` is a GlobalValue_ and therefore also a Constant_.  "
+"The value of the function is its address (after linking) which is guaranteed "
+"to be constant."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3812
+msgid "Important Public Members of the ``Function``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3814
+msgid ""
+"``Function(const FunctionType *Ty, LinkageTypes Linkage, const std::string "
+"&N = \"\", Module* Parent = 0)``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3817
+msgid ""
+"Constructor used when you need to create new ``Function``\\ s to add the "
+"program.  The constructor must specify the type of the function to create "
+"and what type of linkage the function should have.  The FunctionType_ "
+"argument specifies the formal arguments and return value for the function.  "
+"The same FunctionType_ value can be used to create multiple functions.  The "
+"``Parent`` argument specifies the Module in which the function is defined.  "
+"If this argument is provided, the function will automatically be inserted "
+"into that module's list of functions."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3826
+msgid "``bool isDeclaration()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3828
+msgid ""
+"Return whether or not the ``Function`` has a body defined.  If the function "
+"is \"external\", it does not have a body, and thus must be resolved by "
+"linking with a function defined in a different translation unit."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Function::iterator`` - Typedef for basic block list iterator"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Function::const_iterator`` - Typedef for const_iterator."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3836
+msgid ""
+"These are forwarding methods that make it easy to access the contents of a "
+"``Function`` object's BasicBlock_ list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3839
+msgid "``Function::BasicBlockListType &getBasicBlockList()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3841
+msgid ""
+"Returns the list of BasicBlock_\\ s.  This is necessary to use when you need "
+"to update the list or perform a complex action that doesn't have a "
+"forwarding method."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Function::arg_iterator`` - Typedef for the argument list iterator"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Function::const_arg_iterator`` - Typedef for const_iterator."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``arg_begin()``, ``arg_end()``, ``arg_size()``, ``arg_empty()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3849
+msgid ""
+"These are forwarding methods that make it easy to access the contents of a "
+"``Function`` object's Argument_ list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3852
+msgid "``Function::ArgumentListType &getArgumentList()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3854
+msgid ""
+"Returns the list of Argument_.  This is necessary to use when you need to "
+"update the list or perform a complex action that doesn't have a forwarding "
+"method."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3858
+msgid "``BasicBlock &getEntryBlock()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3860
+msgid ""
+"Returns the entry ``BasicBlock`` for the function.  Because the entry block "
+"for the function is always the first block, this returns the first block of "
+"the ``Function``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``Type *getReturnType()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``FunctionType *getFunctionType()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3867
+msgid ""
+"This traverses the Type_ of the ``Function`` and returns the return type of "
+"the function, or the FunctionType_ of the actual function."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3872
+msgid "Return a pointer to the SymbolTable_ for this ``Function``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3877
+msgid "The ``GlobalVariable`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3879
+msgid "``#include \"llvm/IR/GlobalVariable.h\"``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3881
+msgid ""
+"header source: `GlobalVariable.h <http://llvm.org/doxygen/GlobalVariable_8h-"
+"source.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3884
+msgid ""
+"doxygen info: `GlobalVariable Class <http://llvm.org/doxygen/"
+"classllvm_1_1GlobalVariable.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3889
+msgid ""
+"Global variables are represented with the (surprise surprise) "
+"``GlobalVariable`` class.  Like functions, ``GlobalVariable``\\ s are also "
+"subclasses of GlobalValue_, and as such are always referenced by their "
+"address (global values must live in memory, so their \"name\" refers to "
+"their constant address).  See GlobalValue_ for more on this.  Global "
+"variables may have an initial value (which must be a Constant_), and if they "
+"have an initializer, they may be marked as \"constant\" themselves "
+"(indicating that their contents never change at runtime)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3901
+msgid "Important Public Members of the ``GlobalVariable`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3903
+msgid ""
+"``GlobalVariable(const Type *Ty, bool isConstant, LinkageTypes &Linkage, "
+"Constant *Initializer = 0, const std::string &Name = \"\", Module* Parent = "
+"0)``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3906
+msgid ""
+"Create a new global variable of the specified type.  If ``isConstant`` is "
+"true then the global variable will be marked as unchanging for the program.  "
+"The Linkage parameter specifies the type of linkage (internal, external, "
+"weak, linkonce, appending) for the variable.  If the linkage is "
+"InternalLinkage, WeakAnyLinkage, WeakODRLinkage, LinkOnceAnyLinkage or "
+"LinkOnceODRLinkage, then the resultant global variable will have internal "
+"linkage.  AppendingLinkage concatenates together all instances (in different "
+"translation units) of the variable into a single variable but is only "
+"applicable to arrays.  See the `LLVM Language Reference <LangRef."
+"html#modulestructure>`_ for further details on linkage types.  Optionally an "
+"initializer, a name, and the module to put the variable into may be "
+"specified for the global variable as well."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3918
+msgid "``bool isConstant() const``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3920
+msgid ""
+"Returns true if this is a global variable that is known not to be modified "
+"at runtime."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3923
+msgid "``bool hasInitializer()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3925
+msgid "Returns true if this ``GlobalVariable`` has an intializer."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3927
+msgid "``Constant *getInitializer()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3929
+msgid ""
+"Returns the initial value for a ``GlobalVariable``.  It is not legal to call "
+"this method if there is no initializer."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3935
+msgid "The ``BasicBlock`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3937
+msgid "``#include \"llvm/IR/BasicBlock.h\"``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3939
+msgid ""
+"header source: `BasicBlock.h <http://llvm.org/doxygen/BasicBlock_8h-source."
+"html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3942
+msgid ""
+"doxygen info: `BasicBlock Class <http://llvm.org/doxygen/"
+"classllvm_1_1BasicBlock.html>`_"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3947
+msgid ""
+"This class represents a single entry single exit section of the code, "
+"commonly known as a basic block by the compiler community.  The "
+"``BasicBlock`` class maintains a list of Instruction_\\ s, which form the "
+"body of the block.  Matching the language definition, the last element of "
+"this list of instructions is always a terminator instruction (a subclass of "
+"the TerminatorInst_ class)."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3953
+msgid ""
+"In addition to tracking the list of instructions that make up the block, the "
+"``BasicBlock`` class also keeps track of the :ref:`Function <c_Function>` "
+"that it is embedded into."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3957
+msgid ""
+"Note that ``BasicBlock``\\ s themselves are Value_\\ s, because they are "
+"referenced by instructions like branches and can go in the switch tables. "
+"``BasicBlock``\\ s have type ``label``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3964
+msgid "Important Public Members of the ``BasicBlock`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3966
+msgid "``BasicBlock(const std::string &Name = \"\", Function *Parent = 0)``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3968
+msgid ""
+"The ``BasicBlock`` constructor is used to create new basic blocks for "
+"insertion into a function.  The constructor optionally takes a name for the "
+"new block, and a :ref:`Function <c_Function>` to insert it into.  If the "
+"``Parent`` parameter is specified, the new ``BasicBlock`` is automatically "
+"inserted at the end of the specified :ref:`Function <c_Function>`, if not "
+"specified, the BasicBlock must be manually inserted into the :ref:`Function "
+"<c_Function>`."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``BasicBlock::iterator`` - Typedef for instruction list iterator"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid "``BasicBlock::const_iterator`` - Typedef for const_iterator."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:0
+msgid ""
+"``begin()``, ``end()``, ``front()``, ``back()``, ``size()``, ``empty()`` STL-"
+"style functions for accessing the instruction list."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3982
+msgid ""
+"These methods and typedefs are forwarding functions that have the same "
+"semantics as the standard library methods of the same names.  These methods "
+"expose the underlying instruction list of a basic block in a way that is "
+"easy to manipulate.  To get the full complement of container operations "
+"(including operations to update the list), you must use the "
+"``getInstList()`` method."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3988
+msgid "``BasicBlock::InstListType &getInstList()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3990
+msgid ""
+"This method is used to get access to the underlying container that actually "
+"holds the Instructions.  This method must be used when there isn't a "
+"forwarding function in the ``BasicBlock`` class for the operation that you "
+"would like to perform.  Because there are no forwarding functions for "
+"\"updating\" operations, you need to use this if you want to update the "
+"contents of a ``BasicBlock``."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3997
+msgid "``Function *getParent()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:3999
+msgid ""
+"Returns a pointer to :ref:`Function <c_Function>` the block is embedded "
+"into, or a null pointer if it is homeless."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:4002
+msgid "``TerminatorInst *getTerminator()``"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:4004
+msgid ""
+"Returns a pointer to the terminator instruction that appears at the end of "
+"the ``BasicBlock``.  If there is no terminator instruction, or if the last "
+"instruction in the block is not a terminator, then a null pointer is "
+"returned."
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:4011
+msgid "The ``Argument`` class"
+msgstr ""
+
+#: ../../../ProgrammersManual.rst:4013
+msgid ""
+"This subclass of Value defines the interface for incoming formal arguments "
+"to a function.  A Function maintains a list of its formal arguments.  An "
+"argument has a pointer to the parent Function."
+msgstr ""
