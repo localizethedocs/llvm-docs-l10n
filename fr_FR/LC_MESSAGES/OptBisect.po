@@ -1,0 +1,209 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 9\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../OptBisect.rst:3
+msgid "Using -opt-bisect-limit to debug optimization errors"
+msgstr ""
+
+#: ../../../OptBisect.rst:9
+msgid "Introduction"
+msgstr ""
+
+#: ../../../OptBisect.rst:11
+msgid ""
+"The -opt-bisect-limit option provides a way to disable all optimization "
+"passes above a specified limit without modifying the way in which the Pass "
+"Managers are populated.  The intention of this option is to assist in "
+"tracking down problems where incorrect transformations during optimization "
+"result in incorrect run-time behavior."
+msgstr ""
+
+#: ../../../OptBisect.rst:17
+msgid ""
+"This feature is implemented on an opt-in basis.  Passes which can be safely "
+"skipped while still allowing correct code generation call a function to "
+"check the opt-bisect limit before performing optimizations.  Passes which "
+"either must be run or do not modify the IR do not perform this check and are "
+"therefore never skipped.  Generally, this means analysis passes, passes that "
+"are run at CodeGenOpt::None and passes which are required for register "
+"allocation."
+msgstr ""
+
+#: ../../../OptBisect.rst:25
+msgid ""
+"The -opt-bisect-limit option can be used with any tool, including front ends "
+"such as clang, that uses the core LLVM library for optimization and code "
+"generation.  The exact syntax for invoking the option is discussed below."
+msgstr ""
+
+#: ../../../OptBisect.rst:29
+msgid ""
+"This feature is not intended to replace other debugging tools such as "
+"bugpoint. Rather it provides an alternate course of action when reproducing "
+"the problem requires a complex build infrastructure that would make using "
+"bugpoint impractical or when reproducing the failure requires a sequence of "
+"transformations that is difficult to replicate with tools like opt and llc."
+msgstr ""
+
+#: ../../../OptBisect.rst:37
+msgid "Getting Started"
+msgstr ""
+
+#: ../../../OptBisect.rst:39
+msgid ""
+"The -opt-bisect-limit command line option can be passed directly to tools "
+"such as opt, llc and lli.  The syntax is as follows:"
+msgstr ""
+
+#: ../../../OptBisect.rst:46
+msgid ""
+"If a value of -1 is used the tool will perform all optimizations but a "
+"message will be printed to stderr for each optimization that could be "
+"skipped indicating the index value that is associated with that "
+"optimization.  To skip optimizations, pass the value of the last "
+"optimization to be performed as the opt-bisect-limit.  All optimizations "
+"with a higher index value will be skipped."
+msgstr ""
+
+#: ../../../OptBisect.rst:52
+msgid ""
+"In order to use the -opt-bisect-limit option with a driver that provides a "
+"wrapper around the LLVM core library, an additional prefix option may be "
+"required, as defined by the driver.  For example, to use this option with "
+"clang, the \"-mllvm\" prefix must be used.  A typical clang invocation would "
+"look like this:"
+msgstr ""
+
+#: ../../../OptBisect.rst:62
+msgid ""
+"The -opt-bisect-limit option may also be applied to link-time optimizations "
+"by using a prefix to indicate that this is a plug-in option for the linker. "
+"The following syntax will set a bisect limit for LTO transformations:"
+msgstr ""
+
+#: ../../../OptBisect.rst:73
+msgid ""
+"LTO passes are run by a library instance invoked by the linker. Therefore "
+"any passes run in the primary driver compilation phase are not affected by "
+"options passed via '-Wl,-plugin-opt' and LTO passes are not affected by "
+"options passed to the driver-invoked LLVM invocation via '-mllvm'."
+msgstr ""
+
+#: ../../../OptBisect.rst:80
+msgid "Bisection Index Values"
+msgstr ""
+
+#: ../../../OptBisect.rst:82
+msgid ""
+"The granularity of the optimizations associated with a single index value is "
+"variable.  Depending on how the optimization pass has been instrumented the "
+"value may be associated with as much as all transformations that would have "
+"been performed by an optimization pass on an IR unit for which it is invoked "
+"(for instance, during a single call of runOnFunction for a FunctionPass) or "
+"as little as a single transformation. The index values may also be nested so "
+"that if an invocation of the pass is not skipped individual transformations "
+"within that invocation may still be skipped."
+msgstr ""
+
+#: ../../../OptBisect.rst:91
+msgid ""
+"The order of the values assigned is guaranteed to remain stable and "
+"consistent from one run to the next up to and including the value specified "
+"as the limit. Above the limit value skipping of optimizations can cause a "
+"change in the numbering, but because all optimizations above the limit are "
+"skipped this is not a problem."
+msgstr ""
+
+#: ../../../OptBisect.rst:97
+msgid ""
+"When an opt-bisect index value refers to an entire invocation of the run "
+"function for a pass, the pass will query whether or not it should be skipped "
+"each time it is invoked and each invocation will be assigned a unique value. "
+"For example, if a FunctionPass is used with a module containing three "
+"functions a different index value will be assigned to the pass for each of "
+"the functions as the pass is run. The pass may be run on two functions but "
+"skipped for the third."
+msgstr ""
+
+#: ../../../OptBisect.rst:105
+msgid ""
+"If the pass internally performs operations on a smaller IR unit the pass "
+"must be specifically instrumented to enable bisection at this finer level of "
+"granularity (see below for details)."
+msgstr ""
+
+#: ../../../OptBisect.rst:111
+msgid "Example Usage"
+msgstr ""
+
+#: ../../../OptBisect.rst:143
+msgid "Pass Skipping Implementation"
+msgstr ""
+
+#: ../../../OptBisect.rst:145
+msgid ""
+"The -opt-bisect-limit implementation depends on individual passes opting in "
+"to the opt-bisect process.  The OptBisect object that manages the process is "
+"entirely passive and has no knowledge of how any pass is implemented.  When "
+"a pass is run if the pass may be skipped, it should call the OptBisect "
+"object to see if it should be skipped."
+msgstr ""
+
+#: ../../../OptBisect.rst:151
+msgid ""
+"The OptBisect object is intended to be accessed through LLVMContext and each "
+"Pass base class contains a helper function that abstracts the details in "
+"order to make this check uniform across all passes.  These helper functions "
+"are:"
+msgstr ""
+
+#: ../../../OptBisect.rst:163
+msgid "A MachineFunctionPass should use FunctionPass::skipFunction() as such:"
+msgstr ""
+
+#: ../../../OptBisect.rst:173
+msgid ""
+"In addition to checking with the OptBisect class to see if the pass should "
+"be skipped, the skipFunction(), skipLoop() and skipBasicBlock() helper "
+"functions also look for the presence of the \"optnone\" function attribute.  "
+"The calling pass will be unable to determine whether it is being skipped "
+"because the \"optnone\" attribute is present or because the opt-bisect-limit "
+"has been reached.  This is desirable because the behavior should be the same "
+"in either case."
+msgstr ""
+
+#: ../../../OptBisect.rst:181
+msgid ""
+"The majority of LLVM passes which can be skipped have already been "
+"instrumented in the manner described above.  If you are adding a new pass or "
+"believe you have found a pass which is not being included in the opt-bisect "
+"process but should be, you can add it as described above."
+msgstr ""
+
+#: ../../../OptBisect.rst:188
+msgid "Adding Finer Granularity"
+msgstr ""
+
+#: ../../../OptBisect.rst:190
+msgid ""
+"Once the pass in which an incorrect transformation is performed has been "
+"determined, it may be useful to perform further analysis in order to "
+"determine which specific transformation is causing the problem.  Debug "
+"counters can be used for this purpose."
+msgstr ""
