@@ -1,0 +1,3874 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-03 08:36+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../NVPTXUsage.rst:3
+msgid "User Guide for NVPTX Back-end"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:11
+msgid "Introduction"
+msgstr "簡介"
+
+#: ../../../NVPTXUsage.rst:13
+msgid ""
+"To support GPU programming, the NVPTX back-end supports a subset of LLVM IR "
+"along with a defined set of conventions used to represent GPU programming "
+"concepts. This document provides an overview of the general usage of the "
+"back- end, including a description of the conventions used and the set of "
+"accepted LLVM IR."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:21
+msgid ""
+"This document assumes a basic familiarity with CUDA and the PTX assembly "
+"language. Information about the CUDA Driver API and the PTX assembly "
+"language can be found in the `CUDA documentation <http://docs.nvidia.com/"
+"cuda/index.html>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:29
+msgid "Conventions"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:32
+msgid "Marking Functions as Kernels"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:34
+msgid ""
+"In PTX, there are two types of functions: *device functions*, which are only "
+"callable by device code, and *kernel functions*, which are callable by host "
+"code. By default, the back-end will emit device functions. The "
+"``ptx_kernel`` calling convention is used to declare a function as a kernel "
+"function."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:39
+msgid ""
+"The following example shows a kernel function calling a device function in "
+"LLVM IR. The function ``@my_kernel`` is callable from host code, but "
+"``@my_fmad`` is not."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:58
+msgid "When compiled, the PTX kernel functions are callable by host-side code."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:62
+msgid "Parameter Attributes"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:71
+msgid "``\"nvvm.grid_constant\"``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:65
+msgid ""
+"This attribute may be attached to a ``byval`` parameter of a kernel function "
+"to indicate that the parameter should be lowered as a direct reference to "
+"the grid-constant memory of the parameter, as opposed to a copy of the "
+"parameter in local memory. Writing to a grid-constant parameter is undefined "
+"behavior. Unlike a normal ``byval`` parameter, the address of a grid-"
+"constant parameter is not unique to a given function invocation but instead "
+"is shared by all kernels in the grid."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:76
+msgid "Function Attributes"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:80
+msgid "``\"nvvm.maxclusterrank\"=\"<n>\"``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:79
+msgid ""
+"This attribute specifies the maximum number of blocks per cluster. Must be "
+"non-zero. Only supported for Hopper+."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:84
+msgid "``\"nvvm.minctasm\"=\"<n>\"``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:83
+msgid ""
+"This indicates a hint/directive to the compiler/driver, asking it to put at "
+"least these many CTAs on an SM."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:88
+msgid "``\"nvvm.maxnreg\"=\"<n>\"``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:87
+msgid ""
+"This attribute indicates the maximum number of registers to be used for the "
+"kernel function."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:94
+msgid "``\"nvvm.maxntid\"=\"<x>[,<y>[,<z>]]\"``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:91
+msgid ""
+"This attribute declares the maximum number of threads in the thread block "
+"(CTA). The maximum number of threads is the product of the maximum extent in "
+"each dimension. Exceeding the maximum number of threads results in a runtime "
+"error or kernel launch failure."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:100
+msgid "``\"nvvm.reqntid\"=\"<x>[,<y>[,<z>]]\"``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:97
+msgid ""
+"This attribute declares the exact number of threads in the thread block "
+"(CTA). The number of threads is the product of the value in each dimension. "
+"Specifying a different CTA dimension at launch will result in a runtime "
+"error or kernel launch failure."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:106
+msgid "``\"nvvm.cluster_dim\"=\"<x>[,<y>[,<z>]]\"``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:103
+msgid ""
+"This attribute declares the number of thread blocks (CTAs) in the cluster. "
+"The total number of CTAs is the product of the number of CTAs in each "
+"dimension. Specifying a different cluster dimension at launch will result in "
+"a runtime error or kernel launch failure. Only supported for Hopper+."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:112
+msgid "``\"nvvm.blocksareclusters\"``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:109
+msgid ""
+"This attribute implies that the grid launch configuration for the "
+"corresponding kernel function is specifying the number of clusters instead "
+"of the number of thread blocks. This attribute is only allowed for kernel "
+"functions and requires ``nvvm.reqntid`` and ``nvvm.cluster_dim`` attributes."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:117 ../../../NVPTXUsage.rst:3335
+msgid "Address Spaces"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:119
+msgid "The NVPTX back-end uses the following address space mapping:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:122
+msgid "Address Space"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:122
+msgid "Memory Space"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:124 ../../../NVPTXUsage.rst:1249
+#: ../../../NVPTXUsage.rst:1257 ../../../NVPTXUsage.rst:1265
+#: ../../../NVPTXUsage.rst:1273 ../../../NVPTXUsage.rst:1281
+#: ../../../NVPTXUsage.rst:1289 ../../../NVPTXUsage.rst:2623
+#: ../../../NVPTXUsage.rst:2643 ../../../NVPTXUsage.rst:2716
+#: ../../../NVPTXUsage.rst:2777 ../../../NVPTXUsage.rst:2797
+#: ../../../NVPTXUsage.rst:2848 ../../../NVPTXUsage.rst:2859
+#: ../../../NVPTXUsage.rst:2870
+msgid "0"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:124
+msgid "Generic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:125 ../../../NVPTXUsage.rst:1251
+#: ../../../NVPTXUsage.rst:1259 ../../../NVPTXUsage.rst:1267
+#: ../../../NVPTXUsage.rst:1275 ../../../NVPTXUsage.rst:1283
+#: ../../../NVPTXUsage.rst:1291 ../../../NVPTXUsage.rst:2361
+#: ../../../NVPTXUsage.rst:2624 ../../../NVPTXUsage.rst:2634
+#: ../../../NVPTXUsage.rst:2644 ../../../NVPTXUsage.rst:2707
+#: ../../../NVPTXUsage.rst:2717 ../../../NVPTXUsage.rst:2778
+#: ../../../NVPTXUsage.rst:2788 ../../../NVPTXUsage.rst:2798
+#: ../../../NVPTXUsage.rst:2849 ../../../NVPTXUsage.rst:2860
+#: ../../../NVPTXUsage.rst:2871
+msgid "1"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:125
+msgid "Global"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:126 ../../../NVPTXUsage.rst:1253
+#: ../../../NVPTXUsage.rst:1261 ../../../NVPTXUsage.rst:1269
+#: ../../../NVPTXUsage.rst:1277 ../../../NVPTXUsage.rst:1285
+#: ../../../NVPTXUsage.rst:1293 ../../../NVPTXUsage.rst:2361
+#: ../../../NVPTXUsage.rst:2362 ../../../NVPTXUsage.rst:2625
+#: ../../../NVPTXUsage.rst:2635 ../../../NVPTXUsage.rst:2645
+#: ../../../NVPTXUsage.rst:2708 ../../../NVPTXUsage.rst:2718
+#: ../../../NVPTXUsage.rst:2779 ../../../NVPTXUsage.rst:2789
+#: ../../../NVPTXUsage.rst:2799 ../../../NVPTXUsage.rst:2850
+#: ../../../NVPTXUsage.rst:2861 ../../../NVPTXUsage.rst:2872
+msgid "2"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:126
+msgid "Internal Use"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:127 ../../../NVPTXUsage.rst:1255
+#: ../../../NVPTXUsage.rst:1263 ../../../NVPTXUsage.rst:1271
+#: ../../../NVPTXUsage.rst:1279 ../../../NVPTXUsage.rst:1287
+#: ../../../NVPTXUsage.rst:1295 ../../../NVPTXUsage.rst:2626
+#: ../../../NVPTXUsage.rst:2646 ../../../NVPTXUsage.rst:2719
+#: ../../../NVPTXUsage.rst:2780 ../../../NVPTXUsage.rst:2800
+#: ../../../NVPTXUsage.rst:2851 ../../../NVPTXUsage.rst:2862
+#: ../../../NVPTXUsage.rst:2873
+msgid "3"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:127
+msgid "Shared"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:128 ../../../NVPTXUsage.rst:2361
+#: ../../../NVPTXUsage.rst:2362 ../../../NVPTXUsage.rst:2363
+msgid "4"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:128
+msgid "Constant"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:129
+msgid "5"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:129
+msgid "Local"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:130
+msgid "7"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:130
+msgid "Shared Cluster"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:133
+msgid ""
+"Every global variable and pointer type is assigned to one of these address "
+"spaces, with 0 being the default address space. Intrinsics are provided "
+"which can be used to convert pointers between the generic and non-generic "
+"address spaces."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:138
+msgid ""
+"As an example, the following IR will define an array ``@g`` that resides in "
+"global device memory."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:145
+msgid ""
+"LLVM IR functions can read and write to this array, and host-side code can "
+"copy data to it by name with the CUDA Driver API."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:148
+msgid ""
+"Note that since address space 0 is the generic space, it is illegal to have "
+"global variables in address space 0.  Address space 0 is the default address "
+"space in LLVM, so the ``addrspace(N)`` annotation is *required* for global "
+"variables."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:155
+msgid "Triples"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:157
+msgid ""
+"The NVPTX target uses the module triple to select between 32/64-bit code "
+"generation and the driver-compiler interface to use. The triple architecture "
+"can be one of ``nvptx`` (32-bit PTX) or ``nvptx64`` (64-bit PTX). The "
+"operating system should be one of ``cuda`` or ``nvcl``, which determines the "
+"interface used by the generated code to communicate with the driver.  Most "
+"users will want to use ``cuda`` as the operating system, which makes the "
+"generated PTX compatible with the CUDA Driver API."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:165
+msgid "Example: 32-bit PTX for CUDA Driver API: ``nvptx-nvidia-cuda``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:167
+msgid "Example: 64-bit PTX for CUDA Driver API: ``nvptx64-nvidia-cuda``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:172
+msgid "NVPTX Architecture Hierarchy and Ordering"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:174
+msgid ""
+"GPU architectures: sm_2Y/sm_3Y/sm_5Y/sm_6Y/sm_7Y/sm_8Y/sm_9Y/sm_10Y/sm_12Y "
+"('Y' represents version within the architecture) The architectures have name "
+"of form ``sm_XYz`` where ``X`` represent the generation number, ``Y`` "
+"represents the version within the architecture, and ``z`` represents the "
+"optional feature suffix. If ``X1Y1 <= X2Y2``, then GPU capabilities of "
+"``sm_X1Y1`` are included in ``sm_X2Y2``. For example, take ``sm_90`` (9 "
+"represents ``X``, 0 represents ``Y``, and no feature suffix) and ``sm_103`` "
+"architectures (10 represents ``X``, 3 represents ``Y``, and no feature "
+"suffix). Since 90 <= 103, ``sm_90`` is compatible with ``sm_103``."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:184
+msgid ""
+"The family-specific variants have ``f`` feature suffix and they follow "
+"following order: ``sm_X{Y2}f > sm_X{Y1}f`` iff ``Y2 > Y1`` ``sm_XY{f} > "
+"sm_{XY}{}``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:189
+msgid ""
+"For example, take ``sm_100f`` (10 represents ``X``, 0 represents ``Y``, and "
+"``f`` represents ``z``) and ``sm_103f`` (10 represents ``X``, 3 represents "
+"``Y``, and ``f`` represents ``z``) architecture variants. Since ``Y1 < Y2``, "
+"``sm_100f`` is compatible with ``sm_103f``. Similarly based on the second "
+"rule, ``sm_90`` is compatible with ``sm_103f``."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:194
+msgid ""
+"Some counter examples, take ``sm_100f`` and ``sm_120f`` (12 represents "
+"``X``, 0 represents ``Y``, and ``f`` represents ``z``) architecture "
+"variants. Since both belongs to different family i.e. ``X1 != X2``, "
+"``sm_100f`` is not compatible with ``sm_120f``."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:199
+msgid ""
+"The architecture-specific variants have ``a`` feature suffix and they follow "
+"following order: ``sm_XY{a} > sm_XY{f} > sm_{XY}{}``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:203
+msgid ""
+"For example, take ``sm_103a`` (10 represents ``X``, 3 represents ``Y``, and "
+"``a`` represents ``z``), ``sm_103f``, and ``sm_103`` architecture variants. "
+"The ``sm_103`` is compatible with ``sm_103a`` and ``sm_103f``, and "
+"``sm_103f`` is compatible with ``sm_103a``."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:207
+msgid "Encoding := Arch * 10 + 2 (for 'f') + 1 (for 'a') Arch := X * 10 + Y"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:210
+msgid ""
+"For example, ``sm_103f`` is encoded as 1032 (103 * 10 + 2) and ``sm_103a`` "
+"is encoded as 1033 (103 * 10 + 2 + 1)."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:213
+msgid "This encoding allows simple partial ordering of the architectures."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:215
+msgid ""
+"Compare Family and Arch by dividing FullSMVersion by 100 and 10 respectively "
+"before the comparison."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:217
+msgid ""
+"Compare within the family by comparing FullSMVersion, given both belongs to "
+"the same family."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:219
+msgid "Detect ``a`` variants by checking FullSMVersion & 1."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:224
+msgid "NVPTX Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:227
+msgid "Reading PTX Special Registers"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:230
+msgid "'``llvm.nvvm.read.ptx.sreg.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:233 ../../../NVPTXUsage.rst:275
+#: ../../../NVPTXUsage.rst:381 ../../../NVPTXUsage.rst:413
+#: ../../../NVPTXUsage.rst:439 ../../../NVPTXUsage.rst:477
+#: ../../../NVPTXUsage.rst:505 ../../../NVPTXUsage.rst:560
+#: ../../../NVPTXUsage.rst:593 ../../../NVPTXUsage.rst:625
+#: ../../../NVPTXUsage.rst:660 ../../../NVPTXUsage.rst:739
+#: ../../../NVPTXUsage.rst:776 ../../../NVPTXUsage.rst:803
+#: ../../../NVPTXUsage.rst:838 ../../../NVPTXUsage.rst:865
+#: ../../../NVPTXUsage.rst:894 ../../../NVPTXUsage.rst:921
+#: ../../../NVPTXUsage.rst:947 ../../../NVPTXUsage.rst:982
+#: ../../../NVPTXUsage.rst:1016 ../../../NVPTXUsage.rst:1044
+#: ../../../NVPTXUsage.rst:1072 ../../../NVPTXUsage.rst:1098
+#: ../../../NVPTXUsage.rst:1126 ../../../NVPTXUsage.rst:1156
+#: ../../../NVPTXUsage.rst:1182 ../../../NVPTXUsage.rst:1216
+#: ../../../NVPTXUsage.rst:1305 ../../../NVPTXUsage.rst:1341
+#: ../../../NVPTXUsage.rst:1373 ../../../NVPTXUsage.rst:1397
+#: ../../../NVPTXUsage.rst:1425 ../../../NVPTXUsage.rst:1472
+#: ../../../NVPTXUsage.rst:1496 ../../../NVPTXUsage.rst:1535
+#: ../../../NVPTXUsage.rst:1593 ../../../NVPTXUsage.rst:1637
+#: ../../../NVPTXUsage.rst:1680 ../../../NVPTXUsage.rst:1727
+#: ../../../NVPTXUsage.rst:1768 ../../../NVPTXUsage.rst:1796
+#: ../../../NVPTXUsage.rst:1839 ../../../NVPTXUsage.rst:1884
+#: ../../../NVPTXUsage.rst:1927 ../../../NVPTXUsage.rst:1957
+#: ../../../NVPTXUsage.rst:1988 ../../../NVPTXUsage.rst:2015
+#: ../../../NVPTXUsage.rst:2044 ../../../NVPTXUsage.rst:2084
+#: ../../../NVPTXUsage.rst:2114 ../../../NVPTXUsage.rst:2139
+#: ../../../NVPTXUsage.rst:2165 ../../../NVPTXUsage.rst:2192
+#: ../../../NVPTXUsage.rst:2217 ../../../NVPTXUsage.rst:2239
+#: ../../../NVPTXUsage.rst:2263 ../../../NVPTXUsage.rst:2327
+#: ../../../NVPTXUsage.rst:2381 ../../../NVPTXUsage.rst:2567
+#: ../../../NVPTXUsage.rst:2653 ../../../NVPTXUsage.rst:2726
+#: ../../../NVPTXUsage.rst:2808 ../../../NVPTXUsage.rst:2883
+#: ../../../NVPTXUsage.rst:2916 ../../../NVPTXUsage.rst:2949
+#: ../../../NVPTXUsage.rst:2976 ../../../NVPTXUsage.rst:3007
+msgid "Syntax:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:252 ../../../NVPTXUsage.rst:288
+#: ../../../NVPTXUsage.rst:329 ../../../NVPTXUsage.rst:389
+#: ../../../NVPTXUsage.rst:421 ../../../NVPTXUsage.rst:449
+#: ../../../NVPTXUsage.rst:487 ../../../NVPTXUsage.rst:520
+#: ../../../NVPTXUsage.rst:575 ../../../NVPTXUsage.rst:608
+#: ../../../NVPTXUsage.rst:640 ../../../NVPTXUsage.rst:675
+#: ../../../NVPTXUsage.rst:756 ../../../NVPTXUsage.rst:783
+#: ../../../NVPTXUsage.rst:818 ../../../NVPTXUsage.rst:849
+#: ../../../NVPTXUsage.rst:873 ../../../NVPTXUsage.rst:906
+#: ../../../NVPTXUsage.rst:930 ../../../NVPTXUsage.rst:958
+#: ../../../NVPTXUsage.rst:992 ../../../NVPTXUsage.rst:1023
+#: ../../../NVPTXUsage.rst:1051 ../../../NVPTXUsage.rst:1080
+#: ../../../NVPTXUsage.rst:1106 ../../../NVPTXUsage.rst:1136
+#: ../../../NVPTXUsage.rst:1164 ../../../NVPTXUsage.rst:1189
+#: ../../../NVPTXUsage.rst:1229 ../../../NVPTXUsage.rst:1312
+#: ../../../NVPTXUsage.rst:1349 ../../../NVPTXUsage.rst:1380
+#: ../../../NVPTXUsage.rst:1404 ../../../NVPTXUsage.rst:1447
+#: ../../../NVPTXUsage.rst:1480 ../../../NVPTXUsage.rst:1504
+#: ../../../NVPTXUsage.rst:1548 ../../../NVPTXUsage.rst:1610
+#: ../../../NVPTXUsage.rst:1650 ../../../NVPTXUsage.rst:1697
+#: ../../../NVPTXUsage.rst:1740 ../../../NVPTXUsage.rst:1777
+#: ../../../NVPTXUsage.rst:1809 ../../../NVPTXUsage.rst:1856
+#: ../../../NVPTXUsage.rst:1903 ../../../NVPTXUsage.rst:1936
+#: ../../../NVPTXUsage.rst:1964 ../../../NVPTXUsage.rst:1995
+#: ../../../NVPTXUsage.rst:2022 ../../../NVPTXUsage.rst:2052
+#: ../../../NVPTXUsage.rst:2094 ../../../NVPTXUsage.rst:2122
+#: ../../../NVPTXUsage.rst:2147 ../../../NVPTXUsage.rst:2175
+#: ../../../NVPTXUsage.rst:2200 ../../../NVPTXUsage.rst:2225
+#: ../../../NVPTXUsage.rst:2247 ../../../NVPTXUsage.rst:2289
+#: ../../../NVPTXUsage.rst:2336 ../../../NVPTXUsage.rst:2390
+#: ../../../NVPTXUsage.rst:2587 ../../../NVPTXUsage.rst:2688
+#: ../../../NVPTXUsage.rst:2754 ../../../NVPTXUsage.rst:2826
+#: ../../../NVPTXUsage.rst:2891 ../../../NVPTXUsage.rst:2924
+#: ../../../NVPTXUsage.rst:2956 ../../../NVPTXUsage.rst:2985
+#: ../../../NVPTXUsage.rst:3014
+msgid "Overview:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:254
+msgid ""
+"The '``@llvm.nvvm.read.ptx.sreg.*``' intrinsics provide access to the PTX "
+"special registers, in particular the kernel launch bounds.  These registers "
+"map in the following way to CUDA builtins:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:259
+msgid "CUDA Builtin"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:259
+msgid "PTX Special Register Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:261
+msgid "``threadId``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:261
+msgid "``@llvm.nvvm.read.ptx.sreg.tid.*``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:262
+msgid "``blockIdx``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:262
+msgid "``@llvm.nvvm.read.ptx.sreg.ctaid.*``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:263
+msgid "``blockDim``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:263
+msgid "``@llvm.nvvm.read.ptx.sreg.ntid.*``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:264
+msgid "``gridDim``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:264
+msgid "``@llvm.nvvm.read.ptx.sreg.nctaid.*``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:269
+msgid "Barriers"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:272
+msgid "'``llvm.nvvm.barrier.cta.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:290
+msgid ""
+"The '``@llvm.nvvm.barrier.cta.*``' family of intrinsics perform barrier "
+"synchronization and communication within a CTA. They can be used by the "
+"threads within the CTA for synchronization and communication."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:295 ../../../NVPTXUsage.rst:400
+#: ../../../NVPTXUsage.rst:427 ../../../NVPTXUsage.rst:456
+#: ../../../NVPTXUsage.rst:496 ../../../NVPTXUsage.rst:530
+#: ../../../NVPTXUsage.rst:584 ../../../NVPTXUsage.rst:616
+#: ../../../NVPTXUsage.rst:651 ../../../NVPTXUsage.rst:693
+#: ../../../NVPTXUsage.rst:855 ../../../NVPTXUsage.rst:881
+#: ../../../NVPTXUsage.rst:911 ../../../NVPTXUsage.rst:936
+#: ../../../NVPTXUsage.rst:965 ../../../NVPTXUsage.rst:999
+#: ../../../NVPTXUsage.rst:1031 ../../../NVPTXUsage.rst:1059
+#: ../../../NVPTXUsage.rst:1086 ../../../NVPTXUsage.rst:1113
+#: ../../../NVPTXUsage.rst:1143 ../../../NVPTXUsage.rst:1170
+#: ../../../NVPTXUsage.rst:1195 ../../../NVPTXUsage.rst:1236
+msgid "Semantics:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:297
+msgid ""
+"Operand %id specifies a logical barrier resource and must fall within the "
+"range 0 through 15. When present, operand %n specifies the number of threads "
+"participating in the barrier. When specifying a thread count, the value must "
+"be a multiple of the warp size. With the '``@llvm.nvvm.barrier.cta.sync.*``' "
+"variants, the '``.all``' suffix indicates that all threads in the CTA should "
+"participate in the barrier while the '``.count``' suffix indicates that only "
+"the threads specified by the %n operand should participate in the barrier."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:305
+msgid ""
+"All forms of the '``@llvm.nvvm.barrier.cta.*``' intrinsic cause the "
+"executing thread to wait for all non-exited threads from its warp and then "
+"marks the warp's arrival at the barrier. In addition to signaling its "
+"arrival at the barrier, the '``@llvm.nvvm.barrier.cta.sync.*``' intrinsics "
+"cause the executing thread to wait for non-exited threads of all other warps "
+"participating in the barrier to arrive. On the other hand, the '``@llvm.nvvm."
+"barrier.cta.arrive.*``' intrinsic does not cause the executing thread to "
+"wait for threads of other participating warps."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:314
+msgid ""
+"When a barrier completes, the waiting threads are restarted without delay, "
+"and the barrier is reinitialized so that it can be immediately reused."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:317
+msgid ""
+"The '``@llvm.nvvm.barrier.cta.*``' intrinsic has an optional '``.aligned``' "
+"modifier to indicate textual alignment of the barrier. When specified, it "
+"indicates that all threads in the CTA will execute the same '``@llvm.nvvm."
+"barrier.cta.*``' instruction. In conditionally executed code, an aligned "
+"'``@llvm.nvvm.barrier.cta.*``' instruction should only be used if it is "
+"known that all threads in the CTA evaluate the condition identically, "
+"otherwise behavior is undefined."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:326
+msgid "MBarrier family of Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:331
+msgid "An ``mbarrier`` is a barrier created in shared memory that supports:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:333
+msgid "Synchronizing any subset of threads within a CTA."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:334
+msgid ""
+"One-way synchronization of threads across CTAs of a cluster. Threads can "
+"perform only ``arrive`` operations but not ``*_wait`` on an mbarrier located "
+"in shared::cluster space."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:337
+msgid ""
+"Waiting for completion of asynchronous memory operations initiated by a "
+"thread and making them visible to other threads."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:340
+msgid ""
+"Unlike ``bar{.cta}/barrier{.cta}`` instructions which can access a limited "
+"number of barriers per CTA, ``mbarrier`` objects are user-defined and are "
+"only limited by the total shared memory size available."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:344
+msgid ""
+"An mbarrier object is an opaque object in shared memory with an alignment of "
+"8-bytes. It keeps track of:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:347
+msgid "Current phase of the mbarrier object"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:348
+msgid "Count of pending arrivals for the current phase of the mbarrier object"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:349
+msgid "Count of expected arrivals for the next phase of the mbarrier object"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:350
+msgid ""
+"Count of pending asynchronous memory operations (or transactions) tracked by "
+"the current phase of the mbarrier object. This is also referred to as ``tx-"
+"count``. The unit of ``tx-count`` is specified by the asynchronous memory "
+"operation (for example, ``llvm.nvvm.cp.async.bulk.tensor.g2s.*``)."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:356
+msgid ""
+"The ``phase`` of an mbarrier object is the number of times the mbarrier "
+"object has been used to synchronize threads/track async operations. In each "
+"phase, threads perform:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:360
+msgid "arrive/expect-tx/complete-tx operations to progress the current phase."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:361
+msgid ""
+"test_wait/try_wait operations to check for completion of the current phase."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:363
+msgid "An mbarrier object completes the current phase when:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:365
+msgid "The count of the pending arrivals has reached zero AND"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:366
+msgid "The tx-count has reached zero."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:368
+msgid ""
+"When an mbarrier object completes the current phase, below actions are "
+"performed ``atomically``:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:371
+msgid "The mbarrier object transitions to the next phase."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:372
+msgid ""
+"The pending arrival count is reinitialized to the expected arrival count."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:374
+msgid ""
+"For more information, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/#parallel-synchronization-and-communication-instructions-"
+"mbarrier>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:378
+msgid "'``llvm.nvvm.mbarrier.init``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:391
+msgid ""
+"The '``@llvm.nvvm.mbarrier.init.*``' intrinsics are used to initialize an "
+"mbarrier object located at ``addr`` with the value ``count``. ``count`` is a "
+"32-bit unsigned integer value and must be within the range [1...2^20-1]. "
+"During initialization:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:396
+msgid "The tx-count and the current phase of the mbarrier object are set to 0."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:397
+msgid "The expected and pending arrival counts are set to ``count``."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:402
+msgid ""
+"The ``.shared`` variant explicitly uses shared memory address space for the "
+"``addr`` operand. If the ``addr`` does not fall within the shared::cta "
+"space, then the behavior of this intrinsic is undefined. Performing "
+"``mbarrier.init`` on a valid mbarrier object is undefined; use ``mbarrier."
+"inval`` before reusing the memory for another mbarrier or any other purpose."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:410
+msgid "'``llvm.nvvm.mbarrier.inval``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:423
+msgid ""
+"The '``@llvm.nvvm.mbarrier.inval.*``' intrinsics invalidate the mbarrier "
+"object at the address specified by ``addr``."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:429
+msgid ""
+"The ``.shared`` variant explicitly uses shared memory address space for the "
+"``addr`` operand. If the ``addr`` does not fall within the shared::cta "
+"space, then the behavior of this intrinsic is undefined. It is expected that "
+"``addr`` was previously initialized using ``mbarrier.init``; otherwise, the "
+"behavior is undefined."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:436
+msgid "'``llvm.nvvm.mbarrier.expect.tx``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:451
+msgid ""
+"The '``@llvm.nvvm.mbarrier.expect.tx.*``' intrinsics increase the "
+"transaction count of the mbarrier object at ``%addr`` by ``%tx_count``. The "
+"``%tx_count`` is a 32-bit unsigned integer value."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:458
+msgid ""
+"The ``.space.{cta/cluster}`` indicates the address space where the mbarrier "
+"object resides."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:461
+msgid ""
+"The ``.scope.{cta/cluster}`` denotes the set of threads that can directly "
+"observe the synchronizing effect of the mbarrier operation. When scope is "
+"\"cta\", all threads executing in the same CTA (as the current thread) can "
+"directly observe the effect of the ``expect.tx`` operation. Similarly, when "
+"scope is \"cluster\", all threads executing in the same Cluster (as the "
+"current thread) can directly observe the effect of the operation."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:468
+msgid ""
+"If the ``addr`` does not fall within shared::cta or shared::cluster space, "
+"then the behavior of this intrinsic is undefined. This intrinsic has "
+"``relaxed`` semantics and hence does not provide any memory ordering or "
+"visibility guarantees."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:474
+msgid "'``llvm.nvvm.mbarrier.complete.tx``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:489
+msgid ""
+"The '``@llvm.nvvm.mbarrier.complete.tx.*``' intrinsics decrease the "
+"transaction count of the mbarrier object at ``%addr`` by ``%tx_count``. The "
+"``%tx_count`` is a 32-bit unsigned integer value. As a result of this "
+"decrement, the mbarrier can potentially complete its current phase and "
+"transition to the next phase."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:498
+msgid ""
+"The semantics of these intrinsics are identical to those of the ``llvm.nvvm."
+"mbarrier.expect.tx.*`` intrinsics described above."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:502
+msgid "'``llvm.nvvm.mbarrier.arrive``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:522
+msgid ""
+"The ``@llvm.nvvm.mbarrier.arrive.*`` intrinsics signal the arrival of the "
+"executing thread or completion of an asynchronous instruction associated "
+"with an arrive operation on the mbarrier object at ``%addr``. This operation "
+"decrements the pending arrival count by ``%count``, a 32-bit unsigned "
+"integer, potentially completing the current phase and triggering a "
+"transition to the next phase."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:532
+msgid ""
+"The ``.space.{cta/cluster}`` indicates the address space where the mbarrier "
+"object resides. When the mbarrier is in shared::cta space, the intrinsics "
+"return an opaque 64-bit value capturing the phase of the mbarrier object "
+"_prior_ to this arrive operation. This value can be used with a try_wait or "
+"test_wait operation to check for the completion of the mbarrier."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:538
+msgid ""
+"The ``.scope.{cta/cluster}`` denotes the set of threads that can directly "
+"observe the synchronizing effect of the mbarrier operation. When scope is "
+"\"cta\", all threads executing in the same CTA (as the current thread) can "
+"directly observe the effect of the ``arrive`` operation. Similarly, when "
+"scope is \"cluster\", all threads executing in the same Cluster (as the "
+"current thread) can directly observe the effect of the operation."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:545
+msgid ""
+"If the ``addr`` does not fall within shared::cta or shared::cluster space, "
+"then the behavior of this intrinsic is undefined."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:548
+msgid ""
+"These intrinsics have ``release`` semantics by default. The release "
+"semantics ensure ordering of operations that occur in program order _before_ "
+"this arrive instruction, making their effects visible to subsequent "
+"operations in other threads of the CTA (or cluster, depending on scope). "
+"Threads performing corresponding acquire operations (such as mbarrier.test."
+"wait) synchronize with this release. The ``relaxed`` variants of these "
+"intrinsics do not provide any memory ordering or visibility guarantees."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:557
+msgid "'``llvm.nvvm.mbarrier.arrive.expect.tx``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:577
+msgid ""
+"The ``@llvm.nvvm.mbarrier.arrive.expect.tx.*`` intrinsics are similar to the "
+"``@llvm.nvvm.mbarrier.arrive`` intrinsics except that they also perform an "
+"``expect-tx`` operation _prior_ to the ``arrive`` operation. The "
+"``%tx_count`` specifies the transaction count for the ``expect-tx`` "
+"operation and the count for the ``arrive`` operation is assumed to be 1."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:586 ../../../NVPTXUsage.rst:618
+#: ../../../NVPTXUsage.rst:653
+msgid ""
+"The semantics of these intrinsics are identical to those of the ``llvm.nvvm."
+"mbarrier.arrive.*`` intrinsics described above."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:590
+msgid "'``llvm.nvvm.mbarrier.arrive.drop``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:610
+msgid ""
+"The ``@llvm.nvvm.mbarrier.arrive.drop.*`` intrinsics decrement the expected "
+"arrival count of the mbarrier object at ``%addr`` by ``%count`` and then "
+"perform an ``arrive`` operation with ``%count``. The ``%count`` is a 32-bit "
+"integer."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:622
+msgid "'``llvm.nvvm.mbarrier.arrive.drop.expect.tx``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:642
+msgid ""
+"The ``@llvm.nvvm.mbarrier.arrive.drop.expect.tx.*`` intrinsics perform the "
+"below operations on the mbarrier located at ``%addr``."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:645
+msgid ""
+"Perform an ``expect-tx`` operation i.e. increase the transaction count of "
+"the mbarrier by ``%tx_count``, a 32-bit unsigned integer value."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:647
+msgid "Decrement the expected arrival count of the mbarrier by 1."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:648
+msgid "Perform an ``arrive`` operation on the mbarrier with a value of 1."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:657
+msgid "'``llvm.nvvm.mbarrier.test.wait``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:677
+msgid ""
+"The ``@llvm.nvvm.mbarrier.test.wait.*`` intrinsics test for the completion "
+"of the current or the immediately preceding phase of an mbarrier object at "
+"``%addr``. The test for completion can be done with either the ``state`` or "
+"the ``phase-parity`` of the mbarrier object."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:682
+msgid ""
+"When done through the ``i64 %state`` operand, the state must be returned by "
+"an ``llvm.nvvm.mbarrier.arrive.*`` on the _same_ mbarrier object."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:685
+msgid ""
+"The ``.parity`` variant of these intrinsics test for completion of the phase "
+"indicated by the operand ``i32 %phase``, which is the integer parity of "
+"either the current phase or the immediately preceding phase of the mbarrier "
+"object. An even phase has integer parity 0 and an odd phase has integer "
+"parity of 1. So the valid values for phase-parity are 0 and 1."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:695
+msgid ""
+"The ``.scope.{cta/cluster}`` denotes the set of threads that the test_wait "
+"operation can directly synchronize with."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:698
+msgid ""
+"If the ``addr`` does not fall within shared::cta space, then the the "
+"behavior of this intrinsic is undefined."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:701
+msgid ""
+"These intrinsics have ``acquire`` semantics by default. This acquire pattern "
+"establishes memory ordering for operations occurring in program order after "
+"this ``test_wait`` instruction by making operations from other threads in "
+"the CTA (or cluster, depending on scope) visible to subsequent operations in "
+"the current thread. When this wait completes, it synchronizes with the "
+"corresponding release pattern from the ``mbarrier.arrive`` operation. The "
+"``relaxed`` variants of these intrinsics do not provide any memory ordering "
+"or visibility guarantees."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:710
+msgid ""
+"This ``test.wait`` intrinsic is non-blocking and immediately returns the "
+"completion status without suspending the executing thread."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:713
+msgid "The boolean return value indicates:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:715
+msgid "True: The immediately preceding phase has completed"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:716
+msgid "False: The current phase is still incomplete"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:718
+msgid "When this wait returns true, the following ordering guarantees hold:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:720
+msgid ""
+"All memory accesses (except async operations) requested prior to ``mbarrier."
+"arrive`` having release semantics by participating threads of a CTA (or "
+"cluster, depending on scope) are visible to the executing thread."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:724
+msgid ""
+"All ``cp.async`` operations requested prior to ``cp.async.mbarrier.arrive`` "
+"by participating threads of a CTA are visible to the executing thread."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:726
+msgid ""
+"All ``cp.async.bulk`` operations using the same mbarrier object requested "
+"prior to ``mbarrier.arrive`` having release semantics by participating CTA "
+"threads are visible to the executing thread."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:729
+msgid ""
+"Memory accesses requested after this wait are not visible to memory accesses "
+"performed prior to ``mbarrier.arrive`` by other participating threads."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:732
+msgid ""
+"No ordering guarantee exists for memory accesses by the same thread between "
+"an ``mbarrier.arrive`` and this wait."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:736
+msgid "'``llvm.nvvm.mbarrier.try.wait``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:758
+msgid ""
+"The ``@llvm.nvvm.mbarrier.try.wait.*`` intrinsics test for the completion of "
+"the current or immediately preceding phase of an mbarrier object at "
+"``%addr``. Unlike the ``test.wait`` intrinsics, which perform a non-blocking "
+"test, these intrinsics may block the executing thread until the specified "
+"phase completes or a system-dependent time limit expires. Suspended threads "
+"resume execution when the phase completes or the time limit elapses. This "
+"time limit is configurable through the ``.tl`` variants of these intrinsics, "
+"where the ``%timelimit`` operand (an unsigned integer) specifies the limit "
+"in nanoseconds. Other semantics are identical to those of the ``test.wait`` "
+"intrinsics described above."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:770
+msgid "Electing a thread"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:773
+msgid "'``llvm.nvvm.elect.sync``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:785
+msgid ""
+"The '``@llvm.nvvm.elect.sync``' intrinsic generates the ``elect.sync`` PTX "
+"instruction, which elects one predicated active leader thread from a set of "
+"threads specified by ``membermask``. The behavior is undefined if the "
+"executing thread is not in ``membermask``. The laneid of the elected thread "
+"is captured in the i32 return value. The i1 return value is set to ``True`` "
+"for the leader thread and ``False`` for all the other threads. Election of a "
+"leader thread happens deterministically, i.e. the same leader thread is "
+"elected for the same ``membermask`` every time. For more information, refer "
+"PTX ISA `<https://docs.nvidia.com/cuda/parallel-thread-execution/index."
+"html#parallel-synchronization-and-communication-instructions-elect-sync>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:797
+msgid "Membar/Fences"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:800
+msgid "'``llvm.nvvm.fence.proxy.tensormap_generic.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:820
+msgid ""
+"The ``@llvm.nvvm.fence.proxy.tensormap_generic.*`` is a uni-directional "
+"fence used to establish ordering between a prior memory access performed via "
+"the generic `proxy<https://docs.nvidia.com/cuda/parallel-thread-execution/"
+"index.html#proxies>_` and a subsequent memory access performed via the "
+"tensormap proxy. ``nvvm.fence.proxy.tensormap_generic.release`` can form a "
+"release sequence that synchronizes with an acquire sequence that contains "
+"the ``nvvm.fence.proxy.tensormap_generic.acquire`` proxy fence. The "
+"following table describes the mapping between LLVM Intrinsic and the PTX "
+"instruction:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:823
+msgid "NVVM Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:823
+msgid "PTX Instruction"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:825
+msgid "``@llvm.nvvm.fence.proxy.tensormap_generic.release.*``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:825
+msgid "``fence.proxy.tensormap::generic.release.*``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:826
+msgid "``@llvm.nvvm.fence.proxy.tensormap_generic.acquire.*``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:826
+msgid "``fence.proxy.tensormap::generic.acquire.* [addr], size``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:829
+msgid ""
+"The address operand ``addr`` and the operand ``size`` together specify the "
+"memory range ``[addr, addr+size)`` on which the ordering guarantees on the "
+"memory accesses across the proxies is to be provided. The only supported "
+"value for the ``size`` operand is ``128`` and must be an immediate. Generic "
+"Addressing is used unconditionally, and the address specified by the operand "
+"addr must fall within the ``.global`` state space. Otherwise, the behavior "
+"is undefined. For more information, see `PTX ISA <https://docs.nvidia.com/"
+"cuda/parallel-thread-execution/#parallel-synchronization-and-communication-"
+"instructions-membar>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:832
+msgid "Address Space Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:835
+msgid "'``llvm.nvvm.isspacep.*``' Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:851
+msgid ""
+"The '``llvm.nvvm.isspacep.*``' intrinsics determine whether the provided "
+"generic pointer references memory which falls within a particular address "
+"space."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:857 ../../../NVPTXUsage.rst:883
+msgid ""
+"If the given pointer in the generic address space refers to memory which "
+"falls within the state space of the intrinsic (and therefore could be safely "
+"address space casted to this space), 1 is returned, otherwise 0 is returned."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:862
+msgid "'``llvm.nvvm.mapa.*``' Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:875
+msgid ""
+"The '``llvm.nvvm.mapa.*``' intrinsics map a shared memory pointer ``p`` of "
+"another CTA with ``%rank`` to the current CTA. The ``llvm.nvvm.mapa`` form "
+"expects a generic pointer to shared memory and returns a generic pointer to "
+"shared cluster memory. The ``llvm.nvvm.mapa.shared.cluster`` form expects a "
+"pointer to shared memory and returns a pointer to shared cluster memory. "
+"They corresponds directly to the ``mapa`` and ``mapa.shared.cluster`` PTX "
+"instructions."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:888
+msgid "Arithmetic Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:891
+msgid "'``llvm.nvvm.fabs.*``' Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:908
+msgid ""
+"The '``llvm.nvvm.fabs.*``' intrinsics return the absolute value of the "
+"operand."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:913
+msgid ""
+"Unlike, '``llvm.fabs.*``', these intrinsics do not perfectly preserve NaN "
+"values. Instead, a NaN input yeilds an unspecified NaN output."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:918
+msgid "'``llvm.nvvm.fabs.ftz.*``' Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:932
+msgid ""
+"The '``llvm.nvvm.fabs.ftz.*``' intrinsics return the absolute value of the "
+"operand, flushing subnormals to sign preserving zero."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:938
+msgid ""
+"Before the absolute value is taken, the input is flushed to sign preserving "
+"zero if it is a subnormal. In addition, unlike '``llvm.fabs.*``', a NaN "
+"input yields an unspecified NaN output."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:944
+msgid "'``llvm.nvvm.idp2a.[us].[us]``' Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:960
+msgid ""
+"The '``llvm.nvvm.idp2a.[us].[us]``' intrinsics performs a 2-element vector "
+"dot product followed by addition. They corresponds directly to the ``dp2a`` "
+"PTX instruction."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:967
+msgid ""
+"The 32-bit value in ``%a`` is broken into 2 16-bit values which are extended "
+"to 32 bits. For the '``llvm.nvvm.idp2a.u.[us]``' variants zero-extension is "
+"used, while for the '``llvm.nvvm.idp2a.s.[us]``' sign-extension is used. Two "
+"bytes are selected from ``%b``, if ``%is.hi`` is true, the most significant "
+"bytes are selected, otherwise the least significant bytes are selected. "
+"These bytes are then extended to 32-bits. For the '``llvm.nvvm.idp2a.[us]."
+"u``' variants zero-extension is used, while for the '``llvm.nvvm.idp2a.[us]."
+"s``' sign-extension is used. The dot product of these 2-element vectors is "
+"added to ``%c`` to produce the return."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:979
+msgid "'``llvm.nvvm.idp4a.[us].[us]``' Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:994
+msgid ""
+"The '``llvm.nvvm.idp4a.[us].[us]``' intrinsics perform a 4-element vector "
+"dot product followed by addition. They corresponds directly to the ``dp4a`` "
+"PTX instruction."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1001
+msgid ""
+"Each of the 4 bytes in both ``%a`` and ``%b`` are extended to 32-bit "
+"integers forming 2 ``<4 x i32>``. For ``%a``, zero-extension is used in the "
+"'``llvm.nvvm.idp4a.u.[us]``' variants, while sign-extension is used with "
+"'``llvm.nvvm.idp4a.s.[us]``' variants. Similarly, for ``%b``, zero-extension "
+"is used in the '``llvm.nvvm.idp4a.[us].u``' variants, while sign-extension "
+"is used with '``llvm.nvvm.idp4a.[us].s``' variants. The dot product of these "
+"4-element vectors is added to ``%c`` to produce the return."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1010
+msgid "Bit Manipulation Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1013
+msgid "'``llvm.nvvm.fshl.clamp.*``' Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1025
+msgid ""
+"The '``llvm.nvvm.fshl.clamp``' family of intrinsics performs a clamped "
+"funnel shift left. These intrinsics are very similar to '``llvm.fshl``', "
+"except the shift amount is clamped at the integer width (instead of modulo "
+"it). Currently, only ``i32`` is supported."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1033
+msgid ""
+"The '``llvm.nvvm.fshl.clamp``' family of intrinsic functions performs a "
+"clamped funnel shift left: the first two values are concatenated as { %hi : "
+"%lo } (%hi is the most significant bits of the wide value), the combined "
+"value is shifted left, and the most significant bits are extracted to "
+"produce a result that is the same size as the original arguments. The shift "
+"amount is the minimum of the value of %n and the bit width of the integer "
+"type."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1041
+msgid "'``llvm.nvvm.fshr.clamp.*``' Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1053
+msgid ""
+"The '``llvm.nvvm.fshr.clamp``' family of intrinsics perform a clamped funnel "
+"shift right. These intrinsics are very similar to '``llvm.fshr``', except "
+"the shift amount is clamped at the integer width (instead of modulo it). "
+"Currently, only ``i32`` is supported."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1061
+msgid ""
+"The '``llvm.nvvm.fshr.clamp``' family of intrinsic functions performs a "
+"clamped funnel shift right: the first two values are concatenated as { %hi : "
+"%lo } (%hi is the most significant bits of the wide value), the combined "
+"value is shifted right, and the least significant bits are extracted to "
+"produce a result that is the same size as the original arguments. The shift "
+"amount is the minimum of the value of %n and the bit width of the integer "
+"type."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1069
+msgid "'``llvm.nvvm.flo.u.*``' Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1082
+msgid ""
+"The '``llvm.nvvm.flo.u``' family of intrinsics identifies the bit position "
+"of the leading one, returning either it's offset from the most or least "
+"significant bit."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1088
+msgid ""
+"The '``llvm.nvvm.flo.u``' family of intrinsics returns the bit position of "
+"the most significant 1. If %shiftamt is true, The result is the shift amount "
+"needed to left-shift the found bit into the most-significant bit position, "
+"otherwise the result is the shift amount needed to right-shift the found bit "
+"into the least-significant bit position. 0xffffffff is returned if no 1 bit "
+"is found."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1095
+msgid "'``llvm.nvvm.flo.s.*``' Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1108
+msgid ""
+"The '``llvm.nvvm.flo.s``' family of intrinsics identifies the bit position "
+"of the leading non-sign bit, returning either it's offset from the most or "
+"least significant bit."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1115
+msgid ""
+"The '``llvm.nvvm.flo.s``' family of intrinsics returns the bit position of "
+"the most significant 0 for negative inputs and the most significant 1 for "
+"non-negative inputs. If %shiftamt is true, The result is the shift amount "
+"needed to left-shift the found bit into the most-significant bit position, "
+"otherwise the result is the shift amount needed to right-shift the found bit "
+"into the least-significant bit position. 0xffffffff is returned if no 1 bit "
+"is found."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1123
+msgid "'``llvm.nvvm.{zext,sext}.{wrap,clamp}``' Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1138
+msgid ""
+"The '``llvm.nvvm.{zext,sext}.{wrap,clamp}``' family of intrinsics extracts "
+"the low bits of the input value, and zero- or sign-extends them back to the "
+"original width."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1145
+msgid ""
+"The '``llvm.nvvm.{zext,sext}.{wrap,clamp}``' family of intrinsics returns "
+"extension of N lowest bits of operand %a. For the '``wrap``' variants, N is "
+"the value of operand %b modulo 32. For the '``clamp``' variants, N is the "
+"value of operand %b clamped to the range [0, 32]. The N lowest bits are then "
+"zero-extended the case of the '``zext``' variants, or sign-extended the case "
+"of the '``sext``' variants. If N is 0, the result is 0."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1153
+msgid "'``llvm.nvvm.bmsk.{wrap,clamp}``' Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1166
+msgid ""
+"The '``llvm.nvvm.bmsk.{wrap,clamp}``' family of intrinsics creates a bit "
+"mask given a starting bit position and a bit width."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1172
+msgid ""
+"The '``llvm.nvvm.bmsk.{wrap,clamp}``' family of intrinsics returns a value "
+"with all bits set to 0 except for %b bits starting at bit position %a. For "
+"the '``wrap``' variants, the values of %a and %b modulo 32 are used. For the "
+"'``clamp``' variants, the values of %a and %b are clamped to the range [0, "
+"32], which in practice is equivalent to using them as is."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1179
+msgid "'``llvm.nvvm.prmt``' Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1191
+msgid ""
+"The '``llvm.nvvm.prmt``' constructs a permutation of the bytes of the first "
+"two operands, selecting based on the third operand."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1197
+msgid ""
+"The bytes in the first two source operands are numbered from 0 to 7: {%hi, "
+"%lo} = {{b7, b6, b5, b4}, {b3, b2, b1, b0}}. For each byte in the target "
+"register, a 4-bit selection value is defined."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1201
+msgid ""
+"The 3 lsbs of the selection value specify which of the 8 source bytes should "
+"be moved into the target position. The msb defines if the byte value should "
+"be copied, or if the sign (msb of the byte) should be replicated over all 8 "
+"bits of the target position (sign extend of the byte value); msb=0 means "
+"copy the literal value; msb=1 means replicate the sign."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1207
+msgid ""
+"These 4-bit selection values are pulled from the lower 16-bits of the "
+"%selector operand, with the least significant selection value corresponding "
+"to the least significant byte of the destination."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1213
+msgid "'``llvm.nvvm.prmt.*``' Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1231
+msgid ""
+"The '``llvm.nvvm.prmt.*``' family of intrinsics constructs a permutation of "
+"the bytes of the first one or two operands, selecting based on the 2 least "
+"significant bits of the final operand."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1238
+msgid ""
+"As with the generic '``llvm.nvvm.prmt``' intrinsic, the bytes in the first "
+"one or two source operands are numbered. The first source operand (%lo) is "
+"numbered {b3, b2, b1, b0}, in the case of the '``f4e``' and '``b4e``' "
+"variants, the second source operand (%hi) is numbered {b7, b6, b5, b4}."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1243
+msgid ""
+"Depending on the 2 least significant bits of the %selector operand, the "
+"result of the permutation is defined as follows:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1247
+msgid "Mode"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1247
+msgid "%selector[1:0]"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1247
+msgid "Output"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1249
+msgid "'``f4e``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1249 ../../../NVPTXUsage.rst:1273
+#: ../../../NVPTXUsage.rst:1287
+msgid "{3, 2, 1, 0}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1251
+msgid "{4, 3, 2, 1}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1253
+msgid "{5, 4, 3, 2}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1255
+msgid "{6, 5, 4, 3}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1257
+msgid "'``b4e``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1257
+msgid "{5, 6, 7, 0}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1259
+msgid "{6, 7, 0, 1}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1261
+msgid "{7, 0, 1, 2}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1263
+msgid "{0, 1, 2, 3}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1265
+msgid "'``rc8``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1265 ../../../NVPTXUsage.rst:1281
+msgid "{0, 0, 0, 0}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1267
+msgid "{1, 1, 1, 1}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1269
+msgid "{2, 2, 2, 2}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1271 ../../../NVPTXUsage.rst:1279
+msgid "{3, 3, 3, 3}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1273
+msgid "'``ecl``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1275
+msgid "{3, 2, 1, 1}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1277
+msgid "{3, 2, 2, 2}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1281
+msgid "'``ecr``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1283
+msgid "{1, 1, 1, 0}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1285
+msgid "{2, 2, 1, 0}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1289
+msgid "'``rc16``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1289 ../../../NVPTXUsage.rst:1293
+msgid "{1, 0, 1, 0}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1291 ../../../NVPTXUsage.rst:1295
+msgid "{3, 2, 3, 2}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1299
+msgid "TMA family of Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1302
+msgid "'``llvm.nvvm.cp.async.bulk.global.to.shared.cluster``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1314
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.global.to.shared.cluster``' intrinsic "
+"corresponds to the ``cp.async.bulk.shared::cluster.global.*`` family of PTX "
+"instructions. These instructions initiate an asynchronous copy of bulk data "
+"from global memory to shared::cluster memory. The 32-bit operand ``%size`` "
+"specifies the amount of memory to be copied and it must be a multiple of 16."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1321
+msgid ""
+"The last two arguments to these intrinsics are boolean flags indicating "
+"support for cache_hint and/or multicast modifiers. These flag arguments must "
+"be compile-time constants. The backend looks through these flags and lowers "
+"the intrinsics appropriately."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1326
+msgid ""
+"The Nth argument (denoted by ``i1 %flag_ch``) when set, indicates a valid "
+"cache_hint (``i64 %ch``) and generates the ``.L2::cache_hint`` variant of "
+"the PTX instruction."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1330
+msgid ""
+"The [N-1]th argument (denoted by ``i1 %flag_mc``) when set, indicates the "
+"presence of a multicast mask (``i16 %mc``) and generates the PTX instruction "
+"with the ``.multicast::cluster`` modifier."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1334 ../../../NVPTXUsage.rst:1366
+#: ../../../NVPTXUsage.rst:1390
+msgid ""
+"For more information, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/index.html#data-movement-and-conversion-instructions-cp-"
+"async-bulk>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1338
+msgid "'``llvm.nvvm.cp.async.bulk.shared.cta.to.global``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1351
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.shared.cta.to.global``' intrinsic "
+"corresponds to the ``cp.async.bulk.global.shared::cta.*`` set of PTX "
+"instructions. These instructions initiate an asynchronous copy from shared::"
+"cta to global memory. The 32-bit operand ``%size`` specifies the amount of "
+"memory to be copied (in bytes) and it must be a multiple of 16. For the ``."
+"bytemask`` variant, the 16-bit wide mask operand specifies whether the i-th "
+"byte of each 16-byte wide chunk of source data is copied to the destination."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1360
+msgid ""
+"The ``i1 %flag_ch`` argument to these intrinsics is a boolean flag "
+"indicating support for cache_hint. This flag argument must be a compile-time "
+"constant. When set, it indicates a valid cache_hint (``i64 %ch``) and "
+"generates the ``.L2::cache_hint`` variant of the PTX instruction."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1370
+msgid "'``llvm.nvvm.cp.async.bulk.shared.cta.to.cluster``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1382
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.shared.cta.to.cluster``' intrinsic "
+"corresponds to the ``cp.async.bulk.shared::cluster.shared::cta.*`` PTX "
+"instruction. This instruction initiates an asynchronous copy from shared::"
+"cta to shared::cluster memory. The destination has to be in the shared "
+"memory of a different CTA within the cluster. The 32-bit operand ``%size`` "
+"specifies the amount of memory to be copied and it must be a multiple of 16."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1394
+msgid "'``llvm.nvvm.cp.async.bulk.prefetch.L2``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1406
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.prefetch.L2``' intrinsic corresponds to the "
+"``cp.async.bulk.prefetch.L2.*`` family of PTX instructions. These "
+"instructions initiate an asynchronous prefetch of bulk data from global "
+"memory to the L2 cache. The 32-bit operand ``%size`` specifies the amount of "
+"memory to be prefetched in terms of bytes and it must be a multiple of 16."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1413
+msgid ""
+"The last argument to these intrinsics is boolean flag indicating support for "
+"cache_hint. These flag argument must be compile-time constant. When set, it "
+"indicates a valid cache_hint (``i64 %ch``) and generates the ``.L2::"
+"cache_hint`` variant of the PTX instruction."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1418
+msgid ""
+"For more information, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/#data-movement-and-conversion-instructions-cp-async-bulk-"
+"prefetch>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1422
+msgid "'``llvm.nvvm.prefetch.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1449
+msgid ""
+"The '``@llvm.nvvm.prefetch.*``' and '``@llvm.nvvm.prefetchu.*``' intrinsic "
+"correspond to the '``prefetch.*``;' and '``prefetchu.*``' family of PTX "
+"instructions. The '``prefetch.*``' instructions bring the cache line "
+"containing the specified address in global or local memory address space "
+"into the specified cache level (L1 or L2). If the '``.tensormap``' qualifier "
+"is specified then the prefetch instruction brings the cache line containing "
+"the specified address in the '``.const``' or '``.param memory``' state space "
+"for subsequent use by the '``cp.async.bulk.tensor``' instruction. The "
+"'`prefetchu.*``' instruction brings the cache line containing the specified "
+"generic address into the specified uniform cache level. If no address space "
+"is specified, it is assumed to be generic address. The intrinsic uses and "
+"eviction priority which can be accessed by the '``.level::"
+"eviction_priority``' modifier."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1461
+msgid "A prefetch to a shared memory location performs no operation."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1462
+msgid ""
+"A prefetch into the uniform cache requires a generic address, and no "
+"operation occurs if the address maps to a const, local, or shared memory "
+"location."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1465
+msgid ""
+"For more information, refer to the PTX ISA `<https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#data-movement-and-conversion-instructions-"
+"prefetch-prefetchu>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1469
+msgid "'``llvm.nvvm.applypriority.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1482
+msgid ""
+"The '``@llvm.nvvm.applypriority.*``'  applies the cache eviction priority "
+"specified by the .level::eviction_priority qualifier to the address range "
+"[a..a+size) in the specified cache level. If no state space is specified "
+"then Generic Addressing is used. If the specified address does not fall "
+"within the address window of .global state space then the behavior is "
+"undefined. The operand size is an integer constant that specifies the amount "
+"of data, in bytes, in the specified cache level on which the priority is to "
+"be applied. The only supported value for the size operand is 128."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1489
+msgid ""
+"For more information, refer to the PTX ISA `<https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#data-movement-and-conversion-instructions-"
+"applypriority>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1493
+msgid "``llvm.nvvm.discard.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1506
+msgid ""
+"The *effects* of the ``@llvm.nvvm.discard.L2*`` intrinsics are those of a "
+"non-atomic non-volatile ``llvm.memset`` that writes ``undef`` to the "
+"destination address range ``[%ptr, %ptr + immarg)``. The ``%ptr`` must be "
+"aligned by 128 bytes. Subsequent reads from the address range may read "
+"``undef`` until the memory is overwritten with a different value. These "
+"operations *hint* the implementation that data in the L2 cache can be "
+"destructively discarded without writing it back to memory. The operand "
+"``immarg`` is an integer constant that specifies the length in bytes of the "
+"address range ``[%ptr, %ptr + immarg)`` to write ``undef`` into. The only "
+"supported value for the ``immarg`` operand is ``128``. If generic addressing "
+"is used and the specified address does not fall within the address window of "
+"global memory (``addrspace(1)``) the behavior is undefined."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1529
+msgid ""
+"For more information, refer to the  `CUDA C++ discard documentation <https://"
+"nvidia.github.io/cccl/libcudacxx/extended_api/memory_access_properties/"
+"discard_memory.html>`__ and to the `PTX ISA discard documentation <https://"
+"docs.nvidia.com/cuda/parallel-thread-execution/#data-movement-and-conversion-"
+"instructions-discard>`__ ."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1532
+msgid "'``llvm.nvvm.cp.async.bulk.tensor.g2s.tile.[1-5]d``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1550
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.tensor.g2s.tile.[1-5]d``' intrinsics "
+"correspond to the ``cp.async.bulk.tensor.[1-5]d.*`` set of PTX instructions. "
+"These instructions initiate an asynchronous copy of tensor data from global "
+"memory to shared::cluster memory (indicated by the ``g2s`` prefix) in "
+"``tile`` mode. In tile mode, the multi-dimensional layout of the source "
+"tensor is preserved at the destination. The dimension of the tensor data "
+"ranges from 1d to 5d with the coordinates specified by the ``i32 %d0 ... i32 "
+"%d4`` arguments. In ``tile.gather4`` mode, four rows in a 2D tensor are "
+"combined to form a single 2D destination tensor. The first coordinate ``i32 "
+"%x0`` denotes the column index followed by four coordinates indicating the "
+"four row-indices. So, this mode takes a total of 5 coordinates as input "
+"arguments. For more information on ``gather4`` mode, refer PTX ISA `<https://"
+"docs.nvidia.com/cuda/parallel-thread-execution/#tensor-tiled-scatter4-"
+"gather4-modes>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1565
+msgid ""
+"The last three arguments to these intrinsics are flags indicating support "
+"for multicast, cache_hint and cta_group::1/2 modifiers. These flag arguments "
+"must be compile-time constants. The backend looks through these flags and "
+"lowers the intrinsics appropriately."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1571
+msgid ""
+"The argument denoted by ``i1 %flag_ch`` when set, indicates a valid "
+"cache_hint (``i64 %ch``) and generates the ``.L2::cache_hint`` variant of "
+"the PTX instruction."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1575
+msgid ""
+"The argument denoted by ``i1 %flag_mc`` when set, indicates the presence of "
+"a multicast mask (``i16 %mc``) and generates the PTX instruction with the ``."
+"multicast::cluster`` modifier."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1579
+msgid ""
+"The argument denoted by ``i32 %flag_cta_group`` takes values within the "
+"range [0, 3) i.e. {0,1,2}. When the value of ``%flag_cta_group`` is not "
+"within the range, it may raise an error from the Verifier. The default value "
+"is '0' with no cta_group modifier in the instruction. The values of '1' and "
+"'2' lower to ``cta_group::1`` and ``cta_group::2`` variants of the PTX "
+"instruction respectively."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1586 ../../../NVPTXUsage.rst:1630
+#: ../../../NVPTXUsage.rst:1673 ../../../NVPTXUsage.rst:1720
+#: ../../../NVPTXUsage.rst:1761 ../../../NVPTXUsage.rst:1789
+msgid ""
+"For more information, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/index.html#data-movement-and-conversion-instructions-cp-"
+"async-bulk-tensor>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1590
+msgid "'``llvm.nvvm.cp.async.bulk.tensor.g2s.im2col.[3-5]d``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1612
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.tensor.g2s.im2col.[3-5]d``' intrinsics "
+"correspond to the ``cp.async.bulk.tensor.[1-5]d.*`` set of PTX instructions. "
+"These instructions initiate an asynchronous copy of tensor data from global "
+"memory to shared::cluster memory (indicated by the ``g2s`` prefix) in "
+"``im2col`` mode. In im2col mode, some dimensions of the source tensor are "
+"unrolled into a single dimensional column at the destination. In this mode, "
+"the tensor has to be at least three-dimensional. Along with the tensor "
+"coordinates, im2col offsets are also specified (denoted by ``i16 im2col0..."
+"i16 %im2col2``). For the ``im2col`` mode, the number of offsets is two less "
+"than the number of dimensions of the tensor operation. For the ``im2col.w`` "
+"and ``im2col.w.128`` mode, the number of offsets is always 2, denoted by "
+"``i16 %wHalo`` and ``i16 %wOffset`` arguments. For more information on "
+"``im2col.w`` and ``im2col.w.128`` modes, refer PTX ISA `<https://docs.nvidia."
+"com/cuda/parallel-thread-execution/#tensor-im2col-w-w128-modes>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1627
+msgid ""
+"The last three arguments to these intrinsics are flags, with the same "
+"functionality as described in the ``tile`` mode intrinsics above."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1634
+msgid "'``llvm.nvvm.cp.async.bulk.tensor.g2s.cta.tile.[1-5]d``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1652
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.tensor.g2s.cta.tile.[1-5]d``' intrinsics "
+"correspond to the ``cp.async.bulk.tensor.[1-5]d.shared::cta.global.*`` set "
+"of PTX instructions. These instructions initiate an asynchronous copy of "
+"tensor data from global memory to shared::cta memory in ``tile`` mode. In "
+"tile mode, the multi-dimensional layout of the source tensor is preserved at "
+"the destination. The dimension of the tensor data ranges from 1d to 5d with "
+"the coordinates specified by the ``i32 %d0 ... i32 %d4`` arguments. In "
+"``tile.gather4`` mode, four rows in a 2D tensor are combined to form a "
+"single 2D destination tensor. The first coordinate ``i32 %x0`` denotes the "
+"column index followed by four coordinates indicating the four row-indices. "
+"So, this mode takes a total of 5 coordinates as input arguments. For more "
+"information on ``gather4`` mode, refer PTX ISA `<https://docs.nvidia.com/"
+"cuda/parallel-thread-execution/#tensor-tiled-scatter4-gather4-modes>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1667 ../../../NVPTXUsage.rst:1714
+#: ../../../NVPTXUsage.rst:1755 ../../../NVPTXUsage.rst:1826
+#: ../../../NVPTXUsage.rst:1914
+msgid ""
+"The last argument to these intrinsics is a boolean flag indicating support "
+"for cache_hint. This flag argument must be a compile-time constant. When "
+"set, it indicates a valid cache_hint (``i64 %ch``) and generates the ``.L2::"
+"cache_hint`` variant of the PTX instruction."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1677
+msgid "'``llvm.nvvm.cp.async.bulk.tensor.g2s.cta.im2col.[3-5]d``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1699
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.tensor.g2s.cta.im2col.[3-5]d``' intrinsics "
+"correspond to the ``cp.async.bulk.tensor.[1-5]d.shared::cta.global.*`` set "
+"of PTX instructions. These instructions initiate an asynchronous copy of "
+"tensor data from global memory to shared::cta memory in ``im2col`` mode. In "
+"im2col mode, some dimensions of the source tensor are unrolled into a single "
+"dimensional column at the destination. In this mode, the tensor has to be at "
+"least three-dimensional. Along with the tensor coordinates, im2col offsets "
+"are also specified (denoted by ``i16 im2col0...i16 %im2col2``). For the "
+"``im2col`` mode, the number of offsets is two less than the number of "
+"dimensions of the tensor operation. For the ``im2col.w`` and ``im2col."
+"w.128`` mode, the number of offsets is always 2, denoted by ``i16 %wHalo`` "
+"and ``i16 %wOffset`` arguments. For more information on ``im2col.w`` and "
+"``im2col.w.128`` modes, refer PTX ISA `<https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tensor-im2col-w-w128-modes>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1724
+msgid "'``llvm.nvvm.cp.async.bulk.tensor.s2g.tile.[1-5]d``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1742
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.tensor.s2g.tile.[1-5]d``' intrinsics "
+"correspond to the ``cp.async.bulk.tensor.[1-5]d.*`` set of PTX instructions. "
+"These instructions initiate an asynchronous copy of tensor data from shared::"
+"cta to global memory (indicated by the ``s2g`` prefix) in ``tile`` mode. The "
+"dimension of the tensor data ranges from 1d to 5d with the coordinates "
+"specified by the ``i32 %d0 ... i32 %d4`` arguments. In ``tile.scatter4`` "
+"mode, a single 2D source tensor is divided into four rows in the 2D "
+"destination tensor. The first coordinate ``i32 %x0`` denotes the column "
+"index followed by four coordinates indicating the four row-indices. So, this "
+"mode takes a total of 5 coordinates as input arguments. For more information "
+"on ``scatter4`` mode, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/#tensor-tiled-scatter4-gather4-modes>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1765
+msgid "'``llvm.nvvm.cp.async.bulk.tensor.s2g.im2col.[3-5]d``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1779
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.tensor.s2g.im2col.[1-5]d``' intrinsics "
+"correspond to the ``cp.async.bulk.tensor.[1-5]d.*`` set of PTX instructions. "
+"These instructions initiate an asynchronous copy of tensor data from shared::"
+"cta to global memory (indicated by the ``s2g`` prefix) in ``im2col`` mode. "
+"In this mode, the tensor has to be at least three-dimensional. Unlike the "
+"``g2s`` variants, there are no im2col_offsets for these intrinsics. The last "
+"argument to these intrinsics is a boolean flag, with the same functionality "
+"as described in the ``s2g.tile`` mode intrinsics above."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1793
+msgid "'``llvm.nvvm.cp.async.bulk.tensor.prefetch.tile.[1-5]d``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1811
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.tensor.prefetch.tile.[1-5]d``' intrinsics "
+"correspond to the ``cp.async.bulk.prefetch.tensor.[1-5]d.L2.global*`` set of "
+"PTX instructions. These instructions initiate an asynchronous prefetch of "
+"tensor data from global memory to the L2 cache. In tile mode, the multi-"
+"dimensional layout of the source tensor is preserved at the destination. The "
+"dimension of the tensor data ranges from 1d to 5d with the coordinates "
+"specified by the ``i32 %d0 ... i32 %d4`` arguments."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1819
+msgid ""
+"In ``tile.gather4`` mode, four rows in the 2-dimnesional source tensor are "
+"fetched to the L2 cache. The first coordinate ``i32 %x0`` denotes the column "
+"index followed by four coordinates indicating the four row-indices. So, this "
+"mode takes a total of 5 coordinates as input arguments. For more information "
+"on ``gather4`` mode, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/#tensor-tiled-scatter4-gather4-modes>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1832 ../../../NVPTXUsage.rst:1877
+msgid ""
+"For more information, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/#data-movement-and-conversion-instructions-cp-async-bulk-"
+"prefetch-tensor>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1836
+msgid "'``llvm.nvvm.cp.async.bulk.tensor.prefetch.im2col.[3-5]d``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1858
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.tensor.prefetch.im2col.[3-5]d``' intrinsics "
+"correspond to the ``cp.async.bulk.prefetch.tensor.[1-5]d.L2.global*`` set of "
+"PTX instructions. These instructions initiate an asynchronous prefetch of "
+"tensor data from global memory to the L2 cache. In im2col mode, some "
+"dimensions of the source tensor are unrolled into a single dimensional "
+"column at the destination. In this mode, the tensor has to be at least three-"
+"dimensional. Along with the tensor coordinates, im2col offsets are also "
+"specified (denoted by ``i16 im2col0...i16 %im2col2``). For ``im2col`` mode, "
+"the number of offsets is two less than the number of dimensions of the "
+"tensor operation. For the ``im2col.w`` and ``im2col.w.128`` modes, the "
+"number of offsets is always 2, denoted by ``i16 %wHalo`` and ``i16 "
+"%wOffset`` arguments. For more information on ``im2col.w`` and ``im2col."
+"w.128`` modes, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-thread-"
+"execution/#tensor-im2col-w-w128-modes>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1874
+msgid ""
+"The last argument to these intrinsics is a boolean flag, with the same "
+"functionality as described in the ``tile`` mode intrinsics above."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1881
+msgid "'``llvm.nvvm.cp.async.bulk.tensor.reduce.[red_op].tile.[1-5]d``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1905
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.tensor.reduce.<red_op>.tile.[1-5]d``' "
+"intrinsics correspond to the ``cp.reduce.async.bulk.tensor.[1-5]d.*`` set of "
+"PTX instructions. These instructions initiate an asynchronous reduction "
+"operation of tensor data in global memory with the tensor data in shared{::"
+"cta} memory, using ``tile`` mode. The dimension of the tensor data ranges "
+"from 1d to 5d with the coordinates specified by the ``i32 %d0 ... i32 %d4`` "
+"arguments. The supported reduction operations are {add, min, max, inc, dec, "
+"and, or, xor} as described in the ``tile.1d`` intrinsics."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1920 ../../../NVPTXUsage.rst:1947
+msgid ""
+"For more information, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/index.html#data-movement-and-conversion-instructions-cp-"
+"reduce-async-bulk-tensor>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1924
+msgid "'``llvm.nvvm.cp.async.bulk.tensor.reduce.[red_op].im2col.[3-5]d``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1938
+msgid ""
+"The '``@llvm.nvvm.cp.async.bulk.tensor.reduce.<red_op>.im2col.[3-5]d``' "
+"intrinsics correspond to the ``cp.reduce.async.bulk.tensor.[3-5]d.*`` set of "
+"PTX instructions. These instructions initiate an asynchronous reduction "
+"operation of tensor data in global memory with the tensor data in shared{::"
+"cta} memory, using ``im2col`` mode. In this mode, the tensor has to be at "
+"least three-dimensional. The supported reduction operations supported are "
+"the same as the ones in the tile mode. The last argument to these intrinsics "
+"is a boolean flag, with the same functionality as described in the ``tile`` "
+"mode intrinsics above."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1951
+msgid "Warp Group Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1954
+msgid "'``llvm.nvvm.wgmma.fence.sync.aligned``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1966
+msgid ""
+"The '``@llvm.nvvm.wgmma.fence.sync.aligned``' intrinsic generates the "
+"``wgmma.fence.sync.aligned`` PTX instruction, which establishes an ordering "
+"between prior accesses to any warpgroup registers and subsequent accesses to "
+"the same registers by a ``wgmma.mma_async`` instruction."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1971
+msgid ""
+"The ``wgmma.fence`` instruction must be issued by all warps of the warpgroup "
+"in the following locations:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1974
+msgid "Before the first ``wgmma.mma_async`` operation in a warpgroup."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1975
+msgid ""
+"Between a register access by a thread in the warpgroup and any ``wgmma."
+"mma_async`` instruction that accesses the same registers, except when these "
+"are accumulator register accesses across multiple ``wgmma.mma_async`` "
+"instructions of the same shape in which case an ordering guarantee is "
+"provided by default."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1981
+msgid ""
+"For more information, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/#asynchronous-warpgroup-level-matrix-instructions-wgmma-"
+"fence>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1985
+msgid "'``llvm.nvvm.wgmma.commit_group.sync.aligned``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:1997
+msgid ""
+"The '``@llvm.nvvm.wgmma.commit_group.sync.aligned``' intrinsic generates the "
+"``wgmma.commit_group.sync.aligned`` PTX instruction, which creates a new "
+"wgmma-group per warpgroup and batches all prior ``wgmma.mma_async`` "
+"instructions initiated by the executing warp but not committed to any wgmma-"
+"group into the new wgmma-group. If there are no uncommitted ``wgmma "
+"mma_async`` instructions then, ``wgmma.commit_group`` results in an empty "
+"wgmma-group."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2005
+msgid ""
+"An executing thread can wait for the completion of all ``wgmma.mma_async`` "
+"operations in a wgmma-group by using ``wgmma.wait_group``."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2008
+msgid ""
+"For more information, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/#asynchronous-warpgroup-level-matrix-instructions-wgmma-"
+"commit-group>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2012
+msgid "'``llvm.nvvm.wgmma.wait_group.sync.aligned``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2024
+msgid ""
+"The '``@llvm.nvvm.wgmma.wait_group.sync.aligned``' intrinsic generates the "
+"``wgmma.commit_group.sync.aligned N`` PTX instruction, which will cause the "
+"executing thread to wait until only ``N`` or fewer of the most recent wgmma-"
+"groups are pending and all the prior wgmma-groups committed by the executing "
+"threads are complete. For example, when ``N`` is 0, the executing thread "
+"waits on all the prior wgmma-groups to complete. Operand ``N`` is an integer "
+"constant."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2032
+msgid ""
+"Accessing the accumulator register or the input register containing the "
+"fragments of matrix A of a ``wgmma.mma_async`` instruction without first "
+"performing a ``wgmma.wait_group`` instruction that waits on a wgmma-group "
+"including that ``wgmma.mma_async`` instruction is undefined behavior."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2037
+msgid ""
+"For more information, refer PTX ISA `<https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/#asynchronous-warpgroup-level-matrix-instructions-wgmma-"
+"wait-group>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2041
+msgid "'``llvm.nvvm.griddepcontrol.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2054
+msgid ""
+"The ``griddepcontrol`` intrinsics allows the dependent grids and "
+"prerequisite grids as defined by the runtime, to control execution in the "
+"following way:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2056
+msgid ""
+"``griddepcontrol.launch_dependents`` intrinsic signals that the dependents "
+"can be scheduled, before the current grid completes. The intrinsic can be "
+"invoked by multiple threads in the current CTA and repeated invocations of "
+"the intrinsic will have no additional side effects past that of the first "
+"invocation."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2058
+msgid ""
+"``griddepcontrol.wait`` intrinsic causes the executing thread to wait until "
+"all prerequisite grids in flight have completed and all the memory "
+"operations from the prerequisite grids are performed and made visible to the "
+"current grid."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2060
+msgid ""
+"For more information, refer `PTX ISA <https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/#parallel-synchronization-and-communication-instructions-"
+"griddepcontrol>`__."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2064
+msgid "TCGEN05 family of Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2066
+msgid ""
+"The llvm.nvvm.tcgen05.* intrinsics model the TCGEN05 family of instructions "
+"exposed by PTX. These intrinsics use 'Tensor Memory' (henceforth ``tmem``). "
+"NVPTX represents this memory using ``addrspace(6)`` and is always 32-bits."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2070
+msgid ""
+"For more information, refer to the PTX ISA `<https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tensor-memory>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2073
+msgid ""
+"The tensor-memory pointers may only be used with the tcgen05 intrinsics. "
+"There are specialized load/store instructions provided (tcgen05.ld/st) to "
+"work with tensor-memory."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2077
+msgid ""
+"See the PTX ISA for more information on tensor-memory load/store "
+"instructions `<https://docs.nvidia.com/cuda/parallel-thread-execution/"
+"#tensor-memory-and-register-load-store-instructions>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2081
+msgid "'``llvm.nvvm.tcgen05.alloc``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2096
+msgid ""
+"The '``@llvm.nvvm.tcgen05.alloc.*``' intrinsics correspond to the ``tcgen05."
+"alloc.cta_group*.sync.aligned.b32`` family of PTX instructions. The "
+"``tcgen05.alloc`` is a potentially blocking instruction which dynamically "
+"allocates the specified number of columns in the Tensor Memory and writes "
+"the address of the allocated Tensor Memory into shared memory at the "
+"location specified by ``%dst``. The 32-bit operand ``%ncols`` specifies the "
+"number of columns to be allocated and it must be a power-of-two. The ``."
+"shared`` variant explicitly uses shared memory address space for the "
+"``%dst`` operand. The ``.cg1`` and ``.cg2`` variants generate "
+"``cta_group::1`` and ``cta_group::2`` variants of the instruction "
+"respectively."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2107 ../../../NVPTXUsage.rst:2132
+#: ../../../NVPTXUsage.rst:2158
+msgid ""
+"For more information, refer to the PTX ISA `<https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tensor-memory-allocation-and-management-"
+"instructions>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2111
+msgid "'``llvm.nvvm.tcgen05.dealloc``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2124
+msgid ""
+"The '``@llvm.nvvm.tcgen05.dealloc.*``' intrinsics correspond to the "
+"``tcgen05.dealloc.*`` set of PTX instructions. The ``tcgen05.dealloc`` "
+"instructions deallocates the Tensor Memory specified by the Tensor Memory "
+"address ``%tmem_addr``. The operand ``%tmem_addr`` must point to a previous "
+"Tensor Memory allocation. The 32-bit operand ``%ncols`` specifies the number "
+"of columns to be de-allocated. The ``.cg1`` and ``.cg2`` variants generate "
+"``cta_group::1`` and ``cta_group::2`` variants of the instruction "
+"respectively."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2136
+msgid "'``llvm.nvvm.tcgen05.relinq.alloc.permit``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2149
+msgid ""
+"The '``@llvm.nvvm.tcgen05.relinq.alloc.permit.*``' intrinsics correspond to "
+"the ``tcgen05.relinquish_alloc_permit.*`` set of PTX instructions. This "
+"instruction specifies that the CTA of the executing thread is relinquishing "
+"the right to allocate Tensor Memory. So, it is illegal for a CTA to perform "
+"``tcgen05.alloc`` after any of its constituent threads execute ``tcgen05."
+"relinquish_alloc_permit``. The ``.cg1`` and ``.cg2`` variants generate "
+"``cta_group::1`` and ``cta_group::2`` flavors of the instruction "
+"respectively."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2162
+msgid "'``llvm.nvvm.tcgen05.commit``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2177
+msgid ""
+"The '``@llvm.nvvm.tcgen05.commit.*``' intrinsics correspond to the ``tcgen05."
+"commit.{cg1/cg2}.mbarrier::arrive::one.*`` set of PTX instructions. The "
+"``tcgen05.commit`` is an asynchronous instruction which makes the mbarrier "
+"object (``%mbar``) track the completion of all prior asynchronous tcgen05 "
+"operations. The ``.mc`` variants allow signaling on the mbarrier objects of "
+"multiple CTAs (specified by ``%mc``) in the cluster. The ``.cg1`` and ``."
+"cg2`` variants generate ``cta_group::1`` and ``cta_group::2`` flavors of the "
+"instruction respectively."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2185
+msgid ""
+"For more information, refer to the PTX ISA `<https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tcgen-async-sync-operations-commit>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2189
+msgid "'``llvm.nvvm.tcgen05.wait``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2202
+msgid ""
+"The '``@llvm.nvvm.tcgen05.wait.ld/st``' intrinsics correspond to the "
+"``tcgen05.wait::{ld/st}.sync.aligned`` pair of PTX instructions. The "
+"``tcgen05.wait::ld`` causes the executing thread to block until all prior "
+"``tcgen05.ld`` operations issued by the executing thread have completed. The "
+"``tcgen05.wait::st`` causes the executing thread to block until all prior "
+"``tcgen05.st`` operations issued by the executing thread have completed."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2210
+msgid ""
+"For more information, refer to the PTX ISA `<https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tcgen05-instructions-tcgen05-wait>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2214
+msgid "'``llvm.nvvm.tcgen05.fence``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2227
+msgid ""
+"The '``@llvm.nvvm.tcgen05.fence.*``' intrinsics correspond to the ``tcgen05."
+"fence::{before/after}_thread_sync`` pair of PTX instructions. These "
+"instructions act as code motion fences for asynchronous tcgen05 operations."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2232
+msgid ""
+"For more information, refer to the PTX ISA `<https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tensorcore-5th-generation-instructions-tcgen05-"
+"fence>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2236
+msgid "'``llvm.nvvm.tcgen05.shift``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2249
+msgid ""
+"The '``@llvm.nvvm.tcgen05.shift.{cg1/cg2}``' intrinsics correspond to the "
+"``tcgen05.shift.{cg1/cg2}`` PTX instructions. The ``tcgen05.shift`` is an "
+"asynchronous instruction which initiates the shifting of 32-byte elements "
+"downwards across all the rows, except the last, by one row. The address "
+"operand ``%tmem_addr`` specifies the base address of the matrix in the "
+"Tensor Memory whose rows must be down shifted."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2256
+msgid ""
+"For more information, refer to the PTX ISA `<https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tcgen05-instructions-tcgen05-shift>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2260
+msgid "'``llvm.nvvm.tcgen05.cp``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2291
+msgid ""
+"The '``@llvm.nvvm.tcgen05.cp.{shape}.{src_fmt}.{cg1/cg2}``' intrinsics "
+"correspond to the ``tcgen05.cp.*`` family of PTX instructions. The ``tcgen05."
+"cp`` instruction initiates an asynchronous copy operation from shared memory "
+"to the location specified by ``%tmem_addr`` in Tensor Memory. The 64-bit "
+"register operand ``%sdesc`` is the matrix descriptor representing the source "
+"matrix in shared memory that needs to be copied."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2298
+msgid ""
+"The valid shapes for the copy operation are: {128x256b, 4x256b, 128x128b, "
+"64x128b_warpx2_02_13, 64x128b_warpx2_01_23, 32x128b_warpx4}."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2301
+msgid ""
+"Shapes ``64x128b`` and ``32x128b`` require dedicated multicast qualifiers, "
+"which are appended to the corresponding intrinsic names."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2304
+msgid ""
+"Optionally, the data can be decompressed from the source format in the "
+"shared memory to the destination format in Tensor Memory during the copy "
+"operation. Currently, only ``.b8x16`` is supported as destination format. "
+"The valid source formats are ``.b6x16_p32`` and ``.b4x16_p64``."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2309
+msgid ""
+"When the source format is ``.b6x16_p32``, a contiguous set of 16 elements of "
+"6-bits each followed by four bytes of padding (``_p32``) in shared memory is "
+"decompressed into 16 elements of 8-bits (``.b8x16``) each in the Tensor "
+"Memory."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2313
+msgid ""
+"When the source format is ``.b4x16_p64``, a contiguous set of 16 elements of "
+"4-bits each followed by eight bytes of padding (``_p64``) in shared memory "
+"is decompressed into 16 elements of 8-bits (``.b8x16``) each in the Tensor "
+"Memory."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2317
+msgid ""
+"For more information on the decompression schemes, refer to the PTX ISA "
+"`<https://docs.nvidia.com/cuda/parallel-thread-execution/#optional-"
+"decompression>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2320
+msgid ""
+"For more information on the tcgen05.cp instruction, refer to the PTX ISA "
+"`<https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-"
+"instructions-tcgen05-cp>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2324
+msgid "'``llvm.nvvm.tcgen05.ld.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2338
+msgid ""
+"This group of intrinsics asynchronously load data from the Tensor Memory at "
+"the location specified by the 32-bit address operand `tmem_addr` into the "
+"destination registers, collectively across all threads of the warps."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2342 ../../../NVPTXUsage.rst:2395
+msgid ""
+"All the threads in the warp must specify the same value of `tmem_addr`, "
+"which must be the base address of the collective load operation. Otherwise, "
+"the behavior is undefined."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2345 ../../../NVPTXUsage.rst:2398
+msgid ""
+"The `shape` qualifier and the `num` qualifier together determines the total "
+"dimension of the data ('n') which is loaded from the Tensor Memory. The "
+"`shape` qualifier indicates the base dimension of data. The `num` qualifier "
+"indicates the repeat factor on the base dimension resulting in the total "
+"dimension of the data that is accessed."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2349 ../../../NVPTXUsage.rst:2402
+msgid "Allowed values for the 'num' are `x1, x2, x4, x8, x16, x32, x64, x128`."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2351 ../../../NVPTXUsage.rst:2404
+msgid ""
+"Allowed values for the 'shape' in the first intrinsic are `16x64b, 16x128b, "
+"16x256b, 32x32b`."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2353 ../../../NVPTXUsage.rst:2406
+msgid "Allowed value for the 'shape' in the second intrinsic is `16x32bx2`."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2355
+msgid ""
+"The result of the intrinsic is a vector consisting of one or more 32-bit "
+"registers derived from `shape` and `num` as shown below."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2359
+msgid "num/shape"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2359
+msgid "16x32bx2/16x64b/32x32b"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2359
+msgid "16x128b"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2359
+msgid "16x256b"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2361
+msgid "x1"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2362
+msgid "x2"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2362 ../../../NVPTXUsage.rst:2363
+#: ../../../NVPTXUsage.rst:2364
+msgid "8"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2363
+msgid "x4"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2363 ../../../NVPTXUsage.rst:2364
+#: ../../../NVPTXUsage.rst:2365 ../../../NVPTXUsage.rst:2539
+msgid "16"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2364
+msgid "x8"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2364 ../../../NVPTXUsage.rst:2365
+#: ../../../NVPTXUsage.rst:2366 ../../../NVPTXUsage.rst:2487
+#: ../../../NVPTXUsage.rst:2535 ../../../NVPTXUsage.rst:2543
+#: ../../../NVPTXUsage.rst:2545 ../../../NVPTXUsage.rst:2547
+#: ../../../NVPTXUsage.rst:2549
+msgid "32"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2365
+msgid "x16"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2365 ../../../NVPTXUsage.rst:2366
+#: ../../../NVPTXUsage.rst:2367 ../../../NVPTXUsage.rst:2483
+#: ../../../NVPTXUsage.rst:2492
+msgid "64"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2366
+msgid "x32"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2366 ../../../NVPTXUsage.rst:2367
+#: ../../../NVPTXUsage.rst:2368 ../../../NVPTXUsage.rst:2533
+#: ../../../NVPTXUsage.rst:2537 ../../../NVPTXUsage.rst:2541
+msgid "128"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2367
+msgid "x64"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2367 ../../../NVPTXUsage.rst:2368
+msgid "NA"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2368
+msgid "x128"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2371
+msgid ""
+"The last argument `i1 %pack` is a compile-time constant which when set, "
+"indicates that the adjacent columns are packed into a single 32-bit element "
+"during the load"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2373
+msgid ""
+"For more information, refer to the `PTX ISA <https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tcgen05-instructions-tcgen05-ld>`__."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2378
+msgid "'``llvm.nvvm.tcgen05.st.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2392
+msgid ""
+"This group of intrinsics asynchronously store data from the source vector "
+"into the Tensor Memory at the location specified by the 32-bit address "
+"operand 'tmem_addr` collectively across all threads of the warps."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2408
+msgid ""
+"`args` argument is a vector consisting of one or more 32-bit registers "
+"derived from `shape` and `num` as listed in the table listed in the `tcgen05."
+"ld` section."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2411
+msgid ""
+"Each shape support an `unpack` mode to allow a 32-bit element in the "
+"register to be unpacked into two 16-bit elements and store them in adjacent "
+"columns. `unpack` mode can be enabled by setting the `%unpack` operand to 1 "
+"and can be disabled by setting it to 0."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2413
+msgid ""
+"The last argument `i1 %unpack` is a compile-time constant which when set, "
+"indicates that a 32-bit element in the register to be unpacked into two 16-"
+"bit elements and store them in adjacent columns."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2415
+msgid ""
+"For more information, refer to the `PTX ISA <https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tcgen05-instructions-tcgen05-st>`__."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2419
+msgid "tcgen05.mma Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2422
+msgid "Overview"
+msgstr "概覽"
+
+#: ../../../NVPTXUsage.rst:2424
+msgid ""
+"`tcgen05.mma` operation of shape `M x N x K` perform matrix multiplication "
+"and accumulation of the form: `D =  A * B + D` where:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2427
+msgid ""
+"the `A` matrix has shape `M x K`, in either `Tensor Memory` or `Shared "
+"Memory`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2428
+msgid ""
+"the `B` matrix has shape `K x N`, in `Shared Memory` of the current CTA and, "
+"optionally in peer CTA"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2429
+msgid "the `D` matrix is of the shape `M x N`, in `Tensor Memory`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2431
+msgid ""
+"Optionally an input predicate can be used to disable the input "
+"(`%enable_inp_d`) from the accumulator matrix and the following operation "
+"can be performed as `D = A * B`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2434
+msgid ""
+"The matrix multiplication and accumulation operations are categorized into "
+"various kinds based on input types and the throughput of the multiplication "
+"operation. The following table shows the different kinds of MMA operations "
+"that are supported:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2439
+msgid ".kind"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2439
+msgid "Supported Input Types"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2441
+msgid "f16"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2441
+msgid "F16 and BF16"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2443
+msgid "tf32"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2443 ../../../NVPTXUsage.rst:2624
+#: ../../../NVPTXUsage.rst:2778 ../../../NVPTXUsage.rst:2849
+msgid "TF32"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2445
+msgid "f8f6f4"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2445
+msgid "All combinations of F8, F6, and F4"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2447
+msgid "i8"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2447
+msgid "Signed and Unsigned 8-bit Integers"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2449
+msgid "mxf8f6f4"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2449
+msgid "MX-floating point formats"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2451
+msgid "mxf4"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2451
+msgid "MX-floating point formats (FP4)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2453
+msgid "mxf4nvf4"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2453
+msgid "MXF4 + custom NVIDIA 4-bit floating point (with common scaling factor)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2457
+msgid ""
+"`tcgen05.mma.sp` supports sparse variant of `A` with shape `M x K` stored in "
+"packed form as `M X (K / 2)` in memory. The `%spmetadata` specifies the "
+"mapping of the `K / 2` non-zero elements to the `K` elements before "
+"performing the MMA operation."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2461
+msgid ""
+"`tcgen05.mma.block_scale` perform matrix multiplication with block scaling "
+"`D = (A * scale_A)  * (B * scale_B) + D` where scaling of input matrices "
+"from memory to form the matrix `A` and matrix `B` before performing the MMA "
+"operation. Scale factors for `A` and `B` matrices need to be duplicated to "
+"all 32 lane partitions of tensor memory. The shape of `%scale_a` and "
+"`%scale_b` matrices depend on the `.scale_vectorsize` described in `here "
+"<https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-mma-scale-"
+"valid-comb>`__"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2468
+msgid ""
+"The sparsity metadata (`%spmetadata`) as well as the block-scale inputs for "
+"`A / B` matrices (`%scale_a` and `%scale_b`) reside in Tensor Memory."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2471
+msgid ""
+"To facilitate opportunistic re-use of `A / B` matrix data across a sequence "
+"of MMA operations, the `A/B` matrices are loaded into a collector buffer "
+"(`%collector_usage_a_op_flag`, `%collector_usage_b_buffer_flag`, and "
+"`%collector_usage_b_op_flag`). The flag value of the collector_usage flag in "
+"the intrinsic specifies the nature of the re-use"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2476
+msgid ""
+"There are three kinds of matrix descriptors used by the tcgen05 family of "
+"instructions:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2479
+msgid "Descriptor"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2479 ../../../NVPTXUsage.rst:3121
+msgid "Description"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2479
+msgid "Size (bits)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2481
+msgid "Shared Memory Descriptor"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2481
+msgid ""
+"Describes properties of multiplicand matrix in shared memory, including its "
+"location within the CTA's shared memory. `PTX ISA <https://docs.nvidia.com/"
+"cuda/parallel-thread-execution/#tcgen05-shared-memory-descriptor>`__"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2486
+msgid "Instruction Descriptor"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2486
+msgid ""
+"Describes shapes, types, and details of all matrices and the MMA operation. "
+"`PTX ISA <https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-"
+"zero-column-mask-descriptor>`__"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2490
+msgid "Zero-Column Mask Descriptor"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2490
+msgid ""
+"Generates a mask specifying which columns of B matrix are zeroed in the MMA "
+"operation, regardless of values in shared memory. Total mask size = N bits "
+"`PTX ISA <https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-"
+"instruction-descriptor>`__"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2497
+msgid ""
+"`tcgen05.mma` can be used for general matrix multiplication or for "
+"convolution operations. In case of convolutions, the `activations` can be "
+"stored in either matrix `A` or matrix `B` while the `weights` will be stored "
+"in the other matrix"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2501
+msgid ""
+"`tcgen05.mma` has an optional collector qualifier to specify when an `A` or "
+"`B` matrix is new to the sequence and should be loaded, unchanged within the "
+"sequence and, should be reused, or the last use in the sequence and should "
+"be discarded. The collector qualifier is used to give the TensorCore "
+"permission to reuse a previously loaded `A` or `B` matrix; however reuse is "
+"opportunistic in that the TensorCore may reload a matrix even when it has "
+"permission to reuse that matrix. Thus, the source memory of an A or B matrix "
+"must not be modified while the MMA instruction using those matrices has not "
+"completed - regardless of collector qualifier permissions."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2511
+msgid ""
+"The `cta_group::1` specifies that the operation is performed on the Tensor "
+"Memory of the executing thread’s CTA only. The `cta_group::2` specifies that "
+"the MMA operation is performed on the Tensor Memory of the executing "
+"thread’s CTA and its peer CTA."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2515
+msgid ""
+"The vector operand `%disable_output_lane` specifies the lane(s) in the "
+"Tensor Memory that should be not be updated with the resultant matrix D. "
+"Elements of the vector operand disable-output-lane forms a mask where each "
+"bit corresponds to a lane of the Tensor Memory, with least significant bit "
+"of the first element of the vector (leftmost in syntax) corresponding to the "
+"lane 0 of the Tensor Memory. If a bit in the mask is 1, then the "
+"corresponding lane in the Tensor Memory for the resultant matrix D will not "
+"be updated"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2524
+msgid "Intrinsic Design:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2526
+msgid ""
+"Given the broad feature set of `tcgen05.mma` instruction modeling these "
+"through intrinsics is highly complex, and the following table outlines the "
+"large number of intrinsics required to fully support the `tcgen05.mma` "
+"instruction set."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2531
+msgid "variant"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2531
+msgid "Configuration"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2531
+msgid "Total Variants"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2533
+msgid "tcgen05.mma.shared"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2533 ../../../NVPTXUsage.rst:2541
+msgid "2 (space) x 2 (sp) x 4 (kind) x 2 (cta_group) x 4 (collector_usage)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2535
+msgid "tcgen05.mma.tensor.ashift"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2535 ../../../NVPTXUsage.rst:2543
+msgid "2 (sp) x 4 (kind) x 2 (cta_group) x 2 (collector_usage)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2537
+msgid "tcgen05.mma.scale_d"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2537
+msgid "2 (space) x 2 (sp) x 2 (kind) x 2 (cta_group) x 4 (collector_usage)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2539
+msgid "tcgen05.mma.scale_d.tensor.ashift"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2539
+msgid "2 (sp) x 2 (kind) x 2 (cta_group) x 2 (collector_usage)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2541
+msgid "tcgen05.mma.disable_output_lane"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2543
+msgid "tcgen05.mma.disable_output_lane..."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2545 ../../../NVPTXUsage.rst:2547
+#: ../../../NVPTXUsage.rst:2549
+msgid "tcgen05.mma.block_scale"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2545
+msgid ""
+"2 (space) x 1 (mxf4nvf4) x 2 (cta_group) x 2 (scale_vec_size) x 4 "
+"(collector_usage)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2547
+msgid ""
+"2 (space) x 1 (mxf4) x 2 (cta_group) x 2 (scale_vec_size) x 4 "
+"(collector_usage)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2549
+msgid ""
+"2 (space) x 1 (mxf8f6f4) x 2 (cta_group) x 2 (scale_vec_size) x 4 "
+"(collector_usage)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2551
+msgid "tcgen05.mma.ws"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2551
+msgid ""
+"2 (space) x 2 (sp) x 4 (kind) x 2 (zero_col_mask) x 4 (collector_usage_op) x "
+"4 (collector_buffer)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2551
+msgid "256"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2553
+msgid "Total"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2553
+msgid "816"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2557
+msgid ""
+"To reduce the number of possible intrinsic variations, we've modeled the "
+"`tcgen05.mma` instructions using flag operands. We've added range checks to "
+"these flags to prevent invalid values. We also expanded some flags back into "
+"intrinsic modifiers to avoid supporting invalid combinations of features."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2564
+msgid "'``llvm.nvvm.tcgen05.mma.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2589
+msgid ""
+"`nvvm.tcgen05.mma` is an asynchronous intrinsic which initiates an `M x N x "
+"K` matrix multiply and accumulate operation, `D = A * B + D` where the `A` "
+"matrix is `M x K`, the `B` matrix is `K x N`, and the `D` matrix is `M x N`. "
+"The operation of the form `D = A*B` is issued when the input predicate "
+"argument `%enable_inp_d` is false. The optional immediate argument "
+"`%scale_d_imm` can be specified to scale the input matrix `D` as follows: `D "
+"= A * B + D * (2 ^ - %scale_d_imm)`. The valid range of values for argument "
+"`%scale_d_imm` is `[0, 15]`. The 32-bit register operand idesc is the "
+"instruction descriptor as described in `Instruction descriptor <https://docs."
+"nvidia.com/cuda/parallel-thread-execution/#tcgen05-instruction-descriptor>`__"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2598
+msgid ""
+"`nvvm.tcgen05.mma` has single thread semantics, unlike the collective "
+"instructions `nvvm.mma.sync` or the PTX `wgmma.mma_async` instruction. So, a "
+"single thread issuing the `nvvm.tcgen05.mma` will result in the initiation "
+"of the whole matrix and accumulate operation"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2603
+msgid ""
+"When `.sp` is specifed, the dimension of A matrix is `M x (K/2)` and "
+"requires specifiying an additional `%spmetadata` argument"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2606 ../../../NVPTXUsage.rst:2764
+msgid ""
+"`.ashift` shifts the rows of the A matrix down by one row, except for the "
+"last row in the Tensor Memory. `.ashift` is only allowed with M = 128 or M = "
+"256."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2609 ../../../NVPTXUsage.rst:2766
+msgid ""
+"The `%collector_usage_a_op_flag` flag specifies the usage of collector "
+"buffer for matrix `A`. It is illegal to specify either of `USE` or `FILL` "
+"for `%collector_usage_a_op_flag` along with `.ashift`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2613 ../../../NVPTXUsage.rst:2697
+#: ../../../NVPTXUsage.rst:2768
+msgid ""
+"For more information, refer to the `PTX ISA <https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tcgen05-mma-instructions-mma>`__"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2616 ../../../NVPTXUsage.rst:2700
+#: ../../../NVPTXUsage.rst:2770 ../../../NVPTXUsage.rst:2841
+msgid ""
+"The following tables describes the possible values of the flag arguments"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2618
+msgid "`%kind_flag` flag:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2621 ../../../NVPTXUsage.rst:2775
+#: ../../../NVPTXUsage.rst:2846
+msgid "`kind_flag`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2621 ../../../NVPTXUsage.rst:2632
+#: ../../../NVPTXUsage.rst:2641 ../../../NVPTXUsage.rst:2705
+#: ../../../NVPTXUsage.rst:2714 ../../../NVPTXUsage.rst:2775
+#: ../../../NVPTXUsage.rst:2786 ../../../NVPTXUsage.rst:2795
+#: ../../../NVPTXUsage.rst:2846 ../../../NVPTXUsage.rst:2857
+#: ../../../NVPTXUsage.rst:2868
+msgid "value"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2623 ../../../NVPTXUsage.rst:2777
+#: ../../../NVPTXUsage.rst:2848
+msgid "F16"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2625 ../../../NVPTXUsage.rst:2779
+#: ../../../NVPTXUsage.rst:2850
+msgid "F8F6F4"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2626 ../../../NVPTXUsage.rst:2780
+#: ../../../NVPTXUsage.rst:2851
+msgid "I8"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2629
+msgid "`%cta_group_flag` flag:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2632 ../../../NVPTXUsage.rst:2786
+msgid "`cta_group_flag`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2634 ../../../NVPTXUsage.rst:2707
+#: ../../../NVPTXUsage.rst:2788
+msgid "CG1"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2635 ../../../NVPTXUsage.rst:2708
+#: ../../../NVPTXUsage.rst:2789
+msgid "CG2"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2638
+msgid "`%collector_usage_a_op_flag` flag:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2641 ../../../NVPTXUsage.rst:2714
+#: ../../../NVPTXUsage.rst:2795
+msgid "`collector_usage_a_op_flag`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2643 ../../../NVPTXUsage.rst:2716
+#: ../../../NVPTXUsage.rst:2797 ../../../NVPTXUsage.rst:2870
+msgid "DISCARD"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2644 ../../../NVPTXUsage.rst:2717
+#: ../../../NVPTXUsage.rst:2798 ../../../NVPTXUsage.rst:2871
+msgid "LASTUSE"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2645 ../../../NVPTXUsage.rst:2718
+#: ../../../NVPTXUsage.rst:2799 ../../../NVPTXUsage.rst:2872
+msgid "USE"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2646 ../../../NVPTXUsage.rst:2719
+#: ../../../NVPTXUsage.rst:2800 ../../../NVPTXUsage.rst:2873
+msgid "FILL"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2650
+msgid "'``llvm.nvvm.tcgen05.mma.block_scale*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2689
+msgid ""
+"`nvvm.tcgen05.mma.block_scale` is an asynchronous intrinsic which initiates "
+"an `M x N x K` matrix multiply and accumulate operation, `D = (A * scale_a)  "
+"* (B * scale_b) + D` where the `A` matrix is `M x K`, the `B` matrix is `K x "
+"N`, and the `D` matrix is `M x N`. The matrices `A` and `B` are scaled with "
+"`%scale_A` and `%scale_B` matrices respectively before performing the matrix "
+"multiply and accumulate operation. The operation of the form `D = A*B` is "
+"issued when the input predicate argument `%enable_inp_d` is false. The 32-"
+"bit register operand idesc is the instruction descriptor as described in "
+"`Instruction descriptor <https://docs.nvidia.com/cuda/parallel-thread-"
+"execution/#tcgen05-instruction-descriptor>`__"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2691
+msgid ""
+"`nvvm.tcgen05.mma.block_scale` has single thread semantics, unlike the "
+"collective instructions `nvvm.mma.sync` or the PTX `wgmma.mma_async` "
+"instruction. So, a single thread issuing the `nvvm.tcgen05.mma.block_scale` "
+"will result in the initiation of the whole matrix multiply and accumulate "
+"operation"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2693 ../../../NVPTXUsage.rst:2762
+#: ../../../NVPTXUsage.rst:2832
+msgid ""
+"When `.sp` is specifed, the dimension of A matrix is `M x (K / 2)` and "
+"requires specifiying an additional `%spmetadata` argument"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2695
+msgid ""
+"The `%collector_usage_a_op_flag` flag specifies the usage of collector "
+"buffer for matrix `A`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2702
+msgid "`%cta_group`:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2705
+msgid "`cta_group`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2711 ../../../NVPTXUsage.rst:2792
+msgid "`%collector_usage_a_op_flag`:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2723
+msgid "'``llvm.nvvm.tcgen05.mma.disable_output_lane*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2756
+msgid ""
+"`nvvm.tcgen05.mma.disable_output_lane` is an asynchronous intrinsic which "
+"initiates an `M x N x K` matrix multiply and accumulate operation, `D = A * "
+"B + D` where the `A` matrix is `M x K`, the `B` matrix is `K x N`, and the "
+"`D` matrix is `M x N`. The operation of the form `D = A*B` is issued when "
+"the input predicate argument `%enable_inp_d` is false. The optional "
+"immediate argument `%scale_d_imm` can be specified to scale the input matrix "
+"`D` as follows: `D = A*B+D * (2 ^ - %scale_d_imm)`. The valid range of "
+"values for argument `%scale_d_imm` is `[0, 15]`. The 32-bit register operand "
+"idesc is the instruction descriptor as described in `Instruction descriptor "
+"<https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-instruction-"
+"descriptor>`__"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2758
+msgid ""
+"The vector operand `%disable_output_lane` specifies the lane(s) in the "
+"Tensor Memory that should be not be updated with the resultant matrix `D`. "
+"Elements of the vector operand `%disable_output_lane` forms a mask where "
+"each bit corresponds to a lane of the Tensor Memory, with least significant "
+"bit of the first element of the vector corresponding to the `lane 0` of the "
+"Tensor Memory. If a bit in the mask is 1, then the corresponding lane in the "
+"Tensor Memory for the resultant matrix `D` will not be updated"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2760
+msgid ""
+"`nvvm.tcgen05.mma.disable_output_lane` has single thread semantics, unlike "
+"the collective instructions `nvvm.mma.sync` or the PTX `wgmma.mma_async` "
+"instruction. So, a single thread issuing the `nvvm.tcgen05.mma."
+"disable_output_lane` will result in the initiation of the whole matrix "
+"multiply and accumulate operation"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2772 ../../../NVPTXUsage.rst:2843
+msgid "`%kind_flag`:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2783
+msgid "`%cta_group_flag`:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2805
+msgid "'``llvm.nvvm.tcgen05.mma.ws*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2828
+msgid ""
+"`nvvm.tcgen05.mma.ws` is an asynchronous intrinsic which initiates an `M x N "
+"x K` weight stationary convolution matrix multiply and accumulate operation, "
+"`D = A * B + D` where the `A` matrix is `M x K`, the `B` matrix is `K x N`, "
+"and the `D` matrix is `M x N`. The operation of the form `D = A*B` is issued "
+"when the input predicate argument `%enable_inp_d` is false. The optional "
+"immediate argument `%scale_d_imm` can be specified to scale the input matrix "
+"`D` as follows: `D = A*B+D * (2 ^ - %scale_d_imm)`. The valid range of "
+"values for argument `%scale_d_imm` is `[0, 15]`. The 32-bit register operand "
+"idesc is the instruction descriptor as described in `Instruction descriptor "
+"<https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-instruction-"
+"descriptor>`__"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2830
+msgid ""
+"`nvvm.tcgen05.mma` has single thread semantics, unlike the collective "
+"instructions `nvvm.mma.sync` or the PTX `wgmma.mma_async` instruction. So, a "
+"single thread issuing the `nvvm.tcgen05.mma` will result in the initiation "
+"of the whole matrix multiply and accumulate operation"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2834
+msgid ""
+"The operand `%zero_col_mask` is a 64-bit register which specifies the `Zero-"
+"Column Mask Descriptor <https://docs.nvidia.com/cuda/parallel-thread-"
+"execution/#tcgen05-zero-column-mask-descriptor>`__. The zero-column mask "
+"descriptor is used to generate a mask that specifies which columns of `B` "
+"matrix will have zero value for the matrix multiply and accumulate operation "
+"regardless of the values present in the shared memory."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2836
+msgid ""
+"The `%collector_usage_b_buffer_flag` and `%collector_usage_b_op_flag` "
+"together flag specifies the usage of collector buffer for Matrix `B`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2838
+msgid ""
+"For more information, refer to the `PTX ISA <https://docs.nvidia.com/cuda/"
+"parallel-thread-execution/#tcgen05-mma-instructions-mma-ws>`__"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2854
+msgid "`%collector_usage_b_buffer_flag`:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2857
+msgid "`collector_usage_b_buffer_flag`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2859
+msgid "B0"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2860
+msgid "B1"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2861
+msgid "B2"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2862
+msgid "B3"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2865
+msgid "`%collector_usage_b_op_flag`:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2868
+msgid "`collector_usage_b_op_flag`"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2877
+msgid "Store Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2880
+msgid "'``llvm.nvvm.st.bulk.*``'"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2893
+msgid ""
+"The '``@llvm.nvvm.st.bulk.*``' intrinsics initialize a region of shared "
+"memory starting from the location specified by the destination address "
+"operand `%dst`."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2896
+msgid ""
+"The integer operand `%size` specifies the amount of memory to be initialized "
+"in terms of number of bytes and must be a multiple of 8. Otherwise, the "
+"behavior is undefined."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2900
+msgid ""
+"The integer immediate operand `%initval` specifies the initialization value "
+"for the memory locations. The only numeric value allowed is 0."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2903
+msgid ""
+"The ``@llvm.nvvm.st.bulk.shared.cta`` and ``@llvm.nvvm.st.bulk`` intrinsics "
+"are similar but the latter uses generic addressing (see `Generic Addressing "
+"<https://docs.nvidia.com/cuda/parallel-thread-execution/#generic-"
+"addressing>`__)."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2906
+msgid ""
+"For more information, refer `PTX ISA <https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/#data-movement-and-conversion-instructions-st-bulk>`__."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2910
+msgid "clusterlaunchcontrol Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2913
+msgid "'``llvm.nvvm.clusterlaunchcontrol.try_cancel*``' Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2926
+msgid ""
+"The ``clusterlaunchcontrol.try_cancel`` intrinsics requests atomically "
+"cancelling the launch of a cluster that has not started running yet. It "
+"asynchronously non-atomically writes a 16-byte opaque response to shared "
+"memory, pointed to by 16-byte-aligned ``addr`` indicating whether the "
+"operation succeeded or failed. ``addr`` and 8-byte-aligned ``mbar`` must "
+"refer to ``shared::cta`` otherwise the behavior is undefined. The completion "
+"of the asynchronous operation is tracked using the mbarrier completion "
+"mechanism at ``.cluster`` scope referenced by the shared memory pointer, "
+"``mbar``. On success, the opaque response contains the CTA id of the first "
+"CTA of the canceled cluster; no other successful response from other "
+"``clusterlaunchcontrol.try_cancel`` operations from the same grid will "
+"contain that id."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2937
+msgid ""
+"The ``multicast`` variant specifies that the response is asynchronously non-"
+"atomically written to the corresponding shared memory location of each CTA "
+"in the requesting cluster. The completion of the write of each local "
+"response is tracked by independent mbarriers at the corresponding shared "
+"memory location of each CTA in the cluster."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2943
+msgid ""
+"For more information, refer `PTX ISA <https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/?a#parallel-synchronization-and-communication-instructions-"
+"clusterlaunchcontrol-try-cancel>`__."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2946
+msgid "'``llvm.nvvm.clusterlaunchcontrol.query_cancel.is_canceled``' Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2958
+msgid ""
+"The ``llvm.nvvm.clusterlaunchcontrol.query_cancel.is_canceled`` intrinsic "
+"decodes the opaque response written by the ``llvm.nvvm.clusterlaunchcontrol."
+"try_cancel`` operation."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2961
+msgid ""
+"The intrinsic returns ``0`` (false) if the request failed. If the request "
+"succeeded, it returns ``1`` (true). A true result indicates that:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2964
+msgid ""
+"the thread block cluster whose first CTA id matches that of the response "
+"handle will not run, and"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2966
+msgid ""
+"no other successful response of another ``try_cancel`` request in the grid "
+"will contain the first CTA id of that cluster"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2969 ../../../NVPTXUsage.rst:2998
+msgid ""
+"For more information, refer `PTX ISA <https://docs.nvidia.com/cuda/parallel-"
+"thread-execution/?a#parallel-synchronization-and-communication-instructions-"
+"clusterlaunchcontrol-query-cancel>`__."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2973
+msgid ""
+"'``llvm.nvvm.clusterlaunchcontrol.query_cancel.get_first_ctaid.*``' "
+"Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2987
+msgid ""
+"The ``clusterlaunchcontrol.query_cancel.get_first_ctaid.*`` intrinsic can be "
+"used to decode the successful opaque response written by the ``llvm.nvvm."
+"clusterlaunchcontrol.try_cancel`` operation."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2991
+msgid "If the request succeeded:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2993
+msgid ""
+"``llvm.nvvm.clusterlaunchcontrol.query_cancel.get_first_ctaid.{x,y,z}`` "
+"returns the coordinate of the first CTA in the canceled cluster, either x, "
+"y, or z."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:2996
+msgid "If the request failed, the behavior of these intrinsics is undefined."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3001
+msgid "Perf Monitor Event Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3004
+msgid "'``llvm.nvvm.pm.event.mask``' Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3016
+msgid ""
+"The '``llvm.nvvm.pm.event.mask``' intrinsic triggers one or more performance "
+"monitor events. Each bit in the 16-bit immediate operand ``%mask_val`` "
+"controls an event."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3020
+msgid ""
+"For more information on the pmevent instructions, refer to the PTX ISA "
+"`<https://docs.nvidia.com/cuda/parallel-thread-execution/index."
+"html#miscellaneous-instructions-pmevent>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3024
+msgid "Other Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3026
+msgid ""
+"For the full set of NVPTX intrinsics, please see the ``include/llvm/IR/"
+"IntrinsicsNVVM.td`` file in the LLVM source tree."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3033
+msgid "Linking with Libdevice"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3035
+msgid ""
+"The CUDA Toolkit comes with an LLVM bitcode library called ``libdevice`` "
+"that implements many common mathematical functions. This library can be used "
+"as a high-performance math library for any compilers using the LLVM NVPTX "
+"target. The library can be found under ``nvvm/libdevice/`` in the CUDA "
+"Toolkit and there is a separate version for each compute architecture."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3041
+msgid ""
+"For a list of all math functions implemented in libdevice, see `libdevice "
+"Users Guide <http://docs.nvidia.com/cuda/libdevice-users-guide/index.html>`_."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3044
+msgid ""
+"To accommodate various math-related compiler flags that can affect code "
+"generation of libdevice code, the library code depends on a special LLVM IR "
+"pass (``NVVMReflect``) to handle conditional compilation within LLVM IR. "
+"This pass looks for calls to the ``@__nvvm_reflect`` function and replaces "
+"them with constants based on the defined reflection parameters. Such "
+"conditional code often follows a pattern:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3060
+msgid "The default value for all unspecified reflection parameters is zero."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3062
+msgid ""
+"The ``NVVMReflect`` pass should be executed early in the optimization "
+"pipeline, immediately after the link stage. The ``internalize`` pass is also "
+"recommended to remove unused math functions from the resulting PTX. For an "
+"input IR module ``module.bc``, the following compilation flow is recommended:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3067
+msgid ""
+"The ``NVVMReflect`` pass will attempt to remove dead code even without "
+"optimizations. This allows potentially incompatible instructions to be "
+"avoided at all optimizations levels by using the ``__CUDA_ARCH`` argument."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3071
+msgid "Save list of external functions in ``module.bc``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3072
+msgid "Link ``module.bc`` with ``libdevice.compute_XX.YY.bc``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3073
+msgid "Internalize all functions not in list from (1)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3074
+msgid "Eliminate all unused internal functions"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3075
+msgid "Run ``NVVMReflect`` pass"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3076
+msgid "Run standard optimization pipeline"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3080
+msgid ""
+"``linkonce`` and ``linkonce_odr`` linkage types are not suitable for the "
+"libdevice functions. It is possible to link two IR modules that have been "
+"linked against libdevice using different reflection variables."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3084
+msgid ""
+"Since the ``NVVMReflect`` pass replaces conditionals with constants, it will "
+"often leave behind dead code of the form:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3098
+msgid ""
+"Therefore, it is recommended that ``NVVMReflect`` is executed early in the "
+"optimization pipeline before dead-code elimination."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3101
+msgid ""
+"The NVPTX TargetMachine knows how to schedule ``NVVMReflect`` at the "
+"beginning of your pass manager; just use the following code when setting up "
+"your pass manager and the PassBuilder will use "
+"``registerPassBuilderCallbacks`` to let NVPTXTargetMachine::"
+"registerPassBuilderCallbacks add the pass to the pass manager:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3115
+msgid "Reflection Parameters"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3117
+msgid ""
+"The libdevice library currently uses the following reflection parameters to "
+"control code generation:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3121
+msgid "Flag"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3123
+msgid "``__CUDA_FTZ=[0,1]``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3123
+msgid "Use optimized code paths that flush subnormals to zero"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3126
+msgid ""
+"The value of this flag is determined by the \"nvvm-reflect-ftz\" module "
+"flag. The following sets the ftz flag to 1."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3134
+msgid ""
+"(``i32 4`` indicates that the value set here overrides the value in another "
+"module we link with.  See the `LangRef <LangRef.html#module-flags-metadata>` "
+"for details.)"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3139
+msgid "Executing PTX"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3141
+msgid ""
+"The most common way to execute PTX assembly on a GPU device is to use the "
+"CUDA Driver API. This API is a low-level interface to the GPU driver and "
+"allows for JIT compilation of PTX code to native GPU machine code."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3145
+msgid "Initializing the Driver API:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3159
+msgid "JIT compiling a PTX string to a device binary:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3172
+msgid ""
+"For full examples of executing PTX assembly, please see the `CUDA Samples "
+"<https://developer.nvidia.com/cuda-downloads>`_ distribution."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3177
+msgid "Common Issues"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3180
+msgid "ptxas complains of undefined function: __nvvm_reflect"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3182
+msgid ""
+"When linking with libdevice, the ``NVVMReflect`` pass must be used. See :ref:"
+"`libdevice` for more information."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3187
+msgid "Tutorial: A Simple Compute Kernel"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3189
+msgid ""
+"To start, let us take a look at a simple compute kernel written directly in "
+"LLVM IR. The kernel implements vector addition, where each thread computes "
+"one element of the output vector C from the input vectors A and B.  To make "
+"this easier, we also assume that only a single CTA (thread block) will be "
+"launched, and that it will be one dimensional."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3197
+msgid "The Kernel"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3233
+msgid ""
+"We can use the LLVM ``llc`` tool to directly run the NVPTX code generator:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3242
+msgid ""
+"If you want to generate 32-bit code, change ``p:64:64:64`` to ``p:32:32:32`` "
+"in the module data layout string and use ``nvptx-nvidia-cuda`` as the target "
+"triple."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3247
+msgid "The output we get from ``llc`` (as of LLVM 3.4):"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3289
+msgid "Dissecting the Kernel"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3291
+msgid "Now let us dissect the LLVM IR that makes up this kernel."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3294
+msgid "Data Layout"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3296
+msgid ""
+"The data layout string determines the size in bits of common data types, "
+"their ABI alignment, and their storage size.  For NVPTX, you should use one "
+"of the following:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3300
+msgid "32-bit PTX:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3306
+msgid "64-bit PTX:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3314
+msgid "Target Intrinsics"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3316
+msgid ""
+"In this example, we use the ``@llvm.nvvm.read.ptx.sreg.tid.x`` intrinsic to "
+"read the X component of the current thread's ID, which corresponds to a read "
+"of register ``%tid.x`` in PTX. The NVPTX back-end supports a large set of "
+"intrinsics.  A short list is shown below; please see ``include/llvm/IR/"
+"IntrinsicsNVVM.td`` for the full list."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3324
+msgid "Intrinsic"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3324
+msgid "CUDA Equivalent"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3326
+msgid "``i32 @llvm.nvvm.read.ptx.sreg.tid.{x,y,z}``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3326
+msgid "threadIdx.{x,y,z}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3327
+msgid "``i32 @llvm.nvvm.read.ptx.sreg.ctaid.{x,y,z}``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3327
+msgid "blockIdx.{x,y,z}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3328
+msgid "``i32 @llvm.nvvm.read.ptx.sreg.ntid.{x,y,z}``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3328
+msgid "blockDim.{x,y,z}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3329
+msgid "``i32 @llvm.nvvm.read.ptx.sreg.nctaid.{x,y,z}``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3329
+msgid "gridDim.{x,y,z}"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3330
+msgid "``void @llvm.nvvm.barrier0()``"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3330
+msgid "__syncthreads()"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3337
+msgid ""
+"You may have noticed that all of the pointer types in the LLVM IR example "
+"had an explicit address space specifier. What is address space 1? NVIDIA GPU "
+"devices (generally) have four types of memory:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3341
+msgid "Global: Large, off-chip memory"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3342
+msgid "Shared: Small, on-chip memory shared among all threads in a CTA"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3343
+msgid "Local: Per-thread, private memory"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3344
+msgid "Constant: Read-only memory shared across all threads"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3346
+msgid ""
+"These different types of memory are represented in LLVM IR as address "
+"spaces. There is also a fifth address space used by the NVPTX code generator "
+"that corresponds to the \"generic\" address space.  This address space can "
+"represent addresses in any other address space (with a few exceptions).  "
+"This allows users to write IR functions that can load/store memory using the "
+"same instructions. Intrinsics are provided to convert pointers between the "
+"generic and non-generic address spaces."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3354
+msgid ""
+"See :ref:`address_spaces` and :ref:`nvptx_intrinsics` for more information."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3358
+msgid "Running the Kernel"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3360
+msgid ""
+"Generating PTX from LLVM IR is all well and good, but how do we execute it "
+"on a real GPU device? The CUDA Driver API provides a convenient mechanism "
+"for loading and JIT compiling PTX to a native GPU device, and launching a "
+"kernel. The API is similar to OpenCL.  A simple example showing how to load "
+"and execute our vector addition code is shown below. Note that for brevity "
+"this code does not perform much error checking!"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3369
+msgid ""
+"You can also use the ``ptxas`` tool provided by the CUDA Toolkit to offline "
+"compile PTX to machine code (SASS) for a specific GPU architecture. Such "
+"binaries can be loaded by the CUDA Driver API in the same way as PTX. This "
+"can be useful for reducing startup time by precompiling the PTX kernels."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3498
+msgid ""
+"You will need to link with the CUDA driver and specify the path to cuda.h."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3504
+msgid ""
+"We don't need to specify a path to ``libcuda.so`` since this is installed in "
+"a system location by the driver, not the CUDA toolkit."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3507
+msgid ""
+"If everything goes as planned, you should see the following output when "
+"running the compiled program:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3535
+msgid ""
+"You will likely see a different device identifier based on your hardware"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3539
+msgid "Tutorial: Linking with Libdevice"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3541
+msgid ""
+"In this tutorial, we show a simple example of linking LLVM IR with the "
+"libdevice library. We will use the same kernel as the previous tutorial, "
+"except that we will compute ``C = pow(A, B)`` instead of ``C = A + B``. "
+"Libdevice provides an ``__nv_powf`` function that we will use."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3582
+msgid "To compile this kernel, we perform the following steps:"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3584
+msgid "Link with libdevice"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3585
+msgid "Internalize all but the public kernel function"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3586
+msgid "Run ``NVVMReflect`` and set ``__CUDA_FTZ`` to 0"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3587
+msgid "Optimize the linked module"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3588
+msgid "Codegen the module"
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3591
+msgid ""
+"These steps can be performed by the LLVM ``llvm-link``, ``opt``, and ``llc`` "
+"tools. In a complete compiler, these steps can also be performed entirely "
+"programmatically by setting up an appropriate pass configuration (see :ref:"
+"`libdevice`)."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3604
+msgid ""
+"The ``-nvvm-reflect-list=_CUDA_FTZ=0`` is not strictly required, as any "
+"undefined variables will default to zero. It is shown here for evaluation "
+"purposes."
+msgstr ""
+
+#: ../../../NVPTXUsage.rst:3609
+msgid "This gives us the following PTX (excerpt):"
+msgstr ""
