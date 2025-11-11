@@ -1,0 +1,573 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../MIRLangRef.rst:3
+msgid "Machine IR (MIR) Format Reference Manual"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:9
+msgid "This is a work in progress."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:12
+msgid "Introduction"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:14
+msgid ""
+"This document is a reference manual for the Machine IR (MIR) serialization "
+"format. MIR is a human readable serialization format that is used to "
+"represent LLVM's :ref:`machine specific intermediate representation <machine "
+"code representation>`."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:19
+msgid ""
+"The MIR serialization format is designed to be used for testing the code "
+"generation passes in LLVM."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:23
+msgid "Overview"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:25
+msgid ""
+"The MIR serialization format uses a YAML container. YAML is a standard data "
+"serialization language, and the full YAML language spec can be read at `yaml."
+"org <http://www.yaml.org/spec/1.2/spec.html#Introduction>`_."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:30
+msgid ""
+"A MIR file is split up into a series of `YAML documents`_. The first "
+"document can contain an optional embedded LLVM IR module, and the rest of "
+"the documents contain the serialized machine functions."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:37
+msgid "MIR Testing Guide"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:39
+msgid "You can use the MIR format for testing in two different ways:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:41
+msgid ""
+"You can write MIR tests that invoke a single code generation pass using the "
+"``run-pass`` option in llc."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:44
+msgid ""
+"You can use llc's ``stop-after`` option with existing or new LLVM assembly "
+"tests and check the MIR output of a specific code generation pass."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:48
+msgid "Testing Individual Code Generation Passes"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:50
+msgid ""
+"The ``run-pass`` option in llc allows you to create MIR tests that invoke "
+"just a single code generation pass. When this option is used, llc will parse "
+"an input MIR file, run the specified code generation pass, and print the "
+"resulting MIR to the standard output stream."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:55
+msgid ""
+"You can generate an input MIR file for the test by using the ``stop-after`` "
+"option in llc. For example, if you would like to write a test for the post "
+"register allocation pseudo instruction expansion pass, you can specify the "
+"machine copy propagation pass in the ``stop-after`` option, as it runs just "
+"before the pass that we are trying to test:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:61
+msgid "``llc -stop-after machine-cp bug-trigger.ll > test.mir``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:63
+msgid ""
+"After generating the input MIR file, you'll have to add a run line that uses "
+"the ``-run-pass`` option to it. In order to test the post register "
+"allocation pseudo instruction expansion pass on X86-64, a run line like the "
+"one shown below can be used:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:68
+msgid ""
+"``# RUN: llc -run-pass postrapseudos -march=x86-64 %s -o /dev/null | "
+"FileCheck %s``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:70
+msgid ""
+"The MIR files are target dependent, so they have to be placed in the target "
+"specific test directories. They also need to specify a target triple or a "
+"target architecture either in the run line or in the embedded LLVM IR module."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:75
+msgid "Limitations"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:77
+msgid ""
+"Currently the MIR format has several limitations in terms of which state it "
+"can serialize:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:80
+msgid ""
+"The target-specific state in the target-specific ``MachineFunctionInfo`` "
+"subclasses isn't serialized at the moment."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:83
+msgid ""
+"The target-specific ``MachineConstantPoolValue`` subclasses (in the ARM and "
+"SystemZ backends) aren't serialized at the moment."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:86
+msgid ""
+"The ``MCSymbol`` machine operands are only printed, they can't be parsed."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:88
+msgid ""
+"A lot of the state in ``MachineModuleInfo`` isn't serialized - only the CFI "
+"instructions and the variable debug information from MMI is serialized right "
+"now."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:92
+msgid ""
+"These limitations impose restrictions on what you can test with the MIR "
+"format. For now, tests that would like to test some behaviour that depends "
+"on the state of certain ``MCSymbol``  operands or the exception handling "
+"state in MMI, can't use the MIR format. As well as that, tests that test "
+"some behaviour that depends on the state of the target specific "
+"``MachineFunctionInfo`` or ``MachineConstantPoolValue`` subclasses can't use "
+"the MIR format at the moment."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:100
+msgid "High Level Structure"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:105
+msgid "Embedded Module"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:107
+msgid ""
+"When the first YAML document contains a `YAML block literal string`_, the "
+"MIR parser will treat this string as an LLVM assembly language string that "
+"represents an embedded LLVM IR module. Here is an example of a YAML document "
+"that contains an LLVM module:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:125
+msgid "Machine Functions"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:127
+msgid ""
+"The remaining YAML documents contain the machine functions. This is an "
+"example of such YAML document:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:147
+msgid ""
+"The document above consists of attributes that represent the various "
+"properties and data structures in a machine function."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:150
+msgid ""
+"The attribute ``name`` is required, and its value should be identical to the "
+"name of a function that this machine function is based on."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:153
+msgid ""
+"The attribute ``body`` is a `YAML block literal string`_. Its value "
+"represents the function's machine basic blocks and their machine "
+"instructions."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:157
+msgid "Machine Instructions Format Reference"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:159
+msgid ""
+"The machine basic blocks and their instructions are represented using a "
+"custom, human readable serialization language. This language is used in the "
+"`YAML block literal string`_ that corresponds to the machine function's body."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:163
+msgid ""
+"A source string that uses this language contains a list of machine basic "
+"blocks, which are described in the section below."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:167
+msgid "Machine Basic Blocks"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:169
+msgid ""
+"A machine basic block is defined in a single block definition source "
+"construct that contains the block's ID. The example below defines two blocks "
+"that have an ID of zero and one:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:180
+msgid ""
+"A machine basic block can also have a name. It should be specified after the "
+"ID in the block's definition:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:188
+msgid ""
+"The block's name should be identical to the name of the IR block that this "
+"machine block is based on."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:192
+msgid "Block References"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:194
+msgid ""
+"The machine basic blocks are identified by their ID numbers. Individual "
+"blocks are referenced using the following syntax:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:201
+msgid "Examples:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:209
+msgid "Successors"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:211
+msgid ""
+"The machine basic block's successors have to be specified before any of the "
+"instructions:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:224
+msgid ""
+"The branch weights can be specified in brackets after the successor blocks. "
+"The example below defines a block that has two successors with branch "
+"weights of 32 and 16:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:236
+msgid "Live In Registers"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:238
+msgid ""
+"The machine basic block's live in registers have to be specified before any "
+"of the instructions:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:246
+msgid ""
+"The list of live in registers and successors can be empty. The language also "
+"allows multiple live in register and successor lists - they are combined "
+"into one list by the parser."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:251
+msgid "Miscellaneous Attributes"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:253
+msgid ""
+"The attributes ``IsAddressTaken``, ``IsLandingPad`` and ``Alignment`` can be "
+"specified in brackets after the block's definition:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:269
+msgid "Machine Instructions"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:271
+msgid ""
+"A machine instruction is composed of a name, :ref:`machine operands <machine-"
+"operands>`, :ref:`instruction flags <instruction-flags>`, and machine memory "
+"operands."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:275
+msgid ""
+"The instruction's name is usually specified before the operands. The example "
+"below shows an instance of the X86 ``RETQ`` instruction with a single "
+"machine operand:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:283
+msgid ""
+"However, if the machine instruction has one or more explicitly defined "
+"register operands, the instruction's name has to be specified after them. "
+"The example below shows an instance of the AArch64 ``LDPXpost`` instruction "
+"with three defined register operands:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:292
+msgid ""
+"The instruction names are serialized using the exact definitions from the "
+"target's ``*InstrInfo.td`` files, and they are case sensitive. This means "
+"that similar instruction names like ``TSTri`` and ``tSTRi`` represent "
+"different machine instructions."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:300
+msgid "Instruction Flags"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:302
+msgid ""
+"The flag ``frame-setup`` can be specified before the instruction's name:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:311
+msgid "Registers"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:313
+msgid ""
+"Registers are one of the key primitives in the machine instructions "
+"serialization language. They are primarly used in the :ref:`register machine "
+"operands <register-operands>`, but they can also be used in a number of "
+"other places, like the :ref:`basic block's live in list <bb-liveins>`."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:319
+msgid ""
+"The physical registers are identified by their name. They use the following "
+"syntax:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:326
+msgid "The example below shows three X86 physical registers:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:334
+msgid ""
+"The virtual registers are identified by their ID number. They use the "
+"following syntax:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:341
+msgid "Example:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:347
+msgid ""
+"The null registers are represented using an underscore ('``_``'). They can "
+"also be represented using a '``%noreg``' named register, although the former "
+"syntax is preferred."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:354
+msgid "Machine Operands"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:356
+msgid ""
+"There are seventeen different kinds of machine operands, and all of them, "
+"except the ``MCSymbol`` operand, can be serialized. The ``MCSymbol`` "
+"operands are just printed out - they can't be parsed back yet."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:361
+msgid "Immediate Operands"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:363
+msgid ""
+"The immediate machine operands are untyped, 64-bit signed integers. The "
+"example below shows an instance of the X86 ``MOV32ri`` instruction that has "
+"an immediate machine operand ``-42``:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:376
+msgid "Register Operands"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:378
+msgid ""
+"The :ref:`register <registers>` primitive is used to represent the register "
+"machine operands. The register operands can also have optional :ref:"
+"`register flags <register-flags>`, :ref:`a subregister index <subregister-"
+"indices>`, and a reference to the tied register operand. The full syntax of "
+"a register operand is shown below:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:389
+msgid ""
+"This example shows an instance of the X86 ``XOR32rr`` instruction that has 5 "
+"register operands with different register flags:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:399
+msgid "Register Flags"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:401
+msgid ""
+"The table below shows all of the possible register flags along with the "
+"corresponding internal ``llvm::RegState`` representation:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:407
+msgid "Flag"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:408
+msgid "Internal Value"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:410
+msgid "``implicit``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:411
+msgid "``RegState::Implicit``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:413
+msgid "``implicit-def``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:414
+msgid "``RegState::ImplicitDefine``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:416
+msgid "``def``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:417
+msgid "``RegState::Define``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:419
+msgid "``dead``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:420
+msgid "``RegState::Dead``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:422
+msgid "``killed``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:423
+msgid "``RegState::Kill``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:425
+msgid "``undef``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:426
+msgid "``RegState::Undef``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:428
+msgid "``internal``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:429
+msgid "``RegState::InternalRead``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:431
+msgid "``early-clobber``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:432
+msgid "``RegState::EarlyClobber``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:434
+msgid "``debug-use``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:435
+msgid "``RegState::Debug``"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:440
+msgid "Subregister Indices"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:442
+msgid ""
+"The register machine operands can reference a portion of a register by using "
+"the subregister indices. The example below shows an instance of the ``COPY`` "
+"pseudo instruction that uses the X86 ``sub_8bit`` subregister index to copy "
+"8 lower bits from the 32-bit virtual register 0 to the 8-bit virtual "
+"register 1:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:451
+msgid ""
+"The names of the subregister indices are target specific, and are typically "
+"defined in the target's ``*RegisterInfo.td`` file."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:455
+msgid "Global Value Operands"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:457
+msgid ""
+"The global value machine operands reference the global values from the :ref:"
+"`embedded LLVM IR module <embedded-module>`. The example below shows an "
+"instance of the X86 ``MOV64rm`` instruction that has a global value operand "
+"named ``G``:"
+msgstr ""
+
+#: ../../../MIRLangRef.rst:466
+msgid ""
+"The named global values are represented using an identifier with the '@' "
+"prefix. If the identifier doesn't match the regular expression `[-a-zA-Z$._]"
+"[-a-zA-Z$._0-9]*`, then this identifier must be quoted."
+msgstr ""
+
+#: ../../../MIRLangRef.rst:470
+msgid ""
+"The unnamed global values are represented using an unsigned numeric value "
+"with the '@' prefix, like in the following examples: ``@0``, ``@989``."
+msgstr ""
