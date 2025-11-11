@@ -1,0 +1,1378 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 9\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../GlobalISel.rst:3
+msgid "Global Instruction Selection"
+msgstr ""
+
+#: ../../../GlobalISel.rst:10
+msgid ""
+"This document is a work in progress.  It reflects the current state of the "
+"implementation, as well as open design and implementation issues."
+msgstr ""
+
+#: ../../../GlobalISel.rst:14
+msgid "Introduction"
+msgstr "Introduction"
+
+#: ../../../GlobalISel.rst:16
+msgid ""
+"GlobalISel is a framework that provides a set of reusable passes and "
+"utilities for instruction selection --- translation from LLVM IR to target-"
+"specific Machine IR (MIR)."
+msgstr ""
+
+#: ../../../GlobalISel.rst:20
+msgid ""
+"GlobalISel is intended to be a replacement for SelectionDAG and FastISel, to "
+"solve three major problems:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:23
+msgid ""
+"**Performance** --- SelectionDAG introduces a dedicated intermediate "
+"representation, which has a compile-time cost."
+msgstr ""
+
+#: ../../../GlobalISel.rst:26
+msgid ""
+"GlobalISel directly operates on the post-isel representation used by the "
+"rest of the code generator, MIR. It does require extensions to that "
+"representation to support arbitrary incoming IR: :ref:`gmir`."
+msgstr ""
+
+#: ../../../GlobalISel.rst:31
+msgid ""
+"**Granularity** --- SelectionDAG and FastISel operate on individual basic "
+"blocks, losing some global optimization opportunities."
+msgstr ""
+
+#: ../../../GlobalISel.rst:34
+msgid "GlobalISel operates on the whole function."
+msgstr ""
+
+#: ../../../GlobalISel.rst:36
+msgid ""
+"**Modularity** --- SelectionDAG and FastISel are radically different and "
+"share very little code."
+msgstr ""
+
+#: ../../../GlobalISel.rst:39
+msgid ""
+"GlobalISel is built in a way that enables code reuse. For instance, both the "
+"optimized and fast selectors share the :ref:`pipeline`, and targets can "
+"configure that pipeline to better suit their needs."
+msgstr ""
+
+#: ../../../GlobalISel.rst:47
+msgid "Generic Machine IR"
+msgstr ""
+
+#: ../../../GlobalISel.rst:49
+msgid ""
+"Machine IR operates on physical registers, register classes, and (mostly) "
+"target-specific instructions."
+msgstr ""
+
+#: ../../../GlobalISel.rst:52
+msgid ""
+"To bridge the gap with LLVM IR, GlobalISel introduces \"generic\" extensions "
+"to Machine IR:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:58
+msgid ""
+"``NOTE``: The generic MIR (GMIR) representation still contains references to "
+"IR constructs (such as ``GlobalValue``).  Removing those should let us write "
+"more accurate tests, or delete IR after building the initial MIR.  However, "
+"it is not part of the GlobalISel effort."
+msgstr ""
+
+#: ../../../GlobalISel.rst:67
+msgid "Generic Instructions"
+msgstr ""
+
+#: ../../../GlobalISel.rst:69
+msgid ""
+"The main addition is support for pre-isel generic machine instructions (e."
+"g., ``G_ADD``).  Like other target-independent instructions (e.g., ``COPY`` "
+"or ``PHI``), these are available on all targets."
+msgstr ""
+
+#: ../../../GlobalISel.rst:73
+msgid ""
+"``TODO``: While we're progressively adding instructions, one kind in "
+"particular exposes interesting problems: compares and how to represent "
+"condition codes. Some targets (x86, ARM) have generic comparisons setting "
+"multiple flags, which are then used by predicated variants. Others (IR) "
+"specify the predicate in the comparison and users just get a single bit.  "
+"SelectionDAG uses SETCC/CONDBR vs BR_CC (and similar for select) to "
+"represent this."
+msgstr ""
+
+#: ../../../GlobalISel.rst:82
+msgid ""
+"The ``MachineIRBuilder`` class wraps the ``MachineInstrBuilder`` and "
+"provides a convenient way to create these generic instructions."
+msgstr ""
+
+#: ../../../GlobalISel.rst:88
+msgid "Generic Virtual Registers"
+msgstr ""
+
+#: ../../../GlobalISel.rst:90
+msgid ""
+"Generic instructions operate on a new kind of register: \"generic\" virtual "
+"registers.  As opposed to non-generic vregs, they are not assigned a "
+"Register Class.  Instead, generic vregs have a :ref:`gmir-llt`, and can be "
+"assigned a :ref:`gmir-regbank`."
+msgstr ""
+
+#: ../../../GlobalISel.rst:95
+msgid ""
+"``MachineRegisterInfo`` tracks the same information that it does for non-"
+"generic vregs (e.g., use-def chains).  Additionally, it also tracks the :ref:"
+"`gmir-llt` of the register, and, instead of the ``TargetRegisterClass``, "
+"its :ref:`gmir-regbank`, if any."
+msgstr ""
+
+#: ../../../GlobalISel.rst:100
+msgid "For simplicity, most generic instructions only accept generic vregs:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:102
+msgid ""
+"instead of immediates, they use a gvreg defined by an instruction "
+"materializing the immediate value (see :ref:`irtranslator-constants`)."
+msgstr ""
+
+#: ../../../GlobalISel.rst:104
+msgid "instead of physical register, they use a gvreg defined by a ``COPY``."
+msgstr ""
+
+#: ../../../GlobalISel.rst:106
+msgid ""
+"``NOTE``: We started with an alternative representation, where MRI tracks a "
+"size for each gvreg, and instructions have lists of types. That had two "
+"flaws: the type and size are redundant, and there was no generic way of "
+"getting a given operand's type (as there was no 1:1 mapping between "
+"instruction types and operands). We considered putting the type in some "
+"variant of MCInstrDesc instead: See `PR26576 <http://llvm.org/PR26576>`_: "
+"[GlobalISel] Generic MachineInstrs need a type but this increases the memory "
+"footprint of the related objects"
+msgstr ""
+
+#: ../../../GlobalISel.rst:119
+msgid "Register Bank"
+msgstr ""
+
+#: ../../../GlobalISel.rst:121
+msgid ""
+"A Register Bank is a set of register classes defined by the target. A bank "
+"has a size, which is the maximum store size of all covered classes."
+msgstr ""
+
+#: ../../../GlobalISel.rst:124
+msgid ""
+"In general, cross-class copies inside a bank are expected to be cheaper than "
+"copies across banks.  They are also coalesceable by the register coalescer, "
+"whereas cross-bank copies are not."
+msgstr ""
+
+#: ../../../GlobalISel.rst:128
+msgid ""
+"Also, equivalent operations can be performed on different banks using "
+"different instructions."
+msgstr ""
+
+#: ../../../GlobalISel.rst:131
+msgid ""
+"For example, X86 can be seen as having 3 main banks: general-purpose, x87, "
+"and vector (which could be further split into a bank per domain for single "
+"vs double precision instructions)."
+msgstr ""
+
+#: ../../../GlobalISel.rst:135
+msgid ""
+"Register banks are described by a target-provided API, :ref:"
+"`RegisterBankInfo <api-registerbankinfo>`."
+msgstr ""
+
+#: ../../../GlobalISel.rst:141
+msgid "Low Level Type"
+msgstr ""
+
+#: ../../../GlobalISel.rst:143
+msgid ""
+"Additionally, every generic virtual register has a type, represented by an "
+"instance of the ``LLT`` class."
+msgstr ""
+
+#: ../../../GlobalISel.rst:146
+msgid ""
+"Like ``EVT``/``MVT``/``Type``, it has no distinction between unsigned and "
+"signed integer types.  Furthermore, it also has no distinction between "
+"integer and floating-point types: it mainly conveys absolutely necessary "
+"information, such as size and number of vector lanes:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:151
+msgid "``sN`` for scalars"
+msgstr ""
+
+#: ../../../GlobalISel.rst:152
+msgid "``pN`` for pointers"
+msgstr ""
+
+#: ../../../GlobalISel.rst:153
+msgid "``<N x sM>`` for vectors"
+msgstr ""
+
+#: ../../../GlobalISel.rst:154
+msgid "``unsized`` for labels, etc.."
+msgstr ""
+
+#: ../../../GlobalISel.rst:156
+msgid "``LLT`` is intended to replace the usage of ``EVT`` in SelectionDAG."
+msgstr ""
+
+#: ../../../GlobalISel.rst:158
+msgid "Here are some LLT examples and their ``EVT`` and ``Type`` equivalents:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:161
+msgid "LLT"
+msgstr ""
+
+#: ../../../GlobalISel.rst:161
+msgid "EVT"
+msgstr ""
+
+#: ../../../GlobalISel.rst:161
+msgid "IR Type"
+msgstr ""
+
+#: ../../../GlobalISel.rst:163
+msgid "``s1``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:163
+msgid "``i1``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:164
+msgid "``s8``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:164
+msgid "``i8``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:165 ../../../GlobalISel.rst:166
+#: ../../../GlobalISel.rst:169
+msgid "``s32``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:165
+msgid "``i32``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:166
+msgid "``f32``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:166
+msgid "``float``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:167
+msgid "``s17``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:167
+msgid "``i17``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:168
+msgid "``s16``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:168 ../../../GlobalISel.rst:169
+msgid "N/A"
+msgstr ""
+
+#: ../../../GlobalISel.rst:168
+msgid "``{i8, i8}``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:169
+msgid "``[4 x i8]``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:170
+msgid "``p0``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:170 ../../../GlobalISel.rst:171
+msgid "``iPTR``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:170
+msgid "``i8*``, ``i32*``, ``%opaque*``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:171
+msgid "``p2``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:171
+msgid "``i8 addrspace(2)*``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:172
+msgid "``<4 x s32>``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:172
+msgid "``v4f32``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:172
+msgid "``<4 x float>``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:173
+msgid "``s64``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:173
+msgid "``v1f64``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:173
+msgid "``<1 x double>``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:174
+msgid "``<3 x s32>``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:174
+msgid "``v3i32``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:174
+msgid "``<3 x i32>``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:175
+msgid "``unsized``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:175
+msgid "``Other``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:175
+msgid "``label``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:179
+msgid ""
+"Rationale: instructions already encode a specific interpretation of types (e."
+"g., ``add`` vs. ``fadd``, or ``sdiv`` vs. ``udiv``).  Also encoding that "
+"information in the type system requires introducing bitcast with no real "
+"advantage for the selector."
+msgstr ""
+
+#: ../../../GlobalISel.rst:184
+msgid ""
+"Pointer types are distinguished by address space.  This matches IR, as "
+"opposed to SelectionDAG where address space is an attribute on operations. "
+"This representation better supports pointers having different sizes "
+"depending on their addressspace."
+msgstr ""
+
+#: ../../../GlobalISel.rst:189
+msgid ""
+"``NOTE``: Currently, LLT requires at least 2 elements in vectors, but some "
+"targets have the concept of a '1-element vector'.  Representing them as "
+"their underlying scalar type is a nice simplification."
+msgstr ""
+
+#: ../../../GlobalISel.rst:194
+msgid ""
+"``TODO``: Currently, non-generic virtual registers, defined by non-pre-isel-"
+"generic instructions, cannot have a type, and thus cannot be used by a pre-"
+"isel generic instruction.  Instead, they are given a type using a COPY.  We "
+"could relax that and allow types on all vregs: this would reduce the number "
+"of MI required when emitting target-specific MIR early in the pipeline.  "
+"This should purely be a compile-time optimization."
+msgstr ""
+
+#: ../../../GlobalISel.rst:205
+msgid "Core Pipeline"
+msgstr ""
+
+#: ../../../GlobalISel.rst:207
+msgid "There are four required passes, regardless of the optimization mode:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:212
+msgid ""
+"Additional passes can then be inserted at higher optimization levels or for "
+"specific targets. For example, to match the current SelectionDAG set of "
+"transformations: MachineCSE and a better MachineCombiner between every pass."
+msgstr ""
+
+#: ../../../GlobalISel.rst:216
+msgid ""
+"``NOTE``: In theory, not all passes are always necessary. As an additional "
+"compile-time optimization, we could skip some of the passes by setting the "
+"relevant MachineFunction properties.  For instance, if the IRTranslator did "
+"not encounter any illegal instruction, it would set the ``legalized`` "
+"property to avoid running the :ref:`milegalizer`. Similarly, we considered "
+"specializing the IRTranslator per-target to directly emit target-specific "
+"MI. However, we instead decided to keep the core pipeline simple, and focus "
+"on minimizing the overhead of the passes in the no-op cases."
+msgstr ""
+
+#: ../../../GlobalISel.rst:231
+msgid "IRTranslator"
+msgstr ""
+
+#: ../../../GlobalISel.rst:233
+msgid ""
+"This pass translates the input LLVM IR ``Function`` to a GMIR "
+"``MachineFunction``."
+msgstr ""
+
+#: ../../../GlobalISel.rst:236
+msgid ""
+"``TODO``: This currently doesn't support the more complex instructions, in "
+"particular those involving control flow (``switch``, ``invoke``, ...). For "
+"``switch`` in particular, we can initially use the ``LowerSwitch`` pass."
+msgstr ""
+
+#: ../../../GlobalISel.rst:244
+msgid "API: CallLowering"
+msgstr ""
+
+#: ../../../GlobalISel.rst:246
+msgid ""
+"The ``IRTranslator`` (using the ``CallLowering`` target-provided utility) "
+"also implements the ABI's calling convention by lowering calls, returns, and "
+"arguments to the appropriate physical register usage and instruction "
+"sequences."
+msgstr ""
+
+#: ../../../GlobalISel.rst:253
+msgid "Aggregates"
+msgstr ""
+
+#: ../../../GlobalISel.rst:255
+msgid ""
+"Aggregates are lowered to a single scalar vreg. This differs from "
+"SelectionDAG's multiple vregs via ``GetValueVTs``."
+msgstr ""
+
+#: ../../../GlobalISel.rst:258
+msgid ""
+"``TODO``: As some of the bits are undef (padding), we should consider "
+"augmenting the representation with additional metadata (in effect, caching "
+"computeKnownBits information on vregs). See `PR26161 <http://llvm.org/"
+"PR26161>`_: [GlobalISel] Value to vreg during IR to MachineInstr translation "
+"for aggregate type"
+msgstr ""
+
+#: ../../../GlobalISel.rst:268
+msgid "Constant Lowering"
+msgstr ""
+
+#: ../../../GlobalISel.rst:270
+msgid ""
+"The ``IRTranslator`` lowers ``Constant`` operands into uses of gvregs "
+"defined by ``G_CONSTANT`` or ``G_FCONSTANT`` instructions. Currently, these "
+"instructions are always emitted in the entry basic block. In a "
+"``MachineFunction``, each ``Constant`` is materialized by a single gvreg."
+msgstr ""
+
+#: ../../../GlobalISel.rst:275
+msgid ""
+"This is beneficial as it allows us to fold constants into immediate operands "
+"during :ref:`instructionselect`, while still avoiding redundant "
+"materializations for expensive non-foldable constants. However, this can "
+"lead to unnecessary spills and reloads in an -O0 pipeline, as these vregs "
+"can have long live ranges."
+msgstr ""
+
+#: ../../../GlobalISel.rst:281
+msgid ""
+"``TODO``: We're investigating better placement of these instructions, in "
+"fast and optimized modes."
+msgstr ""
+
+#: ../../../GlobalISel.rst:289
+msgid "Legalizer"
+msgstr ""
+
+#: ../../../GlobalISel.rst:291
+msgid ""
+"This pass transforms the generic machine instructions such that they are "
+"legal."
+msgstr ""
+
+#: ../../../GlobalISel.rst:293
+msgid "A legal instruction is defined as:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:295
+msgid ""
+"**selectable** --- the target will later be able to select it to a target-"
+"specific (non-generic) instruction."
+msgstr ""
+
+#: ../../../GlobalISel.rst:298
+msgid ""
+"operating on **vregs that can be loaded and stored** -- if necessary, the "
+"target can select a ``G_LOAD``/``G_STORE`` of each gvreg operand."
+msgstr ""
+
+#: ../../../GlobalISel.rst:301
+msgid ""
+"As opposed to SelectionDAG, there are no legalization phases.  In "
+"particular, 'type' and 'operation' legalization are not separate."
+msgstr ""
+
+#: ../../../GlobalISel.rst:304
+msgid ""
+"Legalization is iterative, and all state is contained in GMIR.  To maintain "
+"the validity of the intermediate code, instructions are introduced:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:307
+msgid ""
+"``G_MERGE_VALUES`` --- concatenate multiple registers of the same size into "
+"a single wider register."
+msgstr ""
+
+#: ../../../GlobalISel.rst:310
+msgid ""
+"``G_UNMERGE_VALUES`` --- extract multiple registers of the same size from a "
+"single wider register."
+msgstr ""
+
+#: ../../../GlobalISel.rst:313
+msgid ""
+"``G_EXTRACT`` --- extract a simple register (as contiguous sequences of "
+"bits) from a single wider register."
+msgstr ""
+
+#: ../../../GlobalISel.rst:316
+msgid ""
+"As they are expected to be temporary byproducts of the legalization process, "
+"they are combined at the end of the :ref:`milegalizer` pass. If any remain, "
+"they are expected to always be selectable, using loads and stores if "
+"necessary."
+msgstr ""
+
+#: ../../../GlobalISel.rst:321
+msgid ""
+"The legality of an instruction may only depend on the instruction itself and "
+"must not depend on any context in which the instruction is used. However, "
+"after deciding that an instruction is not legal, using the context of the "
+"instruction to decide how to legalize the instruction is permitted. As an "
+"example, if we have a ``G_FOO`` instruction of the form::"
+msgstr ""
+
+#: ../../../GlobalISel.rst:330
+msgid ""
+"it's impossible to say that G_FOO is legal iff %1 is a ``G_CONSTANT`` with "
+"value ``1``. However, the following::"
+msgstr ""
+
+#: ../../../GlobalISel.rst:335
+msgid ""
+"can say that it's legal iff operand 2 is an immediate with value ``1`` "
+"because that information is entirely contained within the single instruction."
+msgstr ""
+
+#: ../../../GlobalISel.rst:341
+msgid "API: LegalizerInfo"
+msgstr ""
+
+#: ../../../GlobalISel.rst:343
+msgid "The recommended [#legalizer-legacy-footnote]_ API looks like this::"
+msgstr ""
+
+#: ../../../GlobalISel.rst:353
+msgid ""
+"and describes a set of rules by which we can either declare an instruction "
+"legal or decide which action to take to make it more legal."
+msgstr ""
+
+#: ../../../GlobalISel.rst:356
+msgid ""
+"At the core of this ruleset is the ``LegalityQuery`` which describes the "
+"instruction. We use a description rather than the instruction to both allow "
+"other passes to determine legality without having to create an instruction "
+"and also to limit the information available to the predicates to that which "
+"is safe to rely on. Currently, the information available to the predicates "
+"that determine legality contains:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:363
+msgid "The opcode for the instruction"
+msgstr ""
+
+#: ../../../GlobalISel.rst:365
+msgid "The type of each type index (see ``type0``, ``type1``, etc.)"
+msgstr ""
+
+#: ../../../GlobalISel.rst:367
+msgid "The size in bytes and atomic ordering for each MachineMemOperand"
+msgstr ""
+
+#: ../../../GlobalISel.rst:370
+msgid "Rule Processing and Declaring Rules"
+msgstr ""
+
+#: ../../../GlobalISel.rst:372
+msgid ""
+"The ``getActionDefinitionsBuilder`` function generates a ruleset for the "
+"given opcode(s) that rules can be added to. If multiple opcodes are given, "
+"they are all permanently bound to the same ruleset. The rules in a ruleset "
+"are executed from top to bottom and will start again from the top if an "
+"instruction is legalized as a result of the rules. If the ruleset is "
+"exhausted without satisfying any rule, then it is considered unsupported."
+msgstr ""
+
+#: ../../../GlobalISel.rst:379
+msgid ""
+"When it doesn't declare the instruction legal, each pass over the rules may "
+"request that one type changes to another type. Sometimes this can cause "
+"multiple types to change but we avoid this as much as possible as making "
+"multiple changes can make it difficult to avoid infinite loops where, for "
+"example, narrowing one type causes another to be too small and widening that "
+"type causes the first one to be too big."
+msgstr ""
+
+#: ../../../GlobalISel.rst:386
+msgid ""
+"In general, it's advisable to declare instructions legal as close to the top "
+"of the rule as possible and to place any expensive rules as low as possible. "
+"This helps with performance as testing for legality happens more often than "
+"legalization and legalization can require multiple passes over the rules."
+msgstr ""
+
+#: ../../../GlobalISel.rst:391
+msgid "As a concrete example, consider the rule::"
+msgstr ""
+
+#: ../../../GlobalISel.rst:398
+msgid "and the instruction::"
+msgstr ""
+
+#: ../../../GlobalISel.rst:402
+msgid ""
+"this doesn't meet the predicate for the :ref:`.legalFor() <legalfor>` as "
+"``s7`` is not one of the listed types so it falls through to the :ref:`."
+"clampScalar() <clampscalar>`. It does meet the predicate for this rule as "
+"the type is smaller than the ``s32`` and this rule instructs the legalizer "
+"to change type 0 to ``s32``. It then restarts from the top. This time it "
+"does satisfy ``.legalFor()`` and the resulting output is::"
+msgstr ""
+
+#: ../../../GlobalISel.rst:414
+msgid ""
+"where the ``G_ADD`` is legal and the other instructions are scheduled for "
+"processing by the legalizer."
+msgstr ""
+
+#: ../../../GlobalISel.rst:418
+msgid "Rule Actions"
+msgstr ""
+
+#: ../../../GlobalISel.rst:420
+msgid ""
+"There are various rule factories that append rules to a ruleset but they "
+"have a few actions in common:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:425
+msgid ""
+"``legalIf()``, ``legalFor()``, etc. declare an instruction to be legal if "
+"the predicate is satisfied."
+msgstr ""
+
+#: ../../../GlobalISel.rst:428
+msgid ""
+"``narrowScalarIf()``, ``narrowScalarFor()``, etc. declare an instruction to "
+"be illegal if the predicate is satisfied and indicates that narrowing the "
+"scalars in one of the types to a specific type would make it more legal. "
+"This action supports both scalars and vectors."
+msgstr ""
+
+#: ../../../GlobalISel.rst:433
+msgid ""
+"``widenScalarIf()``, ``widenScalarFor()``, etc. declare an instruction to be "
+"illegal if the predicate is satisfied and indicates that widening the "
+"scalars in one of the types to a specific type would make it more legal. "
+"This action supports both scalars and vectors."
+msgstr ""
+
+#: ../../../GlobalISel.rst:438
+msgid ""
+"``fewerElementsIf()``, ``fewerElementsFor()``, etc. declare an instruction "
+"to be illegal if the predicate is satisfied and indicates reducing the "
+"number of vector elements in one of the types to a specific type would make "
+"it more legal. This action supports vectors."
+msgstr ""
+
+#: ../../../GlobalISel.rst:443
+msgid ""
+"``moreElementsIf()``, ``moreElementsFor()``, etc. declare an instruction to "
+"be illegal if the predicate is satisfied and indicates increasing the number "
+"of vector elements in one of the types to a specific type would make it more "
+"legal. This action supports vectors."
+msgstr ""
+
+#: ../../../GlobalISel.rst:448
+msgid ""
+"``lowerIf()``, ``lowerFor()``, etc. declare an instruction to be illegal if "
+"the predicate is satisfied and indicates that replacing it with equivalent "
+"instruction(s) would make it more legal. Support for this action differs for "
+"each opcode."
+msgstr ""
+
+#: ../../../GlobalISel.rst:453
+msgid ""
+"``libcallIf()``, ``libcallFor()``, etc. declare an instruction to be illegal "
+"if the predicate is satisfied and indicates that replacing it with a libcall "
+"would make it more legal. Support for this action differs for each opcode."
+msgstr ""
+
+#: ../../../GlobalISel.rst:458
+msgid ""
+"``customIf()``, ``customFor()``, etc. declare an instruction to be illegal "
+"if the predicate is satisfied and indicates that the backend developer will "
+"supply a means of making it more legal."
+msgstr ""
+
+#: ../../../GlobalISel.rst:462
+msgid ""
+"``unsupportedIf()``, ``unsupportedFor()``, etc. declare an instruction to be "
+"illegal if the predicate is satisfied and indicates that there is no way to "
+"make it legal and the compiler should fail."
+msgstr ""
+
+#: ../../../GlobalISel.rst:466
+msgid ""
+"``fallback()`` falls back on an older API and should only be used while "
+"porting existing code from that API."
+msgstr ""
+
+#: ../../../GlobalISel.rst:470
+msgid "Rule Predicates"
+msgstr ""
+
+#: ../../../GlobalISel.rst:472
+msgid "The rule factories also have predicates in common:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:474
+msgid "``legal()``, ``lower()``, etc. are always satisfied."
+msgstr ""
+
+#: ../../../GlobalISel.rst:476
+msgid ""
+"``legalIf()``, ``narrowScalarIf()``, etc. are satisfied if the user-supplied "
+"``LegalityPredicate`` function returns true. This predicate has access to "
+"the information in the ``LegalityQuery`` to make its decision. User-supplied "
+"predicates can also be combined using ``all(P0, P1, ...)``."
+msgstr ""
+
+#: ../../../GlobalISel.rst:481
+msgid ""
+"``legalFor()``, ``narrowScalarFor()``, etc. are satisfied if the type "
+"matches one in a given set of types. For example ``.legalFor({s16, s32})`` "
+"declares the instruction legal if type 0 is either s16 or s32. Additional "
+"versions for two and three type indices are generally available. For these, "
+"all the type indices considered together must match all the types in one of "
+"the tuples. So ``.legalFor({{s16, s32}, {s32, s64}})`` will only accept "
+"``{s16, s32}``, or ``{s32, s64}`` but will not accept ``{s16, s64}``."
+msgstr ""
+
+#: ../../../GlobalISel.rst:489
+msgid ""
+"``legalForTypesWithMemSize()``, ``narrowScalarForTypesWithMemSize()``, etc. "
+"are similar to ``legalFor()``, ``narrowScalarFor()``, etc. but additionally "
+"require a MachineMemOperand to have a given size in each tuple."
+msgstr ""
+
+#: ../../../GlobalISel.rst:493
+msgid ""
+"``legalForCartesianProduct()``, ``narrowScalarForCartesianProduct()``, etc. "
+"are satisfied if each type index matches one element in each of the "
+"independent sets. So ``.legalForCartesianProduct({s16, s32}, {s32, s64})`` "
+"will accept ``{s16, s32}``, ``{s16, s64}``, ``{s32, s32}``, and ``{s32, s64}"
+"``."
+msgstr ""
+
+#: ../../../GlobalISel.rst:499
+msgid "Composite Rules"
+msgstr ""
+
+#: ../../../GlobalISel.rst:501
+msgid ""
+"There are some composite rules for common situations built out of the above "
+"facilities:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:503
+msgid ""
+"``widenScalarToNextPow2()`` is like ``widenScalarIf()`` but is satisfied iff "
+"the type size in bits is not a power of 2 and selects a target type that is "
+"the next largest power of 2."
+msgstr ""
+
+#: ../../../GlobalISel.rst:509
+msgid ""
+"``minScalar()`` is like ``widenScalarIf()`` but is satisfied iff the type "
+"size in bits is smaller than the given minimum and selects the minimum as "
+"the target type. Similarly, there is also a ``maxScalar()`` for the maximum "
+"and a ``clampScalar()`` to do both at once."
+msgstr ""
+
+#: ../../../GlobalISel.rst:514
+msgid ""
+"``minScalarSameAs()`` is like ``minScalar()`` but the minimum is taken from "
+"another type index."
+msgstr ""
+
+#: ../../../GlobalISel.rst:517
+msgid ""
+"``moreElementsToNextMultiple()`` is like ``moreElementsToNextPow2()`` but is "
+"based on multiples of X rather than powers of 2."
+msgstr ""
+
+#: ../../../GlobalISel.rst:521
+msgid "Other Information"
+msgstr ""
+
+#: ../../../GlobalISel.rst:523
+msgid ""
+"``TODO``: An alternative worth investigating is to generalize the API to "
+"represent actions using ``std::function`` that implements the action, "
+"instead of explicit enum tokens (``Legal``, ``WidenScalar``, ...)."
+msgstr ""
+
+#: ../../../GlobalISel.rst:528
+msgid ""
+"``TODO``: Moreover, we could use TableGen to initially infer legality of "
+"operation from existing patterns (as any pattern we can select is by "
+"definition legal). Expanding that to describe legalization actions is a much "
+"larger but potentially useful project."
+msgstr ""
+
+#: ../../../GlobalISel.rst:535
+msgid "Footnotes"
+msgstr ""
+
+#: ../../../GlobalISel.rst:536
+msgid ""
+"An API is broadly similar to SelectionDAG/TargetLowering is available but is "
+"not recommended as a more powerful API is available."
+msgstr ""
+
+#: ../../../GlobalISel.rst:543
+msgid "RegBankSelect"
+msgstr ""
+
+#: ../../../GlobalISel.rst:545
+msgid ""
+"This pass constrains the :ref:`gmir-gvregs` operands of generic instructions "
+"to some :ref:`gmir-regbank`."
+msgstr ""
+
+#: ../../../GlobalISel.rst:548
+msgid ""
+"It iteratively maps instructions to a set of per-operand bank assignment. "
+"The possible mappings are determined by the target-provided :ref:"
+"`RegisterBankInfo <api-registerbankinfo>`. The mapping is then applied, "
+"possibly introducing ``COPY`` instructions if necessary."
+msgstr ""
+
+#: ../../../GlobalISel.rst:554
+msgid ""
+"It traverses the ``MachineFunction`` top down so that all operands are "
+"already mapped when analyzing an instruction."
+msgstr ""
+
+#: ../../../GlobalISel.rst:557
+msgid ""
+"This pass could also remap target-specific instructions when beneficial. In "
+"the future, this could replace the ExeDepsFix pass, as we can directly "
+"select the best variant for an instruction that's available on multiple "
+"banks."
+msgstr ""
+
+#: ../../../GlobalISel.rst:564
+msgid "API: RegisterBankInfo"
+msgstr ""
+
+#: ../../../GlobalISel.rst:566
+msgid ""
+"The ``RegisterBankInfo`` class describes multiple aspects of register banks."
+msgstr ""
+
+#: ../../../GlobalISel.rst:568
+msgid ""
+"**Banks**: ``addRegBankCoverage`` --- which register bank covers each "
+"register class."
+msgstr ""
+
+#: ../../../GlobalISel.rst:571
+msgid ""
+"**Cross-Bank Copies**: ``copyCost`` --- the cost of a ``COPY`` from one bank "
+"to another."
+msgstr ""
+
+#: ../../../GlobalISel.rst:574
+msgid ""
+"**Default Mapping**: ``getInstrMapping`` --- the default bank assignments "
+"for a given instruction."
+msgstr ""
+
+#: ../../../GlobalISel.rst:577
+msgid ""
+"**Alternative Mapping**: ``getInstrAlternativeMapping`` --- the other "
+"possible bank assignments for a given instruction."
+msgstr ""
+
+#: ../../../GlobalISel.rst:580
+msgid ""
+"``TODO``: All this information should eventually be static and generated by "
+"TableGen, mostly using existing information augmented by bank descriptions."
+msgstr ""
+
+#: ../../../GlobalISel.rst:584
+msgid ""
+"``TODO``: ``getInstrMapping`` is currently separate from "
+"``getInstrAlternativeMapping`` because the latter is more expensive: as we "
+"move to static mapping info, both methods should be free, and we should "
+"merge them."
+msgstr ""
+
+#: ../../../GlobalISel.rst:592
+msgid "RegBankSelect Modes"
+msgstr ""
+
+#: ../../../GlobalISel.rst:594
+msgid "``RegBankSelect`` currently has two modes:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:596
+msgid ""
+"**Fast** --- For each instruction, pick a target-provided \"default\" bank "
+"assignment.  This is the default at -O0."
+msgstr ""
+
+#: ../../../GlobalISel.rst:599
+msgid ""
+"**Greedy** --- For each instruction, pick the cheapest of several target-"
+"provided bank assignment alternatives."
+msgstr ""
+
+#: ../../../GlobalISel.rst:602
+msgid "We intend to eventually introduce an additional optimizing mode:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:604
+msgid ""
+"**Global** --- Across multiple instructions, pick the cheapest combination "
+"of bank assignments."
+msgstr ""
+
+#: ../../../GlobalISel.rst:607
+msgid ""
+"``NOTE``: On AArch64, we are considering using the Greedy mode even at -O0 "
+"(or perhaps at backend -O1):  because :ref:`gmir-llt` doesn't distinguish "
+"floating point from integer scalars, the default assignment for loads and "
+"stores is the integer bank, introducing cross-bank copies on most floating "
+"point operations."
+msgstr ""
+
+#: ../../../GlobalISel.rst:617
+msgid "InstructionSelect"
+msgstr ""
+
+#: ../../../GlobalISel.rst:619
+msgid ""
+"This pass transforms generic machine instructions into equivalent target-"
+"specific instructions.  It traverses the ``MachineFunction`` bottom-up, "
+"selecting uses before definitions, enabling trivial dead code elimination."
+msgstr ""
+
+#: ../../../GlobalISel.rst:626
+msgid "API: InstructionSelector"
+msgstr ""
+
+#: ../../../GlobalISel.rst:628
+msgid ""
+"The target implements the ``InstructionSelector`` class, containing the "
+"target-specific selection logic proper."
+msgstr ""
+
+#: ../../../GlobalISel.rst:631
+msgid ""
+"The instance is provided by the subtarget, so that it can specialize the "
+"selector by subtarget feature (with, e.g., a vector selector overriding "
+"parts of a general-purpose common selector). We might also want to "
+"parameterize it by MachineFunction, to enable selector variants based on "
+"function attributes like optsize."
+msgstr ""
+
+#: ../../../GlobalISel.rst:637
+msgid "The simple API consists of:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:643
+msgid ""
+"This target-provided method is responsible for mutating (or replacing) a "
+"possibly-generic MI into a fully target-specific equivalent. It is also "
+"responsible for doing the necessary constraining of gvregs into the "
+"appropriate register classes as well as passing through COPY instructions to "
+"the register allocator."
+msgstr ""
+
+#: ../../../GlobalISel.rst:649
+msgid ""
+"The ``InstructionSelector`` can fold other instructions into the selected "
+"MI, by walking the use-def chain of the vreg operands. As GlobalISel is "
+"Global, this folding can occur across basic blocks."
+msgstr ""
+
+#: ../../../GlobalISel.rst:654
+msgid "SelectionDAG Rule Imports"
+msgstr ""
+
+#: ../../../GlobalISel.rst:656
+msgid ""
+"TableGen will import SelectionDAG rules and provide the following function "
+"to execute them:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:663
+msgid ""
+"The ``--stats`` option can be used to determine what proportion of rules "
+"were successfully imported. The easiest way to use this is to copy the ``-"
+"gen-globalisel`` tablegen command from ``ninja -v`` and modify it."
+msgstr ""
+
+#: ../../../GlobalISel.rst:667
+msgid ""
+"Similarly, the ``--warn-on-skipped-patterns`` option can be used to obtain "
+"the reasons that rules weren't imported. This can be used to focus on the "
+"most important rejection reasons."
+msgstr ""
+
+#: ../../../GlobalISel.rst:672
+msgid "PatLeaf Predicates"
+msgstr ""
+
+#: ../../../GlobalISel.rst:674
+msgid ""
+"PatLeafs cannot be imported because their C++ is implemented in terms of "
+"``SDNode`` objects. PatLeafs that handle immediate predicates should be "
+"replaced by ``ImmLeaf``, ``IntImmLeaf``, or ``FPImmLeaf`` as appropriate."
+msgstr ""
+
+#: ../../../GlobalISel.rst:678
+msgid ""
+"There's no standard answer for other PatLeafs. Some standard predicates have "
+"been baked into TableGen but this should not generally be done."
+msgstr ""
+
+#: ../../../GlobalISel.rst:682
+msgid "Custom SDNodes"
+msgstr ""
+
+#: ../../../GlobalISel.rst:684
+msgid ""
+"Custom SDNodes should be mapped to Target Pseudos using ``GINodeEquiv``. "
+"This will cause the instruction selector to import them but you will also "
+"need to ensure the target pseudo is introduced to the MIR before the "
+"instruction selector. Any preceding pass is suitable but the legalizer will "
+"be a particularly common choice."
+msgstr ""
+
+#: ../../../GlobalISel.rst:691
+msgid "ComplexPatterns"
+msgstr ""
+
+#: ../../../GlobalISel.rst:693
+msgid ""
+"ComplexPatterns cannot be imported because their C++ is implemented in terms "
+"of ``SDNode`` objects. GlobalISel versions should be defined with "
+"``GIComplexOperandMatcher`` and mapped to ComplexPattern with "
+"``GIComplexPatternEquiv``."
+msgstr ""
+
+#: ../../../GlobalISel.rst:698
+msgid "The following predicates are useful for porting ComplexPattern:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:700
+msgid "isBaseWithConstantOffset() - Check for base+offset structures"
+msgstr ""
+
+#: ../../../GlobalISel.rst:701
+msgid "isOperandImmEqual() - Check for a particular constant"
+msgstr ""
+
+#: ../../../GlobalISel.rst:702
+msgid ""
+"isObviouslySafeToFold() - Check for reasons an instruction can't be sunk and "
+"folded into another."
+msgstr ""
+
+#: ../../../GlobalISel.rst:704
+msgid "There are some important points for the C++ implementation:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:706
+msgid "Don't modify MIR in the predicate"
+msgstr ""
+
+#: ../../../GlobalISel.rst:707
+msgid ""
+"Renderer lambdas should capture by value to avoid use-after-free. They will "
+"be used after the predicate returns."
+msgstr ""
+
+#: ../../../GlobalISel.rst:708
+msgid ""
+"Only create instructions in a renderer lambda. GlobalISel won't clean up "
+"things you create but don't use."
+msgstr ""
+
+#: ../../../GlobalISel.rst:714
+msgid "Maintainability"
+msgstr ""
+
+#: ../../../GlobalISel.rst:719
+msgid "Iterative Transformations"
+msgstr ""
+
+#: ../../../GlobalISel.rst:721
+msgid ""
+"Passes are split into small, iterative transformations, with all state "
+"represented in the MIR."
+msgstr ""
+
+#: ../../../GlobalISel.rst:724
+msgid ""
+"This differs from SelectionDAG (in particular, the legalizer) using various "
+"in-memory side-tables."
+msgstr ""
+
+#: ../../../GlobalISel.rst:731
+msgid "MIR Serialization"
+msgstr ""
+
+#: ../../../GlobalISel.rst:735
+msgid ""
+":ref:`gmir` is serializable (see :doc:`MIRLangRef`). Combined with :ref:"
+"`maintainability-iterative`, this enables much finer-grained testing, rather "
+"than requiring large and fragile IR-to-assembly tests."
+msgstr ""
+
+#: ../../../GlobalISel.rst:739
+msgid ""
+"The current \"stage\" in the :ref:`pipeline` is represented by a set of "
+"``MachineFunctionProperties``:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:742
+msgid "``legalized``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:743
+msgid "``regBankSelected``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:744
+msgid "``selected``"
+msgstr ""
+
+#: ../../../GlobalISel.rst:750
+msgid "MachineVerifier"
+msgstr ""
+
+#: ../../../GlobalISel.rst:752
+msgid ""
+"The pass approach lets us use the ``MachineVerifier`` to enforce invariants. "
+"For instance, a ``regBankSelected`` function may not have gvregs without a "
+"bank."
+msgstr ""
+
+#: ../../../GlobalISel.rst:756
+msgid ""
+"``TODO``: The ``MachineVerifier`` being monolithic, some of the checks we "
+"want to do can't be integrated to it:  GlobalISel is a separate library, so "
+"we can't directly reference it from CodeGen.  For instance, legality checks "
+"are currently done in RegBankSelect/InstructionSelect proper.  We could "
+"#ifdef out the checks, or we could add some sort of verifier API."
+msgstr ""
+
+#: ../../../GlobalISel.rst:767
+msgid "Progress and Future Work"
+msgstr ""
+
+#: ../../../GlobalISel.rst:769
+msgid ""
+"The initial goal is to replace FastISel on AArch64.  The next step will be "
+"to replace SelectionDAG as the optimized ISel."
+msgstr ""
+
+#: ../../../GlobalISel.rst:772
+msgid ""
+"``NOTE``: While we iterate on GlobalISel, we strive to avoid affecting the "
+"performance of SelectionDAG, FastISel, or the other MIR passes.  For "
+"instance, the types of :ref:`gmir-gvregs` are stored in a separate table in "
+"``MachineRegisterInfo``, that is destroyed after :ref:`instructionselect`."
+msgstr ""
+
+#: ../../../GlobalISel.rst:781
+msgid "FastISel Replacement"
+msgstr ""
+
+#: ../../../GlobalISel.rst:783
+msgid ""
+"For the initial FastISel replacement, we intend to fallback to SelectionDAG "
+"on selection failures."
+msgstr ""
+
+#: ../../../GlobalISel.rst:786
+msgid ""
+"Currently, compile-time of the fast pipeline is within 1.5x of FastISel. "
+"We're optimistic we can get to within 1.1/1.2x, but beating FastISel will be "
+"challenging given the multi-pass approach. Still, supporting all IR (via a "
+"complete legalizer) and avoiding the fallback to SelectionDAG in the worst "
+"case should enable better amortized performance than SelectionDAG+FastISel."
+msgstr ""
+
+#: ../../../GlobalISel.rst:793
+msgid ""
+"``NOTE``: We considered never having a fallback to SelectionDAG, instead "
+"deciding early whether a given function is supported by GlobalISel or not.  "
+"The decision would be based on :ref:`milegalizer` queries. We abandoned that "
+"for two reasons: a) on IR inputs, we'd need to basically simulate the :ref:"
+"`irtranslator`; b) to be robust against unforeseen failures and to enable "
+"iterative improvements."
+msgstr ""
+
+#: ../../../GlobalISel.rst:805
+msgid "Support For Other Targets"
+msgstr ""
+
+#: ../../../GlobalISel.rst:807
+msgid ""
+"In parallel, we're investigating adding support for other - ideally quite "
+"different - targets.  For instance, there is some initial AMDGPU support."
+msgstr ""
+
+#: ../../../GlobalISel.rst:814
+msgid "Porting GlobalISel to A New Target"
+msgstr ""
+
+#: ../../../GlobalISel.rst:816
+msgid "There are four major classes to implement by the target:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:818
+msgid ""
+":ref:`CallLowering <api-calllowering>` --- lower calls, returns, and "
+"arguments according to the ABI."
+msgstr ""
+
+#: ../../../GlobalISel.rst:820
+msgid ""
+":ref:`RegisterBankInfo <api-registerbankinfo>` --- describe :ref:`gmir-"
+"regbank` coverage, cross-bank copy cost, and the mapping of operands onto "
+"banks for each instruction."
+msgstr ""
+
+#: ../../../GlobalISel.rst:823
+msgid ""
+":ref:`LegalizerInfo <api-legalizerinfo>` --- describe what is legal, and how "
+"to legalize what isn't."
+msgstr ""
+
+#: ../../../GlobalISel.rst:825
+msgid ""
+":ref:`InstructionSelector <api-instructionselector>` --- select generic MIR "
+"to target-specific MIR."
+msgstr ""
+
+#: ../../../GlobalISel.rst:828
+msgid "Additionally:"
+msgstr ""
+
+#: ../../../GlobalISel.rst:830
+msgid ""
+"``TargetPassConfig`` --- create the passes constituting the pipeline, "
+"including additional passes not included in the :ref:`pipeline`."
+msgstr ""
+
+#: ../../../GlobalISel.rst:836
+msgid "Resources"
+msgstr ""
+
+#: ../../../GlobalISel.rst:838
+msgid ""
+"`Global Instruction Selection - A Proposal by Quentin Colombet "
+"@LLVMDevMeeting 2015 <https://www.youtube.com/watch?v=F6GGbYtae3g>`_"
+msgstr ""
+
+#: ../../../GlobalISel.rst:839
+msgid ""
+"`Global Instruction Selection - Status by Quentin Colombet, Ahmed Bougacha, "
+"and Tim Northover @LLVMDevMeeting 2016 <https://www.youtube.com/watch?"
+"v=6tfb344A7w8>`_"
+msgstr ""
+
+#: ../../../GlobalISel.rst:840
+msgid ""
+"`GlobalISel - LLVM's Latest Instruction Selection Framework by Diana Picus "
+"@FOSDEM17 <https://www.youtube.com/watch?v=d6dF6E4BPeU>`_"
+msgstr ""
+
+#: ../../../GlobalISel.rst:841
+msgid ""
+"GlobalISel: Past, Present, and Future by Quentin Colombet and Ahmed Bougacha "
+"@LLVMDevMeeting 2017"
+msgstr ""
+
+#: ../../../GlobalISel.rst:842
+msgid ""
+"Head First into GlobalISel by Daniel Sanders, Aditya Nandakumar, and Justin "
+"Bogner @LLVMDevMeeting 2017"
+msgstr ""

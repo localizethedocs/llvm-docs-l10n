@@ -1,0 +1,2127 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 9\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../SourceLevelDebugging.rst:3
+msgid "Source Level Debugging with LLVM"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:9 ../../../SourceLevelDebugging.rst:1030
+#: ../../../SourceLevelDebugging.rst:1243
+msgid "Introduction"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:11
+msgid ""
+"This document is the central repository for all information pertaining to "
+"debug information in LLVM.  It describes the :ref:`actual format that the "
+"LLVM debug information takes <format>`, which is useful for those interested "
+"in creating front-ends or dealing directly with the information.  Further, "
+"this document provides specific examples of what debug information for C/C++ "
+"looks like."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:18
+msgid "Philosophy behind LLVM debugging information"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:20
+msgid ""
+"The idea of the LLVM debugging information is to capture how the important "
+"pieces of the source-language's Abstract Syntax Tree map onto LLVM code. "
+"Several design aspects have shaped the solution that appears here.  The "
+"important ones are:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:25
+msgid ""
+"Debugging information should have very little impact on the rest of the "
+"compiler.  No transformations, analyses, or code generators should need to "
+"be modified because of debugging information."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:29
+msgid ""
+"LLVM optimizations should interact in :ref:`well-defined and easily "
+"described ways <intro_debugopt>` with the debugging information."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:32
+msgid ""
+"Because LLVM is designed to support arbitrary programming languages, LLVM-to-"
+"LLVM tools should not need to know anything about the semantics of the "
+"source-level-language."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:36
+msgid ""
+"Source-level languages are often **widely** different from one another. LLVM "
+"should not put any restrictions of the flavor of the source-language, and "
+"the debugging information should work with any language."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:40
+msgid ""
+"With code generator support, it should be possible to use an LLVM compiler "
+"to compile a program to native machine code and standard debugging formats.  "
+"This allows compatibility with traditional machine-code level debuggers, "
+"like GDB or DBX."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:45
+msgid ""
+"The approach used by the LLVM implementation is to use a small set of :ref:"
+"`intrinsic functions <format_common_intrinsics>` to define a mapping between "
+"LLVM program objects and the source-level objects.  The description of the "
+"source-level program is maintained in LLVM metadata in an :ref:"
+"`implementation-defined format <ccxx_frontend>` (the C/C++ front-end "
+"currently uses working draft 7 of the `DWARF 3 standard <http://www.eagercon."
+"com/dwarf/dwarf3std.htm>`_)."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:53
+msgid ""
+"When a program is being debugged, a debugger interacts with the user and "
+"turns the stored debug information into source-language specific "
+"information.  As such, a debugger must be aware of the source-language, and "
+"is thus tied to a specific language or family of languages."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:59
+msgid "Debug information consumers"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:61
+msgid ""
+"The role of debug information is to provide meta information normally "
+"stripped away during the compilation process.  This meta information "
+"provides an LLVM user a relationship between generated code and the original "
+"program source code."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:66
+msgid ""
+"Currently, there are two backend consumers of debug info: DwarfDebug and "
+"CodeViewDebug. DwarfDebug produces DWARF suitable for use with GDB, LLDB, "
+"and other DWARF-based debuggers. :ref:`CodeViewDebug <codeview>` produces "
+"CodeView, the Microsoft debug info format, which is usable with Microsoft "
+"debuggers such as Visual Studio and WinDBG. LLVM's debug information format "
+"is mostly derived from and inspired by DWARF, but it is feasible to "
+"translate into other target debug info formats such as STABS."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:74
+msgid ""
+"It would also be reasonable to use debug information to feed profiling tools "
+"for analysis of generated code, or, tools for reconstructing the original "
+"source from generated code."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:81
+msgid "Debug information and optimizations"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:83
+msgid ""
+"An extremely high priority of LLVM debugging information is to make it "
+"interact well with optimizations and analysis.  In particular, the LLVM "
+"debug information provides the following guarantees:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:87
+msgid ""
+"LLVM debug information **always provides information to accurately read the "
+"source-level state of the program**, regardless of which LLVM optimizations "
+"have been run, and without any modification to the optimizations "
+"themselves.  However, some optimizations may impact the ability to modify "
+"the current state of the program with a debugger, such as setting program "
+"variables, or calling functions that have been deleted."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:95
+msgid ""
+"As desired, LLVM optimizations can be upgraded to be aware of debugging "
+"information, allowing them to update the debugging information as they "
+"perform aggressive optimizations.  This means that, with effort, the LLVM "
+"optimizers could optimize debug code just as well as non-debug code."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:100
+msgid ""
+"LLVM debug information does not prevent optimizations from happening (for "
+"example inlining, basic block reordering/merging/cleanup, tail duplication, "
+"etc)."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:104
+msgid ""
+"LLVM debug information is automatically optimized along with the rest of the "
+"program, using existing facilities.  For example, duplicate information is "
+"automatically merged by the linker, and unused information is automatically "
+"removed."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:109
+msgid ""
+"Basically, the debug information allows you to compile a program with \"``-"
+"O0 -g``\" and get full debug information, allowing you to arbitrarily modify "
+"the program as it executes from a debugger.  Compiling a program with \"``-"
+"O3 -g``\" gives you full debug information that is always available and "
+"accurate for reading (e.g., you get accurate stack traces despite tail call "
+"elimination and inlining), but you might lose the ability to modify the "
+"program and call functions which were optimized out of the program, or "
+"inlined away completely."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:118
+msgid ""
+"The :doc:`LLVM test-suite <TestSuiteMakefileGuide>` provides a framework to "
+"test the optimizer's handling of debugging information.  It can be run like "
+"this:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:127
+msgid ""
+"This will test impact of debugging information on optimization passes.  If "
+"debugging information influences optimization passes then it will be "
+"reported as a failure.  See :doc:`TestingGuide` for more information on LLVM "
+"test infrastructure and how to run various tests."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:135 ../../../SourceLevelDebugging.rst:1024
+msgid "Debugging information format"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:137
+msgid ""
+"LLVM debugging information has been carefully designed to make it possible "
+"for the optimizer to optimize the program and debugging information without "
+"necessarily having to know anything about debugging information.  In "
+"particular, the use of metadata avoids duplicated debugging information from "
+"the beginning, and the global dead code elimination pass automatically "
+"deletes debugging information for a function if it decides to delete the "
+"function."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:144
+msgid ""
+"To do this, most of the debugging information (descriptors for types, "
+"variables, functions, source files, etc) is inserted by the language front-"
+"end in the form of LLVM metadata."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:148
+msgid ""
+"Debug information is designed to be agnostic about the target debugger and "
+"debugging information representation (e.g. DWARF/Stabs/etc).  It uses a "
+"generic pass to decode the information that represents variables, types, "
+"functions, namespaces, etc: this allows for arbitrary source-language "
+"semantics and type-systems to be used, as long as there is a module written "
+"for the target debugger to interpret the information."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:155
+msgid ""
+"To provide basic functionality, the LLVM debugger does have to make some "
+"assumptions about the source-level language being debugged, though it keeps "
+"these to a minimum.  The only common features that the LLVM debugger assumes "
+"exist are `source files <LangRef.html#difile>`_, and `program objects "
+"<LangRef.html#diglobalvariable>`_.  These abstract objects are used by a "
+"debugger to form stack traces, show information about local variables, etc."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:162
+msgid ""
+"This section of the documentation first describes the representation aspects "
+"common to any source-language.  :ref:`ccxx_frontend` describes the data "
+"layout conventions used by the C and C++ front-ends."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:166
+msgid ""
+"Debug information descriptors are `specialized metadata nodes <LangRef."
+"html#specialized-metadata>`_, first-class subclasses of ``Metadata``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:172
+msgid "Debugger intrinsic functions"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:174
+msgid ""
+"LLVM uses several intrinsic functions (name prefixed with \"``llvm.dbg``\") "
+"to track source local variables through optimization and code generation."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:178
+msgid "``llvm.dbg.addr``"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:184
+msgid ""
+"This intrinsic provides information about a local element (e.g., variable). "
+"The first argument is metadata holding the address of variable, typically a "
+"static alloca in the function entry block.  The second argument is a `local "
+"variable <LangRef.html#dilocalvariable>`_ containing a description of the "
+"variable.  The third argument is a `complex expression <LangRef."
+"html#diexpression>`_.  An `llvm.dbg.addr` intrinsic describes the *address* "
+"of a source variable."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:207
+msgid ""
+"A frontend should generate exactly one call to ``llvm.dbg.addr`` at the "
+"point of declaration of a source variable. Optimization passes that fully "
+"promote the variable from memory to SSA values will replace this call with "
+"possibly multiple calls to `llvm.dbg.value`. Passes that delete stores are "
+"effectively partial promotion, and they will insert a mix of calls to ``llvm."
+"dbg.value`` and ``llvm.dbg.addr`` to track the source variable value when it "
+"is available. After optimization, there may be multiple calls to ``llvm.dbg."
+"addr`` describing the program points where the variables lives in memory. "
+"All calls for the same concrete source variable must agree on the memory "
+"location."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:219
+msgid "``llvm.dbg.declare``"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:225
+msgid ""
+"This intrinsic is identical to `llvm.dbg.addr`, except that there can only "
+"be one call to `llvm.dbg.declare` for a given concrete `local variable "
+"<LangRef.html#dilocalvariable>`_. It is not control-dependent, meaning that "
+"if a call to `llvm.dbg.declare` exists and has a valid location argument, "
+"that address is considered to be the true home of the variable across its "
+"entire lifetime. This makes it hard for optimizations to preserve accurate "
+"debug info in the presence of ``llvm.dbg.declare``, so we are transitioning "
+"away from it, and we plan to deprecate it in future LLVM releases."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:236
+msgid "``llvm.dbg.value``"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:242
+msgid ""
+"This intrinsic provides information when a user source variable is set to a "
+"new value.  The first argument is the new value (wrapped as metadata).  The "
+"second argument is a `local variable <LangRef.html#dilocalvariable>`_ "
+"containing a description of the variable.  The third argument is a `complex "
+"expression <LangRef.html#diexpression>`_."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:248
+msgid ""
+"An `llvm.dbg.value` intrinsic describes the *value* of a source variable "
+"directly, not its address.  Note that the value operand of this intrinsic "
+"may be indirect (i.e, a pointer to the source variable), provided that "
+"interpreting the complex expression derives the direct value."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:254
+msgid "Object lifetimes and scoping"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:256
+msgid ""
+"In many languages, the local variables in functions can have their lifetimes "
+"or scopes limited to a subset of a function.  In the C family of languages, "
+"for example, variables are only live (readable and writable) within the "
+"source block that they are defined in.  In functional languages, values are "
+"only readable after they have been defined.  Though this is a very obvious "
+"concept, it is non-trivial to model in LLVM, because it has no notion of "
+"scoping in this sense, and does not want to be tied to a language's scoping "
+"rules."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:264
+msgid ""
+"In order to handle this, the LLVM debug format uses the metadata attached to "
+"llvm instructions to encode line number and scoping information.  Consider "
+"the following C fragment, for example:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:283
+msgid "Compiled to LLVM, this function would be represented like this:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:343
+msgid ""
+"This example illustrates a few important details about LLVM debugging "
+"information.  In particular, it shows how the ``llvm.dbg.declare`` intrinsic "
+"and location information, which are attached to an instruction, are applied "
+"together to allow a debugger to analyze the relationship between statements, "
+"variable definitions, and the code used to implement the function."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:354
+msgid ""
+"The first intrinsic ``%llvm.dbg.declare`` encodes debugging information for "
+"the variable ``X``.  The metadata ``!dbg !14`` attached to the intrinsic "
+"provides scope information for the variable ``X``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:365
+msgid ""
+"Here ``!14`` is metadata providing `location information <LangRef."
+"html#dilocation>`_.  In this example, scope is encoded by ``!4``, a "
+"`subprogram descriptor <LangRef.html#disubprogram>`_.  This way the location "
+"information attached to the intrinsics indicates that the variable ``X`` is "
+"declared at line number 2 at a function level scope in function ``foo``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:371
+msgid "Now lets take another example."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:378
+msgid ""
+"The third intrinsic ``%llvm.dbg.declare`` encodes debugging information for "
+"variable ``Z``.  The metadata ``!dbg !19`` attached to the intrinsic "
+"provides scope information for the variable ``Z``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:387
+msgid ""
+"Here ``!19`` indicates that ``Z`` is declared at line number 5 and column "
+"number 11 inside of lexical scope ``!18``.  The lexical scope itself resides "
+"inside of subprogram ``!4`` described above."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:391
+msgid ""
+"The scope information attached with each instruction provides a "
+"straightforward way to find instructions covered by a scope."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:395
+msgid "Object lifetime in optimized code"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:397
+msgid ""
+"In the example above, every variable assignment uniquely corresponds to a "
+"memory store to the variable's position on the stack. However in heavily "
+"optimized code LLVM promotes most variables into SSA values, which can "
+"eventually be placed in physical registers or memory locations. To track SSA "
+"values through compilation, when objects are promoted to SSA values an "
+"``llvm.dbg.value`` intrinsic is created for each assignment, recording the "
+"variable's new location. Compared with the ``llvm.dbg.declare`` intrinsic:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:405
+msgid ""
+"A dbg.value terminates the effect of any preceeding dbg.values for (any "
+"overlapping fragments of) the specified variable."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:407
+msgid ""
+"The dbg.value's position in the IR defines where in the instruction stream "
+"the variable's value changes."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:409
+msgid ""
+"Operands can be constants, indicating the variable is assigned a constant "
+"value."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:412
+msgid ""
+"Care must be taken to update ``llvm.dbg.value`` intrinsics when optimization "
+"passes alter or move instructions and blocks -- the developer could observe "
+"such changes reflected in the value of variables when debugging the program. "
+"For any execution of the optimized program, the set of variable values "
+"presented to the developer by the debugger should not show a state that "
+"would never have existed in the execution of the unoptimized program, given "
+"the same input. Doing so risks misleading the developer by reporting a state "
+"that does not exist, damaging their understanding of the optimized program "
+"and undermining their trust in the debugger."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:422
+msgid ""
+"Sometimes perfectly preserving variable locations is not possible, often "
+"when a redundant calculation is optimized out. In such cases, a ``llvm.dbg."
+"value`` with operand ``undef`` should be used, to terminate earlier variable "
+"locations and let the debugger present ``optimized out`` to the developer. "
+"Withholding these potentially stale variable values from the developer "
+"diminishes the amount of available debug information, but increases the "
+"reliability of the remaining information."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:430
+msgid "To illustrate some potential issues, consider the following example:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:459
+msgid ""
+"Containing two source-level variables in ``!1`` and ``!3``. The function "
+"could, perhaps, be optimized into the following code:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:473
+msgid ""
+"What ``llvm.dbg.value`` intrinsics should be placed to represent the "
+"original variable locations in this code? Unfortunately the the second, "
+"third and fourth dbg.values for ``!1`` in the source function have had their "
+"operands (%tval, %fval, %merge) optimized out. Assuming we cannot recover "
+"them, we might consider this placement of dbg.values:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:493
+msgid ""
+"However, this will cause ``!3`` to have the return value of ``@gazonk()`` at "
+"the same time as ``!1`` has the constant value zero -- a pair of assignments "
+"that never occurred in the unoptimized program. To avoid this, we must "
+"terminate the range that ``!1`` has the constant value assignment by "
+"inserting an undef dbg.value before the dbg.value for ``!3``:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:514
+msgid ""
+"In general, if any dbg.value has its operand optimized out and cannot be "
+"recovered, then an undef dbg.value is necessary to terminate earlier "
+"variable locations. Additional undef dbg.values may be necessary when the "
+"debugger can observe re-ordering of assignments."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:520
+msgid "How variable location metadata is transformed during CodeGen"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:522
+msgid ""
+"LLVM preserves debug information throughout mid-level and backend passes, "
+"ultimately producing a mapping between source-level information and "
+"instruction ranges. This is relatively straightforwards for line number "
+"information, as mapping instructions to line numbers is a simple "
+"association. For variable locations however the story is more complex. As "
+"each ``llvm.dbg.value`` intrinsic represents a source-level assignment of a "
+"value to a source variable, the variable location intrinsics effectively "
+"embed a small imperative program within the LLVM IR. By the end of CodeGen, "
+"this becomes a mapping from each variable to their machine locations over "
+"ranges of instructions. From IR to object emission, the major "
+"transformations which affect variable location fidelity are:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:535
+msgid "Instruction Selection"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:536
+msgid "Register allocation"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:537
+msgid "Block layout"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:539
+msgid ""
+"each of which are discussed below. In addition, instruction scheduling can "
+"significantly change the ordering of the program, and occurs in a number of "
+"different passes."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:543
+msgid ""
+"Some variable locations are not transformed during CodeGen. Stack locations "
+"specified by ``llvm.dbg.declare`` are valid and unchanging for the entire "
+"duration of the function, and are recorded in a simple MachineFunction "
+"table. Location changes in the prologue and epilogue of a function are also "
+"ignored: frame setup and destruction may take several instructions, require "
+"a disproportionate amount of debugging information in the output binary to "
+"describe, and should be stepped over by debuggers anyway."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:552
+msgid "Variable locations in Instruction Selection and MIR"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:554
+msgid ""
+"Instruction selection creates a MIR function from an IR function, and just "
+"as it transforms ``intermediate`` instructions into machine instructions, so "
+"must ``intermediate`` variable locations become machine variable locations. "
+"Within IR, variable locations are always identified by a Value, but in MIR "
+"there can be different types of variable locations. In addition, some IR "
+"locations become unavailable, for example if the operation of multiple IR "
+"instructions are combined into one machine instruction (such as multiply-and-"
+"accumulate) then intermediate Values are lost. To track variable locations "
+"through instruction selection, they are first separated into locations that "
+"do not depend on code generation (constants, stack locations, allocated "
+"virtual registers) and those that do. For those that do, debug metadata is "
+"attached to SDNodes in SelectionDAGs. After instruction selection has "
+"occurred and a MIR function is created, if the SDNode associated with debug "
+"metadata is allocated a virtual register, that virtual register is used as "
+"the variable location. If the SDNode is folded into a machine instruction or "
+"otherwise transformed into a non-register, the variable location becomes "
+"unavailable."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:572
+msgid ""
+"Locations that are unavailable are treated as if they have been optimized "
+"out: in IR the location would be assigned ``undef`` by a debug intrinsic, "
+"and in MIR the equivalent location is used."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:576
+msgid ""
+"After MIR locations are assigned to each variable, machine pseudo-"
+"instructions corresponding to each ``llvm.dbg.value`` and ``llvm.dbg.addr`` "
+"intrinsic are inserted. These ``DBG_VALUE`` instructions appear thus:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:594
+msgid "And have the following operands:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:585
+msgid ""
+"The first operand can record the variable location as a register, a frame "
+"index, an immediate, or the base address register if the original debug "
+"intrinsic referred to memory. ``$noreg`` indicates the variable location is "
+"undefined, equivalent to an ``undef`` dbg.value operand."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:589
+msgid ""
+"The type of the second operand indicates whether the variable location is "
+"directly referred to by the DBG_VALUE, or whether it is indirect. The "
+"``$noreg`` register signifies the former, an immediate operand (0) the "
+"latter."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:593
+msgid "Operand 3 is the Variable field of the original debug intrinsic."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:594
+msgid "Operand 4 is the Expression field of the original debug intrinsic."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:596
+msgid ""
+"The position at which the DBG_VALUEs are inserted should correspond to the "
+"positions of their matching ``llvm.dbg.value`` intrinsics in the IR block.  "
+"As with optimization, LLVM aims to preserve the order in which variable "
+"assignments occurred in the source program. However SelectionDAG performs "
+"some instruction scheduling, which can reorder assignments (discussed "
+"below). Function parameter locations are moved to the beginning of the "
+"function if they're not already, to ensure they're immediately available on "
+"function entry."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:604
+msgid ""
+"To demonstrate variable locations during instruction selection, consider the "
+"following example:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:633
+msgid ""
+"If one compiles this IR with ``llc -o - -start-after=codegen-prepare -stop-"
+"after=expand-isel-pseudos -mtriple=x86_64--``, the following MIR is produced:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:666
+msgid ""
+"Observe first that there is a DBG_VALUE instruction for every ``llvm.dbg."
+"value`` intrinsic in the source IR, ensuring no source level assignments go "
+"missing. Then consider the different ways in which variable locations have "
+"been recorded:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:670
+msgid ""
+"For the first dbg.value an immediate operand is used to record a zero value."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:671
+msgid ""
+"The dbg.value of the PHI instruction leads to a DBG_VALUE of virtual "
+"register ``%0``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:673
+msgid ""
+"The first GEP has its effect folded into the first load instruction (as a 4-"
+"byte offset), but the variable location is salvaged by folding the GEPs "
+"effect into the DIExpression."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:676
+msgid ""
+"The second GEP is also folded into the corresponding load. However, it is "
+"insufficiently simple to be salvaged, and is emitted as a ``$noreg`` "
+"DBG_VALUE, indicating that the variable takes on an undefined location."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:679
+msgid "The final dbg.value has its Value placed in virtual register ``%1``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:682
+msgid "Instruction Scheduling"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:684
+msgid ""
+"A number of passes can reschedule instructions, notably instruction "
+"selection and the pre-and-post RA machine schedulers. Instruction scheduling "
+"can significantly change the nature of the program -- in the (very unlikely) "
+"worst case the instruction sequence could be completely reversed. In such "
+"circumstances LLVM follows the principle applied to optimizations, that it "
+"is better for the debugger not to display any state than a misleading state. "
+"Thus, whenever instructions are advanced in order of execution, any "
+"corresponding DBG_VALUE is kept in its original position, and if an "
+"instruction is delayed then the variable is given an undefined location for "
+"the duration of the delay. To illustrate, consider this pseudo-MIR:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:704
+msgid ""
+"Imagine that the SUB32rr were moved forward to give us the following MIR:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:715
+msgid ""
+"In this circumstance LLVM would leave the MIR as shown above. Were we to "
+"move the DBG_VALUE of virtual register %7 upwards with the SUB32rr, we would "
+"re-order assignments and introduce a new state of the program. Wheras with "
+"the solution above, the debugger will see one fewer combination of variable "
+"values, because ``!3`` and ``!5`` will change value at the same time. This "
+"is preferred over misrepresenting the original program."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:722
+msgid ""
+"In comparison, if one sunk the MOV32rm, LLVM would produce the following:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:734
+msgid ""
+"Here, to avoid presenting a state in which the first assignment to ``!1`` "
+"disappears, the DBG_VALUE at the top of the block assigns the variable the "
+"undefined location, until its value is available at the end of the block "
+"where an additional DBG_VALUE is added. Were any other DBG_VALUE for ``!1`` "
+"to occur in the instructions that the MOV32rm was sunk past, the DBG_VALUE "
+"for ``%1`` would be dropped and the debugger would never observe it in the "
+"variable. This accurately reflects that the value is not available during "
+"the corresponding portion of the original program."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:744
+msgid "Variable locations during Register Allocation"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:746
+msgid ""
+"To avoid debug instructions interfering with the register allocator, the "
+"LiveDebugVariables pass extracts variable locations from a MIR function and "
+"deletes the corresponding DBG_VALUE instructions. Some localized copy "
+"propagation is performed within blocks. After register allocation, the "
+"VirtRegRewriter pass re-inserts DBG_VALUE instructions in their orignal "
+"positions, translating virtual register references into their physical "
+"machine locations. To avoid encoding incorrect variable locations, in this "
+"pass any DBG_VALUE of a virtual register that is not live, is replaced by "
+"the undefined location."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:757
+msgid "LiveDebugValues expansion of variable locations"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:759
+msgid ""
+"After all optimizations have run and shortly before emission, the "
+"LiveDebugValues pass runs to achieve two aims:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:762
+msgid ""
+"To propagate the location of variables through copies and register spills,"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:763
+msgid "For every block, to record every valid variable location in that block."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:765
+msgid ""
+"After this pass the DBG_VALUE instruction changes meaning: rather than "
+"corresponding to a source-level assignment where the variable may change "
+"value, it asserts the location of a variable in a block, and loses effect "
+"outside the block. Propagating variable locations through copies and spills "
+"is straightforwards: determining the variable location in every basic block "
+"requries the consideraton of control flow. Consider the following IR, which "
+"presents several difficulties:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:799
+msgid "Here the difficulties are:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:801
+msgid "The control flow is roughly the opposite of basic block order"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:802
+msgid ""
+"The value of the ``!23`` variable merges into ``%bb1``, but there is no PHI "
+"node"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:805
+msgid ""
+"As mentioned above, the ``llvm.dbg.value`` intrinsics essentially form an "
+"imperative program embedded in the IR, with each intrinsic defining a "
+"variable location. This *could* be converted to an SSA form by mem2reg, in "
+"the same way that it uses use-def chains to identify control flow merges and "
+"insert phi nodes for IR Values. However, because debug variable locations "
+"are defined for every machine instruction, in effect every IR instruction "
+"uses every variable location, which would lead to a large number of "
+"debugging intrinsics being generated."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:814
+msgid ""
+"Examining the example above, variable ``!30`` is assigned ``%input`` on both "
+"conditional paths through the function, while ``!23`` is assigned differing "
+"constant values on either path. Where control flow merges in ``%bb1`` we "
+"would want ``!30`` to keep its location (``%input``), but ``!23`` to become "
+"undefined as we cannot determine at runtime what value it should have in "
+"%bb1 without inserting a PHI node. mem2reg does not insert the PHI node to "
+"avoid changing codegen when debugging is enabled, and does not insert the "
+"other dbg.values to avoid adding very large numbers of intrinsics."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:823
+msgid ""
+"Instead, LiveDebugValues determines variable locations when control flow "
+"merges. A dataflow analysis is used to propagate locations between blocks: "
+"when control flow merges, if a variable has the same location in all "
+"predecessors then that location is propagated into the successor. If the "
+"predecessor locations disagree, the location becomes undefined."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:829
+msgid ""
+"Once LiveDebugValues has run, every block should have all valid variable "
+"locations described by DBG_VALUE instructions within the block. Very little "
+"effort is then required by supporting classes (such as "
+"DbgEntityHistoryCalculator) to build a map of each instruction to every "
+"valid variable location, without the need to consider control flow. From the "
+"example above, it is otherwise difficult to determine that the location of "
+"variable ``!30`` should flow \"up\" into block ``%bb1``, but that the "
+"location of variable ``!23`` should not flow \"down\" into the ``%exit`` "
+"block."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:841
+msgid "C/C++ front-end specific debug information"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:843
+msgid ""
+"The C and C++ front-ends represent information about the program in a format "
+"that is effectively identical to `DWARF 3.0 <http://www.eagercon.com/dwarf/"
+"dwarf3std.htm>`_ in terms of information content.  This allows code "
+"generators to trivially support native debuggers by generating standard "
+"dwarf information, and contains enough information for non-dwarf targets to "
+"translate it as needed."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:850
+msgid ""
+"This section describes the forms used to represent C and C++ programs.  "
+"Other languages could pattern themselves after this (which itself is tuned "
+"to representing programs in the same way that DWARF 3 does), or they could "
+"choose to provide completely different forms if they don't fit into the "
+"DWARF model. As support for debugging information gets added to the various "
+"LLVM source-language front-ends, the information used should be documented "
+"here."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:857
+msgid ""
+"The following sections provide examples of a few C/C++ constructs and the "
+"debug information that would best describe those constructs.  The canonical "
+"references are the ``DIDescriptor`` classes defined in ``include/llvm/IR/"
+"DebugInfo.h`` and the implementations of the helper functions in ``lib/IR/"
+"DIBuilder.cpp``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:864
+msgid "C/C++ source file information"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:866
+msgid ""
+"``llvm::Instruction`` provides easy access to metadata attached with an "
+"instruction.  One can extract line number information encoded in LLVM IR "
+"using ``Instruction::getDebugLoc()`` and ``DILocation::getLine()``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:879
+msgid ""
+"When the flag ImplicitCode is true then it means that the Instruction has "
+"been added by the front-end but doesn't correspond to source code written by "
+"the user. For example"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:889
+msgid ""
+"At the end of the scope the MyObject's destructor is called but it isn't "
+"written explicitly. This information is useful to avoid to have counters on "
+"brackets when making code coverage."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:894
+msgid "C/C++ global variable information"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:896
+msgid "Given an integer global variable declared as follows:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:902 ../../../SourceLevelDebugging.rst:973
+msgid "a C/C++ front-end would generate the following descriptors:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:956
+msgid ""
+"The align value in DIGlobalVariable description specifies variable alignment "
+"in case it was forced by C11 _Alignas(), C++11 alignas() keywords or "
+"compiler attribute __attribute__((aligned ())). In other case (when this "
+"field is missing) alignment is considered default. This is used when "
+"producing DWARF output for DW_AT_alignment value."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:963
+msgid "C/C++ function information"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:965
+msgid "Given a function declared as follows:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:993
+msgid "Fortran specific debug information"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:996
+msgid "Fortran function information"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:998
+msgid ""
+"There are a few DWARF attributes defined to support client debugging of "
+"Fortran programs.  LLVM can generate (or omit) the appropriate DWARF "
+"attributes for the prefix-specs of ELEMENTAL, PURE, IMPURE, RECURSIVE, and "
+"NON_RECURSIVE.  This is done by using the spFlags values: DISPFlagElemental, "
+"DISPFlagPure, and DISPFlagRecursive."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1004
+msgid "a Fortran front-end would generate the following descriptors:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1013
+msgid "and this will materialize an additional DWARF attribute as:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1027
+msgid "Debugging Information Extension for Objective C Properties"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1032
+msgid ""
+"Objective C provides a simpler way to declare and define accessor methods "
+"using declared properties.  The language provides features to declare a "
+"property and to let compiler synthesize accessor methods."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1036
+msgid ""
+"The debugger lets developer inspect Objective C interfaces and their "
+"instance variables and class variables.  However, the debugger does not know "
+"anything about the properties defined in Objective C interfaces.  The "
+"debugger consumes information generated by compiler in DWARF format.  The "
+"format does not support encoding of Objective C properties.  This proposal "
+"describes DWARF extensions to encode Objective C properties, which the "
+"debugger can use to let developers inspect Objective C properties."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1045
+msgid "Proposal"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1047
+msgid ""
+"Objective C properties exist separately from class members.  A property can "
+"be defined only by \"setter\" and \"getter\" selectors, and be calculated "
+"anew on each access.  Or a property can just be a direct access to some "
+"declared ivar. Finally it can have an ivar \"automatically synthesized\" for "
+"it by the compiler, in which case the property can be referred to in user "
+"code directly using the standard C dereference syntax as well as through the "
+"property \"dot\" syntax, but there is no entry in the ``@interface`` "
+"declaration corresponding to this ivar."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1055
+msgid ""
+"To facilitate debugging, these properties we will add a new DWARF TAG into "
+"the ``DW_TAG_structure_type`` definition for the class to hold the "
+"description of a given property, and a set of DWARF attributes that provide "
+"said description. The property tag will also contain the name and declared "
+"type of the property."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1060
+msgid ""
+"If there is a related ivar, there will also be a DWARF property attribute "
+"placed in the ``DW_TAG_member`` DIE for that ivar referring back to the "
+"property TAG for that property.  And in the case where the compiler "
+"synthesizes the ivar directly, the compiler is expected to generate a "
+"``DW_TAG_member`` for that ivar (with the ``DW_AT_artificial`` set to 1), "
+"whose name will be the name used to access this ivar directly in code, and "
+"with the property attribute pointing back to the property it is backing."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1068
+msgid "The following examples will serve as illustration for our discussion:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1085
+msgid ""
+"This produces the following DWARF (this is a \"pseudo dwarfdump\" output):"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1116
+msgid ""
+"Note, the current convention is that the name of the ivar for an auto-"
+"synthesized property is the name of the property from which it derives with "
+"an underscore prepended, as is shown in the example.  But we actually don't "
+"need to know this convention, since we are given the name of the ivar "
+"directly."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1122
+msgid ""
+"Also, it is common practice in ObjC to have different property declarations "
+"in the @interface and @implementation - e.g. to provide a read-only property "
+"in the interface,and a read-write interface in the implementation.  In that "
+"case, the compiler should emit whichever property declaration will be in "
+"force in the current translation unit."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1128
+msgid ""
+"Developers can decorate a property with attributes which are encoded using "
+"``DW_AT_APPLE_property_attribute``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1142
+msgid ""
+"The setter and getter method names are attached to the property using "
+"``DW_AT_APPLE_property_setter`` and ``DW_AT_APPLE_property_getter`` "
+"attributes."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1157
+msgid "The DWARF for this would be:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1179
+msgid "New DWARF Tags"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1182
+msgid "TAG"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1182
+#: ../../../SourceLevelDebugging.rst:1191
+#: ../../../SourceLevelDebugging.rst:1206
+msgid "Value"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1184
+msgid "DW_TAG_APPLE_property"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1184
+msgid "0x4200"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1188
+msgid "New DWARF Attributes"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1191
+msgid "Attribute"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1191
+msgid "Classes"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1193
+msgid "DW_AT_APPLE_property"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1193
+msgid "0x3fed"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1193
+msgid "Reference"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1195
+msgid "DW_AT_APPLE_property_getter"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1195
+msgid "0x3fe9"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1195
+#: ../../../SourceLevelDebugging.rst:1197
+msgid "String"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1197
+msgid "DW_AT_APPLE_property_setter"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1197
+msgid "0x3fea"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1199
+msgid "DW_AT_APPLE_property_attribute"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1199
+msgid "0x3feb"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1199
+msgid "Constant"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1203
+msgid "New DWARF Constants"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1206
+msgid "Name"
+msgstr "Nom"
+
+#: ../../../SourceLevelDebugging.rst:1208
+msgid "DW_APPLE_PROPERTY_readonly"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1208
+msgid "0x01"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1210
+msgid "DW_APPLE_PROPERTY_getter"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1210
+msgid "0x02"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1212
+msgid "DW_APPLE_PROPERTY_assign"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1212
+msgid "0x04"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1214
+msgid "DW_APPLE_PROPERTY_readwrite"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1214
+msgid "0x08"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1216
+msgid "DW_APPLE_PROPERTY_retain"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1216
+msgid "0x10"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1218
+msgid "DW_APPLE_PROPERTY_copy"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1218
+msgid "0x20"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1220
+msgid "DW_APPLE_PROPERTY_nonatomic"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1220
+msgid "0x40"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1222
+msgid "DW_APPLE_PROPERTY_setter"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1222
+msgid "0x80"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1224
+msgid "DW_APPLE_PROPERTY_atomic"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1224
+msgid "0x100"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1226
+msgid "DW_APPLE_PROPERTY_weak"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1226
+msgid "0x200"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1228
+msgid "DW_APPLE_PROPERTY_strong"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1228
+msgid "0x400"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1230
+msgid "DW_APPLE_PROPERTY_unsafe_unretained"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1230
+msgid "0x800"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1232
+msgid "DW_APPLE_PROPERTY_nullability"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1232
+msgid "0x1000"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1234
+msgid "DW_APPLE_PROPERTY_null_resettable"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1234
+msgid "0x2000"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1236
+msgid "DW_APPLE_PROPERTY_class"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1236
+msgid "0x4000"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1240
+msgid "Name Accelerator Tables"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1245
+msgid ""
+"The \"``.debug_pubnames``\" and \"``.debug_pubtypes``\" formats are not what "
+"a debugger needs.  The \"``pub``\" in the section name indicates that the "
+"entries in the table are publicly visible names only.  This means no static "
+"or hidden functions show up in the \"``.debug_pubnames``\".  No static "
+"variables or private class variables are in the \"``.debug_pubtypes``\".  "
+"Many compilers add different things to these tables, so we can't rely upon "
+"the contents between gcc, icc, or clang."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1253
+msgid ""
+"The typical query given by users tends not to match up with the contents of "
+"these tables.  For example, the DWARF spec states that \"In the case of the "
+"name of a function member or static data member of a C++ structure, class or "
+"union, the name presented in the \"``.debug_pubnames``\" section is not the "
+"simple name given by the ``DW_AT_name attribute`` of the referenced "
+"debugging information entry, but rather the fully qualified name of the data "
+"or function member.\" So the only names in these tables for complex C++ "
+"entries is a fully qualified name.  Debugger users tend not to enter their "
+"search strings as \"``a::b::c(int,const Foo&) const``\", but rather as "
+"\"``c``\", \"``b::c``\" , or \"``a::b::c``\".  So the name entered in the "
+"name table must be demangled in order to chop it up appropriately and "
+"additional names must be manually entered into the table to make it "
+"effective as a name lookup table for debuggers to use."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1267
+msgid ""
+"All debuggers currently ignore the \"``.debug_pubnames``\" table as a result "
+"of its inconsistent and useless public-only name content making it a waste "
+"of space in the object file.  These tables, when they are written to disk, "
+"are not sorted in any way, leaving every debugger to do its own parsing and "
+"sorting. These tables also include an inlined copy of the string values in "
+"the table itself making the tables much larger than they need to be on disk, "
+"especially for large C++ programs."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1275
+msgid ""
+"Can't we just fix the sections by adding all of the names we need to this "
+"table? No, because that is not what the tables are defined to contain and we "
+"won't know the difference between the old bad tables and the new good "
+"tables. At best we could make our own renamed sections that contain all of "
+"the data we need."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1281
+msgid ""
+"These tables are also insufficient for what a debugger like LLDB needs.  "
+"LLDB uses clang for its expression parsing where LLDB acts as a PCH.  LLDB "
+"is then often asked to look for type \"``foo``\" or namespace \"``bar``\", "
+"or list items in namespace \"``baz``\".  Namespaces are not included in the "
+"pubnames or pubtypes tables.  Since clang asks a lot of questions when it is "
+"parsing an expression, we need to be very fast when looking up names, as it "
+"happens a lot.  Having new accelerator tables that are optimized for very "
+"quick lookups will benefit this type of debugging experience greatly."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1290
+msgid ""
+"We would like to generate name lookup tables that can be mapped into memory "
+"from disk, and used as is, with little or no up-front parsing.  We would "
+"also be able to control the exact content of these different tables so they "
+"contain exactly what we need.  The Name Accelerator Tables were designed to "
+"fix these issues.  In order to solve these issues we need to:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1296
+msgid "Have a format that can be mapped into memory from disk and used as is"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1297
+msgid "Lookups should be very fast"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1298
+msgid "Extensible table format so these tables can be made by many producers"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1299
+msgid "Contain all of the names needed for typical lookups out of the box"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1300
+msgid "Strict rules for the contents of tables"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1302
+msgid ""
+"Table size is important and the accelerator table format should allow the "
+"reuse of strings from common string tables so the strings for the names are "
+"not duplicated.  We also want to make sure the table is ready to be used as-"
+"is by simply mapping the table into memory with minimal header parsing."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1307
+msgid ""
+"The name lookups need to be fast and optimized for the kinds of lookups that "
+"debuggers tend to do.  Optimally we would like to touch as few parts of the "
+"mapped table as possible when doing a name lookup and be able to quickly "
+"find the name entry we are looking for, or discover there are no matches.  "
+"In the case of debuggers we optimized for lookups that fail most of the time."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1313
+msgid ""
+"Each table that is defined should have strict rules on exactly what is in "
+"the accelerator tables and documented so clients can rely on the content."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1317
+msgid "Hash Tables"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1320
+msgid "Standard Hash Tables"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1322
+msgid ""
+"Typical hash tables have a header, buckets, and each bucket points to the "
+"bucket contents:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1335
+msgid "The BUCKETS are an array of offsets to DATA for each hash:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1348
+msgid ""
+"So for ``bucket[3]`` in the example above, we have an offset into the table "
+"0x000034f0 which points to a chain of entries for the bucket.  Each bucket "
+"must contain a next pointer, full 32 bit hash value, the string itself, and "
+"the data for the current string value."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1372
+msgid ""
+"The problem with this layout for debuggers is that we need to optimize for "
+"the negative lookup case where the symbol we're searching for is not "
+"present.  So if we were to lookup \"``printf``\" in the table above, we "
+"would make a 32-bit hash for \"``printf``\", it might match ``bucket[3]``.  "
+"We would need to go to the offset 0x000034f0 and start looking to see if our "
+"32 bit hash matches.  To do so, we need to read the next pointer, then read "
+"the hash, compare it, and skip to the next bucket.  Each time we are "
+"skipping many bytes in memory and touching new pages just to do the compare "
+"on the full 32 bit hash.  All of these accesses then tell us that we didn't "
+"have a match."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1383
+msgid "Name Hash Tables"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1385
+msgid ""
+"To solve the issues mentioned above we have structured the hash tables a bit "
+"differently: a header, buckets, an array of all unique 32 bit hash values, "
+"followed by an array of hash value data offsets, one for each hash value, "
+"then the data for all hash values:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1404
+msgid ""
+"The ``BUCKETS`` in the name tables are an index into the ``HASHES`` array.  "
+"By making all of the full 32 bit hash values contiguous in memory, we allow "
+"ourselves to efficiently check for a match while touching as little memory "
+"as possible.  Most often checking the 32 bit hash values is as far as the "
+"lookup goes.  If it does match, it usually is a match with no collisions.  "
+"So for a table with \"``n_buckets``\" buckets, and \"``n_hashes``\" unique "
+"32 bit hash values, we can clarify the contents of the ``BUCKETS``, "
+"``HASHES`` and ``OFFSETS`` as:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1433
+msgid ""
+"So taking the exact same data from the standard hash example above we end up "
+"with:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1519
+msgid ""
+"So we still have all of the same data, we just organize it more efficiently "
+"for debugger lookup.  If we repeat the same \"``printf``\" lookup from "
+"above, we would hash \"``printf``\" and find it matches ``BUCKETS[3]`` by "
+"taking the 32 bit hash value and modulo it by ``n_buckets``.  ``BUCKETS[3]`` "
+"contains \"6\" which is the index into the ``HASHES`` table.  We would then "
+"compare any consecutive 32 bit hashes values in the ``HASHES`` array as long "
+"as the hashes would be in ``BUCKETS[3]``.  We do this by verifying that each "
+"subsequent hash value modulo ``n_buckets`` is still 3.  In the case of a "
+"failed lookup we would access the memory for ``BUCKETS[3]``, and then "
+"compare a few consecutive 32 bit hashes before we know that we have no "
+"match.  We don't end up marching through multiple words of memory and we "
+"really keep the number of processor data cache lines being accessed as small "
+"as possible."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1532
+msgid ""
+"The string hash that is used for these lookup tables is the Daniel J. "
+"Bernstein hash which is also used in the ELF ``GNU_HASH`` sections.  It is a "
+"very good hash for all kinds of names in programs with very few hash "
+"collisions."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1537
+msgid ""
+"Empty buckets are designated by using an invalid hash index of "
+"``UINT32_MAX``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1540
+msgid "Details"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1542
+msgid ""
+"These name hash tables are designed to be generic where specializations of "
+"the table get to define additional data that goes into the header "
+"(\"``HeaderData``\"), how the string value is stored (\"``KeyType``\") and "
+"the content of the data for each hash value."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1548
+msgid "Header Layout"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1550
+msgid ""
+"The header has a fixed part, and the specialized part.  The exact format of "
+"the header is:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1568
+msgid ""
+"The header starts with a 32 bit \"``magic``\" value which must be ``'HASH'`` "
+"encoded as an ASCII integer.  This allows the detection of the start of the "
+"hash table and also allows the table's byte order to be determined so the "
+"table can be correctly extracted.  The \"``magic``\" value is followed by a "
+"16 bit ``version`` number which allows the table to be revised and modified "
+"in the future.  The current version number is 1. ``hash_function`` is a "
+"``uint16_t`` enumeration that specifies which hash function was used to "
+"produce this table. The current values for the hash function enumerations "
+"include:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1584
+msgid ""
+"``bucket_count`` is a 32 bit unsigned integer that represents how many "
+"buckets are in the ``BUCKETS`` array.  ``hashes_count`` is the number of "
+"unique 32 bit hash values that are in the ``HASHES`` array, and is the same "
+"number of offsets are contained in the ``OFFSETS`` array.  "
+"``header_data_len`` specifies the size in bytes of the ``HeaderData`` that "
+"is filled in by specialized versions of this table."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1592
+msgid "Fixed Lookup"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1594
+msgid ""
+"The header is followed by the buckets, hashes, offsets, and hash value data."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1605
+msgid ""
+"``buckets`` is an array of 32 bit indexes into the ``hashes`` array.  The "
+"``hashes`` array contains all of the 32 bit hash values for all names in the "
+"hash table.  Each hash in the ``hashes`` table has an offset in the "
+"``offsets`` array that points to the data for the hash value."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1610
+msgid ""
+"This table setup makes it very easy to repurpose these tables to contain "
+"different data, while keeping the lookup mechanism the same for all tables. "
+"This layout also makes it possible to save the table to disk and map it in "
+"later and do very efficient name lookups with little or no parsing."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1615
+msgid ""
+"DWARF lookup tables can be implemented in a variety of ways and can store a "
+"lot of information for each name.  We want to make the DWARF tables "
+"extensible and able to store the data efficiently so we have used some of "
+"the DWARF features that enable efficient data storage to define exactly what "
+"kind of data we store for each name."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1621
+msgid ""
+"The ``HeaderData`` contains a definition of the contents of each HashData "
+"chunk. We might want to store an offset to all of the debug information "
+"entries (DIEs) for each name.  To keep things extensible, we create a list "
+"of items, or Atoms, that are contained in the data for each name.  First "
+"comes the type of the data in each atom:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1639
+msgid "The enumeration values and their meanings are:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1650
+msgid ""
+"Then we allow each atom type to define the atom type and how the data for "
+"each atom type data is encoded:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1661
+msgid ""
+"The ``form`` type above is from the DWARF specification and defines the "
+"exact encoding of the data for the Atom type.  See the DWARF specification "
+"for the ``DW_FORM_`` definitions."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1674
+msgid ""
+"``HeaderData`` defines the base DIE offset that should be added to any atoms "
+"that are encoded using the ``DW_FORM_ref1``, ``DW_FORM_ref2``, "
+"``DW_FORM_ref4``, ``DW_FORM_ref8`` or ``DW_FORM_ref_udata``.  It also "
+"defines what is contained in each ``HashData`` object -- ``Atom.form`` tells "
+"us how large each field will be in the ``HashData`` and the ``Atom.type`` "
+"tells us how this data should be interpreted."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1681
+msgid ""
+"For the current implementations of the \"``.apple_names``\" (all functions + "
+"globals), the \"``.apple_types``\" (names of all types that are defined), "
+"and the \"``.apple_namespaces``\" (all namespaces), we currently set the "
+"``Atom`` array to be:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1692
+msgid ""
+"This defines the contents to be the DIE offset (eAtomTypeDIEOffset) that is "
+"encoded as a 32 bit value (DW_FORM_data4).  This allows a single name to "
+"have multiple matching DIEs in a single file, which could come up with an "
+"inlined function for instance.  Future tables could include more information "
+"about the DIE such as flags indicating if the DIE is a function, method, "
+"block, or inlined."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1699
+msgid ""
+"The KeyType for the DWARF table is a 32 bit string table offset into the \"."
+"debug_str\" table.  The \".debug_str\" is the string table for the DWARF "
+"which may already contain copies of all of the strings.  This helps make "
+"sure, with help from the compiler, that we reuse the strings between all of "
+"the DWARF sections and keeps the hash table size down.  Another benefit to "
+"having the compiler generate all strings as DW_FORM_strp in the debug info, "
+"is that DWARF parsing can be made much faster."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1707
+msgid ""
+"After a lookup is made, we get an offset into the hash data.  The hash data "
+"needs to be able to deal with 32 bit hash collisions, so the chunk of data "
+"at the offset in the hash data consists of a triple:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1717
+msgid ""
+"If \"str_offset\" is zero, then the bucket contents are done. 99.9% of the "
+"hash data chunks contain a single item (no 32 bit hash collision):"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1732
+msgid "If there are collisions, you will have multiple valid string offsets:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1750
+msgid ""
+"Current testing with real world C++ binaries has shown that there is around "
+"1 32 bit hash collision per 100,000 name entries."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1754
+msgid "Contents"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1756
+msgid ""
+"As we said, we want to strictly define exactly what is included in the "
+"different tables.  For DWARF, we have 3 tables: \"``.apple_names``\", \"``."
+"apple_types``\", and \"``.apple_namespaces``\"."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1760
+msgid ""
+"\"``.apple_names``\" sections should contain an entry for each DWARF DIE "
+"whose ``DW_TAG`` is a ``DW_TAG_label``, ``DW_TAG_inlined_subroutine``, or "
+"``DW_TAG_subprogram`` that has address attributes: ``DW_AT_low_pc``, "
+"``DW_AT_high_pc``, ``DW_AT_ranges`` or ``DW_AT_entry_pc``.  It also contains "
+"``DW_TAG_variable`` DIEs that have a ``DW_OP_addr`` in the location (global "
+"and static variables).  All global and static variables should be included, "
+"including those scoped within functions and classes.  For example using the "
+"following code:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1778
+msgid ""
+"Both of the static ``var`` variables would be included in the table.  All "
+"functions should emit both their full names and their basenames.  For C or C+"
+"+, the full name is the mangled name (if available) which is usually in the "
+"``DW_AT_MIPS_linkage_name`` attribute, and the ``DW_AT_name`` contains the "
+"function basename.  If global or static variables have a mangled name in a "
+"``DW_AT_MIPS_linkage_name`` attribute, this should be emitted along with the "
+"simple name found in the ``DW_AT_name`` attribute."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1786
+msgid ""
+"\"``.apple_types``\" sections should contain an entry for each DWARF DIE "
+"whose tag is one of:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1789
+msgid "DW_TAG_array_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1790
+msgid "DW_TAG_class_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1791
+msgid "DW_TAG_enumeration_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1792
+msgid "DW_TAG_pointer_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1793
+msgid "DW_TAG_reference_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1794
+msgid "DW_TAG_string_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1795
+msgid "DW_TAG_structure_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1796
+msgid "DW_TAG_subroutine_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1797
+msgid "DW_TAG_typedef"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1798
+msgid "DW_TAG_union_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1799
+msgid "DW_TAG_ptr_to_member_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1800
+msgid "DW_TAG_set_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1801
+msgid "DW_TAG_subrange_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1802
+msgid "DW_TAG_base_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1803
+msgid "DW_TAG_const_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1804
+msgid "DW_TAG_file_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1805
+msgid "DW_TAG_namelist"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1806
+msgid "DW_TAG_packed_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1807
+msgid "DW_TAG_volatile_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1808
+msgid "DW_TAG_restrict_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1809
+msgid "DW_TAG_atomic_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1810
+msgid "DW_TAG_interface_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1811
+msgid "DW_TAG_unspecified_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1812
+msgid "DW_TAG_shared_type"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1814
+msgid ""
+"Only entries with a ``DW_AT_name`` attribute are included, and the entry "
+"must not be a forward declaration (``DW_AT_declaration`` attribute with a "
+"non-zero value).  For example, using the following code:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1826
+msgid "We get a few type DIEs:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1839
+msgid ""
+"The DW_TAG_pointer_type is not included because it does not have a "
+"``DW_AT_name``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1841
+msgid ""
+"\"``.apple_namespaces``\" section should contain all ``DW_TAG_namespace`` "
+"DIEs. If we run into a namespace that has no name this is an anonymous "
+"namespace, and the name should be output as \"``(anonymous "
+"namespace)``\" (without the quotes). Why?  This matches the output of the "
+"``abi::cxa_demangle()`` that is in the standard C++ library that demangles "
+"mangled names."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1849
+msgid "Language Extensions and File Format Changes"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1852
+msgid "Objective-C Extensions"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1854
+msgid ""
+"\"``.apple_objc``\" section should contain all ``DW_TAG_subprogram`` DIEs "
+"for an Objective-C class.  The name used in the hash table is the name of "
+"the Objective-C class itself.  If the Objective-C class has a category, then "
+"an entry is made for both the class name without the category, and for the "
+"class name with the category.  So if we have a DIE at offset 0x1234 with a "
+"name of method \"``-[NSString(my_additions) stringWithSpecialString:]``\", "
+"we would add an entry for \"``NSString``\" that points to DIE 0x1234, and an "
+"entry for \"``NSString(my_additions)``\" that points to 0x1234.  This allows "
+"us to quickly track down all Objective-C methods for an Objective-C class "
+"when doing expressions.  It is needed because of the dynamic nature of "
+"Objective-C where anyone can add methods to a class.  The DWARF for "
+"Objective-C methods is also emitted differently from C++ classes where the "
+"methods are not usually contained in the class definition, they are "
+"scattered about across one or more compile units.  Categories can also be "
+"defined in different shared libraries. So we need to be able to quickly find "
+"all of the methods and class functions given the Objective-C class name, or "
+"quickly find all methods and class functions for a class + category name.  "
+"This table does not contain any selector names, it just maps Objective-C "
+"class names (or class names + category) to all of the methods and class "
+"functions.  The selectors are added as function basenames in the \"``."
+"debug_names``\" section."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1875
+msgid ""
+"In the \"``.apple_names``\" section for Objective-C functions, the full name "
+"is the entire function name with the brackets (\"``-[NSString "
+"stringWithCString:]``\") and the basename is the selector only "
+"(\"``stringWithCString:``\")."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1881
+msgid "Mach-O Changes"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1883
+msgid ""
+"The sections names for the apple hash tables are for non-mach-o files.  For "
+"mach-o files, the sections should be contained in the ``__DWARF`` segment "
+"with names as follows:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1887
+msgid "\"``.apple_names``\" -> \"``__apple_names``\""
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1888
+msgid "\"``.apple_types``\" -> \"``__apple_types``\""
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1889
+msgid ""
+"\"``.apple_namespaces``\" -> \"``__apple_namespac``\" (16 character limit)"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1890
+msgid "\"``.apple_objc``\" -> \"``__apple_objc``\""
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1895
+msgid "CodeView Debug Info Format"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1897
+msgid ""
+"LLVM supports emitting CodeView, the Microsoft debug info format, and this "
+"section describes the design and implementation of that support."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1901
+msgid "Format Background"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1903
+msgid ""
+"CodeView as a format is clearly oriented around C++ debugging, and in C++, "
+"the majority of debug information tends to be type information. Therefore, "
+"the overriding design constraint of CodeView is the separation of type "
+"information from other \"symbol\" information so that type information can "
+"be efficiently merged across translation units. Both type information and "
+"symbol information is generally stored as a sequence of records, where each "
+"record begins with a 16-bit record size and a 16-bit record kind."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1911
+msgid ""
+"Type information is usually stored in the ``.debug$T`` section of the object "
+"file.  All other debug info, such as line info, string table, symbol info, "
+"and inlinee info, is stored in one or more ``.debug$S`` sections. There may "
+"only be one ``.debug$T`` section per object file, since all other debug info "
+"refers to it. If a PDB (enabled by the ``/Zi`` MSVC option) was used during "
+"compilation, the ``.debug$T`` section will contain only an "
+"``LF_TYPESERVER2`` record pointing to the PDB. When using PDBs, symbol "
+"information appears to remain in the object file ``.debug$S`` sections."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1920
+msgid ""
+"Type records are referred to by their index, which is the number of records "
+"in the stream before a given record plus ``0x1000``. Many common basic "
+"types, such as the basic integral types and unqualified pointers to them, "
+"are represented using type indices less than ``0x1000``. Such basic types "
+"are built in to CodeView consumers and do not require type records."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1926
+msgid ""
+"Each type record may only contain type indices that are less than its own "
+"type index. This ensures that the graph of type stream references is "
+"acyclic. While the source-level type graph may contain cycles through "
+"pointer types (consider a linked list struct), these cycles are removed from "
+"the type stream by always referring to the forward declaration record of "
+"user-defined record types. Only \"symbol\" records in the ``.debug$S`` "
+"streams may refer to complete, non-forward-declaration type records."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1935
+msgid "Working with CodeView"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1937
+msgid ""
+"These are instructions for some common tasks for developers working to "
+"improve LLVM's CodeView support. Most of them revolve around using the "
+"CodeView dumper embedded in ``llvm-readobj``."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1941
+msgid "Testing MSVC's output::"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1946
+msgid "Getting LLVM IR debug info out of Clang::"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1950
+msgid "Use this to generate LLVM IR for LLVM test cases."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1952
+msgid "Generate and dump CodeView from LLVM IR metadata::"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1957
+msgid ""
+"Use this pattern in lit test cases and FileCheck the output of llvm-readobj"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1959
+msgid ""
+"Improving LLVM's CodeView support is a process of finding interesting type "
+"records, constructing a C++ test case that makes MSVC emit those records, "
+"dumping the records, understanding them, and then generating equivalent "
+"records in LLVM's backend."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1965
+msgid "Testing Debug Info Preservation in Optimizations"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1967
+msgid ""
+"The following paragraphs are an introduction to the debugify utility and "
+"examples of how to use it in regression tests to check debug info "
+"preservation after optimizations."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1972
+msgid "The ``debugify`` utility"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1974
+msgid ""
+"The ``debugify`` synthetic debug info testing utility consists of two main "
+"parts. The ``debugify`` pass and the ``check-debugify`` one. They are meant "
+"to be used with ``opt`` for development purposes."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1978
+msgid ""
+"The first applies synthetic debug information to every instruction of the "
+"module, while the latter checks that this DI is still available after an "
+"optimization has occurred, reporting any errors/warnings while doing so."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1982
+msgid ""
+"The instructions are assigned sequentially increasing line locations, and "
+"are immediately used by debug value intrinsics when possible."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1985
+msgid "For example, here is a module before:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:1998
+msgid "and after running ``opt -debugify``  on it we get:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2035
+msgid "The following is an example of the -check-debugify output:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2042
+msgid ""
+"Errors/warnings can range from instructions with empty debug location to an "
+"instruction having a type that's incompatible with the source variable it "
+"describes, all the way to missing lines and missing debug value intrinsics."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2047
+msgid "Fixing errors"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2049
+msgid "Each of the errors above has a relevant API available to fix it."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2051
+msgid ""
+"In the case of missing debug location, ``Instruction::setDebugLoc`` or "
+"possibly ``IRBuilder::setCurrentDebugLocation`` when using a Builder and the "
+"new location should be reused."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2055
+msgid ""
+"When a debug value has incompatible type ``llvm::replaceAllDbgUsesWith`` can "
+"be used. After a RAUW call an incompatible type error can occur because RAUW "
+"does not handle widening and narrowing of variables while ``llvm::"
+"replaceAllDbgUsesWith`` does. It is also capable of changing the DWARF "
+"expression used by the debugger to describe the variable. It also prevents "
+"use-before-def by salvaging or deleting invalid debug values."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2061
+msgid ""
+"When a debug value is missing ``llvm::salvageDebugInfo`` can be used when no "
+"replacement exists, or ``llvm::replaceAllDbgUsesWith`` when a replacement "
+"exists."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2065
+msgid "Using ``debugify``"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2067
+msgid ""
+"In order for ``check-debugify`` to work, the DI must be coming from "
+"``debugify``. Thus, modules with existing DI will be skipped."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2070
+msgid "The most straightforward way to use ``debugify`` is as follows::"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2074
+msgid ""
+"This will inject synthetic DI to ``sample.ll`` run the ``pass-to-test`` and "
+"then check for missing DI."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2077
+msgid "Some other ways to run debugify are avaliable:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2091
+msgid "``debugify`` can also be used to test a backend, e.g:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2098
+msgid "``debugify`` in regression tests"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2100
+msgid ""
+"The ``-debugify`` pass is especially helpful when it comes to testing that a "
+"given pass preserves DI while transforming the module. For this to work, the "
+"``-debugify`` output must be stable enough to use in regression tests. "
+"Changes to this pass are not allowed to break existing tests."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2105
+msgid ""
+"It allows us to test for DI loss in the same tests we check that the "
+"transformation is actually doing what it should."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2108
+msgid ""
+"Here is an example from ``test/Transforms/InstCombine/cast-mul-select.ll``:"
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2128
+msgid ""
+"Here we test that the two ``dbg.value`` instrinsics are preserved and are "
+"correctly pointing to the ``[[C]]`` and ``[[D]]`` variables."
+msgstr ""
+
+#: ../../../SourceLevelDebugging.rst:2133
+msgid ""
+"Note, that when writing this kind of regression tests, it is important to "
+"make them as robust as possible. That's why we should try to avoid "
+"hardcoding line/variable numbers in check lines. If for example you test for "
+"a ``DILocation`` to have a specific line number, and someone later adds an "
+"instruction before the one we check the test will fail. In the cases this "
+"can't be avoided (say, if a test wouldn't be precise enough), moving the "
+"test to its own file is preferred."
+msgstr ""
