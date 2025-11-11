@@ -1,0 +1,1223 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 15\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-07 18:11+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../TableGen/BackGuide.rst:3
+msgid "TableGen Backend Developer's Guide"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:11
+msgid "Introduction"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:13
+msgid ""
+"The purpose of TableGen is to generate complex output files based on "
+"information from source files that are significantly easier to code than the "
+"output files would be, and also easier to maintain and modify over time. The "
+"information is coded in a declarative style involving classes and records, "
+"which are then processed by TableGen. The internalized records are passed on "
+"to various backends, which extract information from a subset of the records "
+"and generate an output file. These output files are typically ``.inc`` files "
+"for C++, but may be any type of file that the backend developer needs."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:22
+msgid ""
+"This document is a guide to writing a backend for TableGen. It is not a "
+"complete reference manual, but rather a guide to using the facilities "
+"provided by TableGen for the backends. For a complete reference to the "
+"various data structures and functions involved, see the primary TableGen "
+"header file (``record.h``) and/or the Doxygen documentation."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:28
+msgid ""
+"This document assumes that you have read the :doc:`TableGen Programmer's "
+"Reference <./ProgRef>`, which provides a detailed reference for coding "
+"TableGen source files. For a description of the existing backends, see :doc:"
+"`TableGen BackEnds <./BackEnds>`."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:34
+msgid "Data Structures"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:36
+msgid ""
+"The following sections describe the data structures that contain the classes "
+"and records that are collected from the TableGen source files by the "
+"TableGen parser. Note that the term *class* refers to an abstract record "
+"class, while the term *record* refers to a concrete record."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:41
+msgid ""
+"Unless otherwise noted, functions associated with classes are instance "
+"functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:45
+msgid "``RecordKeeper``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:47
+msgid ""
+"An instance of the ``RecordKeeper`` class acts as the container for all the "
+"classes and records parsed and collected by TableGen. The ``RecordKeeper`` "
+"instance is passed to the backend when it is invoked by TableGen. This class "
+"is usually abbreviated ``RK``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:52
+msgid ""
+"There are two maps in the recordkeeper, one for classes and one for records "
+"(the latter often referred to as *defs*). Each map maps the class or record "
+"name to an instance of the ``Record`` class (see `Record`_), which contains "
+"all the information about that class or record."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:57
+msgid "In addition to the two maps, the ``RecordKeeper`` instance contains:"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:59
+msgid ""
+"A map that maps the names of global variables to their values. Global "
+"variables are defined in TableGen files with outer ``defvar`` statements."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:63
+msgid "A counter for naming anonymous records."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:65
+msgid "The ``RecordKeeper`` class provides a few useful functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:67
+msgid "Functions to get the complete class and record maps."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:69
+msgid "Functions to get a subset of the records based on their parent classes."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:71
+msgid "Functions to get individual classes, records, and globals, by name."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:73
+msgid ""
+"A ``RecordKeeper`` instance can be printed to an output stream with the "
+"``<<`` operator."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:77
+msgid "``Record``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:79
+msgid ""
+"Each class or record built by TableGen is represented by an instance of the "
+"``Record`` class. The ``RecordKeeper`` instance contains one map for the "
+"classes and one for the records. The primary data members of a record are "
+"the record name, the vector of field names and their values, and the vector "
+"of superclasses of the record."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:85
+msgid ""
+"The record name is stored as a pointer to an ``Init`` (see `Init`_), which "
+"is a class whose instances hold TableGen values (sometimes referred to as "
+"*initializers*). The field names and values are stored in a vector of "
+"``RecordVal`` instances (see `RecordVal`_), each of which contains both the "
+"field name and its value. The superclass vector contains a sequence of "
+"pairs, with each pair including the superclass record and its source file "
+"location."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:93
+msgid "In addition to those members, a ``Record`` instance contains:"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:95
+msgid ""
+"A vector of source file locations that includes the record definition "
+"itself, plus the locations of any multiclasses involved in its definition."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:98
+msgid "For a class record, a vector of the class's template arguments."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:100
+msgid ""
+"An instance of ``DefInit`` (see `DefInit`_) corresponding to this record."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:102
+msgid "A unique record ID."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:104
+msgid "A boolean that specifies whether this is a class definition."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:106
+msgid "A boolean that specifies whether this is an anonymous record."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:108
+msgid "The ``Record`` class provides many useful functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:110
+msgid ""
+"Functions to get the record name, fields, source file locations, template "
+"arguments, and unique ID."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:113
+msgid ""
+"Functions to get all the record's superclasses or just its direct "
+"superclasses."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:116
+msgid ""
+"Functions to get a particular field value by specifying its name in various "
+"forms, and returning its value in various forms (see `Getting Record Names "
+"and Fields`_)."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:120
+msgid "Boolean functions to check the various attributes of the record."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:122
+msgid ""
+"A ``Record`` instance can be printed to an output stream with the ``<<`` "
+"operator."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:127
+msgid "``RecordVal``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:129
+msgid ""
+"Each field of a record is stored in an instance of the ``RecordVal`` class. "
+"The ``Record`` instance includes a vector of these value instances. A "
+"``RecordVal`` instance contains the name of the field, stored in an ``Init`` "
+"instance. It also contains the value of the field, likewise stored in an "
+"``Init``. (A better name for this class might be ``RecordField``.)"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:135
+msgid ""
+"In addition to those primary members, the ``RecordVal`` has other data "
+"members."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:137
+msgid "The source file location of the field definition."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:139
+msgid ""
+"The type of the field, stored as an instance of the ``RecTy`` class (see "
+"`RecTy`_)."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:142
+msgid "The ``RecordVal`` class provides some useful functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:144
+msgid "Functions to get the name of the field in various forms."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:146
+msgid "A function to get the type of the field."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:148
+msgid "A function to get the value of the field."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:150
+msgid "A function to get the source file location."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:152
+msgid ""
+"Note that field values are more easily obtained directly from the ``Record`` "
+"instance (see `Record`_)."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:155
+msgid ""
+"A ``RecordVal`` instance can be printed to an output stream with the ``<<`` "
+"operator."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:159
+msgid "``RecTy``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:161
+msgid ""
+"The ``RecTy`` class is used to represent the types of field values. It is "
+"the base class for a series of subclasses, one for each of the available "
+"field types. The ``RecTy`` class has one data member that is an enumerated "
+"type specifying the specific type of field value. (A better name for this "
+"class might be ``FieldTy``.)"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:167
+msgid "The ``RecTy`` class provides a few useful functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:169
+msgid "A virtual function to get the type name as a string."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:171
+msgid ""
+"A virtual function to check whether all the values of this type can be "
+"converted to another given type."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:174
+msgid ""
+"A virtual function to check whether this type is a subtype of another given "
+"type."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:177
+msgid ""
+"A function to get the corresponding ``list`` type for lists with elements of "
+"this type. For example, the function returns the ``list<int>`` type when "
+"called with the ``int`` type."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:181
+msgid ""
+"The subclasses that inherit from ``RecTy`` are ``BitRecTy``, ``BitsRecTy``, "
+"``CodeRecTy``, ``DagRecTy``, ``IntRecTy``, ``ListRecTy``, ``RecordRecTy``, "
+"and ``StringRecTy``. Some of these classes have additional members that are "
+"described in the following subsections."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:193
+msgid ""
+"*All* of the classes derived from ``RecTy`` provide the ``get()`` function. "
+"It returns an instance of ``Recty`` corresponding to the derived class. Some "
+"of the ``get()`` functions require an argument to specify which particular "
+"variant of the type is desired. These arguments are described in the "
+"following subsections."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:199
+msgid ""
+"A ``RecTy`` instance can be printed to an output stream with the ``<<`` "
+"operator."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:203
+msgid ""
+"It is not specified whether there is a single ``RecTy`` instance of a "
+"particular type or multiple instances."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:208
+msgid "``BitsRecTy``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:210
+msgid ""
+"This class includes a data member with the size of the ``bits`` value and a "
+"function to get that size."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:213
+msgid ""
+"The ``get()`` function takes the length of the sequence, *n*, and returns "
+"the ``BitsRecTy`` type corresponding to ``bits<``\\ *n*\\ ``>``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:217
+msgid "``ListRecTy``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:219
+msgid ""
+"This class includes a data member that specifies the type of the list's "
+"elements and a function to get that type."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:222
+msgid ""
+"The ``get()`` function takes the ``RecTy`` *type* of the list members and "
+"returns the ``ListRecTy`` type corresponding to ``list<``\\ *type*\\ ``>``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:227
+msgid "``RecordRecTy``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:229
+msgid ""
+"This class includes data members that contain the list of parent classes of "
+"this record. It also provides a function to obtain the array of classes and "
+"two functions to get the iterator ``begin()`` and ``end()`` values. The "
+"class defines a type for the return values of the latter two functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:238
+msgid ""
+"The ``get()`` function takes an ``ArrayRef`` of pointers to the ``Record`` "
+"instances of the *direct* superclasses of the record and returns the "
+"``RecordRecTy`` corresponding to the record inheriting from those "
+"superclasses."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:243
+msgid "``Init``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:245
+msgid ""
+"The ``Init`` class is used to represent TableGen values.  The name derives "
+"from *initialization value*. This class should not be confused with the "
+"``RecordVal`` class, which represents record fields, both their names and "
+"values. The ``Init`` class is the base class for a series of subclasses, one "
+"for each of the available value types. The primary data member of ``Init`` "
+"is an enumerated type that represents the specific type of the value."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:252
+msgid "The ``Init`` class provides a few useful functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:254
+msgid "A function to get the type enumerator."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:256
+msgid ""
+"A boolean virtual function to determine whether a value is completely "
+"specified; that is, has no uninitialized subvalues."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:259
+msgid "Virtual functions to get the value as a string."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:261
+msgid ""
+"Virtual functions to cast the value to other types, implement the bit range "
+"feature of TableGen, and implement the list slice feature."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:264
+msgid "A virtual function to get a particular bit of the value."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:266
+msgid ""
+"The subclasses that inherit directly from ``Init`` are ``UnsetInit`` and "
+"``TypedInit``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:269
+msgid ""
+"An ``Init`` instance can be printed to an output stream with the ``<<`` "
+"operator."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:273
+msgid ""
+"It is not specified whether two separate initialization values with the same "
+"underlying type and value (e.g., two strings with the value \"Hello\") are "
+"represented by two ``Init``\\ s or share the same ``Init``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:278
+msgid "``UnsetInit``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:280
+msgid ""
+"This class, a subclass of ``Init``, represents the unset (uninitialized) "
+"value. The static function ``get()`` can be used to obtain the singleton "
+"``Init`` of this type."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:286
+msgid "``TypedInit``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:288
+msgid ""
+"This class, a subclass of ``Init``, acts as the parent class of the classes "
+"that represent specific value types (except for the unset value). These "
+"classes include ``BitInit``, ``BitsInit``, ``DagInit``, ``DefInit``, "
+"``IntInit``, ``ListInit``, and ``StringInit``. (There are additional derived "
+"types used by the TableGen parser.)"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:294
+msgid ""
+"This class includes a data member that specifies the ``RecTy`` type of the "
+"value. It provides a function to get that ``RecTy`` type."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:298
+msgid "``BitInit``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:300
+msgid ""
+"The ``BitInit`` class is a subclass of ``TypedInit``. Its instances "
+"represent the possible values of a bit: 0 or 1. It includes a data member "
+"that contains the bit."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:304
+msgid ""
+"*All* of the classes derived from ``TypedInit`` provide the following "
+"functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:306
+msgid ""
+"A static function named ``get()`` that returns an ``Init`` representing the "
+"specified value(s). In the case of ``BitInit``, ``get(true)`` returns an "
+"instance of ``BitInit`` representing true, while ``get(false)`` returns an "
+"instance representing false. As noted above, it is not specified whether "
+"there is exactly one or more than one ``BitInit`` representing true (or "
+"false)."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:313
+msgid ""
+"A function named ``GetValue()`` that returns the value of the instance in a "
+"more direct form, in this case as a ``bool``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:317
+msgid "``BitsInit``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:319
+msgid ""
+"The ``BitsInit`` class is a subclass of ``TypedInit``. Its instances "
+"represent sequences of bits, from high-order to low-order. It includes a "
+"data member with the length of the sequence and a vector of pointers to "
+"``Init`` instances, one per bit."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:324
+msgid ""
+"The class provides the usual ``get()`` function. It does not provide the "
+"``getValue()`` function."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:327
+msgid "The class provides the following additional functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:329
+msgid "A function to get the number of bits in the sequence."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:331
+msgid "A function that gets a bit specified by an integer index."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:334
+msgid "``DagInit``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:336
+msgid ""
+"The ``DagInit`` class is a subclass of ``TypedInit``. Its instances "
+"represent the possible direct acyclic graphs (``dag``)."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:339
+msgid ""
+"The class includes a pointer to an ``Init`` for the DAG operator and a "
+"pointer to a ``StringInit`` for the operator name. It includes the count of "
+"DAG operands and the count of operand names. Finally, it includes a vector "
+"of pointers to ``Init`` instances for the operands and another to "
+"``StringInit`` instances for the operand names. (The DAG operands are also "
+"referred to as *arguments*.)"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:346
+msgid ""
+"The class provides two forms of the usual ``get()`` function. It does not "
+"provide the usual ``getValue()`` function."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:349
+msgid "The class provides many additional functions:"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:351
+msgid ""
+"Functions to get the operator in various forms and to get the operator name "
+"in various forms."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:354
+msgid ""
+"Functions to determine whether there are any operands and to get the number "
+"of operands."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:357
+msgid "Functions to the get the operands, both individually and together."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:359
+msgid ""
+"Functions to determine whether there are any names and to get the number of "
+"names"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:362
+msgid "Functions to the get the names, both individually and together."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:364
+msgid "Functions to get the operand iterator ``begin()`` and ``end()`` values."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:366
+msgid "Functions to get the name iterator ``begin()`` and ``end()`` values."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:368
+msgid ""
+"The class defines two types for the return values of the operand and name "
+"iterators."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:378
+msgid "``DefInit``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:380
+msgid ""
+"The ``DefInit`` class is a subclass of ``TypedInit``. Its instances "
+"represent the records that were collected by TableGen. It includes a data "
+"member that is a pointer to the record's ``Record`` instance."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:384
+msgid ""
+"The class provides the usual ``get()`` function. It does not provide "
+"``getValue()``. Instead, it provides ``getDef()``, which returns the "
+"``Record`` instance."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:389
+msgid "``IntInit``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:391
+msgid ""
+"The ``IntInit`` class is a subclass of ``TypedInit``. Its instances "
+"represent the possible values of a 64-bit integer. It includes a data member "
+"that contains the integer."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:395
+msgid ""
+"The class provides the usual ``get()`` and ``getValue()`` functions. The "
+"latter function returns the integer as an ``int64_t``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:398
+msgid ""
+"The class also provides a function, ``getBit()``, to obtain a specified bit "
+"of the integer value."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:402
+msgid "``ListInit``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:404
+msgid ""
+"The ``ListInit`` class is a subclass of ``TypedInit``. Its instances "
+"represent lists of elements of some type. It includes a data member with the "
+"length of the list and a vector of pointers to ``Init`` instances, one per "
+"element."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:409
+msgid ""
+"The class provides the usual ``get()`` and ``getValues()`` functions. The "
+"latter function returns an ``ArrayRef`` of the vector of pointers to "
+"``Init`` instances."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:413
+msgid "The class provides these additional functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:415
+msgid "A function to get the element type."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:417
+msgid ""
+"Functions to get the length of the vector and to determine whether it is "
+"empty."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:420
+msgid ""
+"Functions to get an element specified by an integer index and return it in "
+"various forms."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:423
+msgid ""
+"Functions to get the iterator ``begin()`` and ``end()`` values. The class "
+"defines a type for the return type of these two functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:432
+msgid "``StringInit``"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:434
+msgid ""
+"The ``StringInit`` class is a subclass of ``TypedInit``. Its instances "
+"represent arbitrary-length strings. It includes a data member that contains "
+"a ``StringRef`` of the value."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:438
+msgid ""
+"The class provides the usual ``get()`` and ``getValue()`` functions. The "
+"latter function returns the ``StringRef``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:442
+msgid "Creating a New Backend"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:444
+msgid "The following steps are required to create a new backend for TableGen."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:446
+msgid "Invent a name for your backend C++ file, say ``GenAddressModes``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:448
+msgid ""
+"Write the new backend, using the file ``TableGenBackendSkeleton.cpp`` as a "
+"starting point."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:451
+msgid ""
+"Determine which instance of TableGen requires the new backend. There is one "
+"instance for Clang and another for LLVM. Or you may be building your own "
+"instance."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:455
+msgid "Modify the selected ``tablegen.cpp`` to include your new backend."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:457
+msgid "Add the name to the enumerated type ``ActionType``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:459
+msgid ""
+"Add a keyword to the ``ActionType`` command option using the "
+"``clEnumValN()`` function."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:462
+msgid ""
+"Add a case to the ``switch`` statement in the *xxx*\\ ``TableGenMain()`` "
+"function. It should invoke the \"main function\" of your backend, which in "
+"this case, according to convention, is named ``EmitAddressModes``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:466
+msgid ""
+"Add a declaration of your \"main function\" to the corresponding "
+"``TableGenBackends.h`` header file."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:469
+msgid ""
+"Add your backend C++ file to the appropriate ``CMakeLists.txt`` file so that "
+"it will be built."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:472
+msgid "Add your C++ file to the system."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:475
+msgid "The Backend Skeleton"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:477
+msgid ""
+"The file ``TableGenBackendSkeleton.cpp`` provides a skeleton C++ translation "
+"unit for writing a new TableGen backend. Here are a few notes on the file."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:480
+msgid "The list of includes is the minimal list required by most backends."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:482
+msgid ""
+"As with all LLVM C++ files, it has a ``using namespace llvm;`` statement. It "
+"also has an anonymous namespace that contains all the file-specific data "
+"structure definitions, along with the class embodying the emitter data "
+"members and functions. Continuing with the ``GenAddressModes`` example, this "
+"class is named ``AddressModesEmitter``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:488
+msgid ""
+"The constructor for the emitter class accepts a ``RecordKeeper`` reference, "
+"typically named ``RK``. The ``RecordKeeper`` reference is saved in a data "
+"member so that records can be obtained from it. This data member is usually "
+"named ``Records``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:493
+msgid ""
+"One function is named ``run``. It is invoked by the backend's \"main "
+"function\" to collect records and emit the output file. It accepts an "
+"instance of the ``raw_ostream`` class, typically named ``OS``. The output "
+"file is emitted by writing to this stream."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:498
+msgid ""
+"The ``run`` function should use the ``emitSourceFileHeader`` helper function "
+"to include a standard header in the emitted file."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:501
+msgid ""
+"The only function in the ``llvm`` namespace is the backend \"main function."
+"\" In this example, it is named ``EmitAddressModes``. It creates an instance "
+"of the ``AddressModesEmitter`` class, passing the ``RecordKeeper`` instance, "
+"then invokes the ``run`` function, passing the ``raw_ostream`` instance."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:507
+msgid ""
+"All the examples in the remainder of this document will assume the naming "
+"conventions used in the skeleton file."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:511
+msgid "Getting Classes"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:513
+msgid ""
+"The ``RecordKeeper`` class provides two functions for getting the ``Record`` "
+"instances for classes defined in the TableGen files."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:516
+msgid "``getClasses()`` returns a ``RecordMap`` reference for all the classes."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:518
+msgid ""
+"``getClass(``\\ *name*\\ ``)`` returns a ``Record`` reference for the named "
+"class."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:521
+msgid "If you need to iterate over all the class records:"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:530
+msgid ""
+"``ClassPair.second`` gets the class's ``unique_ptr``, then ``.get()`` gets "
+"the class ``Record`` itself."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:535
+msgid "Getting Records"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:537
+msgid ""
+"The ``RecordKeeper`` class provides four functions for getting the "
+"``Record`` instances for concrete records defined in the TableGen files."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:540
+msgid ""
+"``getDefs()`` returns a ``RecordMap`` reference for all the concrete records."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:543
+msgid ""
+"``getDef(``\\ *name*\\ ``)`` returns a ``Record`` reference for the named "
+"concrete record."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:546
+msgid ""
+"``getAllDerivedDefinitions(``\\ *classname*\\ ``)`` returns a vector of "
+"``Record`` references for the concrete records that derive from the given "
+"class."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:550
+msgid ""
+"``getAllDerivedDefinitions(``\\ *classnames*\\ ``)`` returns a vector of "
+"``Record`` references for the concrete records that derive from *all* of the "
+"given classes."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:554
+msgid ""
+"This statement obtains all the records that derive from the ``Attribute`` "
+"class and iterates over them."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:565
+msgid "Getting Record Names and Fields"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:567
+msgid ""
+"As described above (see `Record`_), there are multiple functions that return "
+"the name of a record. One particularly useful one is "
+"``getNameInitAsString()``, which returns the name as a ``std::string``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:571
+msgid ""
+"There are also multiple functions that return the fields of a record. To "
+"obtain and iterate over all the fields:"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:580
+msgid ""
+"You will recall that ``RecordVal`` is the class whose instances contain "
+"information about the fields in records."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:583
+msgid ""
+"The ``getValue()`` function returns the ``RecordVal`` instance for a field "
+"specified by name. There are multiple overloaded functions, some taking a "
+"``StringRef`` and others taking a ``const Init *``. Some functions return a "
+"``RecordVal *`` and others return a ``const RecordVal *``. If the field does "
+"not exist, a fatal error message is printed."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:589
+msgid ""
+"More often than not, you are interested in the value of the field, not all "
+"the information in the ``RecordVal``. There is a large set of functions that "
+"take a field name in some form and return its value. One function, "
+"``getValueInit``, returns the value as an ``Init *``. Another function, "
+"``isValueUnset``, returns a boolean specifying whether the value is unset "
+"(uninitialized)."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:596
+msgid ""
+"Most of the functions return the value in some more useful form. For example:"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:604
+msgid ""
+"The field ``RegCosts`` is assumed to be a list of integers. That list is "
+"returned as a ``std::vector`` of 64-bit integers. If the field is not a list "
+"of integers, a fatal error message is printed."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:608
+msgid ""
+"Here is a function that returns a field value as a ``Record``, but returns "
+"null if the field does not exist."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:617
+msgid ""
+"The field is assumed to have another record as its value. That record is "
+"returned as a pointer to a ``Record``. If the field does not exist or is "
+"unset, the functions returns null."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:622
+msgid "Getting Record Superclasses"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:624
+msgid ""
+"The ``Record`` class provides a function to obtain the superclasses of a "
+"record. It is named ``getSuperClasses`` and returns an ``ArrayRef`` of an "
+"array of ``std::pair`` pairs. The superclasses are in post-order: the order "
+"in which the superclasses were visited while copying their fields into the "
+"record. Each pair consists of a pointer to the ``Record`` instance for a "
+"superclass record and an instance of the ``SMRange`` class. The range "
+"indicates the source file locations of the beginning and end of the class "
+"definition."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:633
+msgid ""
+"This example obtains the superclasses of the ``Prototype`` record and then "
+"iterates over the pairs in the returned array."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:644
+msgid ""
+"The ``Record`` class also provides a function, ``getDirectSuperClasses``, to "
+"append the *direct* superclasses of a record to a given vector of type "
+"``SmallVectorImpl<Record *>``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:649
+msgid "Emitting Text to the Output Stream"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:651
+msgid ""
+"The ``run`` function is passed a ``raw_ostream`` to which it prints the "
+"output file. By convention, this stream is saved in the emitter class member "
+"named ``OS``, although some ``run`` functions are simple and just use the "
+"stream without saving it. The output can be produced by writing values "
+"directly to the output stream, or by using the ``std::format()`` or ``llvm::"
+"formatv()`` functions."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:664
+msgid ""
+"Instances of the following classes can be printed using the ``<<`` operator: "
+"``RecordKeeper``, ``Record``, ``RecTy``, ``RecordVal``, and ``Init``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:671
+msgid ""
+"The helper function ``emitSourceFileHeader()`` prints the header comment "
+"that should be included at the top of every output file. A call to it is "
+"included in the skeleton backend file ``TableGenBackendSkeleton.cpp``."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:676
+msgid "Printing Error Messages"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:678
+msgid ""
+"TableGen records are often derived from multiple classes and also often "
+"defined through a sequence of multiclasses. Because of this, it can be "
+"difficult for backends to report clear error messages with accurate source "
+"file locations.  To make error reporting easier, five error reporting "
+"functions are provided, each with four overloads."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:684
+msgid "``PrintWarning`` prints a message tagged as a warning."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:686
+msgid "``PrintError`` prints a message tagged as an error."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:688
+msgid ""
+"``PrintFatalError`` prints a message tagged as an error and then terminates."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:690
+msgid ""
+"``PrintNote`` prints a note. It is often used after one of the previous "
+"functions to provide more information."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:693
+msgid "``PrintFatalNote`` prints a note and then terminates."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:695
+msgid "Each of these five functions is overloaded four times."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:697
+msgid ""
+"``PrintError(const Twine &Msg)``: Prints the message with no source file "
+"location."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:700
+msgid ""
+"``PrintError(ArrayRef<SMLoc> ErrorLoc, const Twine &Msg)``: Prints the "
+"message followed by the specified source line, along with a pointer to the "
+"item in error. The array of source file locations is typically taken from a "
+"``Record`` instance."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:705
+msgid ""
+"``PrintError(const Record *Rec, const Twine &Msg)``: Prints the message "
+"followed by the source line associated with the specified record (see "
+"`Record`_)."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:709
+msgid ""
+"``PrintError(const RecordVal *RecVal, const Twine &Msg)``: Prints the "
+"message followed by the source line associated with the specified record "
+"field (see `RecordVal`_)."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:713
+msgid ""
+"Using these functions, the goal is to produce the most specific error report "
+"possible."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:717
+msgid "Debugging Tools"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:719
+msgid "TableGen provides some tools to aid in debugging backends."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:722
+msgid "The ``PrintRecords`` Backend"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:724
+msgid ""
+"The TableGen command option ``--print-records`` invokes a simple backend "
+"that prints all the classes and records defined in the source files. This is "
+"the default backend option. The format of the output is guaranteed to be "
+"constant over time, so that the output can be compared in tests. The output "
+"looks like this:"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:756
+msgid ""
+"Classes are shown with their template arguments, parent classes (following "
+"``//``), and fields. Records are shown with their parent classes and fields. "
+"Note that anonymous records are named ``anonymous_0``, ``anonymous_1``, etc."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:762
+msgid "The ``PrintDetailedRecords`` Backend"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:764
+msgid ""
+"The TableGen command option ``--print-detailed-records`` invokes a backend "
+"that prints all the global variables, classes, and records defined in the "
+"source files. The format of the output is *not* guaranteed to be constant "
+"over time. The output looks like this."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:798
+msgid ""
+"Global variables defined with outer ``defvar`` statements are shown with "
+"their values."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:801
+msgid ""
+"The classes are shown with their source location, template arguments, "
+"superclasses, and fields."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:804
+msgid ""
+"The records are shown with their source location, ``defm`` sequence, "
+"superclasses, and fields."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:807
+msgid ""
+"Superclasses are shown in the order processed, with indirect superclasses in "
+"parentheses. Each field is shown with its value and the source location at "
+"which it was set. The ``defm`` sequence gives the locations of the ``defm`` "
+"statements that were involved in generating the record, in the order they "
+"were invoked."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:814
+msgid "Timing TableGen Phases"
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:816
+msgid ""
+"TableGen provides a phase timing feature that produces a report of the time "
+"used by the various phases of parsing the source files and running the "
+"selected backend. This feature is enabled with the ``--time-phases`` option "
+"of the TableGen command."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:821
+msgid ""
+"If the backend is *not* instrumented for timing, then a report such as the "
+"following is produced. This is the timing for the ``--print-detailed-"
+"records`` backend run on the AMDGPU target."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:838
+msgid ""
+"Note that all the time for the backend is lumped under \"Backend overall\"."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:840
+msgid ""
+"If the backend is instrumented for timing, then its processing is divided "
+"into phases and each one timed separately. This is the timing for the ``--"
+"emit-dag-isel`` backend run on the AMDGPU target."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:860
+msgid "The backend has been divided into four phases and timed separately."
+msgstr ""
+
+#: ../../../TableGen/BackGuide.rst:862
+msgid ""
+"If you want to instrument a backend, refer to the backend ``DAGISelEmitter."
+"cpp`` and search for ``Records.startTimer``."
+msgstr ""
