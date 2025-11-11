@@ -1,0 +1,344 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM 21\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-28 09:16+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../InterfaceExportAnnotations.rst:2
+msgid "LLVM Interface Export Annotations"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:3
+msgid ""
+"Symbols that are part of LLVM's public interface must be explicitly "
+"annotated to support shared library builds with hidden default symbol "
+"visibility. This document provides background and guidelines for annotating "
+"the codebase."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:8
+msgid "LLVM Shared Library"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:9
+msgid ""
+"LLVM builds as a static library by default, but it can also be built as a "
+"shared library with the following configuration:"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:17
+msgid ""
+"There are three shared library executable formats we're interested in: PE "
+"Dynamic Link Library (.dll) on Windows, Mach-O Shared Object (.dylib) on "
+"Apple systems, and ELF Shared Object (.so) on Linux, BSD and other Unix-like "
+"systems."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:21
+msgid ""
+"ELF and Mach-O Shared Object files can be built with no additional setup or "
+"configuration. This is because all global symbols in the library are "
+"exported by default -- the same as when building a static library. However, "
+"when building a DLL for Windows, the situation is more complex:"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:26
+msgid ""
+"Symbols are not exported from a DLL by default. Symbols must be annotated "
+"with ``__declspec(dllexport)`` when building the library to be externally "
+"visible."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:29
+msgid ""
+"Symbols imported from a Windows DLL should generally be annotated with "
+"``__declspec(dllimport)`` when compiling clients."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:32
+msgid "A single Windows DLL can export a maximum of 65,535 symbols."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:34
+msgid ""
+"Because of the requirements for Windows DLLs, additional work must be done "
+"to ensure the proper set of public symbols is exported and visible to "
+"clients."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:38
+msgid "Annotation Macros"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:39
+msgid ""
+"The distinct DLL import and export annotations required for Windows DLLs "
+"typically lead developers to define a preprocessor macro for annotating "
+"exported symbols in header public files. The custom macro resolves to the "
+"**export** annotation when building the library and the **import** "
+"annotation when building the client."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:45
+msgid ""
+"We have defined the ``LLVM_ABI`` macro in `llvm/Support/Compiler.h <https://"
+"github.com/llvm/llvm-project/blob/main/llvm/include/llvm/Support/Compiler."
+"h#L152>`__ for this purpose:"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:57
+msgid ""
+"Windows DLL symbol visibility requirements are approximated on ELF and Mach-"
+"O shared library builds by setting default symbol visibility to hidden (``-"
+"fvisibility-default=hidden``) when building with the following configuration:"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:66
+msgid ""
+"For an ELF or Mach-O platform with this setting, the ``LLVM_ABI`` macro is "
+"defined to override the default hidden symbol visibility:"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:73
+msgid ""
+"In addition to ``LLVM_ABI``, there are a few other macros for use in less "
+"common cases described below."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:76
+msgid ""
+"Export macros are used to annotate symbols only within their intended shared "
+"library. This is necessary because of the way Windows handles import/export "
+"annotations."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:80
+msgid ""
+"For example, ``LLVM_ABI`` resolves to ``__declspec(dllexport)`` only when "
+"building source that is part of the LLVM shared library (e.g. source under "
+"``llvm-project/llvm``). If ``LLVM_ABI`` were incorrectly used to annotate a "
+"symbol from a different LLVM project (such as Clang) it would always resolve "
+"to ``__declspec(dllimport)`` and the symbol would not be properly exported."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:87
+msgid "How to Annotate Symbols"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:89
+msgid "Functions"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:90
+msgid ""
+"Exported function declarations in header files must be annotated with "
+"``LLVM_ABI``."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:100
+msgid "Global Variables"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:101
+msgid ""
+"Exported global variables must be annotated with ``LLVM_ABI`` at their "
+"``extern`` declarations."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:111
+msgid "Classes, Structs, and Unions"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:112
+msgid ""
+"Classes, structs, and unions can be annotated with ``LLVM_ABI`` at their "
+"declaration, but this option is generally discouraged because it will export "
+"every class member, vtable, and type information. Instead, ``LLVM_ABI`` "
+"should be applied to individual class members that require export."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:117
+msgid ""
+"In the most common case, public and protected methods without a body in the "
+"class declaration must be annotated with ``LLVM_ABI``."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:142
+msgid ""
+"Additionally, public and protected static fields that are not initialized at "
+"declaration must be annotated with ``LLVM_ABI``."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:160
+msgid ""
+"Private methods may also require ``LLVM_ABI`` annotation. This situation "
+"occurs when a method defined in a header calls the private method. The "
+"private method call may be from within the class or a friend class or method."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:183
+msgid ""
+"There are less common cases where you may also need to annotate an inline "
+"function even though it is fully defined in a header. Annotating an inline "
+"function for export does not prevent it being inlined into client code. "
+"However, it does ensure there is a single, stable address for the function "
+"exported from the shared library."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:199
+msgid ""
+"Similarly, if a stable pointer-to-member function address is required for a "
+"method in a C++ class, it may be annotated for export."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:217
+msgid ""
+"When an inline function is annotated for export, the header containing the "
+"function definition **must** be included by at least one of the library's "
+"source files or the function will never be compiled with the export "
+"annotation."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:223
+msgid "Friend Functions"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:224
+msgid ""
+"Friend functions declared in a class, struct or union must be annotated with "
+"``LLVM_ABI`` if the corresponding function declaration is annotated with "
+"``LLVM_ABI``. This requirement applies even when the class containing the "
+"friend declaration is annotated with ``LLVM_ABI``."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:244
+msgid ""
+"Annotating the friend declaration avoids an “inconsistent dll linkage” "
+"compiler error when building a DLL for Windows."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:248
+msgid "Virtual Table and Type Info"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:249
+msgid ""
+"Classes and structs with exported virtual methods, including child classes "
+"that export overridden virtual methods, must also export their vtable for "
+"ELF and Mach-O builds. This can be achieved by annotating the class rather "
+"than individual class members."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:254
+msgid ""
+"The general rule here is to annotate at the class level if any out-of-line "
+"method is declared ``virtual`` or ``override``."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:286
+msgid ""
+"If a class is annotated, none of its members may be annotated. If class- and "
+"member-level annotations are combined on a class, it will fail compilation "
+"on Windows."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:291
+msgid "Compilation Errors"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:292
+msgid ""
+"Annotating a class with ``LLVM_ABI`` causes the compiler to fully "
+"instantiate the class at compile time. This requires exporting every method "
+"that could be potentially used by a client even though no existing clients "
+"may actually use them. This can cause compilation errors that were not "
+"previously present."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:297
+msgid ""
+"The most common type of error occurs when the compiler attempts to "
+"instantiate and export a class' implicit copy constructor and copy "
+"assignment operator. If the class contains move-only members that cannot be "
+"copied (``std::unique_ptr`` for example), the compiler will fail to "
+"instantiate these implicit methods."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:303
+msgid ""
+"This problem is easily addressed by explicitly deleting the class' copy "
+"constructor and copy assignment operator:"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:319
+msgid ""
+"We know this modification is harmless because any clients attempting to use "
+"these methods already would fail to compile. For a more detailed "
+"explanation, see `this Microsoft dev blog <https://devblogs.microsoft.com/"
+"oldnewthing/20190927-00/?p=102932>`__."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:325
+msgid "Templates"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:326
+msgid ""
+"Most template classes are entirely header-defined and do not need to be "
+"exported because they will be instantiated and compiled into the client as "
+"needed. Such template classes require no export annotations. However, there "
+"are some less common cases where annotations are required for templates."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:332
+msgid "Specialized Template Functions"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:333
+msgid ""
+"As with any other exported function, an exported specialization of a "
+"template function not defined in a header file must have its declaration "
+"annotated with ``LLVM_ABI``."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:349
+msgid ""
+"Similarly, an exported specialization of a method in a template class must "
+"have its declaration annotated with ``LLVM_ABI``."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:368
+msgid "Explicitly Instantiated Template Classes"
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:369
+msgid ""
+"Explicitly instantiated template classes must be annotated with template-"
+"specific annotations at both declaration and definition."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:372
+msgid ""
+"An extern template instantiation in a header file must be annotated with "
+"``LLVM_TEMPLATE_ABI``. This will typically be located in a header file."
+msgstr ""
+
+#: ../../../InterfaceExportAnnotations.rst:392
+msgid ""
+"The corresponding definition of the template instantiation must be annotated "
+"with ``LLVM_EXPORT_TEMPLATE``. This will typically be located in a source "
+"file."
+msgstr ""
