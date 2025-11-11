@@ -1,0 +1,418 @@
+
+<!DOCTYPE html>
+
+<html lang="zh-CN" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>User Guide for AMDGPU Back-end &#8212; LLVM 4 文档</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/llvm-theme.css?v=4c4af0c1" />
+    <script src="_static/documentation_options.js?v=216745eb"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/AMDGPUUsage.html" />
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="Stack maps and patch points in LLVM" href="StackMaps.html" />
+    <link rel="prev" title="User Guide for NVPTX Back-end" href="NVPTXUsage.html" />
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+
+  </head><body>
+<div class="logo">
+  <a href="index.html">
+    <img src="_static/logo.png"
+         alt="LLVM Logo" width="250" height="88"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="总索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="StackMaps.html" title="Stack maps and patch points in LLVM"
+             accesskey="N">下一页</a> |</li>
+        <li class="right" >
+          <a href="NVPTXUsage.html" title="User Guide for NVPTX Back-end"
+             accesskey="P">上一页</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">User Guide for AMDGPU Back-end</a></li> 
+      </ul>
+    </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <section id="user-guide-for-amdgpu-back-end">
+<h1>User Guide for AMDGPU Back-end<a class="headerlink" href="#user-guide-for-amdgpu-back-end" title="Link to this heading">¶</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>The AMDGPU back-end provides ISA code generation for AMD GPUs, starting with
+the R600 family up until the current Volcanic Islands (GCN Gen 3).</p>
+<p>Refer to <a class="reference external" href="CompilerWriterInfo.html#amdgpu">AMDGPU section in Architecture &amp; Platform Information for Compiler Writers</a>
+for additional documentation.</p>
+</section>
+<section id="conventions">
+<h2>Conventions<a class="headerlink" href="#conventions" title="Link to this heading">¶</a></h2>
+<section id="address-spaces">
+<h3>Address Spaces<a class="headerlink" href="#address-spaces" title="Link to this heading">¶</a></h3>
+<p>The AMDGPU back-end uses the following address space mapping:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Address Space</p></th>
+<th class="head"><p>Memory Space</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>Private</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>Global</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>Constant</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>Local</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p>Generic (Flat)</p></td>
+</tr>
+<tr class="row-odd"><td><p>5</p></td>
+<td><p>Region</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The terminology in the table, aside from the region memory space, is from the
+OpenCL standard.</p>
+</section>
+</section>
+<section id="assembler">
+<h2>Assembler<a class="headerlink" href="#assembler" title="Link to this heading">¶</a></h2>
+<p>AMDGPU backend has LLVM-MC based assembler which is currently in development.
+It supports Southern Islands ISA, Sea Islands and Volcanic Islands.</p>
+<p>This document describes general syntax for instructions and operands. For more
+information about instructions, their semantics and supported combinations
+of operands, refer to one of Instruction Set Architecture manuals.</p>
+<p>An instruction has the following syntax (register operands are
+normally comma-separated while extra operands are space-separated):</p>
+<p><em>&lt;opcode&gt; &lt;register_operand0&gt;, ... &lt;extra_operand0&gt; ...</em></p>
+<section id="operands">
+<h3>Operands<a class="headerlink" href="#operands" title="Link to this heading">¶</a></h3>
+<p>The following syntax for register operands is supported:</p>
+<ul class="simple">
+<li><p>SGPR registers: s0, ... or s[0], ...</p></li>
+<li><p>VGPR registers: v0, ... or v[0], ...</p></li>
+<li><p>TTMP registers: ttmp0, ... or ttmp[0], ...</p></li>
+<li><p>Special registers: exec (exec_lo, exec_hi), vcc (vcc_lo, vcc_hi), flat_scratch (flat_scratch_lo, flat_scratch_hi)</p></li>
+<li><p>Special trap registers: tba (tba_lo, tba_hi), tma (tma_lo, tma_hi)</p></li>
+<li><p>Register pairs, quads, etc: s[2:3], v[10:11], ttmp[5:6], s[4:7], v[12:15], ttmp[4:7], s[8:15], ...</p></li>
+<li><p>Register lists: [s0, s1], [ttmp0, ttmp1, ttmp2, ttmp3]</p></li>
+<li><p>Register index expressions: v[2*2], s[1-1:2-1]</p></li>
+<li><p>'off' indicates that an operand is not enabled</p></li>
+</ul>
+<p>The following extra operands are supported:</p>
+<ul class="simple">
+<li><p>offset, offset0, offset1</p></li>
+<li><p>idxen, offen bits</p></li>
+<li><p>glc, slc, tfe bits</p></li>
+<li><p>waitcnt: integer or combination of counter values</p></li>
+<li><p>VOP3 modifiers:</p>
+<ul>
+<li><p>abs (| |), neg (-)</p></li>
+</ul>
+</li>
+<li><p>DPP modifiers:</p>
+<ul>
+<li><p>row_shl, row_shr, row_ror, row_rol</p></li>
+<li><p>row_mirror, row_half_mirror, row_bcast</p></li>
+<li><p>wave_shl, wave_shr, wave_ror, wave_rol, quad_perm</p></li>
+<li><p>row_mask, bank_mask, bound_ctrl</p></li>
+</ul>
+</li>
+<li><p>SDWA modifiers:</p>
+<ul>
+<li><p>dst_sel, src0_sel, src1_sel (BYTE_N, WORD_M, DWORD)</p></li>
+<li><p>dst_unused (UNUSED_PAD, UNUSED_SEXT, UNUSED_PRESERVE)</p></li>
+<li><p>abs, neg, sext</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="ds-instructions-examples">
+<h3>DS Instructions Examples<a class="headerlink" href="#ds-instructions-examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">ds_add_u32</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">v4</span><span class="w"> </span><span class="nv">offset</span><span class="p">:</span><span class="mi">16</span>
+<span class="nf">ds_write_src2_b64</span><span class="w"> </span><span class="nv">v2</span><span class="w"> </span><span class="nv">offset0</span><span class="p">:</span><span class="mi">4</span><span class="w"> </span><span class="nv">offset1</span><span class="p">:</span><span class="mi">8</span>
+<span class="nf">ds_cmpst_f32</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">v4</span><span class="p">,</span><span class="w"> </span><span class="nv">v6</span>
+<span class="nf">ds_min_rtn_f64</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">9</span><span class="p">],</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>For full list of supported instructions, refer to &quot;LDS/GDS instructions&quot; in ISA Manual.</p>
+</section>
+<section id="flat-instruction-examples">
+<h3>FLAT Instruction Examples<a class="headerlink" href="#flat-instruction-examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">flat_load_dword</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+<span class="nf">flat_store_dwordx3</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
+<span class="nf">flat_atomic_swap</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span><span class="w"> </span><span class="nv">v5</span><span class="w"> </span><span class="nv">glc</span>
+<span class="nf">flat_atomic_cmpswap</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span><span class="w"> </span><span class="nv">glc</span><span class="w"> </span><span class="nv">slc</span>
+<span class="nf">flat_atomic_fmax_x2</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span><span class="w"> </span><span class="nv">glc</span>
+</pre></div>
+</div>
+<p>For full list of supported instructions, refer to &quot;FLAT instructions&quot; in ISA Manual.</p>
+</section>
+<section id="mubuf-instruction-examples">
+<h3>MUBUF Instruction Examples<a class="headerlink" href="#mubuf-instruction-examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">buffer_load_dword</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">off</span><span class="p">,</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">7</span><span class="p">],</span><span class="w"> </span><span class="nv">s1</span>
+<span class="nf">buffer_store_dwordx4</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">ttmp</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">7</span><span class="p">],</span><span class="w"> </span><span class="nv">s1</span><span class="w"> </span><span class="nv">offen</span><span class="w"> </span><span class="nv">offset</span><span class="p">:</span><span class="mi">4</span><span class="w"> </span><span class="nv">glc</span><span class="w"> </span><span class="nv">tfe</span>
+<span class="nf">buffer_store_format_xy</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="nv">off</span><span class="p">,</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">7</span><span class="p">],</span><span class="w"> </span><span class="nv">s1</span>
+<span class="nf">buffer_wbinvl1</span>
+<span class="nf">buffer_atomic_inc</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">11</span><span class="p">],</span><span class="w"> </span><span class="nv">s4</span><span class="w"> </span><span class="nv">idxen</span><span class="w"> </span><span class="nv">offset</span><span class="p">:</span><span class="mi">4</span><span class="w"> </span><span class="nv">slc</span>
+</pre></div>
+</div>
+<p>For full list of supported instructions, refer to &quot;MUBUF Instructions&quot; in ISA Manual.</p>
+</section>
+<section id="smrd-smem-instruction-examples">
+<h3>SMRD/SMEM Instruction Examples<a class="headerlink" href="#smrd-smem-instruction-examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">s_load_dword</span><span class="w"> </span><span class="nv">s1</span><span class="p">,</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="mh">0xfc</span>
+<span class="nf">s_load_dwordx8</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">15</span><span class="p">],</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nv">s4</span>
+<span class="nf">s_load_dwordx16</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">88</span><span class="p">:</span><span class="mi">103</span><span class="p">],</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nv">s4</span>
+<span class="nf">s_dcache_inv_vol</span>
+<span class="nf">s_memtime</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>For full list of supported instructions, refer to &quot;Scalar Memory Operations&quot; in ISA Manual.</p>
+</section>
+<section id="sop1-instruction-examples">
+<h3>SOP1 Instruction Examples<a class="headerlink" href="#sop1-instruction-examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">s_mov_b32</span><span class="w"> </span><span class="nv">s1</span><span class="p">,</span><span class="w"> </span><span class="nv">s2</span>
+<span class="nf">s_mov_b64</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="mh">0x80000000</span>
+<span class="nf">s_cmov_b32</span><span class="w"> </span><span class="nv">s1</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span>
+<span class="nf">s_wqm_b64</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+<span class="nf">s_bcnt0_i32_b64</span><span class="w"> </span><span class="nv">s1</span><span class="p">,</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="nf">s_swappc_b64</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+<span class="nf">s_cbranch_join</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>For full list of supported instructions, refer to &quot;SOP1 Instructions&quot; in ISA Manual.</p>
+</section>
+<section id="sop2-instruction-examples">
+<h3>SOP2 Instruction Examples<a class="headerlink" href="#sop2-instruction-examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">s_add_u32</span><span class="w"> </span><span class="nv">s1</span><span class="p">,</span><span class="w"> </span><span class="nv">s2</span><span class="p">,</span><span class="w"> </span><span class="nv">s3</span>
+<span class="nf">s_and_b64</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">],</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
+<span class="nf">s_cselect_b32</span><span class="w"> </span><span class="nv">s1</span><span class="p">,</span><span class="w"> </span><span class="nv">s2</span><span class="p">,</span><span class="w"> </span><span class="nv">s3</span>
+<span class="nf">s_andn2_b32</span><span class="w"> </span><span class="nv">s2</span><span class="p">,</span><span class="w"> </span><span class="nv">s4</span><span class="p">,</span><span class="w"> </span><span class="nv">s6</span>
+<span class="nf">s_lshr_b64</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">],</span><span class="w"> </span><span class="nv">s6</span>
+<span class="nf">s_ashr_i32</span><span class="w"> </span><span class="nv">s2</span><span class="p">,</span><span class="w"> </span><span class="nv">s4</span><span class="p">,</span><span class="w"> </span><span class="nv">s6</span>
+<span class="nf">s_bfm_b64</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nv">s4</span><span class="p">,</span><span class="w"> </span><span class="nv">s6</span>
+<span class="nf">s_bfe_i64</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">],</span><span class="w"> </span><span class="nv">s6</span>
+<span class="nf">s_cbranch_g_fork</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">],</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>For full list of supported instructions, refer to &quot;SOP2 Instructions&quot; in ISA Manual.</p>
+</section>
+<section id="sopc-instruction-examples">
+<h3>SOPC Instruction Examples<a class="headerlink" href="#sopc-instruction-examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">s_cmp_eq_i32</span><span class="w"> </span><span class="nv">s1</span><span class="p">,</span><span class="w"> </span><span class="nv">s2</span>
+<span class="nf">s_bitcmp1_b32</span><span class="w"> </span><span class="nv">s1</span><span class="p">,</span><span class="w"> </span><span class="nv">s2</span>
+<span class="nf">s_bitcmp0_b64</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nv">s4</span>
+<span class="nf">s_setvskip</span><span class="w"> </span><span class="nv">s3</span><span class="p">,</span><span class="w"> </span><span class="nv">s5</span>
+</pre></div>
+</div>
+<p>For full list of supported instructions, refer to &quot;SOPC Instructions&quot; in ISA Manual.</p>
+</section>
+<section id="sopp-instruction-examples">
+<h3>SOPP Instruction Examples<a class="headerlink" href="#sopp-instruction-examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">s_barrier</span>
+<span class="nf">s_nop</span><span class="w"> </span><span class="mi">2</span>
+<span class="nf">s_endpgm</span>
+<span class="nf">s_waitcnt</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="c1">; Wait for all counters to be 0</span>
+<span class="nf">s_waitcnt</span><span class="w"> </span><span class="nv">vmcnt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="nv">expcnt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="nv">lgkmcnt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">; Equivalent to above</span>
+<span class="nf">s_waitcnt</span><span class="w"> </span><span class="nv">vmcnt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="c1">; Wait for vmcnt counter to be 1.</span>
+<span class="nf">s_sethalt</span><span class="w"> </span><span class="mi">9</span>
+<span class="nf">s_sleep</span><span class="w"> </span><span class="mi">10</span>
+<span class="nf">s_sendmsg</span><span class="w"> </span><span class="mh">0x1</span>
+<span class="nf">s_sendmsg</span><span class="w"> </span><span class="nv">sendmsg</span><span class="p">(</span><span class="nv">MSG_INTERRUPT</span><span class="p">)</span>
+<span class="nf">s_trap</span><span class="w"> </span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>For full list of supported instructions, refer to &quot;SOPP Instructions&quot; in ISA Manual.</p>
+<p>Unless otherwise mentioned, little verification is performed on the operands
+of SOPP Instrucitons, so it is up to the programmer to be familiar with the
+range or acceptable values.</p>
+</section>
+<section id="vector-alu-instruction-examples">
+<h3>Vector ALU Instruction Examples<a class="headerlink" href="#vector-alu-instruction-examples" title="Link to this heading">¶</a></h3>
+<p>For vector ALU instruction opcodes (VOP1, VOP2, VOP3, VOPC, VOP_DPP, VOP_SDWA),
+the assembler will automatically use optimal encoding based on its operands.
+To force specific encoding, one can add a suffix to the opcode of the instruction:</p>
+<ul class="simple">
+<li><p>_e32 for 32-bit VOP1/VOP2/VOPC</p></li>
+<li><p>_e64 for 64-bit VOP3</p></li>
+<li><p>_dpp for VOP_DPP</p></li>
+<li><p>_sdwa for VOP_SDWA</p></li>
+</ul>
+<p>VOP1/VOP2/VOP3/VOPC examples:</p>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">v_mov_b32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span>
+<span class="nf">v_mov_b32_e32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span>
+<span class="nf">v_nop</span>
+<span class="nf">v_cvt_f64_i32_e32</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="nv">v2</span>
+<span class="nf">v_floor_f32_e32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span>
+<span class="nf">v_bfrev_b32_e32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span>
+<span class="nf">v_add_f32_e32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">v3</span>
+<span class="nf">v_mul_i32_i24_e64</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span>
+<span class="nf">v_mul_i32_i24_e32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nv">v3</span>
+<span class="nf">v_mul_i32_i24_e32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="nv">v3</span>
+<span class="nf">v_addc_u32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">v3</span><span class="p">,</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="nf">v_max_f16_e32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">v3</span>
+</pre></div>
+</div>
+<p>VOP_DPP examples:</p>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">v_mov_b32</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="nv">v0</span><span class="w"> </span><span class="nv">quad_perm</span><span class="p">:[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+<span class="nf">v_sin_f32</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="nv">v0</span><span class="w"> </span><span class="nv">row_shl</span><span class="p">:</span><span class="mi">1</span><span class="w"> </span><span class="nv">row_mask</span><span class="p">:</span><span class="mh">0xa</span><span class="w"> </span><span class="nv">bank_mask</span><span class="p">:</span><span class="mh">0x1</span><span class="w"> </span><span class="nv">bound_ctrl</span><span class="p">:</span><span class="mi">0</span>
+<span class="nf">v_mov_b32</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="nv">v0</span><span class="w"> </span><span class="nv">wave_shl</span><span class="p">:</span><span class="mi">1</span>
+<span class="nf">v_mov_b32</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="nv">v0</span><span class="w"> </span><span class="nv">row_mirror</span>
+<span class="nf">v_mov_b32</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="nv">v0</span><span class="w"> </span><span class="nv">row_bcast</span><span class="p">:</span><span class="mi">31</span>
+<span class="nf">v_mov_b32</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="nv">v0</span><span class="w"> </span><span class="nv">quad_perm</span><span class="p">:[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="nv">row_mask</span><span class="p">:</span><span class="mh">0xa</span><span class="w"> </span><span class="nv">bank_mask</span><span class="p">:</span><span class="mh">0x1</span><span class="w"> </span><span class="nv">bound_ctrl</span><span class="p">:</span><span class="mi">0</span>
+<span class="nf">v_add_f32</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="o">|</span><span class="nv">v0</span><span class="o">|</span><span class="w"> </span><span class="nv">row_shl</span><span class="p">:</span><span class="mi">1</span><span class="w"> </span><span class="nv">row_mask</span><span class="p">:</span><span class="mh">0xa</span><span class="w"> </span><span class="nv">bank_mask</span><span class="p">:</span><span class="mh">0x1</span><span class="w"> </span><span class="nv">bound_ctrl</span><span class="p">:</span><span class="mi">0</span>
+<span class="nf">v_max_f16</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">v3</span><span class="w"> </span><span class="nv">row_shl</span><span class="p">:</span><span class="mi">1</span><span class="w"> </span><span class="nv">row_mask</span><span class="p">:</span><span class="mh">0xa</span><span class="w"> </span><span class="nv">bank_mask</span><span class="p">:</span><span class="mh">0x1</span><span class="w"> </span><span class="nv">bound_ctrl</span><span class="p">:</span><span class="mi">0</span>
+</pre></div>
+</div>
+<p>VOP_SDWA examples:</p>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">v_mov_b32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span><span class="w"> </span><span class="nv">dst_sel</span><span class="p">:</span><span class="kt">BYTE</span><span class="nv">_0</span><span class="w"> </span><span class="nv">dst_unused</span><span class="p">:</span><span class="nv">UNUSED_PRESERVE</span><span class="w"> </span><span class="nv">src0_sel</span><span class="p">:</span><span class="kt">DWORD</span>
+<span class="nf">v_min_u32</span><span class="w"> </span><span class="nv">v200</span><span class="p">,</span><span class="w"> </span><span class="nv">v200</span><span class="p">,</span><span class="w"> </span><span class="nv">v1</span><span class="w"> </span><span class="nv">dst_sel</span><span class="p">:</span><span class="kt">WORD</span><span class="nv">_1</span><span class="w"> </span><span class="nv">dst_unused</span><span class="p">:</span><span class="nv">UNUSED_PAD</span><span class="w"> </span><span class="nv">src0_sel</span><span class="p">:</span><span class="kt">BYTE</span><span class="nv">_1</span><span class="w"> </span><span class="nv">src1_sel</span><span class="p">:</span><span class="kt">DWORD</span>
+<span class="nf">v_sin_f32</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="nv">v0</span><span class="w"> </span><span class="nv">dst_unused</span><span class="p">:</span><span class="nv">UNUSED_PAD</span><span class="w"> </span><span class="nv">src0_sel</span><span class="p">:</span><span class="kt">WORD</span><span class="nv">_1</span>
+<span class="nf">v_fract_f32</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="o">|</span><span class="nv">v0</span><span class="o">|</span><span class="w"> </span><span class="nv">dst_sel</span><span class="p">:</span><span class="kt">DWORD</span><span class="w"> </span><span class="nv">dst_unused</span><span class="p">:</span><span class="nv">UNUSED_PAD</span><span class="w"> </span><span class="nv">src0_sel</span><span class="p">:</span><span class="kt">WORD</span><span class="nv">_1</span>
+<span class="nf">v_cmpx_le_u32</span><span class="w"> </span><span class="nv">vcc</span><span class="p">,</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span><span class="w"> </span><span class="nv">src0_sel</span><span class="p">:</span><span class="kt">BYTE</span><span class="nv">_2</span><span class="w"> </span><span class="nv">src1_sel</span><span class="p">:</span><span class="kt">WORD</span><span class="nv">_0</span>
+</pre></div>
+</div>
+<p>For full list of supported instructions, refer to &quot;Vector ALU instructions&quot;.</p>
+</section>
+<section id="hsa-code-object-directives">
+<h3>HSA Code Object Directives<a class="headerlink" href="#hsa-code-object-directives" title="Link to this heading">¶</a></h3>
+<p>AMDGPU ABI defines auxiliary data in output code object. In assembly source,
+one can specify them with assembler directives.</p>
+<section id="hsa-code-object-version-major-minor">
+<h4>.hsa_code_object_version major, minor<a class="headerlink" href="#hsa-code-object-version-major-minor" title="Link to this heading">¶</a></h4>
+<p><em>major</em> and <em>minor</em> are integers that specify the version of the HSA code
+object that will be generated by the assembler.</p>
+</section>
+<section id="hsa-code-object-isa-major-minor-stepping-vendor-arch">
+<h4>.hsa_code_object_isa [major, minor, stepping, vendor, arch]<a class="headerlink" href="#hsa-code-object-isa-major-minor-stepping-vendor-arch" title="Link to this heading">¶</a></h4>
+<p><em>major</em>, <em>minor</em>, and <em>stepping</em> are all integers that describe the instruction
+set architecture (ISA) version of the assembly program.</p>
+<p><em>vendor</em> and <em>arch</em> are quoted strings.  <em>vendor</em> should always be equal to
+&quot;AMD&quot; and <em>arch</em> should always be equal to &quot;AMDGPU&quot;.</p>
+<p>By default, the assembler will derive the ISA version, <em>vendor</em>, and <em>arch</em>
+from the value of the -mcpu option that is passed to the assembler.</p>
+</section>
+<section id="amdgpu-hsa-kernel-name">
+<h4>.amdgpu_hsa_kernel (name)<a class="headerlink" href="#amdgpu-hsa-kernel-name" title="Link to this heading">¶</a></h4>
+<p>This directives specifies that the symbol with given name is a kernel entry point
+(label) and the object should contain corresponding symbol of type STT_AMDGPU_HSA_KERNEL.</p>
+</section>
+<section id="amd-kernel-code-t">
+<h4>.amd_kernel_code_t<a class="headerlink" href="#amd-kernel-code-t" title="Link to this heading">¶</a></h4>
+<p>This directive marks the beginning of a list of key / value pairs that are used
+to specify the amd_kernel_code_t object that will be emitted by the assembler.
+The list must be terminated by the <em>.end_amd_kernel_code_t</em> directive.  For
+any amd_kernel_code_t values that are unspecified a default value will be
+used.  The default value for all keys is 0, with the following exceptions:</p>
+<ul class="simple">
+<li><p><em>kernel_code_version_major</em> defaults to 1.</p></li>
+<li><p><em>machine_kind</em> defaults to 1.</p></li>
+<li><p><em>machine_version_major</em>, <em>machine_version_minor</em>, and
+<em>machine_version_stepping</em> are derived from the value of the -mcpu option
+that is passed to the assembler.</p></li>
+<li><p><em>kernel_code_entry_byte_offset</em> defaults to 256.</p></li>
+<li><p><em>wavefront_size</em> defaults to 6.</p></li>
+<li><p><em>kernarg_segment_alignment</em>, <em>group_segment_alignment</em>, and
+<em>private_segment_alignment</em> default to 4.  Note that alignments are specified
+as a power of two, so a value of <strong>n</strong> means an alignment of 2^ <strong>n</strong>.</p></li>
+</ul>
+<p>The <em>.amd_kernel_code_t</em> directive must be placed immediately after the
+function label and before any instructions.</p>
+<p>For a full list of amd_kernel_code_t keys, refer to AMDGPU ABI document,
+comments in lib/Target/AMDGPU/AmdKernelCodeT.h and test/CodeGen/AMDGPU/hsa.s.</p>
+<p>Here is an example of a minimal amd_kernel_code_t specification:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>.hsa_code_object_version 1,0
+.hsa_code_object_isa
+
+.hsatext
+.globl  hello_world
+.p2align 8
+.amdgpu_hsa_kernel hello_world
+
+hello_world:
+
+   .amd_kernel_code_t
+      enable_sgpr_kernarg_segment_ptr = 1
+      is_ptr64 = 1
+      compute_pgm_rsrc1_vgprs = 0
+      compute_pgm_rsrc1_sgprs = 0
+      compute_pgm_rsrc2_user_sgpr = 2
+      kernarg_segment_byte_size = 8
+      wavefront_sgpr_count = 2
+      workitem_vgpr_count = 3
+  .end_amd_kernel_code_t
+
+  s_load_dwordx2 s[0:1], s[0:1] 0x0
+  v_mov_b32 v0, 3.14159
+  s_waitcnt lgkmcnt(0)
+  v_mov_b32 v1, s0
+  v_mov_b32 v2, s1
+  flat_store_dword v[1:2], v0
+  s_endpgm
+.Lfunc_end0:
+     .size   hello_world, .Lfunc_end0-hello_world
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="总索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="StackMaps.html" title="Stack maps and patch points in LLVM"
+             >下一页</a> |</li>
+        <li class="right" >
+          <a href="NVPTXUsage.html" title="User Guide for NVPTX Back-end"
+             >上一页</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">User Guide for AMDGPU Back-end</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; 版权所有 2003-2025, LLVM Project.
+      最后更新于 2025-11-11.
+      由 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3创建。
+    </div>
+  </body>
+</html>

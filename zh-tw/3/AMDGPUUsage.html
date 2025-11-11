@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>User Guide for AMDGPU Back-end &#8212; LLVM 3.9 說明文件</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/llvm-theme.css?v=4c4af0c1" />
+    <script src="_static/documentation_options.js?v=e0098335"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=cbf116e0"></script>
+    <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/AMDGPUUsage.html" />
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜尋" href="search.html" />
+    <link rel="next" title="Stack maps and patch points in LLVM" href="StackMaps.html" />
+    <link rel="prev" title="User Guide for NVPTX Back-end" href="NVPTXUsage.html" />
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+
+  </head><body>
+<div class="logo">
+  <a href="index.html">
+    <img src="_static/logo.png"
+         alt="LLVM Logo" width="250" height="88"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="StackMaps.html" title="Stack maps and patch points in LLVM"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="NVPTXUsage.html" title="User Guide for NVPTX Back-end"
+             accesskey="P">上一頁</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">User Guide for AMDGPU Back-end</a></li> 
+      </ul>
+    </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <section id="user-guide-for-amdgpu-back-end">
+<h1>User Guide for AMDGPU Back-end<a class="headerlink" href="#user-guide-for-amdgpu-back-end" title="連結到這個標頭">¶</a></h1>
+<section id="introduction">
+<h2>簡介<a class="headerlink" href="#introduction" title="連結到這個標頭">¶</a></h2>
+<p>The AMDGPU back-end provides ISA code generation for AMD GPUs, starting with
+the R600 family up until the current Volcanic Islands (GCN Gen 3).</p>
+</section>
+<section id="conventions">
+<h2>Conventions<a class="headerlink" href="#conventions" title="連結到這個標頭">¶</a></h2>
+<section id="address-spaces">
+<h3>Address Spaces<a class="headerlink" href="#address-spaces" title="連結到這個標頭">¶</a></h3>
+<p>The AMDGPU back-end uses the following address space mapping:</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Address Space</p></th>
+<th class="head"><p>Memory Space</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>Private</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>Global</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>Constant</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>Local</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p>Generic (Flat)</p></td>
+</tr>
+<tr class="row-odd"><td><p>5</p></td>
+<td><p>Region</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The terminology in the table, aside from the region memory space, is from the
+OpenCL standard.</p>
+</section>
+</section>
+<section id="assembler">
+<h2>Assembler<a class="headerlink" href="#assembler" title="連結到這個標頭">¶</a></h2>
+<p>The assembler is currently considered experimental.</p>
+<p>For syntax examples look in test/MC/AMDGPU.</p>
+<p>Below some of the currently supported features (modulo bugs).  These
+all apply to the Southern Islands ISA, Sea Islands and Volcanic Islands
+are also supported but may be missing some instructions and have more bugs:</p>
+<section id="ds-instructions">
+<h3>DS Instructions<a class="headerlink" href="#ds-instructions" title="連結到這個標頭">¶</a></h3>
+<p>All DS instructions are supported.</p>
+</section>
+<section id="flat-instructions">
+<h3>FLAT Instructions<a class="headerlink" href="#flat-instructions" title="連結到這個標頭">¶</a></h3>
+<p>These instructions are only present in the Sea Islands and Volcanic Islands
+instruction set.  All FLAT instructions are supported for these architectures</p>
+</section>
+<section id="mubuf-instructions">
+<h3>MUBUF Instructions<a class="headerlink" href="#mubuf-instructions" title="連結到這個標頭">¶</a></h3>
+<p>All non-atomic MUBUF instructions are supported.</p>
+</section>
+<section id="smrd-instructions">
+<h3>SMRD Instructions<a class="headerlink" href="#smrd-instructions" title="連結到這個標頭">¶</a></h3>
+<p>Only the s_load_dword* SMRD instructions are supported.</p>
+</section>
+<section id="sop1-instructions">
+<h3>SOP1 Instructions<a class="headerlink" href="#sop1-instructions" title="連結到這個標頭">¶</a></h3>
+<p>All SOP1 instructions are supported.</p>
+</section>
+<section id="sop2-instructions">
+<h3>SOP2 Instructions<a class="headerlink" href="#sop2-instructions" title="連結到這個標頭">¶</a></h3>
+<p>All SOP2 instructions are supported.</p>
+</section>
+<section id="sopc-instructions">
+<h3>SOPC Instructions<a class="headerlink" href="#sopc-instructions" title="連結到這個標頭">¶</a></h3>
+<p>All SOPC instructions are supported.</p>
+</section>
+<section id="sopp-instructions">
+<h3>SOPP Instructions<a class="headerlink" href="#sopp-instructions" title="連結到這個標頭">¶</a></h3>
+<p>Unless otherwise mentioned, all SOPP instructions that have one or more
+operands accept integer operands only.  No verification is performed
+on the operands, so it is up to the programmer to be familiar with the
+range or acceptable values.</p>
+<section id="s-waitcnt">
+<h4>s_waitcnt<a class="headerlink" href="#s-waitcnt" title="連結到這個標頭">¶</a></h4>
+<p>s_waitcnt accepts named arguments to specify which memory counter(s) to
+wait for.</p>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="c1">; Wait for all counters to be 0</span>
+<span class="nf">s_waitcnt</span><span class="w"> </span><span class="mi">0</span>
+
+<span class="c1">; Equivalent to s_waitcnt 0.  Counter names can also be delimited by</span>
+<span class="c1">; &#39;&amp;&#39; or &#39;,&#39;.</span>
+<span class="nf">s_waitcnt</span><span class="w"> </span><span class="nv">vmcnt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">expcnt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">lgkcmt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1">; Wait for vmcnt counter to be 1.</span>
+<span class="nf">s_waitcnt</span><span class="w"> </span><span class="nv">vmcnt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="vop1-vop2-vop3-vopc-instructions">
+<h3>VOP1, VOP2, VOP3, VOPC Instructions<a class="headerlink" href="#vop1-vop2-vop3-vopc-instructions" title="連結到這個標頭">¶</a></h3>
+<p>All 32-bit and 64-bit encodings should work.</p>
+<p>The assembler will automatically detect which encoding size to use for
+VOP1, VOP2, and VOPC instructions based on the operands.  If you want to force
+a specific encoding size, you can add an _e32 (for 32-bit encoding) or
+_e64 (for 64-bit encoding) suffix to the instruction.  Most, but not all
+instructions support an explicit suffix.  These are all valid assembly
+strings:</p>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">v_mul_i32_i24</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">v3</span>
+<span class="nf">v_mul_i32_i24_e32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">v3</span>
+<span class="nf">v_mul_i32_i24_e64</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">v3</span>
+</pre></div>
+</div>
+</section>
+<section id="assembler-directives">
+<h3>Assembler Directives<a class="headerlink" href="#assembler-directives" title="連結到這個標頭">¶</a></h3>
+<section id="hsa-code-object-version-major-minor">
+<h4>.hsa_code_object_version major, minor<a class="headerlink" href="#hsa-code-object-version-major-minor" title="連結到這個標頭">¶</a></h4>
+<p><em>major</em> and <em>minor</em> are integers that specify the version of the HSA code
+object that will be generated by the assembler.  This value will be stored
+in an entry of the .note section.</p>
+</section>
+<section id="hsa-code-object-isa-major-minor-stepping-vendor-arch">
+<h4>.hsa_code_object_isa [major, minor, stepping, vendor, arch]<a class="headerlink" href="#hsa-code-object-isa-major-minor-stepping-vendor-arch" title="連結到這個標頭">¶</a></h4>
+<p><em>major</em>, <em>minor</em>, and <em>stepping</em> are all integers that describe the instruction
+set architecture (ISA) version of the assembly program.</p>
+<p><em>vendor</em> and <em>arch</em> are quoted strings.  <em>vendor</em> should always be equal to
+&quot;AMD&quot; and <em>arch</em> should always be equal to &quot;AMDGPU&quot;.</p>
+<p>If no arguments are specified, then the assembler will derive the ISA version,
+<em>vendor</em>, and <em>arch</em> from the value of the -mcpu option that is passed to the
+assembler.</p>
+<p>ISA version, <em>vendor</em>, and <em>arch</em> will all be stored in a single entry of the
+.note section.</p>
+</section>
+<section id="amd-kernel-code-t">
+<h4>.amd_kernel_code_t<a class="headerlink" href="#amd-kernel-code-t" title="連結到這個標頭">¶</a></h4>
+<p>This directive marks the beginning of a list of key / value pairs that are used
+to specify the amd_kernel_code_t object that will be emitted by the assembler.
+The list must be terminated by the <em>.end_amd_kernel_code_t</em> directive.  For
+any amd_kernel_code_t values that are unspecified a default value will be
+used.  The default value for all keys is 0, with the following exceptions:</p>
+<ul class="simple">
+<li><p><em>kernel_code_version_major</em> defaults to 1.</p></li>
+<li><p><em>machine_kind</em> defaults to 1.</p></li>
+<li><p><em>machine_version_major</em>, <em>machine_version_minor</em>, and
+<em>machine_version_stepping</em> are derived from the value of the -mcpu option
+that is passed to the assembler.</p></li>
+<li><p><em>kernel_code_entry_byte_offset</em> defaults to 256.</p></li>
+<li><p><em>wavefront_size</em> defaults to 6.</p></li>
+<li><p><em>kernarg_segment_alignment</em>, <em>group_segment_alignment</em>, and
+<em>private_segment_alignment</em> default to 4.  Note that alignments are specified
+as a power of two, so a value of <strong>n</strong> means an alignment of 2^ <strong>n</strong>.</p></li>
+</ul>
+<p>The <em>.amd_kernel_code_t</em> directive must be placed immediately after the
+function label and before any instructions.</p>
+<p>For a full list of amd_kernel_code_t keys, see the examples in
+test/CodeGen/AMDGPU/hsa.s.  For an explanation of the meanings of the different
+keys, see the comments in lib/Target/AMDGPU/AmdKernelCodeT.h</p>
+<p>Here is an example of a minimal amd_kernel_code_t specification:</p>
+<div class="highlight-nasm notranslate"><div class="highlight"><pre><span></span><span class="nf">.hsa_code_object_version</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span>
+<span class="nf">.hsa_code_object_isa</span>
+
+<span class="nf">.hsatext</span>
+<span class="nf">.globl</span><span class="w">  </span><span class="nv">hello_world</span>
+<span class="nf">.p2align</span><span class="w"> </span><span class="mi">8</span>
+<span class="nf">.amdgpu_hsa_kernel</span><span class="w"> </span><span class="nv">hello_world</span>
+
+<span class="nl">hello_world:</span>
+
+<span class="w">   </span><span class="nf">.amd_kernel_code_t</span>
+<span class="w">      </span><span class="nf">enable_sgpr_kernarg_segment_ptr</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">      </span><span class="nf">is_ptr64</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">      </span><span class="nf">compute_pgm_rsrc1_vgprs</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">      </span><span class="nf">compute_pgm_rsrc1_sgprs</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">      </span><span class="nf">compute_pgm_rsrc2_user_sgpr</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">      </span><span class="nf">kernarg_segment_byte_size</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="w">      </span><span class="nf">wavefront_sgpr_count</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">      </span><span class="nf">workitem_vgpr_count</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">  </span><span class="nf">.end_amd_kernel_code_t</span>
+
+<span class="w">  </span><span class="nf">s_load_dwordx2</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="nv">s</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="mh">0x0</span>
+<span class="w">  </span><span class="nf">v_mov_b32</span><span class="w"> </span><span class="nv">v0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.14159</span>
+<span class="w">  </span><span class="nf">s_waitcnt</span><span class="w"> </span><span class="nv">lgkmcnt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="w">  </span><span class="nf">v_mov_b32</span><span class="w"> </span><span class="nv">v1</span><span class="p">,</span><span class="w"> </span><span class="nv">s0</span>
+<span class="w">  </span><span class="nf">v_mov_b32</span><span class="w"> </span><span class="nv">v2</span><span class="p">,</span><span class="w"> </span><span class="nv">s1</span>
+<span class="w">  </span><span class="nf">flat_store_dword</span><span class="w"> </span><span class="nv">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="nv">v0</span>
+<span class="w">  </span><span class="nf">s_endpgm</span>
+<span class="nl">.Lfunc_end0:</span>
+<span class="w">     </span><span class="nf">.size</span><span class="w">   </span><span class="nv">hello_world</span><span class="p">,</span><span class="w"> </span><span class="nv">.Lfunc_end0</span><span class="o">-</span><span class="nv">hello_world</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="StackMaps.html" title="Stack maps and patch points in LLVM"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="NVPTXUsage.html" title="User Guide for NVPTX Back-end"
+             >上一頁</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">User Guide for AMDGPU Back-end</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; 版權所有 2003-2025, LLVM Project.
+      最後更新於 2025-11-11。
+      使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3 建立。
+    </div>
+  </body>
+</html>

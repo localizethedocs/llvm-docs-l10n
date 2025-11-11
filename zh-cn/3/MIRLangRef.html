@@ -1,0 +1,510 @@
+
+<!DOCTYPE html>
+
+<html lang="zh-CN" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Machine IR (MIR) Format Reference Manual &#8212; LLVM 3.9 文档</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/llvm-theme.css?v=4c4af0c1" />
+    <script src="_static/documentation_options.js?v=9016a3c2"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/MIRLangRef.html" />
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="LLVM Developer Policy" href="DeveloperPolicy.html" />
+    <link rel="prev" title="FaultMaps and implicit checks" href="FaultMaps.html" />
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+
+  </head><body>
+<div class="logo">
+  <a href="index.html">
+    <img src="_static/logo.png"
+         alt="LLVM Logo" width="250" height="88"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="总索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="DeveloperPolicy.html" title="LLVM Developer Policy"
+             accesskey="N">下一页</a> |</li>
+        <li class="right" >
+          <a href="FaultMaps.html" title="FaultMaps and implicit checks"
+             accesskey="P">上一页</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">Machine IR (MIR) Format Reference Manual</a></li> 
+      </ul>
+    </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <section id="machine-ir-mir-format-reference-manual">
+<h1>Machine IR (MIR) Format Reference Manual<a class="headerlink" href="#machine-ir-mir-format-reference-manual" title="Link to this heading">¶</a></h1>
+<nav class="contents local" id="id1">
+<ul class="simple">
+<li><p><a class="reference internal" href="#introduction" id="id9">Introduction</a></p></li>
+<li><p><a class="reference internal" href="#overview" id="id10">Overview</a></p></li>
+<li><p><a class="reference internal" href="#mir-testing-guide" id="id11">MIR Testing Guide</a></p>
+<ul>
+<li><p><a class="reference internal" href="#testing-individual-code-generation-passes" id="id12">Testing Individual Code Generation Passes</a></p></li>
+<li><p><a class="reference internal" href="#limitations" id="id13">Limitations</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#high-level-structure" id="id14">High Level Structure</a></p>
+<ul>
+<li><p><a class="reference internal" href="#embedded-module" id="id15">Embedded Module</a></p></li>
+<li><p><a class="reference internal" href="#machine-functions" id="id16">Machine Functions</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#machine-instructions-format-reference" id="id17">Machine Instructions Format Reference</a></p>
+<ul>
+<li><p><a class="reference internal" href="#machine-basic-blocks" id="id18">Machine Basic Blocks</a></p>
+<ul>
+<li><p><a class="reference internal" href="#block-references" id="id19">Block References</a></p></li>
+<li><p><a class="reference internal" href="#successors" id="id20">Successors</a></p></li>
+<li><p><a class="reference internal" href="#live-in-registers" id="id21">Live In Registers</a></p></li>
+<li><p><a class="reference internal" href="#miscellaneous-attributes" id="id22">Miscellaneous Attributes</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#machine-instructions" id="id23">Machine Instructions</a></p>
+<ul>
+<li><p><a class="reference internal" href="#instruction-flags" id="id24">Instruction Flags</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#registers" id="id25">Registers</a></p></li>
+<li><p><a class="reference internal" href="#machine-operands" id="id26">Machine Operands</a></p>
+<ul>
+<li><p><a class="reference internal" href="#immediate-operands" id="id27">Immediate Operands</a></p></li>
+<li><p><a class="reference internal" href="#register-operands" id="id28">Register Operands</a></p>
+<ul>
+<li><p><a class="reference internal" href="#register-flags" id="id29">Register Flags</a></p></li>
+<li><p><a class="reference internal" href="#subregister-indices" id="id30">Subregister Indices</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#global-value-operands" id="id31">Global Value Operands</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>This is a work in progress.</p>
+</div>
+<section id="introduction">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Introduction</a><a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>This document is a reference manual for the Machine IR (MIR) serialization
+format. MIR is a human readable serialization format that is used to represent
+LLVM's <a class="reference internal" href="CodeGenerator.html#machine-code-representation"><span class="std std-ref">machine specific intermediate representation</span></a>.</p>
+<p>The MIR serialization format is designed to be used for testing the code
+generation passes in LLVM.</p>
+</section>
+<section id="overview">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>The MIR serialization format uses a YAML container. YAML is a standard
+data serialization language, and the full YAML language spec can be read at
+<a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#Introduction">yaml.org</a>.</p>
+<p>A MIR file is split up into a series of <a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2800132">YAML documents</a>. The first document
+can contain an optional embedded LLVM IR module, and the rest of the documents
+contain the serialized machine functions.</p>
+</section>
+<section id="mir-testing-guide">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">MIR Testing Guide</a><a class="headerlink" href="#mir-testing-guide" title="Link to this heading">¶</a></h2>
+<p>You can use the MIR format for testing in two different ways:</p>
+<ul class="simple">
+<li><p>You can write MIR tests that invoke a single code generation pass using the
+<code class="docutils literal notranslate"><span class="pre">run-pass</span></code> option in llc.</p></li>
+<li><p>You can use llc's <code class="docutils literal notranslate"><span class="pre">stop-after</span></code> option with existing or new LLVM assembly
+tests and check the MIR output of a specific code generation pass.</p></li>
+</ul>
+<section id="testing-individual-code-generation-passes">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Testing Individual Code Generation Passes</a><a class="headerlink" href="#testing-individual-code-generation-passes" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">run-pass</span></code> option in llc allows you to create MIR tests that invoke
+just a single code generation pass. When this option is used, llc will parse
+an input MIR file, run the specified code generation pass, and print the
+resulting MIR to the standard output stream.</p>
+<p>You can generate an input MIR file for the test by using the <code class="docutils literal notranslate"><span class="pre">stop-after</span></code>
+option in llc. For example, if you would like to write a test for the
+post register allocation pseudo instruction expansion pass, you can specify
+the machine copy propagation pass in the <code class="docutils literal notranslate"><span class="pre">stop-after</span></code> option, as it runs
+just before the pass that we are trying to test:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">llc</span> <span class="pre">-stop-after</span> <span class="pre">machine-cp</span> <span class="pre">bug-trigger.ll</span> <span class="pre">&gt;</span> <span class="pre">test.mir</span></code></p>
+</div></blockquote>
+<p>After generating the input MIR file, you'll have to add a run line that uses
+the <code class="docutils literal notranslate"><span class="pre">-run-pass</span></code> option to it. In order to test the post register allocation
+pseudo instruction expansion pass on X86-64, a run line like the one shown
+below can be used:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">RUN:</span> <span class="pre">llc</span> <span class="pre">-run-pass</span> <span class="pre">postrapseudos</span> <span class="pre">-march=x86-64</span> <span class="pre">%s</span> <span class="pre">-o</span> <span class="pre">/dev/null</span> <span class="pre">|</span> <span class="pre">FileCheck</span> <span class="pre">%s</span></code></p>
+</div></blockquote>
+<p>The MIR files are target dependent, so they have to be placed in the target
+specific test directories. They also need to specify a target triple or a
+target architecture either in the run line or in the embedded LLVM IR module.</p>
+</section>
+<section id="limitations">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Limitations</a><a class="headerlink" href="#limitations" title="Link to this heading">¶</a></h3>
+<p>Currently the MIR format has several limitations in terms of which state it
+can serialize:</p>
+<ul class="simple">
+<li><p>The target-specific state in the target-specific <code class="docutils literal notranslate"><span class="pre">MachineFunctionInfo</span></code>
+subclasses isn't serialized at the moment.</p></li>
+<li><p>The target-specific <code class="docutils literal notranslate"><span class="pre">MachineConstantPoolValue</span></code> subclasses (in the ARM and
+SystemZ backends) aren't serialized at the moment.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">MCSymbol</span></code> machine operands are only printed, they can't be parsed.</p></li>
+<li><p>A lot of the state in <code class="docutils literal notranslate"><span class="pre">MachineModuleInfo</span></code> isn't serialized - only the CFI
+instructions and the variable debug information from MMI is serialized right
+now.</p></li>
+</ul>
+<p>These limitations impose restrictions on what you can test with the MIR format.
+For now, tests that would like to test some behaviour that depends on the state
+of certain <code class="docutils literal notranslate"><span class="pre">MCSymbol</span></code>  operands or the exception handling state in MMI, can't
+use the MIR format. As well as that, tests that test some behaviour that
+depends on the state of the target specific <code class="docutils literal notranslate"><span class="pre">MachineFunctionInfo</span></code> or
+<code class="docutils literal notranslate"><span class="pre">MachineConstantPoolValue</span></code> subclasses can't use the MIR format at the moment.</p>
+</section>
+</section>
+<section id="high-level-structure">
+<h2><a class="toc-backref" href="#id14" role="doc-backlink">High Level Structure</a><a class="headerlink" href="#high-level-structure" title="Link to this heading">¶</a></h2>
+<section id="embedded-module">
+<span id="id2"></span><h3><a class="toc-backref" href="#id15" role="doc-backlink">Embedded Module</a><a class="headerlink" href="#embedded-module" title="Link to this heading">¶</a></h3>
+<p>When the first YAML document contains a <a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2795688">YAML block literal string</a>, the MIR
+parser will treat this string as an LLVM assembly language string that
+represents an embedded LLVM IR module.
+Here is an example of a YAML document that contains an LLVM module:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="vg">@inc</span><span class="p">(</span><span class="kt">i32</span><span class="p">*</span><span class="w"> </span><span class="nv">%x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="nl">entry:</span>
+<span class="w">  </span><span class="nv nv-Anonymous">%0</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">load</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">*</span><span class="w"> </span><span class="nv">%x</span>
+<span class="w">  </span><span class="nv nv-Anonymous">%1</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv nv-Anonymous">%0</span><span class="p">,</span><span class="w"> </span><span class="m">1</span>
+<span class="w">  </span><span class="k">store</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv nv-Anonymous">%1</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">*</span><span class="w"> </span><span class="nv">%x</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv nv-Anonymous">%1</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="machine-functions">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Machine Functions</a><a class="headerlink" href="#machine-functions" title="Link to this heading">¶</a></h3>
+<p>The remaining YAML documents contain the machine functions. This is an example
+of such YAML document:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>---
+name:            inc
+tracksRegLiveness: true
+liveins:
+  - { reg: &#39;%rdi&#39; }
+body: |
+  bb.0.entry:
+    liveins: %rdi
+
+    %eax = MOV32rm %rdi, 1, _, 0, _
+    %eax = INC32r killed %eax, implicit-def dead %eflags
+    MOV32mr killed %rdi, 1, _, 0, _, %eax
+    RETQ %eax
+...
+</pre></div>
+</div>
+<p>The document above consists of attributes that represent the various
+properties and data structures in a machine function.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">name</span></code> is required, and its value should be identical to the
+name of a function that this machine function is based on.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">body</span></code> is a <a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2795688">YAML block literal string</a>. Its value represents
+the function's machine basic blocks and their machine instructions.</p>
+</section>
+</section>
+<section id="machine-instructions-format-reference">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">Machine Instructions Format Reference</a><a class="headerlink" href="#machine-instructions-format-reference" title="Link to this heading">¶</a></h2>
+<p>The machine basic blocks and their instructions are represented using a custom,
+human readable serialization language. This language is used in the
+<a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2795688">YAML block literal string</a> that corresponds to the machine function's body.</p>
+<p>A source string that uses this language contains a list of machine basic
+blocks, which are described in the section below.</p>
+<section id="machine-basic-blocks">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Machine Basic Blocks</a><a class="headerlink" href="#machine-basic-blocks" title="Link to this heading">¶</a></h3>
+<p>A machine basic block is defined in a single block definition source construct
+that contains the block's ID.
+The example below defines two blocks that have an ID of zero and one:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0:
+  &lt;instructions&gt;
+bb.1:
+  &lt;instructions&gt;
+</pre></div>
+</div>
+<p>A machine basic block can also have a name. It should be specified after the ID
+in the block's definition:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0.entry:       ; This block&#39;s name is &quot;entry&quot;
+   &lt;instructions&gt;
+</pre></div>
+</div>
+<p>The block's name should be identical to the name of the IR block that this
+machine block is based on.</p>
+<section id="block-references">
+<h4><a class="toc-backref" href="#id19" role="doc-backlink">Block References</a><a class="headerlink" href="#block-references" title="Link to this heading">¶</a></h4>
+<p>The machine basic blocks are identified by their ID numbers. Individual
+blocks are referenced using the following syntax:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%bb.&lt;id&gt;[.&lt;name&gt;]
+</pre></div>
+</div>
+<p>Examples:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="nv">%bb.0</span>
+<span class="nv">%bb.1.then</span>
+</pre></div>
+</div>
+</section>
+<section id="successors">
+<h4><a class="toc-backref" href="#id20" role="doc-backlink">Successors</a><a class="headerlink" href="#successors" title="Link to this heading">¶</a></h4>
+<p>The machine basic block's successors have to be specified before any of the
+instructions:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0.entry:
+  successors: %bb.1.then, %bb.2.else
+  &lt;instructions&gt;
+bb.1.then:
+  &lt;instructions&gt;
+bb.2.else:
+  &lt;instructions&gt;
+</pre></div>
+</div>
+<p>The branch weights can be specified in brackets after the successor blocks.
+The example below defines a block that has two successors with branch weights
+of 32 and 16:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0.entry:
+  successors: %bb.1.then(32), %bb.2.else(16)
+</pre></div>
+</div>
+</section>
+<section id="live-in-registers">
+<span id="bb-liveins"></span><h4><a class="toc-backref" href="#id21" role="doc-backlink">Live In Registers</a><a class="headerlink" href="#live-in-registers" title="Link to this heading">¶</a></h4>
+<p>The machine basic block's live in registers have to be specified before any of
+the instructions:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0.entry:
+  liveins: %edi, %esi
+</pre></div>
+</div>
+<p>The list of live in registers and successors can be empty. The language also
+allows multiple live in register and successor lists - they are combined into
+one list by the parser.</p>
+</section>
+<section id="miscellaneous-attributes">
+<h4><a class="toc-backref" href="#id22" role="doc-backlink">Miscellaneous Attributes</a><a class="headerlink" href="#miscellaneous-attributes" title="Link to this heading">¶</a></h4>
+<p>The attributes <code class="docutils literal notranslate"><span class="pre">IsAddressTaken</span></code>, <code class="docutils literal notranslate"><span class="pre">IsLandingPad</span></code> and <code class="docutils literal notranslate"><span class="pre">Alignment</span></code> can be
+specified in brackets after the block's definition:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0.entry (address-taken):
+  &lt;instructions&gt;
+bb.2.else (align 4):
+  &lt;instructions&gt;
+bb.3(landing-pad, align 4):
+  &lt;instructions&gt;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="machine-instructions">
+<h3><a class="toc-backref" href="#id23" role="doc-backlink">Machine Instructions</a><a class="headerlink" href="#machine-instructions" title="Link to this heading">¶</a></h3>
+<p>A machine instruction is composed of a name,
+<a class="reference internal" href="#machine-operands"><span class="std std-ref">machine operands</span></a>,
+<a class="reference internal" href="#instruction-flags"><span class="std std-ref">instruction flags</span></a>, and machine memory operands.</p>
+<p>The instruction's name is usually specified before the operands. The example
+below shows an instance of the X86 <code class="docutils literal notranslate"><span class="pre">RETQ</span></code> instruction with a single machine
+operand:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>RETQ %eax
+</pre></div>
+</div>
+<p>However, if the machine instruction has one or more explicitly defined register
+operands, the instruction's name has to be specified after them. The example
+below shows an instance of the AArch64 <code class="docutils literal notranslate"><span class="pre">LDPXpost</span></code> instruction with three
+defined register operands:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%sp, %fp, %lr = LDPXpost %sp, 2
+</pre></div>
+</div>
+<p>The instruction names are serialized using the exact definitions from the
+target's <code class="docutils literal notranslate"><span class="pre">*InstrInfo.td</span></code> files, and they are case sensitive. This means that
+similar instruction names like <code class="docutils literal notranslate"><span class="pre">TSTri</span></code> and <code class="docutils literal notranslate"><span class="pre">tSTRi</span></code> represent different
+machine instructions.</p>
+<section id="instruction-flags">
+<span id="id3"></span><h4><a class="toc-backref" href="#id24" role="doc-backlink">Instruction Flags</a><a class="headerlink" href="#instruction-flags" title="Link to this heading">¶</a></h4>
+<p>The flag <code class="docutils literal notranslate"><span class="pre">frame-setup</span></code> can be specified before the instruction's name:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%fp = frame-setup ADDXri %sp, 0, 0
+</pre></div>
+</div>
+</section>
+</section>
+<section id="registers">
+<span id="id4"></span><h3><a class="toc-backref" href="#id25" role="doc-backlink">Registers</a><a class="headerlink" href="#registers" title="Link to this heading">¶</a></h3>
+<p>Registers are one of the key primitives in the machine instructions
+serialization language. They are primarly used in the
+<a class="reference internal" href="#register-operands"><span class="std std-ref">register machine operands</span></a>,
+but they can also be used in a number of other places, like the
+<a class="reference internal" href="#bb-liveins"><span class="std std-ref">basic block's live in list</span></a>.</p>
+<p>The physical registers are identified by their name. They use the following
+syntax:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%&lt;name&gt;
+</pre></div>
+</div>
+<p>The example below shows three X86 physical registers:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%eax
+%r15
+%eflags
+</pre></div>
+</div>
+<p>The virtual registers are identified by their ID number. They use the following
+syntax:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%&lt;id&gt;
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%0
+</pre></div>
+</div>
+<p>The null registers are represented using an underscore ('<code class="docutils literal notranslate"><span class="pre">_</span></code>'). They can also be
+represented using a '<code class="docutils literal notranslate"><span class="pre">%noreg</span></code>' named register, although the former syntax
+is preferred.</p>
+</section>
+<section id="machine-operands">
+<span id="id5"></span><h3><a class="toc-backref" href="#id26" role="doc-backlink">Machine Operands</a><a class="headerlink" href="#machine-operands" title="Link to this heading">¶</a></h3>
+<p>There are seventeen different kinds of machine operands, and all of them, except
+the <code class="docutils literal notranslate"><span class="pre">MCSymbol</span></code> operand, can be serialized. The <code class="docutils literal notranslate"><span class="pre">MCSymbol</span></code> operands are
+just printed out - they can't be parsed back yet.</p>
+<section id="immediate-operands">
+<h4><a class="toc-backref" href="#id27" role="doc-backlink">Immediate Operands</a><a class="headerlink" href="#immediate-operands" title="Link to this heading">¶</a></h4>
+<p>The immediate machine operands are untyped, 64-bit signed integers. The
+example below shows an instance of the X86 <code class="docutils literal notranslate"><span class="pre">MOV32ri</span></code> instruction that has an
+immediate machine operand <code class="docutils literal notranslate"><span class="pre">-42</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%eax = MOV32ri -42
+</pre></div>
+</div>
+</section>
+<section id="register-operands">
+<span id="id6"></span><h4><a class="toc-backref" href="#id28" role="doc-backlink">Register Operands</a><a class="headerlink" href="#register-operands" title="Link to this heading">¶</a></h4>
+<p>The <a class="reference internal" href="#registers"><span class="std std-ref">register</span></a> primitive is used to represent the register
+machine operands. The register operands can also have optional
+<a class="reference internal" href="#register-flags"><span class="std std-ref">register flags</span></a>,
+<a class="reference internal" href="#subregister-indices"><span class="std std-ref">a subregister index</span></a>,
+and a reference to the tied register operand.
+The full syntax of a register operand is shown below:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[&lt;flags&gt;] &lt;register&gt; [ :&lt;subregister-idx-name&gt; ] [ (tied-def &lt;tied-op&gt;) ]
+</pre></div>
+</div>
+<p>This example shows an instance of the X86 <code class="docutils literal notranslate"><span class="pre">XOR32rr</span></code> instruction that has
+5 register operands with different register flags:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dead %eax = XOR32rr undef %eax, undef %eax, implicit-def dead %eflags, implicit-def %al
+</pre></div>
+</div>
+<section id="register-flags">
+<span id="id7"></span><h5><a class="toc-backref" href="#id29" role="doc-backlink">Register Flags</a><a class="headerlink" href="#register-flags" title="Link to this heading">¶</a></h5>
+<p>The table below shows all of the possible register flags along with the
+corresponding internal <code class="docutils literal notranslate"><span class="pre">llvm::RegState</span></code> representation:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Internal Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">implicit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Implicit</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">implicit-def</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::ImplicitDefine</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">def</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Define</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dead</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Dead</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">killed</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Kill</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">undef</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Undef</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">internal</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::InternalRead</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">early-clobber</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::EarlyClobber</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">debug-use</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Debug</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="subregister-indices">
+<span id="id8"></span><h5><a class="toc-backref" href="#id30" role="doc-backlink">Subregister Indices</a><a class="headerlink" href="#subregister-indices" title="Link to this heading">¶</a></h5>
+<p>The register machine operands can reference a portion of a register by using
+the subregister indices. The example below shows an instance of the <code class="docutils literal notranslate"><span class="pre">COPY</span></code>
+pseudo instruction that uses the X86 <code class="docutils literal notranslate"><span class="pre">sub_8bit</span></code> subregister index to copy 8
+lower bits from the 32-bit virtual register 0 to the 8-bit virtual register 1:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%1 = COPY %0:sub_8bit
+</pre></div>
+</div>
+<p>The names of the subregister indices are target specific, and are typically
+defined in the target's <code class="docutils literal notranslate"><span class="pre">*RegisterInfo.td</span></code> file.</p>
+</section>
+</section>
+<section id="global-value-operands">
+<h4><a class="toc-backref" href="#id31" role="doc-backlink">Global Value Operands</a><a class="headerlink" href="#global-value-operands" title="Link to this heading">¶</a></h4>
+<p>The global value machine operands reference the global values from the
+<a class="reference internal" href="#embedded-module"><span class="std std-ref">embedded LLVM IR module</span></a>.
+The example below shows an instance of the X86 <code class="docutils literal notranslate"><span class="pre">MOV64rm</span></code> instruction that has
+a global value operand named <code class="docutils literal notranslate"><span class="pre">G</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%rax = MOV64rm %rip, 1, _, @G, _
+</pre></div>
+</div>
+<p>The named global values are represented using an identifier with the '&#64;' prefix.
+If the identifier doesn't match the regular expression
+<cite>[-a-zA-Z$._][-a-zA-Z$._0-9]*</cite>, then this identifier must be quoted.</p>
+<p>The unnamed global values are represented using an unsigned numeric value with
+the '&#64;' prefix, like in the following examples: <code class="docutils literal notranslate"><span class="pre">&#64;0</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;989</span></code>.</p>
+</section>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="总索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="DeveloperPolicy.html" title="LLVM Developer Policy"
+             >下一页</a> |</li>
+        <li class="right" >
+          <a href="FaultMaps.html" title="FaultMaps and implicit checks"
+             >上一页</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">Machine IR (MIR) Format Reference Manual</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; 版权所有 2003-2025, LLVM Project.
+      最后更新于 2025-11-11.
+      由 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3创建。
+    </div>
+  </body>
+</html>

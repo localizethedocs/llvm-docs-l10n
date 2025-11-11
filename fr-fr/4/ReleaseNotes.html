@@ -1,0 +1,428 @@
+
+<!DOCTYPE html>
+
+<html lang="fr-FR" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LLVM 4.0.0 Release Notes &#8212; Documentation LLVM 4</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/llvm-theme.css?v=4c4af0c1" />
+    <script src="_static/documentation_options.js?v=2dfbda0a"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=aa914e54"></script>
+    <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/ReleaseNotes.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Recherche" href="search.html" />
+    <link rel="next" title="LLVM’s Analysis and Transform Passes" href="Passes.html" />
+    <link rel="prev" title="5. Building a JIT: Remote-JITing – Process Isolation and Laziness at a Distance" href="tutorial/BuildingAJIT5.html" />
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+
+  </head><body>
+<div class="logo">
+  <a href="index.html">
+    <img src="_static/logo.png"
+         alt="LLVM Logo" width="250" height="88"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Index général"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="Passes.html" title="LLVM’s Analysis and Transform Passes"
+             accesskey="N">suivant</a> |</li>
+        <li class="right" >
+          <a href="tutorial/BuildingAJIT5.html" title="5. Building a JIT: Remote-JITing – Process Isolation and Laziness at a Distance"
+             accesskey="P">précédent</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">LLVM 4.0.0 Release Notes</a></li> 
+      </ul>
+    </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <section id="llvm-4-0-0-release-notes">
+<h1>LLVM 4.0.0 Release Notes<a class="headerlink" href="#llvm-4-0-0-release-notes" title="Lien vers cette rubrique">¶</a></h1>
+<nav class="contents local" id="sommaire">
+<ul class="simple">
+<li><p><a class="reference internal" href="#introduction" id="id2">Introduction</a></p></li>
+<li><p><a class="reference internal" href="#new-versioning-scheme" id="id3">New Versioning Scheme</a></p></li>
+<li><p><a class="reference internal" href="#non-comprehensive-list-of-changes-in-this-release" id="id4">Non-comprehensive list of changes in this release</a></p>
+<ul>
+<li><p><a class="reference internal" href="#improvements-to-thinlto-flto-thin" id="id5">Improvements to ThinLTO (-flto=thin)</a></p></li>
+<li><p><a class="reference internal" href="#llvm-coroutines" id="id6">LLVM Coroutines</a></p></li>
+<li><p><a class="reference internal" href="#regcall-and-vectorcall-calling-conventions" id="id7">Regcall and Vectorcall Calling Conventions</a></p></li>
+<li><p><a class="reference internal" href="#code-generation-testing" id="id8">Code Generation Testing</a></p></li>
+<li><p><a class="reference internal" href="#intrusive-list-api-overhaul" id="id9">Intrusive list API overhaul</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-arm-targets" id="id10">Changes to the ARM Targets</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-avr-target" id="id11">Changes to the AVR Target</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-mips-target" id="id12">Changes to the MIPS Target</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-x86-target" id="id13">Changes to the X86 Target</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-ocaml-bindings" id="id14">Changes to the OCaml bindings</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#external-open-source-projects-using-llvm-4-0-0" id="id15">External Open Source Projects Using LLVM 4.0.0</a></p>
+<ul>
+<li><p><a class="reference internal" href="#ldc-the-llvm-based-d-compiler" id="id16">LDC - the LLVM-based D compiler</a></p></li>
+<li><p><a class="reference internal" href="#portable-computing-language-pocl" id="id17">Portable Computing Language (pocl)</a></p></li>
+<li><p><a class="reference internal" href="#tta-based-co-design-environment-tce" id="id18">TTA-based Co-design Environment (TCE)</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#additional-information" id="id19">Additional Information</a></p></li>
+</ul>
+</nav>
+<section id="introduction">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Introduction</a><a class="headerlink" href="#introduction" title="Lien vers cette rubrique">¶</a></h2>
+<p>This document contains the release notes for the LLVM Compiler Infrastructure,
+release 4.0.0.  Here we describe the status of LLVM, including major improvements
+from the previous release, improvements in various subprojects of LLVM, and
+some of the current users of the code.  All LLVM releases may be downloaded
+from the <a class="reference external" href="http://llvm.org/releases/">LLVM releases web site</a>.</p>
+<p>For more information about LLVM, including information about the latest
+release, please check out the <a class="reference external" href="http://llvm.org/">main LLVM web site</a>.  If you
+have questions or comments, the <a class="reference external" href="http://lists.llvm.org/mailman/listinfo/llvm-dev">LLVM Developer’s Mailing List</a> is a good place to send
+them.</p>
+</section>
+<section id="new-versioning-scheme">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">New Versioning Scheme</a><a class="headerlink" href="#new-versioning-scheme" title="Lien vers cette rubrique">¶</a></h2>
+<p>Starting with this release, LLVM is using a
+<a class="reference external" href="http://blog.llvm.org/2016/12/llvms-new-versioning-scheme.html">new versioning scheme</a>,
+increasing the major version number with each major release. Stable updates to
+this release will be versioned 4.0.x, and the next major release, six months
+from now, will be version 5.0.0.</p>
+</section>
+<section id="non-comprehensive-list-of-changes-in-this-release">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Non-comprehensive list of changes in this release</a><a class="headerlink" href="#non-comprehensive-list-of-changes-in-this-release" title="Lien vers cette rubrique">¶</a></h2>
+<ul class="simple">
+<li><p>The minimum compiler version required for building LLVM has been raised to
+4.8 for GCC and 2015 for Visual Studio.</p></li>
+<li><p>The C API functions <code class="docutils literal notranslate"><span class="pre">LLVMAddFunctionAttr</span></code>, <code class="docutils literal notranslate"><span class="pre">LLVMGetFunctionAttr</span></code>,
+<code class="docutils literal notranslate"><span class="pre">LLVMRemoveFunctionAttr</span></code>, <code class="docutils literal notranslate"><span class="pre">LLVMAddAttribute</span></code>, <code class="docutils literal notranslate"><span class="pre">LLVMRemoveAttribute</span></code>,
+<code class="docutils literal notranslate"><span class="pre">LLVMGetAttribute</span></code>, <code class="docutils literal notranslate"><span class="pre">LLVMAddInstrAttribute</span></code> and
+<code class="docutils literal notranslate"><span class="pre">LLVMRemoveInstrAttribute</span></code> have been removed.</p></li>
+<li><p>The C API enum <code class="docutils literal notranslate"><span class="pre">LLVMAttribute</span></code> has been deleted.</p></li>
+<li><p>The definition and uses of <code class="docutils literal notranslate"><span class="pre">LLVM_ATRIBUTE_UNUSED_RESULT</span></code> in the LLVM source
+were replaced with <code class="docutils literal notranslate"><span class="pre">LLVM_NODISCARD</span></code>, which matches the C++17 <code class="docutils literal notranslate"><span class="pre">[[nodiscard]]</span></code>
+semantics rather than gcc’s <code class="docutils literal notranslate"><span class="pre">__attribute__((warn_unused_result))</span></code>.</p></li>
+<li><p>The Timer related APIs now expect a Name and Description. When upgrading code
+the previously used names should become descriptions and a short name in the
+style of a programming language identifier should be added.</p></li>
+<li><p>LLVM now handles <code class="docutils literal notranslate"><span class="pre">invariant.group</span></code> across different basic blocks, which makes
+it possible to devirtualize virtual calls inside loops.</p></li>
+<li><p>The aggressive dead code elimination phase (« adce ») now removes
+branches which do not effect program behavior. Loops are retained by
+default since they may be infinite but these can also be removed
+with LLVM option <code class="docutils literal notranslate"><span class="pre">-adce-remove-loops</span></code> when the loop body otherwise has
+no live operations.</p></li>
+<li><p>The llvm-cov tool can now export coverage data as json. Its html output mode
+has also improved.</p></li>
+</ul>
+<section id="improvements-to-thinlto-flto-thin">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Improvements to ThinLTO (-flto=thin)</a><a class="headerlink" href="#improvements-to-thinlto-flto-thin" title="Lien vers cette rubrique">¶</a></h3>
+<p>Integration with profile data (PGO). When available, profile data
+enables more accurate function importing decisions, as well as
+cross-module indirect call promotion.</p>
+<p>Significant build-time and binary-size improvements when compiling with
+debug info (-g).</p>
+</section>
+<section id="llvm-coroutines">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">LLVM Coroutines</a><a class="headerlink" href="#llvm-coroutines" title="Lien vers cette rubrique">¶</a></h3>
+<p>Experimental support for <a class="reference internal" href="Coroutines.html"><span class="doc">Coroutines in LLVM</span></a> was added, which can be enabled
+with <code class="docutils literal notranslate"><span class="pre">-enable-coroutines</span></code> in <code class="docutils literal notranslate"><span class="pre">opt</span></code> the command tool or using the
+<code class="docutils literal notranslate"><span class="pre">addCoroutinePassesToExtensionPoints</span></code> API when building the optimization
+pipeline.</p>
+<p>For more information on LLVM Coroutines and the LLVM implementation, see
+<a class="reference external" href="http://llvm.org/devmtg/2016-11/#talk4">2016 LLVM Developers’ Meeting talk on LLVM Coroutines</a>.</p>
+</section>
+<section id="regcall-and-vectorcall-calling-conventions">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Regcall and Vectorcall Calling Conventions</a><a class="headerlink" href="#regcall-and-vectorcall-calling-conventions" title="Lien vers cette rubrique">¶</a></h3>
+<p>Support was added for <code class="docutils literal notranslate"><span class="pre">_regcall</span></code> calling convention.
+Existing <code class="docutils literal notranslate"><span class="pre">__vectorcall</span></code> calling convention support was extended to include
+correct handling of HVAs.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">__vectorcall</span></code> calling convention was introduced by Microsoft to
+enhance register usage when passing parameters.
+For more information please read <a class="reference external" href="https://msdn.microsoft.com/en-us/library/dn375768.aspx">__vectorcall documentation</a>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">__regcall</span></code> calling convention was introduced by Intel to
+optimize parameter transfer on function call.
+This calling convention ensures that as many values as possible are
+passed or returned in registers.
+For more information please read <a class="reference external" href="https://software.intel.com/en-us/node/693069">__regcall documentation</a>.</p>
+</section>
+<section id="code-generation-testing">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Code Generation Testing</a><a class="headerlink" href="#code-generation-testing" title="Lien vers cette rubrique">¶</a></h3>
+<p>Passes that work on the machine instruction representation can be tested with
+the .mir serialization format. <code class="docutils literal notranslate"><span class="pre">llc</span></code> supports the <code class="docutils literal notranslate"><span class="pre">-run-pass</span></code>,
+<code class="docutils literal notranslate"><span class="pre">-stop-after</span></code>, <code class="docutils literal notranslate"><span class="pre">-stop-before</span></code>, <code class="docutils literal notranslate"><span class="pre">-start-after</span></code>, <code class="docutils literal notranslate"><span class="pre">-start-before</span></code> to
+run a single pass of the code generation pipeline, or to stop or start the code
+generation pipeline at a given point.</p>
+<p>Additional information can be found in the <a class="reference internal" href="MIRLangRef.html"><span class="doc">Machine IR (MIR) Format Reference Manual</span></a>. The format is
+used by the tests ending in <code class="docutils literal notranslate"><span class="pre">.mir</span></code> in the <code class="docutils literal notranslate"><span class="pre">test/CodeGen</span></code> directory.</p>
+<p>This feature is available since 2015. It is used more often lately and was not
+mentioned in the release notes yet.</p>
+</section>
+<section id="intrusive-list-api-overhaul">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Intrusive list API overhaul</a><a class="headerlink" href="#intrusive-list-api-overhaul" title="Lien vers cette rubrique">¶</a></h3>
+<p>The intrusive list infrastructure was substantially rewritten over the last
+couple of releases, primarily to excise undefined behaviour.  The biggest
+changes landed in this release.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">simple_ilist&lt;T&gt;</span></code> is a lower-level intrusive list that never takes
+ownership of its nodes.  New intrusive-list clients should consider using it
+instead of <code class="docutils literal notranslate"><span class="pre">ilist&lt;T&gt;</span></code>.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ilist_tag&lt;class&gt;</span></code> allows a single data type to be inserted into two
+parallel intrusive lists.  A type can inherit twice from <code class="docutils literal notranslate"><span class="pre">ilist_node</span></code>,
+first using <code class="docutils literal notranslate"><span class="pre">ilist_node&lt;T,ilist_tag&lt;A&gt;&gt;</span></code> (enabling insertion into
+<code class="docutils literal notranslate"><span class="pre">simple_ilist&lt;T,ilist_tag&lt;A&gt;&gt;</span></code>) and second using
+<code class="docutils literal notranslate"><span class="pre">ilist_node&lt;T,ilist_tag&lt;B&gt;&gt;</span></code> (enabling insertion into
+<code class="docutils literal notranslate"><span class="pre">simple_ilist&lt;T,ilist_tag&lt;B&gt;&gt;</span></code>), where <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> are arbitrary
+types.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ilist_sentinel_tracking&lt;bool&gt;</span></code> controls whether an iterator knows
+whether it’s pointing at the sentinel (<code class="docutils literal notranslate"><span class="pre">end()</span></code>).  By default, sentinel
+tracking is on when ABI-breaking checks are enabled, and off otherwise;
+this is used for an assertion when dereferencing <code class="docutils literal notranslate"><span class="pre">end()</span></code> (this assertion
+triggered often in practice, and many backend bugs were fixed).  Explicitly
+turning on sentinel tracking also enables <code class="docutils literal notranslate"><span class="pre">iterator::isEnd()</span></code>.  This is
+used by <code class="docutils literal notranslate"><span class="pre">MachineInstrBundleIterator</span></code> to iterate over bundles.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ilist&lt;T&gt;</span></code> is built on top of <code class="docutils literal notranslate"><span class="pre">simple_ilist&lt;T&gt;</span></code>, and supports the same
+configuration options.  As before (and unlike <code class="docutils literal notranslate"><span class="pre">simple_ilist&lt;T&gt;</span></code>),
+<code class="docutils literal notranslate"><span class="pre">ilist&lt;T&gt;</span></code> takes ownership of its nodes.  However, it no longer supports
+<em>allocating</em> nodes, and is now equivalent to <code class="docutils literal notranslate"><span class="pre">iplist&lt;T&gt;</span></code>.  <code class="docutils literal notranslate"><span class="pre">iplist&lt;T&gt;</span></code>
+will likely be removed in the future.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ilist&lt;T&gt;</span></code> now always uses <code class="docutils literal notranslate"><span class="pre">ilist_traits&lt;T&gt;</span></code>.  Instead of passing a
+custom traits class in via a template parameter, clients that want to
+customize the traits should specialize <code class="docutils literal notranslate"><span class="pre">ilist_traits&lt;T&gt;</span></code>.  Clients that
+want to avoid ownership can specialize <code class="docutils literal notranslate"><span class="pre">ilist_alloc_traits&lt;T&gt;</span></code> to inherit
+from <code class="docutils literal notranslate"><span class="pre">ilist_noalloc_traits&lt;T&gt;</span></code> (or to do something funky); clients that
+need callbacks can specialize <code class="docutils literal notranslate"><span class="pre">ilist_callback_traits&lt;T&gt;</span></code> directly.</p></li>
+</ul>
+</li>
+<li><p>The underlying data structure is now a simple recursive linked list.  The
+sentinel node contains only a « next » (<code class="docutils literal notranslate"><span class="pre">begin()</span></code>) and « prev » (<code class="docutils literal notranslate"><span class="pre">rbegin()</span></code>)
+pointer and is stored in the same allocation as <code class="docutils literal notranslate"><span class="pre">simple_ilist&lt;T&gt;</span></code>.
+Previously, it was malloc-allocated on-demand by default, although the
+now-defunct <code class="docutils literal notranslate"><span class="pre">ilist_sentinel_traits&lt;T&gt;</span></code> was sometimes specialized to avoid
+this.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">reverse_iterator</span></code> class no longer uses <code class="docutils literal notranslate"><span class="pre">std::reverse_iterator</span></code>.
+Instead, it now has a handle to the same node that it dereferences to.
+Reverse iterators now have the same iterator invalidation semantics as
+forward iterators.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">iterator</span></code> and <code class="docutils literal notranslate"><span class="pre">reverse_iterator</span></code> have explicit conversion constructors
+that match <code class="docutils literal notranslate"><span class="pre">std::reverse_iterator</span></code>’s off-by-one semantics, so that
+reversing the end points of an iterator range results in the same range
+(albeit in reverse).  I.e., <code class="docutils literal notranslate"><span class="pre">reverse_iterator(begin())</span></code> equals
+<code class="docutils literal notranslate"><span class="pre">rend()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iterator::getReverse()</span></code> and <code class="docutils literal notranslate"><span class="pre">reverse_iterator::getReverse()</span></code> return an
+iterator that dereferences to the <em>same</em> node.  I.e.,
+<code class="docutils literal notranslate"><span class="pre">begin().getReverse()</span></code> equals <code class="docutils literal notranslate"><span class="pre">--rend()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ilist_node&lt;T&gt;::getIterator()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ilist_node&lt;T&gt;::getReverseIterator()</span></code> return the forward and reverse
+iterators that dereference to the current node.  I.e.,
+<code class="docutils literal notranslate"><span class="pre">begin()-&gt;getIterator()</span></code> equals <code class="docutils literal notranslate"><span class="pre">begin()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">rbegin()-&gt;getReverseIterator()</span></code> equals <code class="docutils literal notranslate"><span class="pre">rbegin()</span></code>.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iterator</span></code> now stores an <code class="docutils literal notranslate"><span class="pre">ilist_node_base*</span></code> instead of a <code class="docutils literal notranslate"><span class="pre">T*</span></code>.  The
+implicit conversions between <code class="docutils literal notranslate"><span class="pre">ilist&lt;T&gt;::iterator</span></code> and <code class="docutils literal notranslate"><span class="pre">T*</span></code> have been
+removed.  Clients may use <code class="docutils literal notranslate"><span class="pre">N-&gt;getIterator()</span></code> (if not <code class="docutils literal notranslate"><span class="pre">nullptr</span></code>) or
+<code class="docutils literal notranslate"><span class="pre">&amp;*I</span></code> (if not <code class="docutils literal notranslate"><span class="pre">end()</span></code>); alternatively, clients may refactor to use
+references for known-good nodes.</p></li>
+</ul>
+</section>
+<section id="changes-to-the-arm-targets">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Changes to the ARM Targets</a><a class="headerlink" href="#changes-to-the-arm-targets" title="Lien vers cette rubrique">¶</a></h3>
+<p><strong>During this release the AArch64 target has:</strong></p>
+<ul class="simple">
+<li><p>Gained support for ILP32 relocations.</p></li>
+<li><p>Gained support for XRay.</p></li>
+<li><p>Made even more progress on GlobalISel. There is still some work left before
+it is production-ready though.</p></li>
+<li><p>Refined the support for Qualcomm’s Falkor and Samsung’s Exynos CPUs.</p></li>
+<li><p>Learned a few new tricks for lowering multiplications by constants, folding
+spilled/refilled copies etc.</p></li>
+</ul>
+<p><strong>During this release the ARM target has:</strong></p>
+<ul class="simple">
+<li><p>Gained support for ROPI (read-only position independence) and RWPI
+(read-write position independence), which can be used to remove the need for
+a dynamic linker.</p></li>
+<li><p>Gained support for execute-only code, which is placed in pages without read
+permissions.</p></li>
+<li><p>Gained a machine scheduler for Cortex-R52.</p></li>
+<li><p>Gained support for XRay.</p></li>
+<li><p>Gained Thumb1 implementations for several compiler-rt builtins. It also
+has some support for building the builtins for HF targets.</p></li>
+<li><p>Started using the generic bitreverse intrinsic instead of rbit.</p></li>
+<li><p>Gained very basic support for GlobalISel.</p></li>
+</ul>
+<p>A lot of work has also been done in LLD for ARM, which now supports more
+relocations and TLS.</p>
+<p>Note: From the next release (5.0), the « vulcan » target will be renamed to
+« thunderx2t99 », including command line options, assembly directives, etc. This
+release (4.0) will be the last one to accept « vulcan » as its name.</p>
+</section>
+<section id="changes-to-the-avr-target">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Changes to the AVR Target</a><a class="headerlink" href="#changes-to-the-avr-target" title="Lien vers cette rubrique">¶</a></h3>
+<p>This marks the first release where the AVR backend has been completely merged
+from a fork into LLVM trunk. The backend is still marked experimental, but
+is generally quite usable. All downstream development has halted on
+<a class="reference external" href="https://github.com/avr-llvm/llvm">GitHub</a>, and changes now go directly into
+LLVM trunk.</p>
+<ul class="simple">
+<li><p>Instruction selector and pseudo instruction expansion pass landed</p></li>
+<li><p><cite>read_register</cite> and <cite>write_register</cite> intrinsics are now supported</p></li>
+<li><p>Support stack stores greater than 63-bytes from the bottom of the stack</p></li>
+<li><p>A number of assertion errors have been fixed</p></li>
+<li><p>Support stores to <cite>undef</cite> locations</p></li>
+<li><p>Very basic support for the target has been added to clang</p></li>
+<li><p>Small optimizations to some 16-bit boolean expressions</p></li>
+</ul>
+<p>Most of the work behind the scenes has been on correctness of generated
+assembly, and also fixing some assertions we would hit on some well-formed
+inputs.</p>
+</section>
+<section id="changes-to-the-mips-target">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Changes to the MIPS Target</a><a class="headerlink" href="#changes-to-the-mips-target" title="Lien vers cette rubrique">¶</a></h3>
+<p><strong>During this release the MIPS target has:</strong></p>
+<ul class="simple">
+<li><p>IAS is now enabled by default for Debian mips64el.</p></li>
+<li><p>Added support for the two operand form for many instructions.</p></li>
+<li><p>Added the following macros: unaligned load/store, seq, double word load/store for O32.</p></li>
+<li><p>Improved the parsing of complex memory offset expressions.</p></li>
+<li><p>Enabled the integrated assembler by default for Debian mips64el.</p></li>
+<li><p>Added a generic scheduler based on the interAptiv CPU.</p></li>
+<li><p>Added support for thread local relocations.</p></li>
+<li><p>Added recip, rsqrt, evp, dvp, synci instructions in IAS.</p></li>
+<li><p>Optimized the generation of constants from some cases.</p></li>
+</ul>
+<p><strong>The following issues have been fixed:</strong></p>
+<ul class="simple">
+<li><p>Thread local debug information is correctly recorded.</p></li>
+<li><p>MSA intrinsics are now range checked.</p></li>
+<li><p>Fixed an issue with MSA and the no-odd-spreg abi.</p></li>
+<li><p>Fixed some corner cases in handling forbidden slots for MIPSR6.</p></li>
+<li><p>Fixed an issue with jumps not being converted to relative branches for assembly.</p></li>
+<li><p>Fixed the handling of local symbols and jal instruction.</p></li>
+<li><p>N32/N64 no longer have their relocation tables sorted as per their ABIs.</p></li>
+<li><p>Fixed a crash when half-precision floating point conversion MSA intrinsics are used.</p></li>
+<li><p>Fixed several crashes involving FastISel.</p></li>
+<li><p>Corrected the corrected definitions for aui/daui/dahi/dati for MIPSR6.</p></li>
+</ul>
+</section>
+<section id="changes-to-the-x86-target">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Changes to the X86 Target</a><a class="headerlink" href="#changes-to-the-x86-target" title="Lien vers cette rubrique">¶</a></h3>
+<p><strong>During this release the X86 target has:</strong></p>
+<ul class="simple">
+<li><p>Added support AMD Ryzen (znver1) CPUs.</p></li>
+<li><p>Gained support for using VEX encoding on AVX-512 CPUs to reduce code size when possible.</p></li>
+<li><p>Improved AVX-512 codegen.</p></li>
+</ul>
+</section>
+<section id="changes-to-the-ocaml-bindings">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Changes to the OCaml bindings</a><a class="headerlink" href="#changes-to-the-ocaml-bindings" title="Lien vers cette rubrique">¶</a></h3>
+<ul class="simple">
+<li><p>The attribute API was completely overhauled, following the changes
+to the C API.</p></li>
+</ul>
+</section>
+</section>
+<section id="external-open-source-projects-using-llvm-4-0-0">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">External Open Source Projects Using LLVM 4.0.0</a><a class="headerlink" href="#external-open-source-projects-using-llvm-4-0-0" title="Lien vers cette rubrique">¶</a></h2>
+<section id="ldc-the-llvm-based-d-compiler">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">LDC - the LLVM-based D compiler</a><a class="headerlink" href="#ldc-the-llvm-based-d-compiler" title="Lien vers cette rubrique">¶</a></h3>
+<p><a class="reference external" href="http://dlang.org">D</a> is a language with C-like syntax and static typing. It
+pragmatically combines efficiency, control, and modeling power, with safety and
+programmer productivity. D supports powerful concepts like Compile-Time Function
+Execution (CTFE) and Template Meta-Programming, provides an innovative approach
+to concurrency and offers many classical paradigms.</p>
+<p><a class="reference external" href="http://wiki.dlang.org/LDC">LDC</a> uses the frontend from the reference compiler
+combined with LLVM as backend to produce efficient native code. LDC targets
+x86/x86_64 systems like Linux, OS X, FreeBSD and Windows and also Linux on ARM
+and PowerPC (32/64 bit). Ports to other architectures like AArch64 and MIPS64
+are underway.</p>
+</section>
+<section id="portable-computing-language-pocl">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Portable Computing Language (pocl)</a><a class="headerlink" href="#portable-computing-language-pocl" title="Lien vers cette rubrique">¶</a></h3>
+<p>In addition to producing an easily portable open source OpenCL
+implementation, another major goal of <a class="reference external" href="http://pocl.sourceforge.net/">pocl</a>
+is improving performance portability of OpenCL programs with
+compiler optimizations, reducing the need for target-dependent manual
+optimizations. An important part of pocl is a set of LLVM passes used to
+statically parallelize multiple work-items with the kernel compiler, even in
+the presence of work-group barriers. This enables static parallelization of
+the fine-grained static concurrency in the work groups in multiple ways.</p>
+</section>
+<section id="tta-based-co-design-environment-tce">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">TTA-based Co-design Environment (TCE)</a><a class="headerlink" href="#tta-based-co-design-environment-tce" title="Lien vers cette rubrique">¶</a></h3>
+<p><a class="reference external" href="http://tce.cs.tut.fi/">TCE</a> is a toolset for designing customized
+processors based on the Transport Triggered Architecture (TTA).
+The toolset provides a complete co-design flow from C/C++
+programs down to synthesizable VHDL/Verilog and parallel program binaries.
+Processor customization points include register files, function units,
+supported operations, and the interconnection network.</p>
+<p>TCE uses Clang and LLVM for C/C++/OpenCL C language support, target independent
+optimizations and also for parts of code generation. It generates new
+LLVM-based code generators « on the fly » for the designed TTA processors and
+loads them in to the compiler backend as runtime libraries to avoid
+per-target recompilation of larger parts of the compiler chain.</p>
+</section>
+</section>
+<section id="additional-information">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Additional Information</a><a class="headerlink" href="#additional-information" title="Lien vers cette rubrique">¶</a></h2>
+<p>A wide variety of additional information is available on the <a class="reference external" href="http://llvm.org/">LLVM web page</a>, in particular in the <a class="reference external" href="http://llvm.org/docs/">documentation</a> section.  The web page also contains versions of the
+API documentation which is up-to-date with the Subversion version of the source
+code.  You can access versions of these documents specific to this release by
+going into the <code class="docutils literal notranslate"><span class="pre">llvm/docs/</span></code> directory in the LLVM tree.</p>
+<p>If you have any questions or comments about LLVM, please feel free to contact
+us via the <a class="reference external" href="http://llvm.org/docs/#maillist">mailing lists</a>.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Index général"
+             >index</a></li>
+        <li class="right" >
+          <a href="Passes.html" title="LLVM’s Analysis and Transform Passes"
+             >suivant</a> |</li>
+        <li class="right" >
+          <a href="tutorial/BuildingAJIT5.html" title="5. Building a JIT: Remote-JITing – Process Isolation and Laziness at a Distance"
+             >précédent</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">LLVM 4.0.0 Release Notes</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2003-2025, LLVM Project.
+      Mis à jour le 2025-11-11.
+      Créé en utilisant <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

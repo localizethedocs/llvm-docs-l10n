@@ -1,0 +1,496 @@
+
+<!DOCTYPE html>
+
+<html lang="en-US" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>TableGen BackEnds &#8212; LLVM 6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/llvm-theme.css?v=4c4af0c1" />
+    <script src="../_static/documentation_options.js?v=b5bc7fdc"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/TableGen/BackEnds.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="TableGen Language Reference" href="LangRef.html" />
+    <link rel="prev" title="TableGen" href="index.html" />
+<script type="text/javascript" src="../ltd-provenance.js"></script>
+<script type="text/javascript" src="../ltd-current.js"></script>
+<script type="text/javascript" src="../../../ltd-config.js"></script>
+<script type="text/javascript" src="../../../ltd-flyout.js"></script>
+
+  </head><body>
+<div class="logo">
+  <a href="../index.html">
+    <img src="../_static/logo.png"
+         alt="LLVM Logo" width="250" height="88"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="LangRef.html" title="TableGen Language Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="TableGen"
+             accesskey="P">previous</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="../index.html">Documentation</a>&raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">TableGen</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">TableGen BackEnds</a></li> 
+      </ul>
+    </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <section id="tablegen-backends">
+<h1>TableGen BackEnds<a class="headerlink" href="#tablegen-backends" title="Link to this heading">¶</a></h1>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#introduction" id="id1">Introduction</a></p></li>
+<li><p><a class="reference internal" href="#llvm-backends" id="id2">LLVM BackEnds</a></p>
+<ul>
+<li><p><a class="reference internal" href="#codeemitter" id="id3">CodeEmitter</a></p></li>
+<li><p><a class="reference internal" href="#registerinfo" id="id4">RegisterInfo</a></p></li>
+<li><p><a class="reference internal" href="#instrinfo" id="id5">InstrInfo</a></p></li>
+<li><p><a class="reference internal" href="#asmwriter" id="id6">AsmWriter</a></p></li>
+<li><p><a class="reference internal" href="#asmmatcher" id="id7">AsmMatcher</a></p></li>
+<li><p><a class="reference internal" href="#disassembler" id="id8">Disassembler</a></p></li>
+<li><p><a class="reference internal" href="#pseudolowering" id="id9">PseudoLowering</a></p></li>
+<li><p><a class="reference internal" href="#callingconv" id="id10">CallingConv</a></p></li>
+<li><p><a class="reference internal" href="#dagisel" id="id11">DAGISel</a></p></li>
+<li><p><a class="reference internal" href="#dfapacketizer" id="id12">DFAPacketizer</a></p></li>
+<li><p><a class="reference internal" href="#fastisel" id="id13">FastISel</a></p></li>
+<li><p><a class="reference internal" href="#subtarget" id="id14">Subtarget</a></p></li>
+<li><p><a class="reference internal" href="#intrinsic" id="id15">Intrinsic</a></p></li>
+<li><p><a class="reference internal" href="#optparserdefs" id="id16">OptParserDefs</a></p></li>
+<li><p><a class="reference internal" href="#ctags" id="id17">CTags</a></p></li>
+<li><p><a class="reference internal" href="#x86evex2vex" id="id18">X86EVEX2VEX</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#clang-backends" id="id19">Clang BackEnds</a></p>
+<ul>
+<li><p><a class="reference internal" href="#clangattrclasses" id="id20">ClangAttrClasses</a></p></li>
+<li><p><a class="reference internal" href="#clangattrparserstringswitches" id="id21">ClangAttrParserStringSwitches</a></p></li>
+<li><p><a class="reference internal" href="#clangattrimpl" id="id22">ClangAttrImpl</a></p></li>
+<li><p><a class="reference internal" href="#clangattrlist" id="id23">ClangAttrList</a></p></li>
+<li><p><a class="reference internal" href="#clangattrpchread" id="id24">ClangAttrPCHRead</a></p></li>
+<li><p><a class="reference internal" href="#clangattrpchwrite" id="id25">ClangAttrPCHWrite</a></p></li>
+<li><p><a class="reference internal" href="#clangattrspellings" id="id26">ClangAttrSpellings</a></p></li>
+<li><p><a class="reference internal" href="#clangattrspellinglistindex" id="id27">ClangAttrSpellingListIndex</a></p></li>
+<li><p><a class="reference internal" href="#clangattrvisitor" id="id28">ClangAttrVisitor</a></p></li>
+<li><p><a class="reference internal" href="#clangattrtemplateinstantiate" id="id29">ClangAttrTemplateInstantiate</a></p></li>
+<li><p><a class="reference internal" href="#clangattrparsedattrlist" id="id30">ClangAttrParsedAttrList</a></p></li>
+<li><p><a class="reference internal" href="#clangattrparsedattrimpl" id="id31">ClangAttrParsedAttrImpl</a></p></li>
+<li><p><a class="reference internal" href="#clangattrparsedattrkinds" id="id32">ClangAttrParsedAttrKinds</a></p></li>
+<li><p><a class="reference internal" href="#clangattrdump" id="id33">ClangAttrDump</a></p></li>
+<li><p><a class="reference internal" href="#clangdiagsdefs" id="id34">ClangDiagsDefs</a></p></li>
+<li><p><a class="reference internal" href="#clangdiaggroups" id="id35">ClangDiagGroups</a></p></li>
+<li><p><a class="reference internal" href="#clangdiagsindexname" id="id36">ClangDiagsIndexName</a></p></li>
+<li><p><a class="reference internal" href="#clangcommentnodes" id="id37">ClangCommentNodes</a></p></li>
+<li><p><a class="reference internal" href="#clangdeclnodes" id="id38">ClangDeclNodes</a></p></li>
+<li><p><a class="reference internal" href="#clangstmtnodes" id="id39">ClangStmtNodes</a></p></li>
+<li><p><a class="reference internal" href="#clangsacheckers" id="id40">ClangSACheckers</a></p></li>
+<li><p><a class="reference internal" href="#clangcommenthtmltags" id="id41">ClangCommentHTMLTags</a></p></li>
+<li><p><a class="reference internal" href="#clangcommenthtmltagsproperties" id="id42">ClangCommentHTMLTagsProperties</a></p></li>
+<li><p><a class="reference internal" href="#clangcommenthtmlnamedcharacterreferences" id="id43">ClangCommentHTMLNamedCharacterReferences</a></p></li>
+<li><p><a class="reference internal" href="#clangcommentcommandinfo" id="id44">ClangCommentCommandInfo</a></p></li>
+<li><p><a class="reference internal" href="#clangcommentcommandlist" id="id45">ClangCommentCommandList</a></p></li>
+<li><p><a class="reference internal" href="#armneon" id="id46">ArmNeon</a></p></li>
+<li><p><a class="reference internal" href="#armneonsema" id="id47">ArmNeonSema</a></p></li>
+<li><p><a class="reference internal" href="#armneontest" id="id48">ArmNeonTest</a></p></li>
+<li><p><a class="reference internal" href="#attrdocs" id="id49">AttrDocs</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#how-to-write-a-back-end" id="id50">How to write a back-end</a></p></li>
+</ul>
+</nav>
+<section id="introduction">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Introduction</a><a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>TableGen backends are at the core of TableGen’s functionality. The source files
+provide the semantics to a generated (in memory) structure, but it’s up to the
+backend to print this out in a way that is meaningful to the user (normally a
+C program including a file or a textual list of warnings, options and error
+messages).</p>
+<p>TableGen is used by both LLVM and Clang with very different goals. LLVM uses it
+as a way to automate the generation of massive amounts of information regarding
+instructions, schedules, cores and architecture features. Some backends generate
+output that is consumed by more than one source file, so they need to be created
+in a way that is easy to use pre-processor tricks. Some backends can also print
+C code structures, so that they can be directly included as-is.</p>
+<p>Clang, on the other hand, uses it mainly for diagnostic messages (errors,
+warnings, tips) and attributes, so more on the textual end of the scale.</p>
+</section>
+<section id="llvm-backends">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">LLVM BackEnds</a><a class="headerlink" href="#llvm-backends" title="Link to this heading">¶</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This document is raw. Each section below needs three sub-sections: description
+of its purpose with a list of users, output generated from generic input, and
+finally why it needed a new backend (in case there’s something similar).</p>
+</div>
+<p>Overall, each backend will take the same TableGen file type and transform into
+similar output for different targets/uses. There is an implicit contract between
+the TableGen files, the back-ends and their users.</p>
+<p>For instance, a global contract is that each back-end produces macro-guarded
+sections. Based on whether the file is included by a header or a source file,
+or even in which context of each file the include is being used, you have
+todefine a macro just before including it, to get the right output:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#define GET_REGINFO_TARGET_DESC</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ARMGenRegisterInfo.inc&quot;</span>
+</pre></div>
+</div>
+<p>And just part of the generated file would be included. This is useful if
+you need the same information in multiple formats (instantiation, initialization,
+getter/setter functions, etc) from the same source TableGen file without having
+to re-compile the TableGen file multiple times.</p>
+<p>Sometimes, multiple macros might be defined before the same include file to
+output multiple blocks:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#define GET_REGISTER_MATCHER</span>
+<span class="cp">#define GET_SUBTARGET_FEATURE_NAME</span>
+<span class="cp">#define GET_MATCHER_IMPLEMENTATION</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;ARMGenAsmMatcher.inc&quot;</span>
+</pre></div>
+</div>
+<p>The macros will be undef’d automatically as they’re used, in the include file.</p>
+<p>On all LLVM back-ends, the <code class="docutils literal notranslate"><span class="pre">llvm-tblgen</span></code> binary will be executed on the root
+TableGen file <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;.td</span></code>, which should include all others. This guarantees
+that all information needed is accessible, and that no duplication is needed
+in the TableGen files.</p>
+<section id="codeemitter">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">CodeEmitter</a><a class="headerlink" href="#codeemitter" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: CodeEmitterGen uses the descriptions of instructions and their fields to
+construct an automated code emitter: a function that, given a MachineInstr,
+returns the (currently, 32-bit unsigned) value of the instruction.</p>
+<p><strong>Output</strong>: C++ code, implementing the target’s CodeEmitter
+class by overriding the virtual functions as <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;CodeEmitter::function()</span></code>.</p>
+<p><strong>Usage</strong>: Used to include directly at the end of <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;MCCodeEmitter.cpp</span></code>.</p>
+</section>
+<section id="registerinfo">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">RegisterInfo</a><a class="headerlink" href="#registerinfo" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: This tablegen backend is responsible for emitting a description of a target
+register file for a code generator.  It uses instances of the Register,
+RegisterAliases, and RegisterClass classes to gather this information.</p>
+<p><strong>Output</strong>: C++ code with enums and structures representing the register mappings,
+properties, masks, etc.</p>
+<p><strong>Usage</strong>: Both on <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;BaseRegisterInfo</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;MCTargetDesc</span></code> (headers
+and source files) with macros defining in which they are for declaration vs.
+initialization issues.</p>
+</section>
+<section id="instrinfo">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">InstrInfo</a><a class="headerlink" href="#instrinfo" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: This tablegen backend is responsible for emitting a description of the target
+instruction set for the code generator. (what are the differences from CodeEmitter?)</p>
+<p><strong>Output</strong>: C++ code with enums and structures representing the instruction mappings,
+properties, masks, etc.</p>
+<p><strong>Usage</strong>: Both on <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;BaseInstrInfo</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;MCTargetDesc</span></code> (headers
+and source files) with macros defining in which they are for declaration vs.
+initialization issues.</p>
+</section>
+<section id="asmwriter">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">AsmWriter</a><a class="headerlink" href="#asmwriter" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Emits an assembly printer for the current target.</p>
+<p><strong>Output</strong>: Implementation of <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;InstPrinter::printInstruction()</span></code>, among
+other things.</p>
+<p><strong>Usage</strong>: Included directly into <code class="docutils literal notranslate"><span class="pre">InstPrinter/&lt;Target&gt;InstPrinter.cpp</span></code>.</p>
+</section>
+<section id="asmmatcher">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">AsmMatcher</a><a class="headerlink" href="#asmmatcher" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Emits a target specifier matcher for
+converting parsed assembly operands in the MCInst structures. It also
+emits a matcher for custom operand parsing. Extensive documentation is
+written on the <code class="docutils literal notranslate"><span class="pre">AsmMatcherEmitter.cpp</span></code> file.</p>
+<p><strong>Output</strong>: Assembler parsers’ matcher functions, declarations, etc.</p>
+<p><strong>Usage</strong>: Used in back-ends’ <code class="docutils literal notranslate"><span class="pre">AsmParser/&lt;Target&gt;AsmParser.cpp</span></code> for
+building the AsmParser class.</p>
+</section>
+<section id="disassembler">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Disassembler</a><a class="headerlink" href="#disassembler" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Contains disassembler table emitters for various
+architectures. Extensive documentation is written on the
+<code class="docutils literal notranslate"><span class="pre">DisassemblerEmitter.cpp</span></code> file.</p>
+<p><strong>Output</strong>: Decoding tables, static decoding functions, etc.</p>
+<p><strong>Usage</strong>: Directly included in <code class="docutils literal notranslate"><span class="pre">Disassembler/&lt;Target&gt;Disassembler.cpp</span></code>
+to cater for all default decodings, after all hand-made ones.</p>
+</section>
+<section id="pseudolowering">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">PseudoLowering</a><a class="headerlink" href="#pseudolowering" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Generate pseudo instruction lowering.</p>
+<p><strong>Output</strong>: Implements <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;AsmPrinter::emitPseudoExpansionLowering()</span></code>.</p>
+<p><strong>Usage</strong>: Included directly into <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;AsmPrinter.cpp</span></code>.</p>
+</section>
+<section id="callingconv">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">CallingConv</a><a class="headerlink" href="#callingconv" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Responsible for emitting descriptions of the calling
+conventions supported by this target.</p>
+<p><strong>Output</strong>: Implement static functions to deal with calling conventions
+chained by matching styles, returning false on no match.</p>
+<p><strong>Usage</strong>: Used in ISelLowering and FastIsel as function pointers to
+implementation returned by a CC selection function.</p>
+</section>
+<section id="dagisel">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">DAGISel</a><a class="headerlink" href="#dagisel" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Generate a DAG instruction selector.</p>
+<p><strong>Output</strong>: Creates huge functions for automating DAG selection.</p>
+<p><strong>Usage</strong>: Included in <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;ISelDAGToDAG.cpp</span></code> inside the target’s
+implementation of <code class="docutils literal notranslate"><span class="pre">SelectionDAGISel</span></code>.</p>
+</section>
+<section id="dfapacketizer">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">DFAPacketizer</a><a class="headerlink" href="#dfapacketizer" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: This class parses the Schedule.td file and produces an API that
+can be used to reason about whether an instruction can be added to a packet
+on a VLIW architecture. The class internally generates a deterministic finite
+automaton (DFA) that models all possible mappings of machine instructions
+to functional units as instructions are added to a packet.</p>
+<p><strong>Output</strong>: Scheduling tables for GPU back-ends (Hexagon, AMD).</p>
+<p><strong>Usage</strong>: Included directly on <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;InstrInfo.cpp</span></code>.</p>
+</section>
+<section id="fastisel">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">FastISel</a><a class="headerlink" href="#fastisel" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: This tablegen backend emits code for use by the “fast”
+instruction selection algorithm. See the comments at the top of
+lib/CodeGen/SelectionDAG/FastISel.cpp for background. This file
+scans through the target’s tablegen instruction-info files
+and extracts instructions with obvious-looking patterns, and it emits
+code to look up these instructions by type and operator.</p>
+<p><strong>Output</strong>: Generates <code class="docutils literal notranslate"><span class="pre">Predicate</span></code> and <code class="docutils literal notranslate"><span class="pre">FastEmit</span></code> methods.</p>
+<p><strong>Usage</strong>: Implements private methods of the targets’ implementation
+of <code class="docutils literal notranslate"><span class="pre">FastISel</span></code> class.</p>
+</section>
+<section id="subtarget">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Subtarget</a><a class="headerlink" href="#subtarget" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Generate subtarget enumerations.</p>
+<p><strong>Output</strong>: Enums, globals, local tables for sub-target information.</p>
+<p><strong>Usage</strong>: Populates <code class="docutils literal notranslate"><span class="pre">&lt;Target&gt;Subtarget</span></code> and
+<code class="docutils literal notranslate"><span class="pre">MCTargetDesc/&lt;Target&gt;MCTargetDesc</span></code> files (both headers and source).</p>
+</section>
+<section id="intrinsic">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Intrinsic</a><a class="headerlink" href="#intrinsic" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Generate (target) intrinsic information.</p>
+</section>
+<section id="optparserdefs">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">OptParserDefs</a><a class="headerlink" href="#optparserdefs" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Print enum values for a class.</p>
+</section>
+<section id="ctags">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">CTags</a><a class="headerlink" href="#ctags" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: This tablegen backend emits an index of definitions in ctags(1)
+format. A helper script, utils/TableGen/tdtags, provides an easier-to-use
+interface; run ‘tdtags -H’ for documentation.</p>
+</section>
+<section id="x86evex2vex">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">X86EVEX2VEX</a><a class="headerlink" href="#x86evex2vex" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: This X86 specific tablegen backend emits tables that map EVEX
+encoded instructions to their VEX encoded identical instruction.</p>
+</section>
+</section>
+<section id="clang-backends">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Clang BackEnds</a><a class="headerlink" href="#clang-backends" title="Link to this heading">¶</a></h2>
+<section id="clangattrclasses">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">ClangAttrClasses</a><a class="headerlink" href="#clangattrclasses" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates Attrs.inc, which contains semantic attribute class
+declarations for any attribute in <code class="docutils literal notranslate"><span class="pre">Attr.td</span></code> that has not set <code class="docutils literal notranslate"><span class="pre">ASTNode</span> <span class="pre">=</span> <span class="pre">0</span></code>.
+This file is included as part of <code class="docutils literal notranslate"><span class="pre">Attr.h</span></code>.</p>
+</section>
+<section id="clangattrparserstringswitches">
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">ClangAttrParserStringSwitches</a><a class="headerlink" href="#clangattrparserstringswitches" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrParserStringSwitches.inc, which contains
+StringSwitch::Case statements for parser-related string switches. Each switch
+is given its own macro (such as <code class="docutils literal notranslate"><span class="pre">CLANG_ATTR_ARG_CONTEXT_LIST</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">CLANG_ATTR_IDENTIFIER_ARG_LIST</span></code>), which is expected to be defined before
+including AttrParserStringSwitches.inc, and undefined after.</p>
+</section>
+<section id="clangattrimpl">
+<h3><a class="toc-backref" href="#id22" role="doc-backlink">ClangAttrImpl</a><a class="headerlink" href="#clangattrimpl" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrImpl.inc, which contains semantic attribute class
+definitions for any attribute in <code class="docutils literal notranslate"><span class="pre">Attr.td</span></code> that has not set <code class="docutils literal notranslate"><span class="pre">ASTNode</span> <span class="pre">=</span> <span class="pre">0</span></code>.
+This file is included as part of <code class="docutils literal notranslate"><span class="pre">AttrImpl.cpp</span></code>.</p>
+</section>
+<section id="clangattrlist">
+<h3><a class="toc-backref" href="#id23" role="doc-backlink">ClangAttrList</a><a class="headerlink" href="#clangattrlist" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrList.inc, which is used when a list of semantic
+attribute identifiers is required. For instance, <code class="docutils literal notranslate"><span class="pre">AttrKinds.h</span></code> includes this
+file to generate the list of <code class="docutils literal notranslate"><span class="pre">attr::Kind</span></code> enumeration values. This list is
+separated out into multiple categories: attributes, inheritable attributes, and
+inheritable parameter attributes. This categorization happens automatically
+based on information in <code class="docutils literal notranslate"><span class="pre">Attr.td</span></code> and is used to implement the <code class="docutils literal notranslate"><span class="pre">classof</span></code>
+functionality required for <code class="docutils literal notranslate"><span class="pre">dyn_cast</span></code> and similar APIs.</p>
+</section>
+<section id="clangattrpchread">
+<h3><a class="toc-backref" href="#id24" role="doc-backlink">ClangAttrPCHRead</a><a class="headerlink" href="#clangattrpchread" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrPCHRead.inc, which is used to deserialize attributes
+in the <code class="docutils literal notranslate"><span class="pre">ASTReader::ReadAttributes</span></code> function.</p>
+</section>
+<section id="clangattrpchwrite">
+<h3><a class="toc-backref" href="#id25" role="doc-backlink">ClangAttrPCHWrite</a><a class="headerlink" href="#clangattrpchwrite" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrPCHWrite.inc, which is used to serialize attributes in
+the <code class="docutils literal notranslate"><span class="pre">ASTWriter::WriteAttributes</span></code> function.</p>
+</section>
+<section id="clangattrspellings">
+<h3><a class="toc-backref" href="#id26" role="doc-backlink">ClangAttrSpellings</a><a class="headerlink" href="#clangattrspellings" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrSpellings.inc, which is used to implement the
+<code class="docutils literal notranslate"><span class="pre">__has_attribute</span></code> feature test macro.</p>
+</section>
+<section id="clangattrspellinglistindex">
+<h3><a class="toc-backref" href="#id27" role="doc-backlink">ClangAttrSpellingListIndex</a><a class="headerlink" href="#clangattrspellinglistindex" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrSpellingListIndex.inc, which is used to map parsed
+attribute spellings (including which syntax or scope was used) to an attribute
+spelling list index. These spelling list index values are internal
+implementation details exposed via
+<code class="docutils literal notranslate"><span class="pre">AttributeList::getAttributeSpellingListIndex</span></code>.</p>
+</section>
+<section id="clangattrvisitor">
+<h3><a class="toc-backref" href="#id28" role="doc-backlink">ClangAttrVisitor</a><a class="headerlink" href="#clangattrvisitor" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrVisitor.inc, which is used when implementing
+recursive AST visitors.</p>
+</section>
+<section id="clangattrtemplateinstantiate">
+<h3><a class="toc-backref" href="#id29" role="doc-backlink">ClangAttrTemplateInstantiate</a><a class="headerlink" href="#clangattrtemplateinstantiate" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrTemplateInstantiate.inc, which implements the
+<code class="docutils literal notranslate"><span class="pre">instantiateTemplateAttribute</span></code> function, used when instantiating a template
+that requires an attribute to be cloned.</p>
+</section>
+<section id="clangattrparsedattrlist">
+<h3><a class="toc-backref" href="#id30" role="doc-backlink">ClangAttrParsedAttrList</a><a class="headerlink" href="#clangattrparsedattrlist" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrParsedAttrList.inc, which is used to generate the
+<code class="docutils literal notranslate"><span class="pre">AttributeList::Kind</span></code> parsed attribute enumeration.</p>
+</section>
+<section id="clangattrparsedattrimpl">
+<h3><a class="toc-backref" href="#id31" role="doc-backlink">ClangAttrParsedAttrImpl</a><a class="headerlink" href="#clangattrparsedattrimpl" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrParsedAttrImpl.inc, which is used by
+<code class="docutils literal notranslate"><span class="pre">AttributeList.cpp</span></code> to implement several functions on the <code class="docutils literal notranslate"><span class="pre">AttributeList</span></code>
+class. This functionality is implemented via the <code class="docutils literal notranslate"><span class="pre">AttrInfoMap</span> <span class="pre">ParsedAttrInfo</span></code>
+array, which contains one element per parsed attribute object.</p>
+</section>
+<section id="clangattrparsedattrkinds">
+<h3><a class="toc-backref" href="#id32" role="doc-backlink">ClangAttrParsedAttrKinds</a><a class="headerlink" href="#clangattrparsedattrkinds" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrParsedAttrKinds.inc, which is used to implement the
+<code class="docutils literal notranslate"><span class="pre">AttributeList::getKind</span></code> function, mapping a string (and syntax) to a parsed
+attribute <code class="docutils literal notranslate"><span class="pre">AttributeList::Kind</span></code> enumeration.</p>
+</section>
+<section id="clangattrdump">
+<h3><a class="toc-backref" href="#id33" role="doc-backlink">ClangAttrDump</a><a class="headerlink" href="#clangattrdump" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates AttrDump.inc, which dumps information about an attribute.
+It is used to implement <code class="docutils literal notranslate"><span class="pre">ASTDumper::dumpAttr</span></code>.</p>
+</section>
+<section id="clangdiagsdefs">
+<h3><a class="toc-backref" href="#id34" role="doc-backlink">ClangDiagsDefs</a><a class="headerlink" href="#clangdiagsdefs" title="Link to this heading">¶</a></h3>
+<p>Generate Clang diagnostics definitions.</p>
+</section>
+<section id="clangdiaggroups">
+<h3><a class="toc-backref" href="#id35" role="doc-backlink">ClangDiagGroups</a><a class="headerlink" href="#clangdiaggroups" title="Link to this heading">¶</a></h3>
+<p>Generate Clang diagnostic groups.</p>
+</section>
+<section id="clangdiagsindexname">
+<h3><a class="toc-backref" href="#id36" role="doc-backlink">ClangDiagsIndexName</a><a class="headerlink" href="#clangdiagsindexname" title="Link to this heading">¶</a></h3>
+<p>Generate Clang diagnostic name index.</p>
+</section>
+<section id="clangcommentnodes">
+<h3><a class="toc-backref" href="#id37" role="doc-backlink">ClangCommentNodes</a><a class="headerlink" href="#clangcommentnodes" title="Link to this heading">¶</a></h3>
+<p>Generate Clang AST comment nodes.</p>
+</section>
+<section id="clangdeclnodes">
+<h3><a class="toc-backref" href="#id38" role="doc-backlink">ClangDeclNodes</a><a class="headerlink" href="#clangdeclnodes" title="Link to this heading">¶</a></h3>
+<p>Generate Clang AST declaration nodes.</p>
+</section>
+<section id="clangstmtnodes">
+<h3><a class="toc-backref" href="#id39" role="doc-backlink">ClangStmtNodes</a><a class="headerlink" href="#clangstmtnodes" title="Link to this heading">¶</a></h3>
+<p>Generate Clang AST statement nodes.</p>
+</section>
+<section id="clangsacheckers">
+<h3><a class="toc-backref" href="#id40" role="doc-backlink">ClangSACheckers</a><a class="headerlink" href="#clangsacheckers" title="Link to this heading">¶</a></h3>
+<p>Generate Clang Static Analyzer checkers.</p>
+</section>
+<section id="clangcommenthtmltags">
+<h3><a class="toc-backref" href="#id41" role="doc-backlink">ClangCommentHTMLTags</a><a class="headerlink" href="#clangcommenthtmltags" title="Link to this heading">¶</a></h3>
+<p>Generate efficient matchers for HTML tag names that are used in documentation comments.</p>
+</section>
+<section id="clangcommenthtmltagsproperties">
+<h3><a class="toc-backref" href="#id42" role="doc-backlink">ClangCommentHTMLTagsProperties</a><a class="headerlink" href="#clangcommenthtmltagsproperties" title="Link to this heading">¶</a></h3>
+<p>Generate efficient matchers for HTML tag properties.</p>
+</section>
+<section id="clangcommenthtmlnamedcharacterreferences">
+<h3><a class="toc-backref" href="#id43" role="doc-backlink">ClangCommentHTMLNamedCharacterReferences</a><a class="headerlink" href="#clangcommenthtmlnamedcharacterreferences" title="Link to this heading">¶</a></h3>
+<p>Generate function to translate named character references to UTF-8 sequences.</p>
+</section>
+<section id="clangcommentcommandinfo">
+<h3><a class="toc-backref" href="#id44" role="doc-backlink">ClangCommentCommandInfo</a><a class="headerlink" href="#clangcommentcommandinfo" title="Link to this heading">¶</a></h3>
+<p>Generate command properties for commands that are used in documentation comments.</p>
+</section>
+<section id="clangcommentcommandlist">
+<h3><a class="toc-backref" href="#id45" role="doc-backlink">ClangCommentCommandList</a><a class="headerlink" href="#clangcommentcommandlist" title="Link to this heading">¶</a></h3>
+<p>Generate list of commands that are used in documentation comments.</p>
+</section>
+<section id="armneon">
+<h3><a class="toc-backref" href="#id46" role="doc-backlink">ArmNeon</a><a class="headerlink" href="#armneon" title="Link to this heading">¶</a></h3>
+<p>Generate arm_neon.h for clang.</p>
+</section>
+<section id="armneonsema">
+<h3><a class="toc-backref" href="#id47" role="doc-backlink">ArmNeonSema</a><a class="headerlink" href="#armneonsema" title="Link to this heading">¶</a></h3>
+<p>Generate ARM NEON sema support for clang.</p>
+</section>
+<section id="armneontest">
+<h3><a class="toc-backref" href="#id48" role="doc-backlink">ArmNeonTest</a><a class="headerlink" href="#armneontest" title="Link to this heading">¶</a></h3>
+<p>Generate ARM NEON tests for clang.</p>
+</section>
+<section id="attrdocs">
+<h3><a class="toc-backref" href="#id49" role="doc-backlink">AttrDocs</a><a class="headerlink" href="#attrdocs" title="Link to this heading">¶</a></h3>
+<p><strong>Purpose</strong>: Creates <code class="docutils literal notranslate"><span class="pre">AttributeReference.rst</span></code> from <code class="docutils literal notranslate"><span class="pre">AttrDocs.td</span></code>, and is
+used for documenting user-facing attributes.</p>
+</section>
+</section>
+<section id="how-to-write-a-back-end">
+<h2><a class="toc-backref" href="#id50" role="doc-backlink">How to write a back-end</a><a class="headerlink" href="#how-to-write-a-back-end" title="Link to this heading">¶</a></h2>
+<p>TODO.</p>
+<p>Until we get a step-by-step HowTo for writing TableGen backends, you can at
+least grab the boilerplate (build system, new files, etc.) from Clang’s
+r173931.</p>
+<p>TODO: How they work, how to write one.  This section should not contain details
+about any particular backend, except maybe <code class="docutils literal notranslate"><span class="pre">-print-enums</span></code> as an example.  This
+should highlight the APIs in <code class="docutils literal notranslate"><span class="pre">TableGen/Record.h</span></code>.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="LangRef.html" title="TableGen Language Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="TableGen"
+             >previous</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="../index.html">Documentation</a>&raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >TableGen</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">TableGen BackEnds</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2003-2025, LLVM Project.
+      Last updated on 2025-11-11.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

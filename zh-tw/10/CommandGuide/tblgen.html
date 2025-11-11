@@ -1,0 +1,334 @@
+
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>tblgen - Target Description To C++ Code Generator &#8212; LLVM 10 說明文件</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/llvm-theme.css?v=4c4af0c1" />
+    <script src="../_static/documentation_options.js?v=0c09651c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/CommandGuide/tblgen.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="next" title="lit - LLVM Integrated Tester" href="lit.html" />
+    <link rel="prev" title="FileCheck - Flexible pattern matching file verifier" href="FileCheck.html" />
+<script type="text/javascript" src="../ltd-provenance.js"></script>
+<script type="text/javascript" src="../ltd-current.js"></script>
+<script type="text/javascript" src="../../../ltd-config.js"></script>
+<script type="text/javascript" src="../../../ltd-flyout.js"></script>
+
+  </head><body>
+<div class="logo">
+  <a href="../index.html">
+    <img src="../_static/logo.png"
+         alt="LLVM Logo" width="250" height="88"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="lit.html" title="lit - LLVM Integrated Tester"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="FileCheck.html" title="FileCheck - Flexible pattern matching file verifier"
+             accesskey="P">上一頁</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="../index.html">Documentation</a>&raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../Reference.html" >Reference</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="index.html" accesskey="U">LLVM Command Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tblgen - Target Description To C++ Code Generator</a></li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+<h3>Documentation</h3>
+
+<ul class="want-points">
+    <li><a href="../GettingStartedTutorials.html">Getting Started/Tutorials</a></li>
+    <li><a href="../UserGuides.html">使用者指南</a></li>
+    <li><a href="../Reference.html">Reference</a></li>
+</ul>
+
+<h3>Getting Involved</h3>
+
+<ul class="want-points">
+    <li><a href="../Contributing.html">Contributing to LLVM</a></li>
+    <li><a href="../HowToSubmitABug.html">Submitting Bug Reports</a></li>
+    <li><a href="../GettingInvolved.html#mailing-lists">Mailing Lists</a></li>
+    <li><a href="../GettingInvolved.html#discord">Discord</a></li>
+    <li><a href="../GettingInvolved.html#meetups-and-social-events">Meetups and Social Events</a></li>
+</ul>
+
+<h3>Additional Links</h3>
+
+<ul class="want-points">
+    <li><a href="../FAQ.html">FAQ</a></li>
+    <li><a href="../Lexicon.html">Glossary</a></li>
+    <li><a href="https://llvm.org/pubs">Publications</a></li>
+    <li><a href="https://github.com/llvm/llvm-project/">Github Repository</a></li>
+</ul>
+  <div role="note" aria-label="source link">
+    <h3>本頁</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/CommandGuide/tblgen.rst.txt"
+            rel="nofollow">顯示原始碼</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜尋</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="前往" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="tblgen-target-description-to-c-code-generator">
+<h1>tblgen - Target Description To C++ Code Generator<a class="headerlink" href="#tblgen-target-description-to-c-code-generator" title="連結到這個標頭">¶</a></h1>
+<section id="synopsis">
+<h2>SYNOPSIS<a class="headerlink" href="#synopsis" title="連結到這個標頭">¶</a></h2>
+<p><strong class="program">tblgen</strong> [<em>options</em>] [<em>filename</em>]</p>
+</section>
+<section id="description">
+<h2>DESCRIPTION<a class="headerlink" href="#description" title="連結到這個標頭">¶</a></h2>
+<p><strong class="program">tblgen</strong> translates from target description (<code class="docutils literal notranslate"><span class="pre">.td</span></code>) files into C++
+code that can be included in the definition of an LLVM target library.  Most
+users of LLVM will not need to use this program.  It is only for assisting with
+writing an LLVM target backend.</p>
+<p>The input and output of <strong class="program">tblgen</strong> is beyond the scope of this short
+introduction; please see the <a class="reference internal" href="../TableGen/index.html"><span class="doc">introduction to TableGen</span></a>.</p>
+<p>The <em>filename</em> argument specifies the name of a Target Description (<code class="docutils literal notranslate"><span class="pre">.td</span></code>)
+file to read as input.</p>
+</section>
+<section id="options">
+<h2>OPTIONS<a class="headerlink" href="#options" title="連結到這個標頭">¶</a></h2>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-help">
+<span class="sig-name descname"><span class="pre">-help</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-help" title="連結到這個定義">¶</a></dt>
+<dd><p>Print a summary of command line options.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-o">
+<span class="sig-name descname"><span class="pre">-o</span></span><span class="sig-prename descclassname"> <span class="pre">filename</span></span><a class="headerlink" href="#cmdoption-tblgen-o" title="連結到這個定義">¶</a></dt>
+<dd><p>Specify the output file name.  If <code class="docutils literal notranslate"><span class="pre">filename</span></code> is <code class="docutils literal notranslate"><span class="pre">-</span></code>, then
+<strong class="program">tblgen</strong> sends its output to standard output.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-I">
+<span class="sig-name descname"><span class="pre">-I</span></span><span class="sig-prename descclassname"> <span class="pre">directory</span></span><a class="headerlink" href="#cmdoption-tblgen-I" title="連結到這個定義">¶</a></dt>
+<dd><p>Specify where to find other target description files for inclusion.  The
+<code class="docutils literal notranslate"><span class="pre">directory</span></code> value should be a full or partial path to a directory that
+contains target description files.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-asmparsernum">
+<span class="sig-name descname"><span class="pre">-asmparsernum</span></span><span class="sig-prename descclassname"> <span class="pre">N</span></span><a class="headerlink" href="#cmdoption-tblgen-asmparsernum" title="連結到這個定義">¶</a></dt>
+<dd><p>Make -gen-asm-parser emit assembly writer number <code class="docutils literal notranslate"><span class="pre">N</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-asmwriternum">
+<span class="sig-name descname"><span class="pre">-asmwriternum</span></span><span class="sig-prename descclassname"> <span class="pre">N</span></span><a class="headerlink" href="#cmdoption-tblgen-asmwriternum" title="連結到這個定義">¶</a></dt>
+<dd><p>Make -gen-asm-writer emit assembly writer number <code class="docutils literal notranslate"><span class="pre">N</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-class">
+<span class="sig-name descname"><span class="pre">-class</span></span><span class="sig-prename descclassname"> <span class="pre">className</span></span><a class="headerlink" href="#cmdoption-tblgen-class" title="連結到這個定義">¶</a></dt>
+<dd><p>Print the enumeration list for this class.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-print-records">
+<span class="sig-name descname"><span class="pre">-print-records</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-print-records" title="連結到這個定義">¶</a></dt>
+<dd><p>Print all records to standard output (default).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-dump-json">
+<span class="sig-name descname"><span class="pre">-dump-json</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-dump-json" title="連結到這個定義">¶</a></dt>
+<dd><p>Print a JSON representation of all records, suitable for further
+automated processing.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-print-enums">
+<span class="sig-name descname"><span class="pre">-print-enums</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-print-enums" title="連結到這個定義">¶</a></dt>
+<dd><p>Print enumeration values for a class.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-print-sets">
+<span class="sig-name descname"><span class="pre">-print-sets</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-print-sets" title="連結到這個定義">¶</a></dt>
+<dd><p>Print expanded sets for testing DAG exprs.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-emitter">
+<span class="sig-name descname"><span class="pre">-gen-emitter</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-emitter" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate machine code emitter.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-register-info">
+<span class="sig-name descname"><span class="pre">-gen-register-info</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-register-info" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate registers and register classes info.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-instr-info">
+<span class="sig-name descname"><span class="pre">-gen-instr-info</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-instr-info" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate instruction descriptions.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-asm-writer">
+<span class="sig-name descname"><span class="pre">-gen-asm-writer</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-asm-writer" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate the assembly writer.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-disassembler">
+<span class="sig-name descname"><span class="pre">-gen-disassembler</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-disassembler" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate disassembler.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-pseudo-lowering">
+<span class="sig-name descname"><span class="pre">-gen-pseudo-lowering</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-pseudo-lowering" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate pseudo instruction lowering.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-dag-isel">
+<span class="sig-name descname"><span class="pre">-gen-dag-isel</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-dag-isel" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate a DAG (Directed Acycle Graph) instruction selector.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-asm-matcher">
+<span class="sig-name descname"><span class="pre">-gen-asm-matcher</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-asm-matcher" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate assembly instruction matcher.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-dfa-packetizer">
+<span class="sig-name descname"><span class="pre">-gen-dfa-packetizer</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-dfa-packetizer" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate DFA Packetizer for VLIW targets.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-fast-isel">
+<span class="sig-name descname"><span class="pre">-gen-fast-isel</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-fast-isel" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate a &quot;fast&quot; instruction selector.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-subtarget">
+<span class="sig-name descname"><span class="pre">-gen-subtarget</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-subtarget" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate subtarget enumerations.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-intrinsic-enums">
+<span class="sig-name descname"><span class="pre">-gen-intrinsic-enums</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-intrinsic-enums" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate intrinsic enums.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-intrinsic-impl">
+<span class="sig-name descname"><span class="pre">-gen-intrinsic-impl</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-intrinsic-impl" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate intrinsic implementation.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-tgt-intrinsic">
+<span class="sig-name descname"><span class="pre">-gen-tgt-intrinsic</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-tgt-intrinsic" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate target intrinsic information.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-enhanced-disassembly-info">
+<span class="sig-name descname"><span class="pre">-gen-enhanced-disassembly-info</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-enhanced-disassembly-info" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate enhanced disassembly info.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-gen-exegesis">
+<span class="sig-name descname"><span class="pre">-gen-exegesis</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-gen-exegesis" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate llvm-exegesis tables.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-tblgen-version">
+<span class="sig-name descname"><span class="pre">-version</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-tblgen-version" title="連結到這個定義">¶</a></dt>
+<dd><p>Show the version number of this program.</p>
+</dd></dl>
+
+</section>
+<section id="exit-status">
+<h2>EXIT STATUS<a class="headerlink" href="#exit-status" title="連結到這個標頭">¶</a></h2>
+<p>If <strong class="program">tblgen</strong> succeeds, it will exit with 0.  Otherwise, if an error
+occurs, it will exit with a non-zero value.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="lit.html" title="lit - LLVM Integrated Tester"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="FileCheck.html" title="FileCheck - Flexible pattern matching file verifier"
+             >上一頁</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="../index.html">Documentation</a>&raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../Reference.html" >Reference</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="index.html" >LLVM Command Guide</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tblgen - Target Description To C++ Code Generator</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; 版權所有 2003-2025, LLVM Project.
+      最後更新於 2025-11-11。
+      使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3 建立。
+    </div>
+  </body>
+</html>

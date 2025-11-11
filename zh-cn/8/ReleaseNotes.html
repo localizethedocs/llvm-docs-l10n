@@ -1,0 +1,398 @@
+
+<!DOCTYPE html>
+
+<html lang="zh-CN" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>LLVM 8.0.0 Release Notes &#8212; LLVM 8 文档</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/llvm-theme.css?v=4c4af0c1" />
+    <script src="_static/documentation_options.js?v=fc4e5553"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/ReleaseNotes.html" />
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="LLVM&#39;s Analysis and Transform Passes" href="Passes.html" />
+    <link rel="prev" title="5. Building a JIT: Remote-JITing -- Process Isolation and Laziness at a Distance" href="tutorial/BuildingAJIT5.html" />
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+
+  </head><body>
+<div class="logo">
+  <a href="index.html">
+    <img src="_static/logo.png"
+         alt="LLVM Logo" width="250" height="88"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="总索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="Passes.html" title="LLVM&#39;s Analysis and Transform Passes"
+             accesskey="N">下一页</a> |</li>
+        <li class="right" >
+          <a href="tutorial/BuildingAJIT5.html" title="5. Building a JIT: Remote-JITing -- Process Isolation and Laziness at a Distance"
+             accesskey="P">上一页</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">LLVM 8.0.0 Release Notes</a></li> 
+      </ul>
+    </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <section id="llvm-8-0-0-release-notes">
+<h1>LLVM 8.0.0 Release Notes<a class="headerlink" href="#llvm-8-0-0-release-notes" title="Link to this heading">¶</a></h1>
+<nav class="contents local" id="id1">
+<ul class="simple">
+<li><p><a class="reference internal" href="#introduction" id="id2">Introduction</a></p></li>
+<li><p><a class="reference internal" href="#minimum-required-compiler-version" id="id3">Minimum Required Compiler Version</a></p></li>
+<li><p><a class="reference internal" href="#known-issues" id="id4">Known Issues</a></p></li>
+<li><p><a class="reference internal" href="#non-comprehensive-list-of-changes-in-this-release" id="id5">Non-comprehensive list of changes in this release</a></p>
+<ul>
+<li><p><a class="reference internal" href="#changes-to-the-llvm-ir" id="id6">Changes to the LLVM IR</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-jit-apis" id="id7">Changes to the JIT APIs</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-c-apis" id="id8">Changes to the C++ APIs</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-aarch64-target" id="id9">Changes to the AArch64 Target</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-hexagon-target" id="id10">Changes to the Hexagon Target</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-mips-target" id="id11">Changes to the MIPS Target</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-powerpc-target" id="id12">Changes to the PowerPC Target</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-systemz-target" id="id13">Changes to the SystemZ Target</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-x86-target" id="id14">Changes to the X86 Target</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-webassembly-target" id="id15">Changes to the WebAssembly Target</a></p></li>
+<li><p><a class="reference internal" href="#changes-to-the-nios2-target" id="id16">Changes to the Nios2 Target</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#changes-to-lldb" id="id17">Changes to LLDB</a></p></li>
+<li><p><a class="reference internal" href="#external-open-source-projects-using-llvm-8" id="id18">External Open Source Projects Using LLVM 8</a></p>
+<ul>
+<li><p><a class="reference internal" href="#ldc-the-llvm-based-d-compiler" id="id19">LDC - the LLVM-based D compiler</a></p></li>
+<li><p><a class="reference internal" href="#open-dylan-compiler" id="id20">Open Dylan Compiler</a></p></li>
+<li><p><a class="reference internal" href="#zig-programming-language" id="id21">Zig Programming Language</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#additional-information" id="id22">Additional Information</a></p></li>
+</ul>
+</nav>
+<section id="introduction">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Introduction</a><a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>This document contains the release notes for the LLVM Compiler Infrastructure,
+release 8.0.0.  Here we describe the status of LLVM, including major improvements
+from the previous release, improvements in various subprojects of LLVM, and
+some of the current users of the code.  All LLVM releases may be downloaded
+from the <a class="reference external" href="https://releases.llvm.org/">LLVM releases web site</a>.</p>
+<p>For more information about LLVM, including information about the latest
+release, please check out the <a class="reference external" href="https://llvm.org/">main LLVM web site</a>.  If you
+have questions or comments, the <a class="reference external" href="https://lists.llvm.org/mailman/listinfo/llvm-dev">LLVM Developer's Mailing List</a> is a good place to send
+them.</p>
+</section>
+<section id="minimum-required-compiler-version">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Minimum Required Compiler Version</a><a class="headerlink" href="#minimum-required-compiler-version" title="Link to this heading">¶</a></h2>
+<p>As <a class="reference external" href="https://lists.llvm.org/pipermail/llvm-dev/2019-January/129452.html">discussed on the mailing list</a>,
+building LLVM will soon require more recent toolchains as follows:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Clang</p></td>
+<td><p>3.5</p></td>
+</tr>
+<tr class="row-even"><td><p>Apple Clang</p></td>
+<td><p>6.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>GCC</p></td>
+<td><p>5.1</p></td>
+</tr>
+<tr class="row-even"><td><p>Visual Studio</p></td>
+<td><p>2017</p></td>
+</tr>
+</tbody>
+</table>
+<p>A new CMake check when configuring LLVM provides a soft-error if your
+toolchain will become unsupported soon. You can opt out of the soft-error by
+setting the <code class="docutils literal notranslate"><span class="pre">LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN</span></code> CMake variable to
+<code class="docutils literal notranslate"><span class="pre">ON</span></code>.</p>
+</section>
+<section id="known-issues">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Known Issues</a><a class="headerlink" href="#known-issues" title="Link to this heading">¶</a></h2>
+<p>These are issues that couldn't be fixed before the release. See the bug reports
+for the latest status.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://llvm.org/pr40547">PR40547</a> Clang gets miscompiled by trunk GCC.</p></li>
+<li><p><a class="reference external" href="https://llvm.org/pr40761">PR40761</a> &quot;asan-dynamic&quot; doesn't work on FreeBSD.</p></li>
+</ul>
+</section>
+<section id="non-comprehensive-list-of-changes-in-this-release">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Non-comprehensive list of changes in this release</a><a class="headerlink" href="#non-comprehensive-list-of-changes-in-this-release" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The <strong>llvm-cov</strong> tool can now export lcov trace files using the
+<cite>-format=lcov</cite> option of the <cite>export</cite> command.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">add_llvm_loadable_module</span></code> CMake macro has been removed.  The
+<code class="docutils literal notranslate"><span class="pre">add_llvm_library</span></code> macro with the <code class="docutils literal notranslate"><span class="pre">MODULE</span></code> argument now provides the same
+functionality.  See <a class="reference external" href="WritingAnLLVMPass.html#setting-up-the-build-environment">Writing an LLVM Pass</a>.</p></li>
+<li><p>For MinGW, references to data variables that might need to be imported
+from a dll are accessed via a stub, to allow the linker to convert it to
+a dllimport if needed.</p></li>
+<li><p>Added support for labels as offsets in <code class="docutils literal notranslate"><span class="pre">.reloc</span></code> directive.</p></li>
+<li><p>Support for precise identification of X86 instructions with memory operands,
+by using debug information. This supports profile-driven cache prefetching.
+It is enabled with the <code class="docutils literal notranslate"><span class="pre">-x86-discriminate-memops</span></code> LLVM Flag.</p></li>
+<li><p>Support for profile-driven software cache prefetching on X86. This is part of
+a larger system, consisting of: an offline cache prefetches recommender,
+AutoFDO tooling, and LLVM. In this system, a binary compiled with
+<code class="docutils literal notranslate"><span class="pre">-x86-discriminate-memops</span></code> is run under the observation of the recommender.
+The recommender identifies certain memory access instructions by their binary
+file address, and recommends a prefetch of a specific type (NTA, T0, etc) be
+performed at a specified fixed offset from such an instruction's memory
+operand. Next, this information needs to be converted to the AutoFDO syntax
+and the resulting profile may be passed back to the compiler with the LLVM
+flag <code class="docutils literal notranslate"><span class="pre">-prefetch-hints-file</span></code>, together with the exact same set of
+compilation parameters used for the original binary. More information is
+available in the <a class="reference external" href="https://lists.llvm.org/pipermail/llvm-dev/2018-November/127461.html">RFC</a>.</p></li>
+<li><p>Windows support for libFuzzer (x86_64).</p></li>
+</ul>
+<section id="changes-to-the-llvm-ir">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Changes to the LLVM IR</a><a class="headerlink" href="#changes-to-the-llvm-ir" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Function attribute <code class="docutils literal notranslate"><span class="pre">speculative_load_hardening</span></code> has been introduced to
+allow indicating that <a class="reference external" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a> must be enabled for the function body.</p></li>
+</ul>
+</section>
+<section id="changes-to-the-jit-apis">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Changes to the JIT APIs</a><a class="headerlink" href="#changes-to-the-jit-apis" title="Link to this heading">¶</a></h3>
+<p>The ORC (On Request Compilation) JIT APIs have been updated to support
+concurrent compilation. The existing (non-concurrent) ORC layer classes and
+related APIs are deprecated, have been renamed with a &quot;Legacy&quot; prefix (e.g.
+LegacyIRCompileLayer). The deprecated clasess will be removed in LLVM 9.</p>
+<p>An example JIT stack using the concurrent ORC APIs, called LLJIT, has been
+added (see include/llvm/ExecutionEngine/Orc/LLJIT.h). The lli tool has been
+updated to use LLJIT.</p>
+<p>MCJIT and ExecutionEngine continue to be supported, though ORC should be
+preferred for new projects.</p>
+</section>
+<section id="changes-to-the-c-apis">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Changes to the C++ APIs</a><a class="headerlink" href="#changes-to-the-c-apis" title="Link to this heading">¶</a></h3>
+<p>Three of the IR library methods related to debugging information for
+functions and methods have changed their prototypes:</p>
+<blockquote>
+<div><p>DIBuilder::createMethod
+DIBuilder::createFunction
+DIBuilder::createTempFunctionFwdDecl</p>
+</div></blockquote>
+<p>In all cases, several individual parameters were removed, and replaced
+by a single 'SPFlags' (subprogram flags) parameter. The individual
+parameters are: 'isLocalToUnit'; 'isDefinition'; 'isOptimized'; and
+for 'createMethod', 'Virtuality'.  The new 'SPFlags' parameter has a
+default value equivalent to passing 'false' for the three 'bool'
+parameters, and zero (non-virtual) to the 'Virtuality' parameter.  For
+any old-style API call that passed 'true' or a non-zero virtuality to
+these methods, you will need to substitute the correct 'SPFlags' value.
+The helper method 'DISubprogram::toSPFlags()' might be useful in making
+this conversion.</p>
+</section>
+<section id="changes-to-the-aarch64-target">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Changes to the AArch64 Target</a><a class="headerlink" href="#changes-to-the-aarch64-target" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Support for Speculative Load Hardening has been added.</p></li>
+<li><p>Initial support for the Tiny code model, where code and its statically
+defined symbols must live within 1MB of each other.</p></li>
+<li><p>Added support for the <code class="docutils literal notranslate"><span class="pre">.arch_extension</span></code> assembler directive, just like
+on ARM.</p></li>
+</ul>
+</section>
+<section id="changes-to-the-hexagon-target">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Changes to the Hexagon Target</a><a class="headerlink" href="#changes-to-the-hexagon-target" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Added support for Hexagon/HVX V66 ISA.</p></li>
+</ul>
+</section>
+<section id="changes-to-the-mips-target">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Changes to the MIPS Target</a><a class="headerlink" href="#changes-to-the-mips-target" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Improved support of GlobalISel instruction selection framework.</p></li>
+<li><p>Implemented emission of <code class="docutils literal notranslate"><span class="pre">R_MIPS_JALR</span></code> and <code class="docutils literal notranslate"><span class="pre">R_MICROMIPS_JALR</span></code>
+relocations. These relocations provide hints to a linker for optimization
+of jumps to protected symbols.</p></li>
+<li><p>ORC JIT has been supported for MIPS and MIPS64 architectures.</p></li>
+<li><p>Assembler now suggests alternative MIPS instruction mnemonics when
+an invalid one is specified.</p></li>
+<li><p>Improved support for MIPS N32 ABI.</p></li>
+<li><p>Added new instructions (<code class="docutils literal notranslate"><span class="pre">pll.ps</span></code>, <code class="docutils literal notranslate"><span class="pre">plu.ps</span></code>, <code class="docutils literal notranslate"><span class="pre">cvt.s.pu</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cvt.s.pl</span></code>, <code class="docutils literal notranslate"><span class="pre">cvt.ps</span></code>, <code class="docutils literal notranslate"><span class="pre">sigrie</span></code>).</p></li>
+<li><p>Numerous bug fixes and code cleanups.</p></li>
+</ul>
+</section>
+<section id="changes-to-the-powerpc-target">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Changes to the PowerPC Target</a><a class="headerlink" href="#changes-to-the-powerpc-target" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Switched to non-PIC default</p></li>
+<li><p>Deprecated Darwin support</p></li>
+<li><p>Enabled Out-of-Order scheduling for P9</p></li>
+<li><p>Better overload rules for compatible vector type parameter</p></li>
+<li><p>Support constraint 'wi', modifier 'x' and VSX registers in inline asm</p></li>
+<li><p>More <code class="docutils literal notranslate"><span class="pre">__float128</span></code> support</p></li>
+<li><p>Added new builtins like vector int128 <code class="docutils literal notranslate"><span class="pre">pack</span></code>/<code class="docutils literal notranslate"><span class="pre">unpack</span></code> and
+<code class="docutils literal notranslate"><span class="pre">stxvw4x.be</span></code>/<code class="docutils literal notranslate"><span class="pre">stxvd2x.be</span></code></p></li>
+<li><p>Provided significant improvements to the automatic vectorizer</p></li>
+<li><p>Code-gen improvements (especially for Power9)</p></li>
+<li><p>Fixed some long-standing bugs in the back end</p></li>
+<li><p>Added experimental prologue/epilogue improvements</p></li>
+<li><p>Enabled builtins tests in compiler-rt</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">___fixunstfti</span></code>/<code class="docutils literal notranslate"><span class="pre">floattitf</span></code> in compiler-rt to support conversion
+between IBM double-double and unsigned int128</p></li>
+<li><p>Disable randomized address space when running the sanitizers on Linux ppc64le</p></li>
+<li><p>Completed support in LLD for ELFv2</p></li>
+<li><p>Enabled llvm-exegesis latency mode for PPC</p></li>
+</ul>
+</section>
+<section id="changes-to-the-systemz-target">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Changes to the SystemZ Target</a><a class="headerlink" href="#changes-to-the-systemz-target" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>A number of bugs related to C/C++ language vector extension support were
+fixed: the <code class="docutils literal notranslate"><span class="pre">-mzvector</span></code> option now actually enables the <code class="docutils literal notranslate"><span class="pre">__vector</span></code> and
+<code class="docutils literal notranslate"><span class="pre">__bool</span></code> keywords, the <code class="docutils literal notranslate"><span class="pre">vec_step</span></code> intrinsic now works, and the
+<code class="docutils literal notranslate"><span class="pre">vec_insert_and_zero</span></code> and <code class="docutils literal notranslate"><span class="pre">vec_orc</span></code> intrinsics now generate correct code.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">__float128</span></code> keyword, which had been accidentally enabled in some
+earlier releases, is now no longer supported.  On SystemZ, the <code class="docutils literal notranslate"><span class="pre">long</span> <span class="pre">double</span></code>
+data type itself already uses the IEEE 128-bit floating-point format.</p></li>
+<li><p>When the compiler inlines <code class="docutils literal notranslate"><span class="pre">strcmp</span></code> or <code class="docutils literal notranslate"><span class="pre">memcmp</span></code>, the generated code no
+longer returns <code class="docutils literal notranslate"><span class="pre">INT_MIN</span></code> as the negative result value under any
+circumstances.</p></li>
+<li><p>Various code-gen improvements, in particular related to improved
+auto-vectorization, inlining, and instruction scheduling.</p></li>
+</ul>
+</section>
+<section id="changes-to-the-x86-target">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Changes to the X86 Target</a><a class="headerlink" href="#changes-to-the-x86-target" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Machine model for AMD bdver2 (Piledriver) CPU was added. It is used to support
+instruction scheduling and other instruction cost heuristics.</p></li>
+<li><p>New AVX512F gather and scatter intrinsics were added that take a &lt;X x i1&gt; mask
+instead of a scalar integer. This removes the need for a bitcast in IR. The
+new intrinsics are named like the old intrinsics with <code class="docutils literal notranslate"><span class="pre">llvm.avx512.</span></code>
+replaced with <code class="docutils literal notranslate"><span class="pre">llvm.avx512.mask.</span></code>. The old intrinsics will be removed in a
+future release.</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">cascadelake</span></code> as a CPU name for -march. This is <code class="docutils literal notranslate"><span class="pre">skylake-avx512</span></code>
+with the addition of the <code class="docutils literal notranslate"><span class="pre">avx512vnni</span></code> instruction set.</p></li>
+<li><p>ADCX instruction will no longer be emitted. This instruction is rarely better
+than the legacy ADC instruction and just increased code size.</p></li>
+</ul>
+</section>
+<section id="changes-to-the-webassembly-target">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Changes to the WebAssembly Target</a><a class="headerlink" href="#changes-to-the-webassembly-target" title="Link to this heading">¶</a></h3>
+<p>The WebAssembly target is no longer &quot;experimental&quot;! It's now built by default,
+rather than needing to be enabled with LLVM_EXPERIMENTAL_TARGETS_TO_BUILD.</p>
+<p>The object file format and core C ABI are now considered stable. That said,
+the object file format has an ABI versioning capability, and one anticipated
+use for it will be to add support for returning small structs as multiple
+return values, once the underlying WebAssembly platform itself supports it.
+Additionally, multithreading support is not yet included in the stable ABI.</p>
+</section>
+<section id="changes-to-the-nios2-target">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Changes to the Nios2 Target</a><a class="headerlink" href="#changes-to-the-nios2-target" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>The Nios2 target was removed from this release.</p></li>
+</ul>
+</section>
+</section>
+<section id="changes-to-lldb">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">Changes to LLDB</a><a class="headerlink" href="#changes-to-lldb" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Printed source code is now syntax highlighted in the terminal (only for C
+languages).</p></li>
+<li><p>The expression command now supports tab completing expressions.</p></li>
+</ul>
+</section>
+<section id="external-open-source-projects-using-llvm-8">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">External Open Source Projects Using LLVM 8</a><a class="headerlink" href="#external-open-source-projects-using-llvm-8" title="Link to this heading">¶</a></h2>
+<section id="ldc-the-llvm-based-d-compiler">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">LDC - the LLVM-based D compiler</a><a class="headerlink" href="#ldc-the-llvm-based-d-compiler" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="http://dlang.org">D</a> is a language with C-like syntax and static typing. It
+pragmatically combines efficiency, control, and modeling power, with safety and
+programmer productivity. D supports powerful concepts like Compile-Time Function
+Execution (CTFE) and Template Meta-Programming, provides an innovative approach
+to concurrency and offers many classical paradigms.</p>
+<p><a class="reference external" href="http://wiki.dlang.org/LDC">LDC</a> uses the frontend from the reference compiler
+combined with LLVM as backend to produce efficient native code. LDC targets
+x86/x86_64 systems like Linux, OS X, FreeBSD and Windows and also Linux on ARM
+and PowerPC (32/64 bit). Ports to other architectures like AArch64 and MIPS64
+are underway.</p>
+</section>
+<section id="open-dylan-compiler">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Open Dylan Compiler</a><a class="headerlink" href="#open-dylan-compiler" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://opendylan.org/">Dylan</a> is a multi-paradigm functional
+and object-oriented programming language.  It is dynamic while
+providing a programming model designed to support efficient machine
+code generation, including fine-grained control over dynamic and
+static behavior. Dylan also features a powerful macro facility for
+expressive metaprogramming.</p>
+<p>The Open Dylan compiler can use LLVM as one of its code-generating
+back-ends, including full support for debug info generation. (Open
+Dylan generates LLVM bitcode directly using a native Dylan IR and
+bitcode library.) Development of a Dylan debugger and interactive REPL
+making use of the LLDB libraries is in progress.</p>
+</section>
+<section id="zig-programming-language">
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Zig Programming Language</a><a class="headerlink" href="#zig-programming-language" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://ziglang.org">Zig</a>  is a system programming language intended to be
+an alternative to C. It provides high level features such as generics, compile
+time function execution, and partial evaluation, while exposing low level LLVM
+IR features such as aliases and intrinsics. Zig uses Clang to provide automatic
+import of .h symbols, including inline functions and simple macros. Zig uses
+LLD combined with lazily building compiler-rt to provide out-of-the-box
+cross-compiling for all supported targets.</p>
+</section>
+</section>
+<section id="additional-information">
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Additional Information</a><a class="headerlink" href="#additional-information" title="Link to this heading">¶</a></h2>
+<p>A wide variety of additional information is available on the <a class="reference external" href="https://llvm.org/">LLVM web page</a>, in particular in the <a class="reference external" href="https://llvm.org/docs/">documentation</a> section.  The web page also contains versions of the
+API documentation which is up-to-date with the Subversion version of the source
+code.  You can access versions of these documents specific to this release by
+going into the <code class="docutils literal notranslate"><span class="pre">llvm/docs/</span></code> directory in the LLVM tree.</p>
+<p>If you have any questions or comments about LLVM, please feel free to contact
+us via the <a class="reference external" href="https://llvm.org/docs/#mailing-lists">mailing lists</a>.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="总索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="Passes.html" title="LLVM&#39;s Analysis and Transform Passes"
+             >下一页</a> |</li>
+        <li class="right" >
+          <a href="tutorial/BuildingAJIT5.html" title="5. Building a JIT: Remote-JITing -- Process Isolation and Laziness at a Distance"
+             >上一页</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">LLVM 8.0.0 Release Notes</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; 版权所有 2003-2025, LLVM Project.
+      最后更新于 2025-11-11.
+      由 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3创建。
+    </div>
+  </body>
+</html>

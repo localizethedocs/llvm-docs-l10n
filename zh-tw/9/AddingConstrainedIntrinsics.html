@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>How To Add A Constrained Floating-Point Intrinsic &#8212; LLVM 9 說明文件</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/llvm-theme.css?v=4c4af0c1" />
+    <script src="_static/documentation_options.js?v=9e9749be"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/translations.js?v=cbf116e0"></script>
+    <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/AddingConstrainedIntrinsics.html" />
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜尋" href="search.html" />
+    <link rel="next" title="LLVM Link Time Optimization: Design and Implementation" href="LinkTimeOptimization.html" />
+    <link rel="prev" title="Exception Handling in LLVM" href="ExceptionHandling.html" />
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+
+  </head><body>
+<div class="logo">
+  <a href="index.html">
+    <img src="_static/logo.png"
+         alt="LLVM Logo" width="250" height="88"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="LinkTimeOptimization.html" title="LLVM Link Time Optimization: Design and Implementation"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="ExceptionHandling.html" title="Exception Handling in LLVM"
+             accesskey="P">上一頁</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">How To Add A Constrained Floating-Point Intrinsic</a></li> 
+      </ul>
+    </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <section id="how-to-add-a-constrained-floating-point-intrinsic">
+<h1>How To Add A Constrained Floating-Point Intrinsic<a class="headerlink" href="#how-to-add-a-constrained-floating-point-intrinsic" title="連結到這個標頭">¶</a></h1>
+<nav class="contents local" id="id1">
+<ul class="simple">
+<li><p><a class="reference internal" href="#add-the-intrinsic" id="id2">Add the intrinsic</a></p></li>
+<li><p><a class="reference internal" href="#add-selectiondag-node-types" id="id3">Add SelectionDAG node types</a></p>
+<ul>
+<li><p><a class="reference internal" href="#building-the-selectiondag" id="id4">Building the SelectionDAG</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#add-documentation-and-tests" id="id5">Add documentation and tests</a></p></li>
+</ul>
+</nav>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>This is a work in progress.</p>
+</div>
+<section id="add-the-intrinsic">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Add the intrinsic</a><a class="headerlink" href="#add-the-intrinsic" title="連結到這個標頭">¶</a></h2>
+<p>Multiple files need to be updated when adding a new constrained intrinsic.</p>
+<p>Add the new intrinsic to the table of intrinsics.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">include</span><span class="o">/</span><span class="n">llvm</span><span class="o">/</span><span class="n">IR</span><span class="o">/</span><span class="n">Intrinsics</span><span class="o">.</span><span class="n">td</span>
+</pre></div>
+</div>
+<p>Update class ConstrainedFPIntrinsic to know about the intrinsics.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">include</span><span class="o">/</span><span class="n">llvm</span><span class="o">/</span><span class="n">IR</span><span class="o">/</span><span class="n">IntrinsicInst</span><span class="o">.</span><span class="n">h</span>
+</pre></div>
+</div>
+<p>Functions like ConstrainedFPIntrinsic::isUnaryOp() or
+ConstrainedFPIntrinsic::isTernaryOp() may need to know about the new
+intrinsic.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span><span class="o">/</span><span class="n">IR</span><span class="o">/</span><span class="n">IntrinsicInst</span><span class="o">.</span><span class="n">cpp</span>
+</pre></div>
+</div>
+<p>Update the IR verifier:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span><span class="o">/</span><span class="n">IR</span><span class="o">/</span><span class="n">Verifier</span><span class="o">.</span><span class="n">cpp</span>
+</pre></div>
+</div>
+</section>
+<section id="add-selectiondag-node-types">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Add SelectionDAG node types</a><a class="headerlink" href="#add-selectiondag-node-types" title="連結到這個標頭">¶</a></h2>
+<p>Add the new STRICT version of the node type to the ISD::NodeType enum.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">include</span><span class="o">/</span><span class="n">llvm</span><span class="o">/</span><span class="n">CodeGen</span><span class="o">/</span><span class="n">ISDOpcodes</span><span class="o">.</span><span class="n">h</span>
+</pre></div>
+</div>
+<p>In class SDNode update isStrictFPOpcode():</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">include</span><span class="o">/</span><span class="n">llvm</span><span class="o">/</span><span class="n">CodeGen</span><span class="o">/</span><span class="n">SelectionDAGNodes</span><span class="o">.</span><span class="n">h</span>
+</pre></div>
+</div>
+<p>A mapping from the STRICT SDnode type to the non-STRICT is done in
+TargetLoweringBase::getStrictFPOperationAction(). This allows STRICT
+nodes to be legalized similarly to the non-STRICT node type.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">include</span><span class="o">/</span><span class="n">llvm</span><span class="o">/</span><span class="n">CodeGen</span><span class="o">/</span><span class="n">TargetLowering</span><span class="o">.</span><span class="n">h</span>
+</pre></div>
+</div>
+<section id="building-the-selectiondag">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Building the SelectionDAG</a><a class="headerlink" href="#building-the-selectiondag" title="連結到這個標頭">¶</a></h3>
+<p>The switch statement in SelectionDAGBuilder::visitIntrinsicCall() needs
+to be updated to call SelectionDAGBuilder::visitConstrainedFPIntrinsic().
+That function, in turn, needs to be updated to know how to create the
+SDNode for the intrinsic. The new STRICT node will eventually be converted
+to the matching non-STRICT node. For this reason it should have the same
+operands and values as the non-STRICT version but should also use the chain.
+This makes subsequent sharing of code for STRICT and non-STRICT code paths
+easier.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span><span class="o">/</span><span class="n">CodeGen</span><span class="o">/</span><span class="n">SelectionDAG</span><span class="o">/</span><span class="n">SelectionDAGBuilder</span><span class="o">.</span><span class="n">cpp</span>
+</pre></div>
+</div>
+<p>Most of the STRICT nodes get legalized the same as their matching non-STRICT
+counterparts. A new STRICT node with this property must get added to the
+switch in SelectionDAGLegalize::LegalizeOp().:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span><span class="o">/</span><span class="n">CodeGen</span><span class="o">/</span><span class="n">SelectionDAG</span><span class="o">/</span><span class="n">LegalizeDAG</span><span class="o">.</span><span class="n">cpp</span>
+</pre></div>
+</div>
+<p>Other parts of the legalizer may need to be updated as well. Look for
+places where the non-STRICT counterpart is legalized and update as needed.
+Be careful of the chain since STRICT nodes use it but their counterparts
+often don't.</p>
+<p>The code to do the conversion or mutation of the STRICT node to a non-STRICT
+version of the node happens in SelectionDAG::mutateStrictFPToFP(). Be
+careful updating this function since some nodes have the same return type
+as their input operand, but some are different. Both of these cases must
+be properly handled.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span><span class="o">/</span><span class="n">CodeGen</span><span class="o">/</span><span class="n">SelectionDAG</span><span class="o">/</span><span class="n">SelectionDAG</span><span class="o">.</span><span class="n">cpp</span>
+</pre></div>
+</div>
+<p>However, the mutation may not happen if the new node has not been registered
+in TargetLoweringBase::initActions(). If the corresponding non-STRICT node
+is Legal but a target does not know about STRICT nodes then the STRICT
+node will default to Legal and mutation will be bypassed with a &quot;Cannot
+select&quot; error. Register the new STRICT node as Expand to avoid this bug.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span><span class="o">/</span><span class="n">CodeGen</span><span class="o">/</span><span class="n">TargetLoweringBase</span><span class="o">.</span><span class="n">cpp</span>
+</pre></div>
+</div>
+<p>To make debug logs readable it is helpful to update the SelectionDAG's
+debug logger::</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span><span class="o">/</span><span class="n">CodeGen</span><span class="o">/</span><span class="n">SelectionDAG</span><span class="o">/</span><span class="n">SelectionDAGDumper</span><span class="o">.</span><span class="n">cpp</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="add-documentation-and-tests">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Add documentation and tests</a><a class="headerlink" href="#add-documentation-and-tests" title="連結到這個標頭">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docs</span><span class="o">/</span><span class="n">LangRef</span><span class="o">.</span><span class="n">rst</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="LinkTimeOptimization.html" title="LLVM Link Time Optimization: Design and Implementation"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="ExceptionHandling.html" title="Exception Handling in LLVM"
+             >上一頁</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="index.html">Documentation</a>&raquo;</li>
+
+        <li class="nav-item nav-item-this"><a href="">How To Add A Constrained Floating-Point Intrinsic</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; 版權所有 2003-2025, LLVM Project.
+      最後更新於 2025-11-11。
+      使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3 建立。
+    </div>
+  </body>
+</html>

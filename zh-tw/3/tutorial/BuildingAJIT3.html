@@ -1,0 +1,391 @@
+
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>3. Building a JIT: Per-function Lazy Compilation &#8212; LLVM 3.9 說明文件</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/llvm-theme.css?v=4c4af0c1" />
+    <script src="../_static/documentation_options.js?v=e0098335"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/tutorial/BuildingAJIT3.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="next" title="4. Building a JIT: Extreme Laziness - Using Compile Callbacks to JIT from ASTs" href="BuildingAJIT4.html" />
+    <link rel="prev" title="2. Building a JIT: Adding Optimizations -- An introduction to ORC Layers" href="BuildingAJIT2.html" />
+<script type="text/javascript" src="../ltd-provenance.js"></script>
+<script type="text/javascript" src="../ltd-current.js"></script>
+<script type="text/javascript" src="../../../ltd-config.js"></script>
+<script type="text/javascript" src="../../../ltd-flyout.js"></script>
+
+  </head><body>
+<div class="logo">
+  <a href="../index.html">
+    <img src="../_static/logo.png"
+         alt="LLVM Logo" width="250" height="88"/></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="BuildingAJIT4.html" title="4. Building a JIT: Extreme Laziness - Using Compile Callbacks to JIT from ASTs"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="BuildingAJIT2.html" title="2. Building a JIT: Adding Optimizations -- An introduction to ORC Layers"
+             accesskey="P">上一頁</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="../index.html">Documentation</a>&raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">LLVM Tutorial: Table of Contents</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">3. </span>Building a JIT: Per-function Lazy Compilation</a></li> 
+      </ul>
+    </div>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <section id="building-a-jit-per-function-lazy-compilation">
+<h1><span class="section-number">3. </span>Building a JIT: Per-function Lazy Compilation<a class="headerlink" href="#building-a-jit-per-function-lazy-compilation" title="連結到這個標頭">¶</a></h1>
+<nav class="contents local" id="id1">
+<ul class="simple">
+<li><p><a class="reference internal" href="#chapter-3-introduction" id="id2">Chapter 3 Introduction</a></p></li>
+<li><p><a class="reference internal" href="#lazy-compilation" id="id3">Lazy Compilation</a></p></li>
+<li><p><a class="reference internal" href="#full-code-listing" id="id4">Full Code Listing</a></p></li>
+</ul>
+</nav>
+<p><strong>This tutorial is under active development. It is incomplete and details may
+change frequently.</strong> Nonetheless we invite you to try it out as it stands, and
+we welcome any feedback.</p>
+<section id="chapter-3-introduction">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink"><span class="section-number">3.1. </span>Chapter 3 Introduction</a><a class="headerlink" href="#chapter-3-introduction" title="連結到這個標頭">¶</a></h2>
+<p>Welcome to Chapter 3 of the &quot;Building an ORC-based JIT in LLVM&quot; tutorial. This
+chapter discusses lazy JITing and shows you how to enable it by adding an ORC
+CompileOnDemand layer the JIT from <a class="reference external" href="BuildingAJIT2.html">Chapter 2</a>.</p>
+</section>
+<section id="lazy-compilation">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink"><span class="section-number">3.2. </span>Lazy Compilation</a><a class="headerlink" href="#lazy-compilation" title="連結到這個標頭">¶</a></h2>
+<p>When we add a module to the KaleidoscopeJIT class described in Chapter 2 it is
+immediately optimized, compiled and linked for us by the IRTransformLayer,
+IRCompileLayer and ObjectLinkingLayer respectively. This scheme, where all the
+work to make a Module executable is done up front, is relatively simple to
+understand its performance characteristics are easy to reason about. However,
+it will lead to very high startup times if the amount of code to be compiled is
+large, and may also do a lot of unnecessary compilation if only a few compiled
+functions are ever called at runtime. A truly &quot;just-in-time&quot; compiler should
+allow us to defer the compilation of any given function until the moment that
+function is first called, improving launch times and eliminating redundant work.
+In fact, the ORC APIs provide us with a layer to lazily compile LLVM IR:
+<em>CompileOnDemandLayer</em>.</p>
+<p>The CompileOnDemandLayer conforms to the layer interface described in Chapter 2,
+but the addModuleSet method behaves quite differently from the layers we have
+seen so far: rather than doing any work up front, it just constructs a <em>stub</em>
+for each function in the module and arranges for the stub to trigger compilation
+of the actual function the first time it is called. Because stub functions are
+very cheap to produce CompileOnDemand's addModuleSet method runs very quickly,
+reducing the time required to launch the first function to be executed, and
+saving us from doing any redundant compilation. By conforming to the layer
+interface, CompileOnDemand can be easily added on top of our existing JIT class.
+We just need a few changes:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="p">...</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/SectionMemoryManager.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/Orc/CompileOnDemandLayer.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/Orc/CompileUtils.h&quot;</span>
+<span class="p">...</span>
+
+<span class="p">...</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">KaleidoscopeJIT</span><span class="w"> </span><span class="p">{</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">TargetMachine</span><span class="o">&gt;</span><span class="w"> </span><span class="n">TM</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">DataLayout</span><span class="w"> </span><span class="n">DL</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">JITCompileCallbackManager</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CompileCallbackManager</span><span class="p">;</span>
+<span class="w">  </span><span class="n">ObjectLinkingLayer</span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">ObjectLayer</span><span class="p">;</span>
+<span class="w">  </span><span class="n">IRCompileLayer</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">ObjectLayer</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CompileLayer</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">typedef</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="p">)</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="n">OptimizeFunction</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">IRTransformLayer</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">CompileLayer</span><span class="p">),</span><span class="w"> </span><span class="n">OptimizeFunction</span><span class="o">&gt;</span><span class="w"> </span><span class="n">OptimizeLayer</span><span class="p">;</span>
+<span class="w">  </span><span class="n">CompileOnDemandLayer</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">OptimizeLayer</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CODLayer</span><span class="p">;</span>
+
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="k">typedef</span><span class="w"> </span><span class="k">decltype</span><span class="p">(</span><span class="n">CODLayer</span><span class="p">)</span><span class="o">::</span><span class="n">ModuleSetHandleT</span><span class="w"> </span><span class="n">ModuleHandle</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>First we need to include the CompileOnDemandLayer.h header, then add two new
+members: a std::unique_ptr&lt;CompileCallbackManager&gt; and a CompileOnDemandLayer,
+to our class. The CompileCallbackManager is a utility that enables us to
+create re-entry points into the compiler for functions that we want to lazily
+compile. In the next chapter we'll be looking at this class in detail, but for
+now we'll be treating it as an opaque utility: We just need to pass a reference
+to it into our new CompileOnDemandLayer, and the layer will do all the work of
+setting up the callbacks using the callback manager we gave it.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">KaleidoscopeJIT</span><span class="p">()</span>
+<span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="n">TM</span><span class="p">(</span><span class="n">EngineBuilder</span><span class="p">().</span><span class="n">selectTarget</span><span class="p">()),</span><span class="w"> </span><span class="n">DL</span><span class="p">(</span><span class="n">TM</span><span class="o">-&gt;</span><span class="n">createDataLayout</span><span class="p">()),</span>
+<span class="w">      </span><span class="n">CompileLayer</span><span class="p">(</span><span class="n">ObjectLayer</span><span class="p">,</span><span class="w"> </span><span class="n">SimpleCompiler</span><span class="p">(</span><span class="o">*</span><span class="n">TM</span><span class="p">)),</span>
+<span class="w">      </span><span class="n">OptimizeLayer</span><span class="p">(</span><span class="n">CompileLayer</span><span class="p">,</span>
+<span class="w">                    </span><span class="p">[</span><span class="k">this</span><span class="p">](</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="w"> </span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                      </span><span class="k">return</span><span class="w"> </span><span class="n">optimizeModule</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">M</span><span class="p">));</span>
+<span class="w">                    </span><span class="p">}),</span>
+<span class="w">      </span><span class="n">CompileCallbackManager</span><span class="p">(</span>
+<span class="w">          </span><span class="n">orc</span><span class="o">::</span><span class="n">createLocalCompileCallbackManager</span><span class="p">(</span><span class="n">TM</span><span class="o">-&gt;</span><span class="n">getTargetTriple</span><span class="p">(),</span><span class="w"> </span><span class="mi">0</span><span class="p">)),</span>
+<span class="w">      </span><span class="n">CODLayer</span><span class="p">(</span><span class="n">OptimizeLayer</span><span class="p">,</span>
+<span class="w">               </span><span class="p">[</span><span class="k">this</span><span class="p">](</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">F</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">set</span><span class="o">&lt;</span><span class="n">Function</span><span class="o">*&gt;</span><span class="p">({</span><span class="o">&amp;</span><span class="n">F</span><span class="p">});</span><span class="w"> </span><span class="p">},</span>
+<span class="w">               </span><span class="o">*</span><span class="n">CompileCallbackManager</span><span class="p">,</span>
+<span class="w">               </span><span class="n">orc</span><span class="o">::</span><span class="n">createLocalIndirectStubsManagerBuilder</span><span class="p">(</span>
+<span class="w">                 </span><span class="n">TM</span><span class="o">-&gt;</span><span class="n">getTargetTriple</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">llvm</span><span class="o">::</span><span class="n">sys</span><span class="o">::</span><span class="n">DynamicLibrary</span><span class="o">::</span><span class="n">LoadLibraryPermanently</span><span class="p">(</span><span class="k">nullptr</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Next we have to update our constructor to initialize the new members. To create
+an appropriate compile callback manager we use the
+createLocalCompileCallbackManager function, which takes a TargetMachine and a
+TargetAddress to call if it receives a request to compile an unknown function.
+In our simple JIT this situation is unlikely to come up, so we'll cheat and
+just pass '0' here. In a production quality JIT you could give the address of a
+function that throws an exception in order to unwind the JIT'd code stack.</p>
+<p>Now we can construct our CompileOnDemandLayer. Following the pattern from
+previous layers we start by passing a reference to the next layer down in our
+stack -- the OptimizeLayer. Next we need to supply a 'partitioning function':
+when a not-yet-compiled function is called, the CompileOnDemandLayer will call
+this function to ask us what we would like to compile. At a minimum we need to
+compile the function being called (given by the argument to the partitioning
+function), but we could also request that the CompileOnDemandLayer compile other
+functions that are unconditionally called (or highly likely to be called) from
+the function being called. For KaleidoscopeJIT we'll keep it simple and just
+request compilation of the function that was called. Next we pass a reference to
+our CompileCallbackManager. Finally, we need to supply an &quot;indirect stubs
+manager builder&quot;. This is a function that constructs IndirectStubManagers, which
+are in turn used to build the stubs for each module. The CompileOnDemandLayer
+will call the indirect stub manager builder once for each call to addModuleSet,
+and use the resulting indirect stubs manager to create stubs for all functions
+in all modules added. If/when the module set is removed from the JIT the
+indirect stubs manager will be deleted, freeing any memory allocated to the
+stubs. We supply this function by using the
+createLocalIndirectStubsManagerBuilder utility.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">Sym</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CODLayer</span><span class="p">.</span><span class="n">findSymbol</span><span class="p">(</span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">))</span>
+<span class="c1">// ...</span>
+<span class="k">return</span><span class="w"> </span><span class="n">CODLayer</span><span class="p">.</span><span class="n">addModuleSet</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">Ms</span><span class="p">),</span>
+<span class="w">                             </span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">SectionMemoryManager</span><span class="o">&gt;</span><span class="p">(),</span>
+<span class="w">                             </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">Resolver</span><span class="p">));</span>
+<span class="c1">// ...</span>
+
+<span class="c1">// ...</span>
+<span class="k">return</span><span class="w"> </span><span class="n">CODLayer</span><span class="p">.</span><span class="n">findSymbol</span><span class="p">(</span><span class="n">MangledNameStream</span><span class="p">.</span><span class="n">str</span><span class="p">(),</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="c1">// ...</span>
+
+<span class="c1">// ...</span>
+<span class="n">CODLayer</span><span class="p">.</span><span class="n">removeModuleSet</span><span class="p">(</span><span class="n">H</span><span class="p">);</span>
+<span class="c1">// ...</span>
+</pre></div>
+</div>
+<p>Finally, we need to replace the references to OptimizeLayer in our addModule,
+findSymbol, and removeModule methods. With that, we're up and running.</p>
+<p><strong>To be done:</strong></p>
+<p>** Discuss CompileCallbackManagers and IndirectStubManagers in more detail.**</p>
+</section>
+<section id="full-code-listing">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink"><span class="section-number">3.3. </span>Full Code Listing</a><a class="headerlink" href="#full-code-listing" title="連結到這個標頭">¶</a></h2>
+<p>Here is the complete code listing for our running example with a CompileOnDemand
+layer added to enable lazy function-at-a-time compilation. To build this example, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compile</span>
+clang++<span class="w"> </span>-g<span class="w"> </span>toy.cpp<span class="w"> </span><span class="sb">`</span>llvm-config<span class="w"> </span>--cxxflags<span class="w"> </span>--ldflags<span class="w"> </span>--system-libs<span class="w"> </span>--libs<span class="w"> </span>core<span class="w"> </span>orc<span class="w"> </span>native<span class="sb">`</span><span class="w"> </span>-O3<span class="w"> </span>-o<span class="w"> </span>toy
+<span class="c1"># Run</span>
+./toy
+</pre></div>
+</div>
+<p>Here is the code:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">//===----- KaleidoscopeJIT.h - A simple JIT for Kaleidoscope ----*- C++ -*-===//</span>
+<span class="c1">//</span>
+<span class="c1">//                     The LLVM Compiler Infrastructure</span>
+<span class="c1">//</span>
+<span class="c1">// This file is distributed under the University of Illinois Open Source</span>
+<span class="c1">// License. See LICENSE.TXT for details.</span>
+<span class="c1">//</span>
+<span class="c1">//===----------------------------------------------------------------------===//</span>
+<span class="c1">//</span>
+<span class="c1">// Contains a simple JIT definition for use in the kaleidoscope tutorials.</span>
+<span class="c1">//</span>
+<span class="c1">//===----------------------------------------------------------------------===//</span>
+
+<span class="cp">#ifndef LLVM_EXECUTIONENGINE_ORC_KALEIDOSCOPEJIT_H</span>
+<span class="cp">#define LLVM_EXECUTIONENGINE_ORC_KALEIDOSCOPEJIT_H</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ADT/STLExtras.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/ExecutionEngine.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/RuntimeDyld.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/SectionMemoryManager.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/Orc/CompileOnDemandLayer.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/Orc/CompileUtils.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/Orc/JITSymbol.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/Orc/IRCompileLayer.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/Orc/IRTransformLayer.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/Orc/LambdaResolver.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/IR/DataLayout.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/IR/Mangler.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/Support/DynamicLibrary.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/Support/raw_ostream.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/Target/TargetMachine.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;memory&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;vector&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">llvm</span><span class="w"> </span><span class="p">{</span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">orc</span><span class="w"> </span><span class="p">{</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">KaleidoscopeJIT</span><span class="w"> </span><span class="p">{</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">TargetMachine</span><span class="o">&gt;</span><span class="w"> </span><span class="n">TM</span><span class="p">;</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">DataLayout</span><span class="w"> </span><span class="n">DL</span><span class="p">;</span>
+<span class="w">  </span><span class="n">ObjectLinkingLayer</span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">ObjectLayer</span><span class="p">;</span>
+<span class="w">  </span><span class="n">IRCompileLayer</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">ObjectLayer</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CompileLayer</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">typedef</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="p">)</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="n">OptimizeFunction</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">IRTransformLayer</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">CompileLayer</span><span class="p">),</span><span class="w"> </span><span class="n">OptimizeFunction</span><span class="o">&gt;</span><span class="w"> </span><span class="n">OptimizeLayer</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">JITCompileCallbackManager</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CompileCallbackManager</span><span class="p">;</span>
+<span class="w">  </span><span class="n">CompileOnDemandLayer</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">OptimizeLayer</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CODLayer</span><span class="p">;</span>
+
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="k">typedef</span><span class="w"> </span><span class="k">decltype</span><span class="p">(</span><span class="n">CODLayer</span><span class="p">)</span><span class="o">::</span><span class="n">ModuleSetHandleT</span><span class="w"> </span><span class="n">ModuleHandle</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">KaleidoscopeJIT</span><span class="p">()</span>
+<span class="w">      </span><span class="o">:</span><span class="w"> </span><span class="n">TM</span><span class="p">(</span><span class="n">EngineBuilder</span><span class="p">().</span><span class="n">selectTarget</span><span class="p">()),</span><span class="w"> </span><span class="n">DL</span><span class="p">(</span><span class="n">TM</span><span class="o">-&gt;</span><span class="n">createDataLayout</span><span class="p">()),</span>
+<span class="w">        </span><span class="n">CompileLayer</span><span class="p">(</span><span class="n">ObjectLayer</span><span class="p">,</span><span class="w"> </span><span class="n">SimpleCompiler</span><span class="p">(</span><span class="o">*</span><span class="n">TM</span><span class="p">)),</span>
+<span class="w">        </span><span class="n">OptimizeLayer</span><span class="p">(</span><span class="n">CompileLayer</span><span class="p">,</span>
+<span class="w">                      </span><span class="p">[</span><span class="k">this</span><span class="p">](</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="w"> </span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                        </span><span class="k">return</span><span class="w"> </span><span class="n">optimizeModule</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">M</span><span class="p">));</span>
+<span class="w">                      </span><span class="p">}),</span>
+<span class="w">        </span><span class="n">CompileCallbackManager</span><span class="p">(</span>
+<span class="w">            </span><span class="n">orc</span><span class="o">::</span><span class="n">createLocalCompileCallbackManager</span><span class="p">(</span><span class="n">TM</span><span class="o">-&gt;</span><span class="n">getTargetTriple</span><span class="p">(),</span><span class="w"> </span><span class="mi">0</span><span class="p">)),</span>
+<span class="w">        </span><span class="n">CODLayer</span><span class="p">(</span><span class="n">OptimizeLayer</span><span class="p">,</span>
+<span class="w">                 </span><span class="p">[</span><span class="k">this</span><span class="p">](</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">F</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">set</span><span class="o">&lt;</span><span class="n">Function</span><span class="o">*&gt;</span><span class="p">({</span><span class="o">&amp;</span><span class="n">F</span><span class="p">});</span><span class="w"> </span><span class="p">},</span>
+<span class="w">                 </span><span class="o">*</span><span class="n">CompileCallbackManager</span><span class="p">,</span>
+<span class="w">                 </span><span class="n">orc</span><span class="o">::</span><span class="n">createLocalIndirectStubsManagerBuilder</span><span class="p">(</span>
+<span class="w">                   </span><span class="n">TM</span><span class="o">-&gt;</span><span class="n">getTargetTriple</span><span class="p">()))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">llvm</span><span class="o">::</span><span class="n">sys</span><span class="o">::</span><span class="n">DynamicLibrary</span><span class="o">::</span><span class="n">LoadLibraryPermanently</span><span class="p">(</span><span class="k">nullptr</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">TargetMachine</span><span class="w"> </span><span class="o">&amp;</span><span class="n">getTargetMachine</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="n">TM</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">ModuleHandle</span><span class="w"> </span><span class="n">addModule</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="w"> </span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Build our symbol resolver:</span>
+<span class="w">    </span><span class="c1">// Lambda 1: Look back into the JIT itself to find symbols that are part of</span>
+<span class="w">    </span><span class="c1">//           the same &quot;logical dylib&quot;.</span>
+<span class="w">    </span><span class="c1">// Lambda 2: Search for external symbols in the host process.</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">Resolver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">createLambdaResolver</span><span class="p">(</span>
+<span class="w">        </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">Sym</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CODLayer</span><span class="p">.</span><span class="n">findSymbol</span><span class="p">(</span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">))</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">Sym</span><span class="p">.</span><span class="n">toRuntimeDyldSymbol</span><span class="p">();</span>
+<span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="n">RuntimeDyld</span><span class="o">::</span><span class="n">SymbolInfo</span><span class="p">(</span><span class="k">nullptr</span><span class="p">);</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">SymAddr</span><span class="w"> </span><span class="o">=</span>
+<span class="w">                </span><span class="n">RTDyldMemoryManager</span><span class="o">::</span><span class="n">getSymbolAddressInProcess</span><span class="p">(</span><span class="n">Name</span><span class="p">))</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">RuntimeDyld</span><span class="o">::</span><span class="n">SymbolInfo</span><span class="p">(</span><span class="n">SymAddr</span><span class="p">,</span><span class="w"> </span><span class="n">JITSymbolFlags</span><span class="o">::</span><span class="n">Exported</span><span class="p">);</span>
+<span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="n">RuntimeDyld</span><span class="o">::</span><span class="n">SymbolInfo</span><span class="p">(</span><span class="k">nullptr</span><span class="p">);</span>
+<span class="w">        </span><span class="p">});</span>
+
+<span class="w">    </span><span class="c1">// Build a singlton module set to hold our module.</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">Ms</span><span class="p">;</span>
+<span class="w">    </span><span class="n">Ms</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">M</span><span class="p">));</span>
+
+<span class="w">    </span><span class="c1">// Add the set to the JIT with the resolver we created above and a newly</span>
+<span class="w">    </span><span class="c1">// created SectionMemoryManager.</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">CODLayer</span><span class="p">.</span><span class="n">addModuleSet</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">Ms</span><span class="p">),</span>
+<span class="w">                                 </span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">SectionMemoryManager</span><span class="o">&gt;</span><span class="p">(),</span>
+<span class="w">                                 </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">Resolver</span><span class="p">));</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">JITSymbol</span><span class="w"> </span><span class="n">findSymbol</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">Name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">MangledName</span><span class="p">;</span>
+<span class="w">    </span><span class="n">raw_string_ostream</span><span class="w"> </span><span class="nf">MangledNameStream</span><span class="p">(</span><span class="n">MangledName</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Mangler</span><span class="o">::</span><span class="n">getNameWithPrefix</span><span class="p">(</span><span class="n">MangledNameStream</span><span class="p">,</span><span class="w"> </span><span class="n">Name</span><span class="p">,</span><span class="w"> </span><span class="n">DL</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">CODLayer</span><span class="p">.</span><span class="n">findSymbol</span><span class="p">(</span><span class="n">MangledNameStream</span><span class="p">.</span><span class="n">str</span><span class="p">(),</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">removeModule</span><span class="p">(</span><span class="n">ModuleHandle</span><span class="w"> </span><span class="n">H</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">CODLayer</span><span class="p">.</span><span class="n">removeModuleSet</span><span class="p">(</span><span class="n">H</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="k">private</span><span class="o">:</span>
+
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="w"> </span><span class="n">optimizeModule</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="w"> </span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Create a function pass manager.</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">FPM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">llvm</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">legacy</span><span class="o">::</span><span class="n">FunctionPassManager</span><span class="o">&gt;</span><span class="p">(</span><span class="n">M</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+
+<span class="w">    </span><span class="c1">// Add some optimizations.</span>
+<span class="w">    </span><span class="n">FPM</span><span class="o">-&gt;</span><span class="n">add</span><span class="p">(</span><span class="n">createInstructionCombiningPass</span><span class="p">());</span>
+<span class="w">    </span><span class="n">FPM</span><span class="o">-&gt;</span><span class="n">add</span><span class="p">(</span><span class="n">createReassociatePass</span><span class="p">());</span>
+<span class="w">    </span><span class="n">FPM</span><span class="o">-&gt;</span><span class="n">add</span><span class="p">(</span><span class="n">createGVNPass</span><span class="p">());</span>
+<span class="w">    </span><span class="n">FPM</span><span class="o">-&gt;</span><span class="n">add</span><span class="p">(</span><span class="n">createCFGSimplificationPass</span><span class="p">());</span>
+<span class="w">    </span><span class="n">FPM</span><span class="o">-&gt;</span><span class="n">doInitialization</span><span class="p">();</span>
+
+<span class="w">    </span><span class="c1">// Run the optimizations over all functions in the module being added to</span>
+<span class="w">    </span><span class="c1">// the JIT.</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">F</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="o">*</span><span class="n">M</span><span class="p">)</span>
+<span class="w">      </span><span class="n">FPM</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">(</span><span class="n">F</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">M</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="p">};</span>
+
+<span class="p">}</span><span class="w"> </span><span class="c1">// end namespace orc</span>
+<span class="p">}</span><span class="w"> </span><span class="c1">// end namespace llvm</span>
+
+<span class="cp">#endif </span><span class="c1">// LLVM_EXECUTIONENGINE_ORC_KALEIDOSCOPEJIT_H</span>
+</pre></div>
+</div>
+<p><a class="reference external" href="BuildingAJIT4.html">Next: Extreme Laziness -- Using Compile Callbacks to JIT directly from ASTs</a></p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="BuildingAJIT4.html" title="4. Building a JIT: Extreme Laziness - Using Compile Callbacks to JIT from ASTs"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="BuildingAJIT2.html" title="2. Building a JIT: Adding Optimizations -- An introduction to ORC Layers"
+             >上一頁</a> |</li>
+  <li><a href="https://llvm.org/">LLVM Home</a>&nbsp;|&nbsp;</li>
+  <li><a href="../index.html">Documentation</a>&raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >LLVM Tutorial: Table of Contents</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">3. </span>Building a JIT: Per-function Lazy Compilation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; 版權所有 2003-2025, LLVM Project.
+      最後更新於 2025-11-11。
+      使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3 建立。
+    </div>
+  </body>
+</html>
