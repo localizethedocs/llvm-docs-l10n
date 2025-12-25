@@ -1,0 +1,404 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-12-22 08:34+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../LFI.rst:3
+msgid "Lightweight Fault Isolation (LFI) in LLVM"
+msgstr ""
+
+#: ../../../LFI.rst:9
+msgid "Introduction"
+msgstr ""
+
+#: ../../../LFI.rst:11
+msgid ""
+"Lightweight Fault Isolation (LFI) is a compiler-based sandboxing technology "
+"for native code. Like WebAssembly and Native Client, LFI isolates sandboxed "
+"code in-process (i.e., in the same address space as a host application)."
+msgstr ""
+
+#: ../../../LFI.rst:15
+msgid ""
+"LFI is designed from the ground up to sandbox existing code, such as C/C++ "
+"libraries (including assembly code) and device drivers."
+msgstr ""
+
+#: ../../../LFI.rst:18
+msgid "LFI aims for the following goals:"
+msgstr ""
+
+#: ../../../LFI.rst:20
+msgid ""
+"Compatibility: LFI can be used to sandbox nearly all existing C/C++/assembly "
+"libraries unmodified (they just need to be recompiled). Sandboxed libraries "
+"work with existing system call interfaces, and are compatible with existing "
+"development tools such as profilers, debuggers, and sanitizers."
+msgstr ""
+
+#: ../../../LFI.rst:24
+msgid "Performance: LFI aims for minimal overhead vs. unsandboxed code."
+msgstr ""
+
+#: ../../../LFI.rst:25
+msgid ""
+"Security: The LFI runtime and compiler elements aim to be simple and "
+"verifiable when possible."
+msgstr ""
+
+#: ../../../LFI.rst:27
+msgid ""
+"Usability: LFI aims to make it as easy as possible to retrofit sandboxing, i."
+"e., to migrate from unsandboxed to sandboxed libraries with minimal effort."
+msgstr ""
+
+#: ../../../LFI.rst:30
+msgid ""
+"When building a program for the LFI target the compiler is designed to "
+"ensure that the program will only be able to access memory within a limited "
+"region of the virtual address space, starting from where the program is "
+"loaded (the current design sets this region to a size of 4GiB of virtual "
+"memory). Programs built for the LFI target are restricted to using a subset "
+"of the instruction set, designed so that the programs can be soundly "
+"confined to their sandbox region. LFI programs must run inside of an "
+"\"emulator\" (usually called the LFI runtime), responsible for initializing "
+"the sandbox region, loading the program, and servicing system call requests, "
+"or other forms of runtime calls."
+msgstr ""
+
+#: ../../../LFI.rst:40
+msgid ""
+"LFI uses an architecture-specific sandboxing scheme based on the general "
+"technique of Software-Based Fault Isolation (SFI). Initial support for LFI "
+"in LLVM is focused on the AArch64 platform, with x86-64 support planned for "
+"the future. The initial version of LFI for AArch64 is designed to support "
+"the Armv8.1 AArch64 architecture."
+msgstr ""
+
+#: ../../../LFI.rst:46
+msgid ""
+"See `https://github.com/lfi-project <https://github.com/lfi-project/>`__ for "
+"details about the LFI project and additional software needed to run LFI "
+"programs."
+msgstr ""
+
+#: ../../../LFI.rst:51
+msgid "Compiler Requirements"
+msgstr ""
+
+#: ../../../LFI.rst:53
+msgid ""
+"When building for the ``aarch64_lfi`` target, the compiler must restrict use "
+"of the instruction set to a subset of instructions, which are known to be "
+"safe from a sandboxing perspective. To do this, we apply a set of simple "
+"rewrites at the assembly language level to transform standard native AArch64 "
+"assembly into LFI-compatible AArch64 assembly."
+msgstr ""
+
+#: ../../../LFI.rst:59
+msgid ""
+"These rewrites (also called \"expansions\") are applied at the very end of "
+"the LLVM compilation pipeline (during the assembler step). This allows the "
+"rewrites to be applied to hand-written assembly, including inline assembly."
+msgstr ""
+
+#: ../../../LFI.rst:64
+msgid "Compiler Options"
+msgstr ""
+
+#: ../../../LFI.rst:66
+msgid "The LFI target has several configuration options."
+msgstr ""
+
+#: ../../../LFI.rst:68
+msgid "``+lfi-loads``: enable sandboxing for loads (default: true)."
+msgstr ""
+
+#: ../../../LFI.rst:69
+msgid "``+lfi-stores``: enable sandboxing for stores (default: true)."
+msgstr ""
+
+#: ../../../LFI.rst:71
+msgid ""
+"Use ``+nolfi-loads`` to create a \"stores-only\" sandbox that may read, but "
+"not write, outside the sandbox region."
+msgstr ""
+
+#: ../../../LFI.rst:74
+msgid ""
+"Use ``+nolfi-loads+nolfi-stores`` to create a \"jumps-only\" sandbox that "
+"may read/write outside the sandbox region but may not transfer control "
+"outside (e.g., may not execute system calls directly). This is primarily "
+"useful in combination with some other form of memory sandboxing, such as "
+"Intel MPK."
+msgstr ""
+
+#: ../../../LFI.rst:80
+msgid "Reserved Registers"
+msgstr ""
+
+#: ../../../LFI.rst:82
+msgid ""
+"The LFI target uses a custom ABI that reserves additional registers for the "
+"platform. The registers are listed below, along with the security invariant "
+"that must be maintained."
+msgstr ""
+
+#: ../../../LFI.rst:86
+msgid "``x27``: always holds the sandbox base address."
+msgstr ""
+
+#: ../../../LFI.rst:87
+msgid "``x28``: always holds an address within the sandbox."
+msgstr ""
+
+#: ../../../LFI.rst:88
+msgid "``sp``: always holds an address within the sandbox."
+msgstr ""
+
+#: ../../../LFI.rst:89
+msgid "``x30``: always holds an address within the sandbox."
+msgstr ""
+
+#: ../../../LFI.rst:90
+msgid "``x26``: scratch register."
+msgstr ""
+
+#: ../../../LFI.rst:91
+msgid ""
+"``x25``: points to a thread-local virtual register file for storing runtime "
+"context information."
+msgstr ""
+
+#: ../../../LFI.rst:94
+msgid "Linker Support"
+msgstr ""
+
+#: ../../../LFI.rst:96
+msgid ""
+"In the initial version, LFI only supports static linking, and only supports "
+"creating ``static-pie`` binaries. There is nothing that fundamentally "
+"precludes support for dynamic linking on the LFI target, but such support "
+"would require that the code generated by the linker for PLT entries be "
+"slightly modified in order to conform to the LFI architecture subset."
+msgstr ""
+
+#: ../../../LFI.rst:103
+msgid "Assembly Rewrites"
+msgstr ""
+
+#: ../../../LFI.rst:106
+msgid "Terminology"
+msgstr ""
+
+#: ../../../LFI.rst:108
+msgid "In the following assembly rewrites, some shorthand is used."
+msgstr ""
+
+#: ../../../LFI.rst:110
+msgid "``xN`` or ``wN``: refers to any general-purpose non-reserved register."
+msgstr ""
+
+#: ../../../LFI.rst:111
+msgid "``{a,b,c}``: matches any of ``a``, ``b``, or ``c``."
+msgstr ""
+
+#: ../../../LFI.rst:112
+msgid ""
+"``LDSTr``: a load/store instruction that supports register-register "
+"addressing modes, with one source/destination register."
+msgstr ""
+
+#: ../../../LFI.rst:113
+msgid "``LDSTx``: a load/store instruction not matched by ``LDSTr``."
+msgstr ""
+
+#: ../../../LFI.rst:116
+msgid "Control flow"
+msgstr ""
+
+#: ../../../LFI.rst:118
+msgid ""
+"Indirect branches get rewritten to branch through register ``x28``, which "
+"must always contain an address within the sandbox. An ``add`` is used to "
+"safely update ``x28`` with the destination address. Since ``ret`` uses "
+"``x30`` by default, which already must contain an address within the "
+"sandbox, it does not require any rewrite."
+msgstr ""
+
+#: ../../../LFI.rst:125 ../../../LFI.rst:148 ../../../LFI.rst:226
+#: ../../../LFI.rst:247 ../../../LFI.rst:278 ../../../LFI.rst:298
+#: ../../../LFI.rst:322 ../../../LFI.rst:345 ../../../LFI.rst:366
+#: ../../../LFI.rst:385
+msgid "Original"
+msgstr ""
+
+#: ../../../LFI.rst:125 ../../../LFI.rst:148 ../../../LFI.rst:226
+#: ../../../LFI.rst:247 ../../../LFI.rst:278 ../../../LFI.rst:298
+#: ../../../LFI.rst:322 ../../../LFI.rst:345 ../../../LFI.rst:366
+#: ../../../LFI.rst:385
+msgid "Rewritten"
+msgstr ""
+
+#: ../../../LFI.rst:140
+msgid "Memory accesses"
+msgstr ""
+
+#: ../../../LFI.rst:142
+msgid ""
+"Memory accesses are rewritten to use the ``[x27, wM, uxtw]`` addressing mode "
+"if it is available, which is automatically safe. Otherwise, rewrites fall "
+"back to using ``x28`` along with an instruction to safely load it with the "
+"target address."
+msgstr ""
+
+#: ../../../LFI.rst:220
+msgid "Stack pointer modification"
+msgstr ""
+
+#: ../../../LFI.rst:222
+msgid ""
+"When the stack pointer is modified, we write the modified value to a "
+"temporary, before moving it back into ``sp`` with a safe ``add``."
+msgstr ""
+
+#: ../../../LFI.rst:241
+msgid "Link register modification"
+msgstr ""
+
+#: ../../../LFI.rst:243
+msgid ""
+"When the link register is modified, we write the modified value to a "
+"temporary, before loading it back into ``x30`` with a safe ``add``."
+msgstr ""
+
+#: ../../../LFI.rst:269
+msgid "System instructions"
+msgstr ""
+
+#: ../../../LFI.rst:271
+msgid ""
+"System calls are rewritten into a sequence that loads the address of the "
+"first runtime call entrypoint and jumps to it. The runtime call entrypoint "
+"table is stored at the start of the sandbox, so it can be referenced by "
+"``x27``. The rewrite also saves and restores the link register, since it is "
+"used for branching into the runtime."
+msgstr ""
+
+#: ../../../LFI.rst:290
+msgid "Thread-local storage"
+msgstr ""
+
+#: ../../../LFI.rst:292
+msgid ""
+"TLS accesses are rewritten into accesses offset from ``x25``, which is a "
+"reserved register that points to a virtual register file, with a location "
+"for storing the sandbox's thread pointer. ``TP`` is the offset into that "
+"virtual register file where the thread pointer is stored."
+msgstr ""
+
+#: ../../../LFI.rst:312
+msgid "Optimizations"
+msgstr ""
+
+#: ../../../LFI.rst:315
+msgid "Basic guard elimination"
+msgstr ""
+
+#: ../../../LFI.rst:317
+msgid ""
+"If a register is guarded multiple times in the same basic block without any "
+"modifications to it during the intervening instructions, then subsequent "
+"guards can be removed."
+msgstr ""
+
+#: ../../../LFI.rst:336
+msgid "Address generation"
+msgstr ""
+
+#: ../../../LFI.rst:338
+msgid ""
+"Addresses to global symbols in position-independent executables are "
+"frequently generated via ``adrp`` followed by ``ldr``. Since the address "
+"generated by ``adrp`` can be statically guaranteed to be within the sandbox, "
+"it is safe to directly target ``x28`` for these sequences. This allows the "
+"omission of a guard instruction before the ``ldr``."
+msgstr ""
+
+#: ../../../LFI.rst:355
+msgid "Stack guard elimination"
+msgstr ""
+
+#: ../../../LFI.rst:357 ../../../LFI.rst:380
+msgid "**Note**: this optimization has not been implemented."
+msgstr ""
+
+#: ../../../LFI.rst:359
+msgid ""
+"If the stack pointer is modified by adding/subtracting a small immediate, "
+"and then later used to perform a memory access without any intervening "
+"jumps, then the guard on the stack pointer modification can be removed. This "
+"is because the load/store is guaranteed to trap if the stack pointer has "
+"been moved outside of the sandbox region."
+msgstr ""
+
+#: ../../../LFI.rst:378
+msgid "Guard hoisting"
+msgstr ""
+
+#: ../../../LFI.rst:382
+msgid "In certain cases, guards may be hoisted outside of loops."
+msgstr ""
+
+#: ../../../LFI.rst:402
+msgid "References"
+msgstr ""
+
+#: ../../../LFI.rst:404
+msgid "For more information, please see the following resources:"
+msgstr ""
+
+#: ../../../LFI.rst:406
+msgid "`LFI project page <https://github.com/lfi-project/>`__"
+msgstr ""
+
+#: ../../../LFI.rst:407
+msgid ""
+"`LFI RFC <https://discourse.llvm.org/t/rfc-lightweight-fault-isolation-lfi-"
+"efficient-native-code-sandboxing-upstream-lfi-target-and-compiler-"
+"changes/88380>`__"
+msgstr ""
+
+#: ../../../LFI.rst:408
+msgid "`LFI paper <https://zyedidia.github.io/papers/lfi_asplos24.pdf>`__"
+msgstr ""
+
+#: ../../../LFI.rst:410
+msgid "Contact info:"
+msgstr ""
+
+#: ../../../LFI.rst:412
+msgid "Zachary Yedidia - zyedidia@cs.stanford.edu"
+msgstr ""
+
+#: ../../../LFI.rst:413
+msgid "Tal Garfinkel - tgarfinkel@google.com"
+msgstr ""
+
+#: ../../../LFI.rst:414
+msgid "Sharjeel Khan - sharjeelkhan@google.com"
+msgstr ""
