@@ -59,7 +59,7 @@
 The goal of this project is to translate the LLVM documentation into multiple languages. Translations are contributed via the Crowdin platform, automatically synchronized with the GitHub repository, and can be previewed on GitHub Pages.
 
 > [!NOTE]
-> The translation is community-driven. If you find any inaccuracies, always refer to the <a href="https://llvm.org/docs">official documentation</a> or the <a href="https://github.com/llvm/llvm-project">source repository</a> of the upstream project for the most reliable information.
+> The translation is <strong>unofficial</strong> and <strong>community-driven</strong>. If you find any inaccuracies, always refer to the <a href="https://llvm.org/docs">official documentation</a> or the <a href="https://github.com/llvm/llvm-project">source repository</a> of the upstream project for the most reliable information.
 
 <div align="center">
 <table>
@@ -196,7 +196,7 @@ The goal of this project is to translate the LLVM documentation into multiple la
         <div><a href="https://github.com/localizethedocs/llvm-docs-l10n/actions/workflows/ci-gettext-statistics.yml"><img alt="ci-gettext-statistics" src="https://github.com/localizethedocs/llvm-docs-l10n/actions/workflows/ci-gettext-statistics.yml/badge.svg" /></a></div>
       </td>
       <td rowspan="1" colspan="1" align="left" style="text-align: left;">
-        <div>使用 Gettext 工具組更新 <code>.po</code> 檔案的統計資訊。</div>
+        <div>透過 Gettext 工具組更新 <code>.po</code> 檔案的統計資訊。</div>
       </td>
     </tr>
     <tr>
