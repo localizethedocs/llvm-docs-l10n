@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-13 08:36+0000\n"
+"POT-Creation-Date: 2026-03-30 09:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -278,7 +278,7 @@ msgid ""
 "expressions to look like this:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:355
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:354
 msgid ""
 "If parsing and codegen succeed, the next step is to add the module "
 "containing the top-level expression to the JIT. We do this by calling "
@@ -289,28 +289,25 @@ msgid ""
 "by calling ``InitializeModuleAndPassManager()``."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:362
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:361
 msgid ""
 "Once we've added the module to the JIT we need to get a pointer to the final "
 "generated code. We do this by calling the JIT's ``lookup`` method, and "
-"passing the name of the top-level expression function: ``__anon_expr``. "
-"Since we just added this function, we assert that ``lookup`` returned a "
-"result."
+"passing the name of the top-level expression function: ``__anon_expr``."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:367
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:365
 msgid ""
-"Next, we get the in-memory address of the ``__anon_expr`` function by "
-"calling ``getAddress()`` on the symbol. Recall that we compile top-level "
-"expressions into a self-contained LLVM function that takes no arguments and "
-"returns the computed double. Because the LLVM JIT compiler matches the "
-"native platform ABI, this means that you can just cast the result pointer to "
-"a function pointer of that type and call it directly. This means, there is "
-"no difference between JIT compiled code and native machine code that is "
-"statically linked into your application."
+"Next, we get the in-memory address of the ``__anon_expr`` function. Recall "
+"that we compile top-level expressions into a self-contained LLVM function "
+"that takes no arguments and returns the computed double. Because the LLVM "
+"JIT compiler matches the native platform ABI, this means that you can just "
+"cast the result pointer to a function pointer of that type and call it "
+"directly. This means, there is no difference between JIT compiled code and "
+"native machine code that is statically linked into your application."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:376
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:373
 msgid ""
 "Finally, since we don't support re-evaluation of top-level expressions, we "
 "remove the module from the JIT when we're done to free the associated "
@@ -319,11 +316,11 @@ msgid ""
 "to be added."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:382
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:379
 msgid "With just these two changes, let's see how Kaleidoscope works now!"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:395
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:392
 msgid ""
 "Well this looks like it is basically working. The dump of the function shows "
 "the \"no argument function that always returns double\" that we synthesize "
@@ -331,7 +328,7 @@ msgid ""
 "functionality, but can we do more?"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:425
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:422
 msgid ""
 "Function definitions and calls also work, but something went very wrong on "
 "that last line. The call looks valid, so what happened? As you may have "
@@ -343,7 +340,7 @@ msgid ""
 "longer find it."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:433
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:430
 msgid ""
 "The easiest way to fix this is to put the anonymous expression in a separate "
 "module from the rest of the function definitions. The JIT will happily "
@@ -353,7 +350,7 @@ msgid ""
 "delete it without affecting the rest of the functions."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:440
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:437
 msgid ""
 "In fact, we're going to go a step further and put every function in its own "
 "module. Doing so allows us to exploit a useful property of the "
@@ -363,13 +360,13 @@ msgid ""
 "it will always return the most recent definition:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:471
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:468
 msgid ""
 "To allow each function to live in its own module we'll need a way to re-"
 "generate previous function declarations into each new module we open:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:513
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:510
 msgid ""
 "To enable this, we'll start by adding a new global, ``FunctionProtos``, that "
 "holds the most recent prototype for each function. We'll also add a "
@@ -383,25 +380,25 @@ msgid ""
 "declaration in the current module for any previously declared function."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:524
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:521
 msgid "We also need to update HandleDefinition and HandleExtern:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:558
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:555
 msgid ""
 "In HandleDefinition, we add two lines to transfer the newly defined function "
 "to the JIT and open a new module. In HandleExtern, we just need to add one "
 "line to add the prototype to FunctionProtos."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:563
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:560
 msgid ""
 "Duplication of symbols in separate modules is not allowed since LLVM-9. That "
 "means you can not redefine function in your Kaleidoscope as its shown below. "
 "Just skip this part."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:565
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:562
 msgid ""
 "The reason is that the newer OrcV2 JIT APIs are trying to stay very close to "
 "the static and dynamic linker rules, including rejecting duplicate symbols. "
@@ -409,23 +406,23 @@ msgid ""
 "compilation for symbols using the (unique) symbol names as keys for tracking."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:567
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:564
 msgid ""
 "With these changes made, let's try our REPL again (I removed the dump of the "
 "anonymous functions this time, you should get the idea by now :) :"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:580
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:577
 msgid "It works!"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:582
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:579
 msgid ""
 "Even with this simple code, we get some surprisingly powerful capabilities - "
 "check this out:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:626
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:623
 msgid ""
 "Whoa, how does the JIT know about sin and cos? The answer is surprisingly "
 "simple: The KaleidoscopeJIT has a straightforward symbol resolution rule "
@@ -441,7 +438,7 @@ msgid ""
 "result when called with constants like in the \"``sin(1.0)``\" above."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:639
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:636
 msgid ""
 "In the future we'll see how tweaking this symbol resolution rule can be used "
 "to enable all sorts of useful features, from security (restricting the set "
@@ -449,20 +446,20 @@ msgid ""
 "symbol names, and even lazy compilation."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:644
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:641
 msgid ""
 "One immediate benefit of the symbol resolution rule is that we can now "
 "extend the language by writing arbitrary C++ code to implement operations. "
 "For example, if we add:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:662
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:659
 msgid ""
 "Note, that for Windows we need to actually export the functions because the "
 "dynamic symbol loader will use ``GetProcAddress`` to find the symbols."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:665
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:662
 msgid ""
 "Now we can produce simple output to the console by using things like: "
 "\"``extern putchard(x); putchard(120);``\", which prints a lowercase 'x' on "
@@ -471,7 +468,7 @@ msgid ""
 "Kaleidoscope."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:671
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:668
 msgid ""
 "This completes the JIT and optimizer chapter of the Kaleidoscope tutorial. "
 "At this point, we can compile a non-Turing-complete programming language, "
@@ -480,27 +477,27 @@ msgid ""
 "tackling some interesting LLVM IR issues along the way."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:679
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:676
 msgid "Full Code Listing"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:681
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:678
 msgid ""
 "Here is the complete code listing for our running example, enhanced with the "
 "LLVM JIT and optimizer. To build this example, use:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:691
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:688
 msgid ""
 "If you are compiling this on Linux, make sure to add the \"-rdynamic\" "
 "option as well. This makes sure that the external functions are resolved "
 "properly at runtime."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:695
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:692
 msgid "Here is the code:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:700
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl04.rst:697
 msgid "`Next: Extending the language: control flow <LangImpl05.html>`_"
 msgstr ""
