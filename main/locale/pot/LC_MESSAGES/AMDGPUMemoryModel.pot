@@ -1,0 +1,763 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2026, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-08 12:58+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../AMDGPUMemoryModel.rst:5
+msgid "AMDGPU Memory Model"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:11
+msgid "Introduction"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:13
+msgid ""
+"The :ref:`LLVM memory model<memmodel>` provides broad guarantees that are "
+"sufficient to implement inter-thread communication via memory. But in most "
+"communication patterns, not all memory accesses performed by a thread need "
+"to be exposed to other threads. Even when they do need to be exposed, not "
+"all threads may need to observe these memory accesses. This document "
+"describes the *AMDGPU memory model* that allows the user to control how the "
+"side-effects of memory accesses are propagated across threads. The "
+"programmer expresses this using **new intrinsics and metadata** as described "
+"below, and the implementation can then choose a more efficient mechanism to "
+"complete them, such as the cache policy bits in an AMDGPU device."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:24
+msgid ""
+"The AMDGPU memory model allows executions that are not allowed by the LLVM "
+"memory model. At the same time, a simple mapping can be used to implement "
+"these new intrinsics and metadata using operations defined in the default "
+"LLVM memory model. Thus, **there exists a safe-by-default implementation** "
+"that produces executions that are valid in both models."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:31
+msgid "Terminology"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:36
+msgid "Memory Accesses"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:34
+msgid ""
+"Operations that read or write locations in memory are termed as *memory "
+"accesses*. Typical examples are ``load``, ``store`` and atomic instructions, "
+"as well as many intrinsics."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:41
+msgid "Synchronizing Operations"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:39
+msgid ""
+"Synchronizing operations control how the side-effects of memory accesses are "
+"propagated in the system. Typical examples are atomic operations (including "
+"fences) with at least ``release`` or ``acquire`` ordering."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:46
+msgid "Scopes"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:48
+msgid ""
+"A *scope* is an abstract description of sets of memory accesses and "
+"synchronizing operations in a multi-threaded execution environment. Each "
+"such set is called an *instance* of that scope, or a *scope instance* for "
+"short."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:52
+msgid ""
+"Each memory access or synchronizing operation belongs to at most one "
+"instance of every scope defined by the target."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:54
+msgid ""
+"When an operation ``X`` specifies a scope ``S``, it indicates the instance "
+"of ``S`` that contains ``X``. This scope instance is also termed as *X's "
+"instance of scope S*, or just *X's scope instance* when ``S`` is implied by "
+"the context."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:58
+msgid ""
+"When an operation does not specify a scope, it indicates the *system* scope "
+"defined below."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:62
+msgid "LLVM scopes"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:64
+msgid ""
+"The LLVM Language Reference defines the following :ref:`scopes<syncscope>`:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:68
+msgid "*system scope* (empty string \"\")"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:67
+msgid ""
+"There exists a single instance of this scope that contains the memory "
+"accesses and synchronizing operations performed by all threads."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:72
+msgid "\"singlethread\" scope"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:71
+msgid ""
+"Each thread corresponds to a \"singlethread\" scope instance that contains "
+"the memory accesses and synchronizing operations performed by that thread."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:75
+msgid "AMDGPU scopes"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:77
+msgid ""
+"The AMDGPU backend further refines the LLVM scopes with the following target-"
+"defined scopes and constraints:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:80
+msgid "*system scope* (same as LLVM)"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:81
+msgid "\"agent\" scope"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:82
+msgid "\"cluster\" scope"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:83
+msgid "\"workgroup\" scope"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:84
+msgid "\"wavefront\" scope"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:85
+msgid "\"singlethread\" scope (same as LLVM)"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:87
+msgid ""
+"These are arranged from largest scope (*system scope*) to smallest scope "
+"(\"singlethread\")."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:90
+msgid ""
+"Every instance ``X`` of some scope ``S1`` other than \"singlethread\" scope "
+"is partitioned by the scope ``S2`` one level below it. Each subset defined "
+"by this partition is an instance of ``S2`` and is called a *subscope "
+"instance* of ``X``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:93
+msgid ""
+"It follows that if two scope instances ``X`` and ``Y`` intersect, then their "
+"intersection is the smaller of ``X`` and ``Y``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:95
+msgid ""
+"A scope ``S1`` is a *subscope* of a scope ``S2`` if every instance of ``S1`` "
+"is a subscope instance of some instance of ``S2``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:98
+msgid ""
+"**Inclusive Scopes**: Two operations ``X`` and ``Y`` are said to have "
+"*inclusive scopes* if the scope instance of each operation contains the "
+"other operation. In that case, the *common scope instance* ``S'`` of ``X`` "
+"and ``Y`` is the intersection of their scope instances. The scope "
+"corresponding to ``S'`` is also termed as the *common scope* of ``X`` and "
+"``Y``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:105
+msgid "Availability and Visibility"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:107
+msgid ""
+"The AMDGPU memory model is built on top of the :ref:`happens-"
+"before<memmodel>` order defined by the LLVM memory model. But when one of "
+"the new intrinsics or metadata is used, **happens-before by itself is not "
+"sufficient** to describe its observable effects. Instead, the AMDGPU model "
+"uses *availability* and *visibility* to describe how the side-effects of "
+"these operations propagate to other threads."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:114
+msgid ""
+"Availability determines how *far* the side-effects of a write have been "
+"forwarded in the system relative to that write. Visibility determines how "
+"*close* the side-effects of the same write have reached relative to an "
+"observer operation (typically a read)."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:119
+msgid ""
+"The AMDGPU memory model *does not change the structure of happens-before*, "
+"but changes the rules that determine how operations may observe the side-"
+"effects of other operations that *happen-before* them."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:123
+msgid ""
+"Consider a write ``W`` that ``happens-before`` a read ``R`` to the same "
+"address:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:125
+msgid ""
+"``R`` can potentially observe the side-effects of ``W`` **only if W is "
+"visible** to ``R``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:127
+msgid ""
+"``W`` can potentially be visible to ``R`` **only if W is first made "
+"available** to ``R``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:130
+msgid ""
+"The instructions used in the default LLVM memory model automatically satisfy "
+"these necessary conditions, and hence they can be explained using the rules "
+"from either memory model. But the new intrinsics and metadata *opt out* of "
+"the LLVM memory model, and can only be explained using the AMDGPU memory "
+"model."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:138
+msgid "store-available"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:147
+msgid ""
+"The ``@llvm.amdgcn.av.global.store.b128`` intrinsic performs a non-atomic "
+"*store-available* operation on ``ptr`` with scope ``scope``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:150
+msgid ""
+"An atomic operation that results in a store operation is a *store-available* "
+"operation with scope ``syncscope``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:156
+msgid "load-visible"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:165
+msgid ""
+"The ``@llvm.amdgcn.av.global.load.b128`` intrinsic performs a non-atomic "
+"*load-visible* operation on ``ptr`` with scope ``scope``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:168
+msgid ""
+"An atomic operation that results in a read operation is a *load-visible* "
+"operation with scope ``syncscope``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:173
+msgid ""
+"Metadata cannot be used to model this using ordinary load/store operations, "
+"because the scope is necessary for correctness. In a hypothetical operation "
+"like this:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:181
+msgid ""
+"If the metadata is dropped or ignored, there is no guarantee that the store "
+"will become available at the intended scope. In implementation terms, the "
+"store may be completed at a nearer cache than the one required for that "
+"scope. A corresponding *load-visible* that does not access the same near "
+"cache will fail to observe this store."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:190
+msgid "AV Metadata"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:196
+msgid ""
+"The presence of this metadata removes the ability of synchronizing "
+"operations to establish availability and visibility, and essentially creates "
+"*non-av* synchronizing operations."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:200
+msgid ""
+"For a synchronizing operation which itself accesses memory (e.g., ``store "
+"atomic release`` or ``load atomic acquire``), the metadata does not affect "
+"the availability or the visibility of the access performed by the operation "
+"itself. It only affects the synchronization of other memory accesses."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:206
+msgid "MakeAvailable and MakeVisible"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:216
+msgid ""
+"A synchronizing operation with at least ``release`` ordering is a "
+"``MakeAvailable`` operation with scope ``syncscope``, if it is not marked as "
+"``!{!\"amdgcn-av\", !\"none\"}``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:220
+msgid ""
+"A synchronizing operation with at least ``acquire`` ordering is a "
+"``MakeVisible`` operation with scope ``syncscope``, if it is not marked as "
+"``!{!\"amdgcn-av\", !\"none\"}``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:239
+msgid "Ordering"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:243
+msgid ""
+"**TODO:** These ordering operations affect all address spaces. We need to "
+"eventually make that a parameter similar to the storage class parameter on "
+"operations and orders in Vulkan."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:248
+msgid "Availability Operation"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:250
+msgid ""
+"An operation ``X`` is an *availability operation* on a write ``W`` if one of "
+"the following holds:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:253
+msgid "``X`` is ``W`` itself, and ``W`` is a *store-available* operation, or,"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:254
+msgid ""
+"``X`` is a ``MakeAvailable`` operation that follows ``W`` in program order, "
+"or,"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:256
+msgid ""
+"``X`` is a ``MakeAvailable`` operation whose scope instance includes ``W``, "
+"and there is an availability operation ``Z`` on ``W`` such that:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:259
+msgid "``Z`` happens-before ``X``, and,"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:260
+msgid "``Z``'s scope instance includes ``X``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:262
+msgid ""
+"Then ``X`` makes ``W`` available in its own scope instance ``S`` and every "
+"subscope instance of ``S`` that also includes ``W``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:266
+msgid "Visibility Operation"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:268
+msgid ""
+"An operation ``Y`` is a *visibility operation* on a write ``W`` if ``Y`` is "
+"a *load-visible* operation to the same address, or a ``MakeVisible`` "
+"operation, and one of the following holds:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:272
+msgid ""
+"There exists an *availability* operation ``X`` on write ``W`` such that:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:274 ../../../AMDGPUMemoryModel.rst:282
+msgid "``X`` happens-before ``Y``, and,"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:275
+msgid "``X`` and ``Y`` specify inclusive scopes."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:277
+msgid ""
+"Then ``Y`` makes ``W`` visible in the common scope instance ``S`` of ``X`` "
+"and ``Y``, and every subscope instance of ``S`` that includes ``Y``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:280
+msgid "There exists a *visibility* operation ``X`` on write ``W`` such that:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:283
+msgid ""
+"``X`` makes ``W`` visible in a scope instance ``S1`` that includes ``Y``, "
+"and,"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:284
+msgid "``X`` is included in the scope instance ``S2`` of ``Y``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:286
+msgid ""
+"Then ``Y`` makes ``W`` visible in the intersection ``S`` of ``S1`` and "
+"``S2``, and every subscope instance of ``S`` that includes ``Y``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:290
+msgid "Location Order"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:292
+msgid ""
+"A write ``W`` is *location-ordered* before an access ``Y`` to the same "
+"address if ``W`` is program-ordered before ``Y``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:295
+msgid ""
+"A write ``W`` is *location-ordered* before a write ``W1`` to the same "
+"address if there exists an availability operation ``Z`` on ``W`` such that:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:298
+msgid "``Z`` happens-before ``W1``, and,"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:299
+msgid "``W1`` is included in ``Z``'s scope instance."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:301
+msgid ""
+"A write ``W`` is *location-ordered* before a read ``R`` to the same address "
+"if there exists a visibility operation ``Z`` on write ``W`` such that:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:304
+msgid "``Z`` is ``R`` itself, or,"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:305
+msgid "``Z`` precedes ``R`` in program order."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:307
+msgid ""
+"The AMDGPU memory model overrides the definition of each byte in the :ref:"
+"`LLVM memory model<memmodel>` as follows."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:310
+msgid ""
+"Every (defined) read operation ``R`` reads a series of bytes written by "
+"(defined) write operations. Each initialized global is assumed to have an "
+"initial *system scoped* atomic write operation that is *location-ordered* "
+"before any other read or write to that same location."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:315
+msgid ""
+"For each byte of a read ``R``, ``R`` may see any write to the same byte, "
+"except:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:317
+msgid ""
+"If a write ``W1`` is *location-ordered* before a write ``W2``, and ``W2`` is "
+"*location-ordered* before a read ``R``, then ``R`` may not see ``W1``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:319
+msgid ""
+"If a read ``R`` happens-before a write ``W3``, then ``R`` may not see ``W3``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:321
+msgid "The value returned by ``R`` is then defined as follows:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:323
+msgid ""
+"If no write is *location-ordered* before a read ``R``, then ``R`` returns "
+"``undef``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:325
+msgid ""
+"Otherwise if the set consisting of ``R`` and all writes that ``R`` may see "
+"contains only atomic operations with inclusive scopes, then ``R`` returns "
+"the value written by one of those writes."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:328
+msgid ""
+"Otherwise, if ``R`` may see some write that is not *location-ordered* before "
+"``R``, then ``R`` returns ``undef``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:330
+msgid ""
+"Otherwise, if ``R`` may see exactly one write ``W``, then ``R`` returns the "
+"value written by ``W``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:332
+msgid "Otherwise, ``R`` returns ``undef``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:335
+msgid "Properties"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:339
+msgid "This section is informational."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:341
+msgid "The following properties follow from the definitions above:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:343
+msgid ""
+"**Happens-before is necessary for location-order.** A write ``W`` is "
+"*location-ordered* before a read ``R`` only if ``W`` happens-before ``R``. "
+"This follows from the definition of availability and visibility operations, "
+"which always require a happens-before link with the preceding operation in "
+"the chain."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:349
+msgid ""
+"**A write cannot be made available in a scope that does not contain it.** "
+"The definition of an availability operation ``X`` requires that ``X``'s "
+"scope instance includes ``W`` as a precondition. Since every scope instance "
+"that includes ``X`` also includes ``W``, availability cannot reach a scope "
+"instance that excludes ``W``. In other words, availability can only \"expand "
+"outwards\" into progressively larger scopes."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:356
+msgid ""
+"**Visibility is bounded by availability.** When a write is available in a "
+"scope instance, it can be made visible in that scope instance by a "
+"visibility operation with the corresponding scope. Subsequent "
+"``MakeVisible`` operations make that write visible into narrower scope "
+"instances towards the observer."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:361
+msgid ""
+"**A write can be made visible in a scope instance that does not contain it."
+"** The definition of a *visibility operation* anchors scope instances to the "
+"observer (``Y``), not to the original write. The only precondition is that "
+"the write must already be visible or available in the scope instance of the "
+"visibility operation."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:367
+msgid ""
+"**Availability and visibility chains.** For a write ``W`` to be visible to a "
+"read ``R`` anywhere in the system, the sufficient condition is a chain of "
+"happens-before edges that include availability and visibility operations "
+"with inclusive scopes. It is not necessary that ``W`` and ``R`` themselves "
+"have inclusive scopes. Each link in the availability and visibility "
+"definitions only checks the immediate predecessor, so intermediate "
+"operations can bridge scope gaps that the endpoints cannot satisfy directly. "
+"Such a chain passes through at least one availability operation and at least "
+"one visibility operation with inclusive scopes, such that their common scope "
+"includes both ``W`` and ``R``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:381
+msgid "The Vulkan Memory Model"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:383
+msgid ""
+"The AMDGPU memory model draws heavily on the Vulkan memory model. In "
+"particular, the following instructions are equivalent."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "LLVM"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "SPIRV"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "Available/Visible Semantics"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``load``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``OpLoad NonPrivatePointer``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "\\-"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``load-visible``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``MakePointerVisible``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``store``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``OpStore NonPrivatePointer``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``store-available``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``MakePointerAvailable``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``load atomic``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``OpAtomicLoad``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid ""
+"``MakePointerVisible``. Also ``MakeVisible`` when order is at least "
+"``acquire``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``load atomic !{!\"amdgcn-av\", !\"none\"}``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``store atomic``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``OpAtomicStore``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid ""
+"``MakePointerAvailable``. Also ``MakeAvailable`` when order is at least "
+"``release``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``store atomic !{!\"amdgcn-av\", !\"none\"}``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``fence``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``OpMemoryBarrier``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid ""
+"``MakeAvailable`` when order is at least ``release``, and ``MakeVisible`` "
+"when order is at least ``acquire``."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:1
+msgid "``fence !{!\"amdgcn-av\", !\"none\"}``"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:403
+msgid ""
+"The above table is representative only, and does not aim to be exhaustive. "
+"In particular, it does not list composite atomic operations like ``rmw`` and "
+"``cmpxchg``. The ordering and semantics of these operations can be "
+"determined by combining suitable rules such as:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:408
+msgid ""
+"\"``MakeAvailable`` if the order is at least ``release``, and the operation "
+"results in a store\","
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:410
+msgid "\"Only if it is not marked as ``!{!\"amdgcn-av\", !\"none\"}``\", etc."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:412
+msgid "The AMDGPU memory model is a special case of the Vulkan memory model:"
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:414
+msgid ""
+"LLVM fence/atomic ordering operations have ``MakeAvailable`` / "
+"``MakeVisible`` semantics by default, thus satisfying the availability and "
+"visibility chains required in Vulkan. Hence the LLVM memory model is a "
+"\"strong\" subset of the Vulkan memory model."
+msgstr ""
+
+#: ../../../AMDGPUMemoryModel.rst:418
+msgid ""
+"The AMDGPU memory model described here makes it possible to opt-out of the "
+"default ``MakeAvailable`` and ``MakeVisible`` semantics, and instead specify "
+"it on select places including the new *load-visible* and *store-available* "
+"operations. This expands the subset of the Vulkan memory model that can now "
+"be expressed in LLVM IR."
+msgstr ""
