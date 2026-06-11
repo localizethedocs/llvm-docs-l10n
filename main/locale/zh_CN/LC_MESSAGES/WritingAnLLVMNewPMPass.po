@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-13 08:36+0000\n"
+"POT-Creation-Date: 2026-06-08 12:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,24 +48,25 @@ msgid ""
 "defined via inheritance, passes under the new pass manager rely on concept-"
 "based polymorphism, meaning there is no explicit interface (see comments in "
 "``PassManager.h`` for more details). All LLVM passes inherit from the CRTP "
-"mix-in ``PassInfoMixin<PassT>``. The pass should have a ``run()`` method "
-"which returns a ``PreservedAnalyses`` and takes in some unit of IR along "
-"with an analysis manager. For example, a function pass would have a "
-"``PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);`` method."
+"mix-in ``OptionalPassInfoMixin<PassT>`` or ``RequiredPassInfoMixin<PassT>``. "
+"The pass should have a ``run()`` method which returns a "
+"``PreservedAnalyses`` and takes in some unit of IR along with an analysis "
+"manager. For example, a function pass would have a ``PreservedAnalyses "
+"run(Function &F, FunctionAnalysisManager &AM);`` method."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:33
+#: ../../../WritingAnLLVMNewPMPass.rst:34
 msgid ""
 "We start by showing you how to construct a pass, from setting up the build, "
 "creating the pass, to executing and testing it. Looking at existing passes "
 "is always a great way to learn details."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:38
+#: ../../../WritingAnLLVMNewPMPass.rst:39
 msgid "Quick Start --- Writing hello world"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:40
+#: ../../../WritingAnLLVMNewPMPass.rst:41
 msgid ""
 "Here we describe how to write the \"hello world\" of passes. The "
 "\"HelloWorld\" pass is designed to simply print out the name of non-external "
@@ -73,21 +74,21 @@ msgid ""
 "program at all, it just inspects it."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:45
+#: ../../../WritingAnLLVMNewPMPass.rst:46
 msgid ""
 "The code below already exists; feel free to create a pass with a different "
 "name alongside the HelloWorld source files."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:51
+#: ../../../WritingAnLLVMNewPMPass.rst:52
 msgid "Setting up the build"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:53
+#: ../../../WritingAnLLVMNewPMPass.rst:54
 msgid "First, configure and build LLVM as described in :doc:`GettingStarted`."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:55
+#: ../../../WritingAnLLVMNewPMPass.rst:56
 msgid ""
 "Next, we will reuse an existing directory (creating a new directory involves "
 "messing around with more CMake files than we want). For this example, we'll "
@@ -97,61 +98,64 @@ msgid ""
 "the ``Transforms/Utils`` directory."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:62
+#: ../../../WritingAnLLVMNewPMPass.rst:63
 msgid ""
 "Now that we have the build set up for a new pass, we need to write the code "
 "for the pass itself."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:68
+#: ../../../WritingAnLLVMNewPMPass.rst:69
 msgid "Basic code required"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:70
+#: ../../../WritingAnLLVMNewPMPass.rst:71
 msgid "Now that the build is setup for a new pass, we just have to write it."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:72
+#: ../../../WritingAnLLVMNewPMPass.rst:73
 msgid ""
 "First we need to define the pass in a header file. We'll create ``llvm/"
 "include/llvm/Transforms/Utils/HelloWorld.h``. The file should contain the "
 "following boilerplate:"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:94
+#: ../../../WritingAnLLVMNewPMPass.rst:95
 msgid ""
 "This creates the class for the pass with a declaration of the ``run()`` "
 "method which actually runs the pass. Inheriting from "
-"``PassInfoMixin<PassT>`` sets up some more boilerplate so that we don't have "
-"to write it ourselves."
+"``OptionalPassInfoMixin<PassT>`` or ``RequiredPassInfoMixin<PassT>`` sets up "
+"some more boilerplate so that we don't have to write it ourselves. "
+"``RequiredPassInfoMixin`` should be used for passes that cannot be skipped "
+"(e.g. ``AlwaysInlinerPass``), while ``OptionalPassInfoMixin`` should be used "
+"for passes that can be skipped (e.g. optimization passes)."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:98
+#: ../../../WritingAnLLVMNewPMPass.rst:103
 msgid ""
 "Our class is in the ``llvm`` namespace so that we don't pollute the global "
 "namespace."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:101
+#: ../../../WritingAnLLVMNewPMPass.rst:106
 msgid ""
 "Next we'll create ``llvm/lib/Transforms/Utils/HelloWorld.cpp``, starting with"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:108
+#: ../../../WritingAnLLVMNewPMPass.rst:113
 msgid "... to include the header file we just created."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:114
+#: ../../../WritingAnLLVMNewPMPass.rst:119
 msgid ""
 "... is required because the functions from the include files live in the "
 "llvm namespace. This should only be done in non-header files."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:117
+#: ../../../WritingAnLLVMNewPMPass.rst:122
 msgid "Next we have the pass's ``run()`` definition:"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:127
+#: ../../../WritingAnLLVMNewPMPass.rst:132
 msgid ""
 "... which simply prints out the name of the function to stderr. The pass "
 "manager will ensure that the pass will be run on every function in a module. "
@@ -160,18 +164,18 @@ msgid ""
 "functions."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:132
+#: ../../../WritingAnLLVMNewPMPass.rst:137
 msgid ""
 "That's it for the pass itself. Now in order to \"register\" the pass, we "
 "need to add it to a couple places. Add the following to ``llvm/lib/Passes/"
 "PassRegistry.def`` in the ``FUNCTION_PASS`` section"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:140
+#: ../../../WritingAnLLVMNewPMPass.rst:145
 msgid "... which adds the pass under the name \"helloworld\"."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:142
+#: ../../../WritingAnLLVMNewPMPass.rst:147
 msgid ""
 "``llvm/lib/Passes/PassRegistry.def`` is #include'd into ``llvm/lib/Passes/"
 "PassBuilder.cpp`` multiple times for various reasons. Since it constructs "
@@ -179,52 +183,52 @@ msgid ""
 "PassBuilder.cpp``:"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:151
+#: ../../../WritingAnLLVMNewPMPass.rst:156
 msgid ""
 "This should be all the code necessary for our pass, now it's time to compile "
 "and run it."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:155
+#: ../../../WritingAnLLVMNewPMPass.rst:160
 msgid "Running a pass with ``opt``"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:157
+#: ../../../WritingAnLLVMNewPMPass.rst:162
 msgid ""
 "Now that you have a brand new shiny pass, we can build :program:`opt` and "
 "use it to run some LLVM IR through the pass."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:179
+#: ../../../WritingAnLLVMNewPMPass.rst:184
 msgid "Our pass ran and printed the names of functions as expected!"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:182
+#: ../../../WritingAnLLVMNewPMPass.rst:187
 msgid "Testing a pass"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:184
+#: ../../../WritingAnLLVMNewPMPass.rst:189
 msgid ""
 "Testing our pass is important to prevent future regressions. We'll add a lit "
 "test at ``llvm/test/Transforms/Utils/helloworld.ll``. See :doc:"
 "`TestingGuide` for more information on testing."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:208
+#: ../../../WritingAnLLVMNewPMPass.rst:213
 msgid "FAQs"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:211
+#: ../../../WritingAnLLVMNewPMPass.rst:216
 msgid "Required passes"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:213
+#: ../../../WritingAnLLVMNewPMPass.rst:218
 msgid ""
-"A pass that defines a static ``isRequired()`` method that returns true is a "
-"required pass. For example:"
+"A pass that inherits from ``RequiredPassInfoMixin<PassT>`` is a required "
+"pass. For example:"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:224
+#: ../../../WritingAnLLVMNewPMPass.rst:227
 msgid ""
 "A required pass is a pass that may not be skipped. An example of a required "
 "pass is ``AlwaysInlinerPass``, which must always be run to preserve "
@@ -232,24 +236,24 @@ msgid ""
 "contain other required passes."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:229
+#: ../../../WritingAnLLVMNewPMPass.rst:232
 msgid ""
 "An example of how a pass can be skipped is the ``optnone`` function "
 "attribute, which specifies that optimizations should not be run on the "
 "function. Required passes will still be run on ``optnone`` functions."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:233
+#: ../../../WritingAnLLVMNewPMPass.rst:236
 msgid ""
 "For more implementation details, see ``PassInstrumentation::"
 "runBeforePass()``."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:237
+#: ../../../WritingAnLLVMNewPMPass.rst:240
 msgid "Registering passes as plugins"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:239
+#: ../../../WritingAnLLVMNewPMPass.rst:242
 msgid ""
 "LLVM provides a mechanism to register pass plugins within various tools like "
 "``clang`` or ``opt``. A pass plugin can add passes to default optimization "
@@ -257,47 +261,47 @@ msgid ""
 "information, see :doc:`NewPassManager`."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:244
+#: ../../../WritingAnLLVMNewPMPass.rst:247
 msgid ""
 "Create a CMake project at the root of the repo alongside other projects.  "
 "This project must contain the following minimal ``CMakeLists.txt``:"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:252
+#: ../../../WritingAnLLVMNewPMPass.rst:255
 msgid "See the definition of ``add_llvm_pass_plugin`` for more CMake details."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:254
+#: ../../../WritingAnLLVMNewPMPass.rst:257
 msgid ""
 "The pass must provide at least one of two entry points for the new pass "
 "manager, one for static registration and one for dynamically loaded plugins:"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:257
+#: ../../../WritingAnLLVMNewPMPass.rst:260
 msgid "``llvm::PassPluginLibraryInfo get##Name##PluginInfo();``"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:258
+#: ../../../WritingAnLLVMNewPMPass.rst:261
 msgid ""
 "``extern \"C\" ::llvm::PassPluginLibraryInfo llvmGetPassPluginInfo() "
 "LLVM_ATTRIBUTE_WEAK;``"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:260
+#: ../../../WritingAnLLVMNewPMPass.rst:263
 msgid ""
 "Pass plugins are compiled and linked dynamically by default. Setting "
 "``LLVM_${NAME}_LINK_INTO_TOOLS`` to ``ON`` turns the project into a "
 "statically linked extension."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:264
+#: ../../../WritingAnLLVMNewPMPass.rst:267
 msgid "For an in-tree example, see ``llvm/examples/Bye/``."
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:266
+#: ../../../WritingAnLLVMNewPMPass.rst:269
 msgid "To make ``PassBuilder`` aware of statically linked pass plugins:"
 msgstr ""
 
-#: ../../../WritingAnLLVMNewPMPass.rst:280
+#: ../../../WritingAnLLVMNewPMPass.rst:283
 msgid "To make ``PassBuilder`` aware of dynamically linked pass plugins:"
 msgstr ""
