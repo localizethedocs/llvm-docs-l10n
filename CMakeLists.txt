@@ -172,20 +172,11 @@ get_members_of_json_object(
 # - For "main":
 #   - Set VERSION_TYPE    to "branch"
 #   - Set BRANCH_NAME     to "main"
-# - For "[MAJOR]":
-#   - Set VERSION_TYPE    to "tag"
-#   - Set TAG_PATTERN     to "^llvmorg-([MAJOR])\\.([0-9]+)\\.([0-9]+)(-rc[1-9][0-9]*)?$"
-#   - Set TAG_SUFFIX      to "-rc"
 #]============================================================]
 
 if     (VERSION MATCHES "^(main)$")
     set(VERSION_TYPE    "branch")
     set(BRANCH_NAME     "main")
-elseif (VERSION MATCHES "^([0-9]+)$")
-    set(MAJOR           "${CMAKE_MATCH_1}")
-    set(VERSION_TYPE    "tag")
-    set(TAG_PATTERN     "^llvmorg-(${MAJOR})\\.([0-9]+)\\.([0-9]+)(-rc[1-9][0-9]*)?$")
-    set(TAG_SUFFIX      "-rc")
 else()
     message(FATAL_ERROR "Invalid VERSION value. (${VERSION})")
 endif()
@@ -260,13 +251,6 @@ endif()
 
 if     (VERSION MATCHES "^(main)$")
     set(VERSION_OF_PYTHON     "3.12")
-elseif (VERSION MATCHES "^([0-9]+)$")
-    if   (VERSION VERSION_LESS_EQUAL    "21" AND
-          VERSION VERSION_GREATER_EQUAL "3")
-        set(VERSION_OF_PYTHON     "3.12")
-    else()
-        message(FATAL_ERROR "Invalid VERSION value. (${VERSION})")
-    endif()
 else()
     message(FATAL_ERROR "Invalid VERSION value. (${VERSION})")
 endif()
