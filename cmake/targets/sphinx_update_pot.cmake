@@ -246,7 +246,7 @@ message(STATUS "Running 'sphinx-build' command with 'gettext' builder to generat
 if (CMAKE_HOST_LINUX)
     set(ENV_PATH                "${PROJ_CONDA_DIR}/bin:$ENV{PATH}")
     set(ENV_LD_LIBRARY_PATH     "${PROJ_CONDA_DIR}/lib:$ENV{LD_LIBRARY_PATH}")
-    set(ENV_PYTHONPATH          "${PROJ_OUT_REPO_DOCS_EXTNS_DIR}")
+    set(ENV_PYTHONPATH          "${PROJ_OUT_REPO_DOCS_EXTNS_DIR}:${PROJ_OUT_REPO_DIR}/utils/docs")
     set(ENV_VARS_OF_SYSTEM      PATH=${ENV_PATH}
                                 LD_LIBRARY_PATH=${ENV_LD_LIBRARY_PATH}
                                 PYTHONPATH=${ENV_PYTHONPATH})
@@ -256,7 +256,8 @@ elseif (CMAKE_HOST_WIN32)
                                 "${PROJ_CONDA_DIR}/Library/bin"
                                 "${PROJ_CONDA_DIR}"
                                 "$ENV{PATH}")
-    set(ENV_PYTHONPATH          "${PROJ_OUT_REPO_DOCS_EXTNS_DIR}")
+    set(ENV_PYTHONPATH          "${PROJ_OUT_REPO_DOCS_EXTNS_DIR}"
+                                "${PROJ_OUT_REPO_DIR}/utils/docs")
     string(REPLACE ";" "\\\\;" ENV_PATH "${ENV_PATH}")
     string(REPLACE ";" "\\\\;" ENV_PYTHONPATH "${ENV_PYTHONPATH}")
     set(ENV_VARS_OF_SYSTEM      PATH=${ENV_PATH}
