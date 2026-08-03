@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-13 08:36+0000\n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,11 +21,11 @@ msgstr ""
 msgid "Kaleidoscope: Extending the Language: Mutable Variables"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:9
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:7
 msgid "Chapter 7 Introduction"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:11
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:9
 msgid ""
 "Welcome to Chapter 7 of the \"`Implementing a language with LLVM <index."
 "html>`_\" tutorial. In chapters 1 through 6, we've built a very respectable, "
@@ -35,7 +35,7 @@ msgid ""
 "to optimize the resultant code as well as JIT compile it."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:19
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:17
 msgid ""
 "While Kaleidoscope is interesting as a functional language, the fact that it "
 "is functional makes it \"too easy\" to generate LLVM IR for it. In "
@@ -47,24 +47,24 @@ msgid ""
 "variables."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:28
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:26
 msgid ""
 "The short (and happy) summary of this chapter is that there is no need for "
 "your front-end to build SSA form: LLVM provides highly tuned and well tested "
 "support for this, though the way it works is a bit unexpected for some."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:34
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:32
 msgid "Why is this a hard problem?"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:36
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:34
 msgid ""
 "To understand why mutable variables cause complexities in SSA construction, "
 "consider this extremely simple C example:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:51
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:49
 msgid ""
 "In this case, we have the variable \"X\", whose value depends on the path "
 "executed in the program. Because there are two different possible values for "
@@ -72,7 +72,7 @@ msgid ""
 "values. The LLVM IR that we want for this example looks like this:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:78
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:76
 msgid ""
 "In this example, the loads from the G and H global variables are explicit in "
 "the LLVM IR, and they live in the then/else branches of the if statement "
@@ -86,7 +86,7 @@ msgid ""
 "Static_single_assignment_form>`_."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:89
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:87
 msgid ""
 "The question for this article is \"who places the phi nodes when lowering "
 "assignments to mutable variables?\". The issue here is that LLVM *requires* "
@@ -96,11 +96,11 @@ msgid ""
 "logic."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:97
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:95
 msgid "Memory in LLVM"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:99
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:97
 msgid ""
 "The 'trick' here is that while LLVM does require all register values to be "
 "in SSA form, it does not require (or permit) memory objects to be in SSA "
@@ -112,7 +112,7 @@ msgid ""
 "computed on demand."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:108
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:106
 msgid ""
 "With this in mind, the high-level idea is that we want to make a stack "
 "variable (which lives in memory, because it is on the stack) for each "
@@ -120,7 +120,7 @@ msgid ""
 "talk about how LLVM represents stack variables."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:113
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:111
 msgid ""
 "In LLVM, all memory accesses are explicit with load/store instructions, and "
 "it is carefully designed not to have (or need) an \"address-of\" operator. "
@@ -133,7 +133,7 @@ msgid ""
 "instruction>`_:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:134
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:132
 msgid ""
 "This code shows an example of how you can declare and manipulate a stack "
 "variable in the LLVM IR. Stack memory allocated with the alloca instruction "
@@ -142,29 +142,29 @@ msgid ""
 "rewrite the example to use the alloca technique to avoid using a PHI node:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:166
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:164
 msgid ""
 "With this, we have discovered a way to handle arbitrary mutable variables "
 "without the need to create Phi nodes at all:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:169
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:167
 msgid "Each mutable variable becomes a stack allocation."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:170
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:168
 msgid "Each read of the variable becomes a load from the stack."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:171
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:169
 msgid "Each update of the variable becomes a store to the stack."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:172
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:170
 msgid "Taking the address of a variable just uses the stack address directly."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:175
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:173
 msgid ""
 "While this solution has solved our immediate problem, it introduced another "
 "one: we have now apparently introduced a lot of stack traffic for very "
@@ -175,7 +175,7 @@ msgid ""
 "through the pass, for example, you'll get:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:206
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:204
 msgid ""
 "The mem2reg pass implements the standard \"iterated dominance frontier\" "
 "algorithm for constructing SSA form and has a number of optimizations that "
@@ -185,27 +185,27 @@ msgid ""
 "circumstances:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:213
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:211
 msgid ""
 "mem2reg is alloca-driven: it looks for allocas and if it can handle them, it "
 "promotes them. It does not apply to global variables or heap allocations."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:216
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:214
 msgid ""
 "mem2reg only looks for alloca instructions in the entry block of the "
 "function. Being in the entry block guarantees that the alloca is only "
 "executed once, which makes analysis simpler."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:219
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:217
 msgid ""
 "mem2reg only promotes allocas whose uses are direct loads and stores. If the "
 "address of the stack object is passed to a function, or if any funny pointer "
 "arithmetic is involved, the alloca will not be promoted."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:223
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:221
 msgid ""
 "mem2reg only works on allocas of `first class <../../LangRef.html#first-"
 "class-types>`_ values (such as pointers, scalars and vectors), and only if "
@@ -215,7 +215,7 @@ msgid ""
 "arrays in many cases."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:231
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:229
 msgid ""
 "All of these properties are easy to satisfy for most imperative languages, "
 "and we'll illustrate it below with Kaleidoscope. The final question you may "
@@ -226,7 +226,7 @@ msgid ""
 "not to. Using this technique is:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:240
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:238
 msgid ""
 "Proven and well tested: clang uses this technique for local mutable "
 "variables. As such, the most common clients of LLVM are using this to handle "
@@ -234,7 +234,7 @@ msgid ""
 "fixed early."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:244
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:242
 msgid ""
 "Extremely Fast: mem2reg has a number of special cases that make it fast in "
 "common cases as well as fully general. For example, it has fast-paths for "
@@ -243,7 +243,7 @@ msgid ""
 "etc."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:249
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:247
 msgid ""
 "Needed for debug info generation: `Debug information in LLVM <../../"
 "SourceLevelDebugging.html>`_ relies on having the address of the variable "
@@ -251,33 +251,33 @@ msgid ""
 "very naturally with this style of debug info."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:254
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:252
 msgid ""
 "If nothing else, this makes it much easier to get your front-end up and "
 "running, and is very simple to implement. Let's extend Kaleidoscope with "
 "mutable variables now!"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:259
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:257
 msgid "Mutable Variables in Kaleidoscope"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:261
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:259
 msgid ""
 "Now that we know the sort of problem we want to tackle, let's see what this "
 "looks like in the context of our little Kaleidoscope language. We're going "
 "to add two features:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:265
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:263
 msgid "The ability to mutate variables with the '=' operator."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:266
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:264
 msgid "The ability to define new variables."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:268
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:266
 msgid ""
 "While the first item is really what this is about, we only have variables "
 "for incoming arguments as well as for induction variables, and redefining "
@@ -286,18 +286,18 @@ msgid ""
 "motivating example that shows how we could use these:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:299
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:297
 msgid ""
 "In order to mutate variables, we have to change our existing variables to "
 "use the \"alloca trick\". Once we have that, we'll add our new operator, "
 "then extend Kaleidoscope to support new variable definitions."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:304
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:302
 msgid "Adjusting Existing Variables for Mutation"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:306
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:304
 msgid ""
 "The symbol table in Kaleidoscope is managed at code generation time by the "
 "'``NamedValues``' map. This map currently keeps track of the LLVM "
@@ -309,7 +309,7 @@ msgid ""
 "isolated in the Kaleidoscope code generator."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:315
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:313
 msgid ""
 "At this point in Kaleidoscope's development, it only supports variables for "
 "two things: incoming arguments to functions and the induction variable of "
@@ -318,7 +318,7 @@ msgid ""
 "need memory locations."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:321
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:319
 msgid ""
 "To start our transformation of Kaleidoscope, we'll change the "
 "``NamedValues`` map so that it maps to AllocaInst\\* instead of Value\\*. "
@@ -326,14 +326,14 @@ msgid ""
 "need to update:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:330
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:328
 msgid ""
 "Also, since we will need to create these allocas, we'll use a helper "
 "function that ensures that the allocas are created in the entry block of the "
 "function:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:346
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:344
 msgid ""
 "This funny looking code creates an IRBuilder object that is pointing at the "
 "first instruction (.begin()) of the entry block. It then creates an alloca "
@@ -341,7 +341,7 @@ msgid ""
 "are doubles, there is no need to pass in a type to use."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:351
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:349
 msgid ""
 "With this in place, the first functionality change we want to make belongs "
 "to variable references. In our new scheme, variables live on the stack, so "
@@ -349,7 +349,7 @@ msgid ""
 "the stack slot:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:368
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:366
 msgid ""
 "As you can see, this is pretty straightforward. Now we need to update the "
 "things that define the variables to set up the alloca. We'll start with "
@@ -357,7 +357,7 @@ msgid ""
 "unabridged code):"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:402
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:400
 msgid ""
 "This code is virtually identical to the code `before we allowed mutable "
 "variables <LangImpl05.html#code-generation-for-the-for-loop>`_. The big "
@@ -365,13 +365,13 @@ msgid ""
 "load/store to access the variable as needed."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:407
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:405
 msgid ""
 "To support mutable argument variables, we need to also make allocas for "
 "them. The code for this is also pretty simple:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:432
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:430
 msgid ""
 "For each argument, we make an alloca, store the input value to the function "
 "into the alloca, and register the alloca as the memory location for the "
@@ -379,20 +379,20 @@ msgid ""
 "it sets up the entry block for the function."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:437
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:435
 msgid ""
 "The final missing piece is adding the mem2reg pass, which allows us to get "
 "good codegen once again:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:450
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:448
 msgid ""
 "It is interesting to see what the code looks like before and after the "
 "mem2reg optimization runs. For example, this is the before/after code for "
 "our recursive fib function. Before the optimization:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:484
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:482
 msgid ""
 "Here there is only one variable (x, the input argument) but you can still "
 "see the extremely simple-minded code generation strategy we are using. In "
@@ -403,39 +403,39 @@ msgid ""
 "create a PHI node for it, so we still just make the PHI."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:493
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:491
 msgid "Here is the code after the mem2reg pass runs:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:520
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:518
 msgid ""
 "This is a trivial case for mem2reg, since there are no redefinitions of the "
 "variable. The point of showing this is to calm your tension about inserting "
 "such blatant inefficiencies :)."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:524
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:522
 msgid "After the rest of the optimizers run, we get:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:547
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:545
 msgid ""
 "Here we see that the simplifycfg pass decided to clone the return "
 "instruction into the end of the 'else' block. This allowed it to eliminate "
 "some branches and the PHI node."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:551
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:549
 msgid ""
 "Now that all symbol table references are updated to use stack variables, "
 "we'll add the assignment operator."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:555
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:553
 msgid "New Assignment Operator"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:557
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:555
 msgid ""
 "With our current framework, adding a new assignment operator is really "
 "simple. We will parse it just like any other binary operator, but handle it "
@@ -443,14 +443,14 @@ msgid ""
 "set a precedence:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:572
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:570
 msgid ""
 "Now that the parser knows the precedence of the binary operator, it takes "
 "care of all the parsing and AST generation. We just need to implement "
 "codegen for the assignment operator. This looks like:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:588
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:586
 msgid ""
 "Unlike the rest of the binary operators, our assignment operator doesn't "
 "follow the \"emit LHS, emit RHS, do computation\" model. As such, it is "
@@ -459,20 +459,20 @@ msgid ""
 "invalid to have \"(x+1) = expr\" - only things like \"x = expr\" are allowed."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:612
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:610
 msgid ""
 "Once we have the variable, codegen'ing the assignment is straightforward: we "
 "emit the RHS of the assignment, create a store, and return the computed "
 "value. Returning a value allows for chained assignments like \"X = (Y = Z)\"."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:617
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:615
 msgid ""
 "Now that we have an assignment operator, we can mutate loop variables and "
 "arguments. For example, we can now run code like this:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:636
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:634
 msgid ""
 "When run, this example prints \"123\" and then \"4\", showing that we did "
 "actually mutate the value! Okay, we have now officially implemented our "
@@ -481,11 +481,11 @@ msgid ""
 "variables, let's add this next!"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:643
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:641
 msgid "User-defined Local Variables"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:645
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:643
 msgid ""
 "Adding var/in is just like any other extension we made to Kaleidoscope: we "
 "extend the lexer, the parser, the AST and the code generator. The first step "
@@ -493,13 +493,13 @@ msgid ""
 "this is pretty trivial, the code looks like this:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:673
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:671
 msgid ""
 "The next step is to define the AST node that we will construct. For var/in, "
 "it looks like this:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:691
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:689
 msgid ""
 "var/in allows a list of names to be defined all at once, and each name can "
 "optionally have an initializer value. As such, we capture this information "
@@ -507,42 +507,42 @@ msgid ""
 "access the variables defined by the var/in."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:696
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:694
 msgid ""
 "With this in place, we can define the parser pieces. The first thing we do "
 "is add it as a primary expression:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:727
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:725
 msgid "Next we define ParseVarExpr:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:742
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:740
 msgid ""
 "The first part of this code parses the list of identifier/expr pairs into "
 "the local ``VarNames`` vector."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:770
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:768
 msgid ""
 "Once all the variables are parsed, we then parse the body and create the AST "
 "node:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:788
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:786
 msgid ""
 "Now that we can parse and represent the code, we need to support emission of "
 "LLVM IR for it. This code starts out with:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:803
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:801
 msgid ""
 "Basically it loops over all the variables, installing them one at a time. "
 "For each variable we put into the symbol table, we remember the previous "
 "value that we replace in OldBindings."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:834
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:832
 msgid ""
 "There are more comments here than code. The basic idea is that we emit the "
 "initializer, create the alloca, then update the symbol table to point to it. "
@@ -550,17 +550,17 @@ msgid ""
 "body of the var/in expression:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:846
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:844
 msgid "Finally, before returning, we restore the previous variable bindings:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:858
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:856
 msgid ""
 "The end result of all of this is that we get properly scoped variable "
 "definitions, and we even (trivially) allow mutation of them :)."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:861
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:859
 msgid ""
 "With this, we completed what we set out to do. Our nice iterative fib "
 "example from the intro compiles and runs just fine. The mem2reg pass "
@@ -569,20 +569,20 @@ msgid ""
 "frontier\" computation anywhere in sight."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:868
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:866
 msgid "Full Code Listing"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:870
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:868
 msgid ""
 "Here is the complete code listing for our running example, enhanced with "
 "mutable variables and var/in support. To build this example, use:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:880
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:878
 msgid "Here is the code:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:885
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl07.rst:883
 msgid "`Next: Compiling to Object Code <LangImpl08.html>`_"
 msgstr ""
