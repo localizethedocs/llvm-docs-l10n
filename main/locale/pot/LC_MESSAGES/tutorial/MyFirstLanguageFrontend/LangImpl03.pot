@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-13 08:36+0000\n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,11 +21,11 @@ msgstr ""
 msgid "Kaleidoscope: Code generation to LLVM IR"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:9
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:7
 msgid "Chapter 3 Introduction"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:11
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:9
 msgid ""
 "Welcome to Chapter 3 of the \"`Implementing a language with LLVM <index."
 "html>`_\" tutorial. This chapter shows you how to transform the `Abstract "
@@ -35,7 +35,7 @@ msgid ""
 "it is to generate LLVM IR code. :)"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:18
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:16
 msgid ""
 "**Please note**: the code in this chapter and later require LLVM 3.7 or "
 "later. LLVM 3.6 and before will not work with it. Also note that you need to "
@@ -45,17 +45,17 @@ msgid ""
 "org/releases/>`_."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:26
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:24
 msgid "Code Generation Setup"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:28
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:26
 msgid ""
 "In order to generate LLVM IR, we want some simple setup to get started. "
 "First we define virtual code generation (codegen) methods in each AST class:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:51
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:49
 msgid ""
 "The codegen() method says to emit IR for that AST node along with all the "
 "things it depends on, and they all return an LLVM Value object. \"Value\" is "
@@ -70,7 +70,7 @@ msgid ""
 "once you grok them."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:63
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:61
 msgid ""
 "Note that instead of adding virtual methods to the ExprAST class hierarchy, "
 "it could also make sense to use a `visitor pattern <http://en.wikipedia.org/"
@@ -79,14 +79,14 @@ msgid ""
 "purposes, adding a virtual method is simplest."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:70
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:68
 msgid ""
 "The second thing we want is a \"LogError\" method like we used for the "
 "parser, which will be used to report errors found during code generation "
 "(for example, use of an undeclared parameter):"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:86
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:84
 msgid ""
 "The static variables will be used during code generation. ``TheContext`` is "
 "an opaque object that owns a lot of core LLVM data structures, such as the "
@@ -94,7 +94,7 @@ msgid ""
 "just need a single instance to pass into APIs that require it."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:91
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:89
 msgid ""
 "The ``Builder`` object is a helper object that makes it easy to generate "
 "LLVM instructions. Instances of the `IRBuilder <https://llvm.org/doxygen/"
@@ -102,7 +102,7 @@ msgid ""
 "to insert instructions and has methods to create new instructions."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:97
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:95
 msgid ""
 "``TheModule`` is an LLVM construct that contains functions and global "
 "variables. In many ways, it is the top-level structure that the LLVM IR uses "
@@ -111,7 +111,7 @@ msgid ""
 "unique_ptr<Value>."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:103
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:101
 msgid ""
 "The ``NamedValues`` map keeps track of which values are defined in the "
 "current scope and what their LLVM representation is. (In other words, it is "
@@ -120,7 +120,7 @@ msgid ""
 "will be in this map when generating code for their function body."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:110
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:108
 msgid ""
 "With these basics in place, we can start talking about how to generate code "
 "for each expression. Note that this assumes that the ``Builder`` has been "
@@ -128,18 +128,18 @@ msgid ""
 "has already been done, and we'll just use it to emit code."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:116
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:114
 msgid "Expression Code Generation"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:118
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:116
 msgid ""
 "Generating LLVM code for expression nodes is very straightforward: less than "
 "45 lines of commented code for all four of our expression nodes. First we'll "
 "do numeric literals:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:128
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:126
 msgid ""
 "In the LLVM IR, numeric constants are represented with the ``ConstantFP`` "
 "class, which holds the numeric value in an ``APFloat`` internally "
@@ -150,7 +150,7 @@ msgid ""
 "idiom instead of \"new foo(..)\" or \"foo::Create(..)\"."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:146
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:144
 msgid ""
 "References to variables are also quite simple using LLVM. In the simple "
 "version of Kaleidoscope, we assume that the variable has already been "
@@ -163,7 +163,7 @@ msgid ""
 "<LangImpl07.html#user-defined-local-variables>`_."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:181
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:179
 msgid ""
 "Binary operators start to get more interesting. The basic idea here is that "
 "we recursively emit code for the left-hand side of the expression, then the "
@@ -172,7 +172,7 @@ msgid ""
 "instruction."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:187
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:185
 msgid ""
 "In the example above, the LLVM builder class is starting to show its value. "
 "IRBuilder knows where to insert the newly created instruction, all you have "
@@ -181,7 +181,7 @@ msgid ""
 "for the generated instruction."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:193
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:191
 msgid ""
 "One nice thing about LLVM is that the name is just a hint. For instance, if "
 "the code above emits multiple \"addtmp\" variables, LLVM will automatically "
@@ -190,7 +190,7 @@ msgid ""
 "read the IR dumps."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:199
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:197
 msgid ""
 "`LLVM instructions <../../LangRef.html#instruction-reference>`_ are "
 "constrained by strict rules: for example, the Left and Right operands of an "
@@ -200,7 +200,7 @@ msgid ""
 "add, sub and mul."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:206
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:204
 msgid ""
 "On the other hand, LLVM specifies that the `fcmp instruction <../../LangRef."
 "html#fcmp-instruction>`_ always returns an 'i1' value (a one bit integer). "
@@ -213,7 +213,7 @@ msgid ""
 "'<' operator would return 0.0 and -1.0, depending on the input value."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:239
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:237
 msgid ""
 "Code generation for function calls is quite straightforward with LLVM. The "
 "code above initially does a function name lookup in the LLVM Module's symbol "
@@ -222,7 +222,7 @@ msgid ""
 "specifies, we can use the LLVM symbol table to resolve function names for us."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:245
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:243
 msgid ""
 "Once we have the function to call, we recursively codegen each argument that "
 "is to be passed in, and create an LLVM `call instruction <../../LangRef."
@@ -231,7 +231,7 @@ msgid ""
 "library functions like \"sin\" and \"cos\", with no additional effort."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:252
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:250
 msgid ""
 "This wraps up our handling of the four basic expressions that we have so far "
 "in Kaleidoscope. Feel free to go in and add some more. For example, by "
@@ -240,11 +240,11 @@ msgid ""
 "basic framework."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:259
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:257
 msgid "Function Code Generation"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:261
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:259
 msgid ""
 "Code generation for prototypes and functions must handle a number of "
 "details, which make their code less beautiful than expression code "
@@ -253,7 +253,7 @@ msgid ""
 "bodies and external function declarations. The code starts with:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:280
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:278
 msgid ""
 "This code packs a lot of power into a few lines. Note first that this "
 "function returns a \"Function\\*\" instead of a \"Value\\*\". Because a "
@@ -262,7 +262,7 @@ msgid ""
 "LLVM Function it corresponds to when codegen'd."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:286
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:284
 msgid ""
 "The call to ``FunctionType::get`` creates the ``FunctionType`` that should "
 "be used for a given Prototype. Since all function arguments in Kaleidoscope "
@@ -274,7 +274,7 @@ msgid ""
 "you \"get\" it."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:295
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:293
 msgid ""
 "The final line above actually creates the IR Function corresponding to the "
 "Prototype. This indicates the type, linkage and name to use, as well as "
@@ -285,7 +285,7 @@ msgid ""
 "specified, this name is registered in \"``TheModule``\"s symbol table."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:313
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:311
 msgid ""
 "Finally, we set the name of each of the function's arguments according to "
 "the names given in the Prototype. This step isn't strictly necessary, but "
@@ -294,7 +294,7 @@ msgid ""
 "than having to look them up in the Prototype AST."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:319
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:317
 msgid ""
 "At this point we have a function prototype with no body. This is how LLVM IR "
 "represents function declarations. For extern statements in Kaleidoscope, "
@@ -302,7 +302,7 @@ msgid ""
 "to codegen and attach a function body."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:340
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:338
 msgid ""
 "For function definitions, we start by searching TheModule's symbol table for "
 "an existing version of this function, in case one has already been created "
@@ -312,7 +312,7 @@ msgid ""
 "before we start."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:357
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:355
 msgid ""
 "Now we get to the point where the ``Builder`` is set up. The first line "
 "creates a new `basic block <http://en.wikipedia.org/wiki/Basic_block>`_ "
@@ -325,13 +325,13 @@ msgid ""
 "<LangImpl05.html>`_ :)."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:367
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:365
 msgid ""
 "Next we add the function arguments to the NamedValues map (after first "
 "clearing it out) so that they're accessible to ``VariableExprAST`` nodes."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:382
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:380
 msgid ""
 "Once the insertion point has been set up and the NamedValues map populated, "
 "we call the ``codegen()`` method for the root expression of the function. If "
@@ -345,7 +345,7 @@ msgid ""
 "Once the function is finished and validated, we return it."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:400
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:398
 msgid ""
 "The only piece left here is handling of the error case. For simplicity, we "
 "handle this by merely deleting the function we produced with the "
@@ -354,7 +354,7 @@ msgid ""
 "the symbol table, with a body, preventing future redefinition."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:406
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:404
 msgid ""
 "This code does have a bug, though: If the ``FunctionAST::codegen()`` method "
 "finds an existing IR Function, it does not validate its signature against "
@@ -365,11 +365,11 @@ msgid ""
 "can come up with! Here is a testcase:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:420
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:418
 msgid "Driver Changes and Closing Thoughts"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:422
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:420
 msgid ""
 "For now, code generation to LLVM doesn't really get us much, except that we "
 "can look at the pretty IR calls. The sample code inserts calls to codegen "
@@ -378,7 +378,7 @@ msgid ""
 "simple functions. For example:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:437
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:435
 msgid ""
 "Note how the parser turns the top-level expression into anonymous functions "
 "for us. This will be handy when we add `JIT support <LangImpl04.html#adding-"
@@ -388,34 +388,34 @@ msgid ""
 "html#trivial-constant-folding>`_ explicitly in the next chapter."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:460
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:458
 msgid ""
 "This shows some simple arithmetic. Notice the striking similarity to the "
 "LLVM builder calls that we use to create the instructions."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:475
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:473
 msgid ""
 "This shows some function calls. Note that this function will take a long "
 "time to execute if you call it. In the future we'll add conditional control "
 "flow to actually make recursion useful :)."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:493
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:491
 msgid "This shows an extern for the libm \"cos\" function, and a call to it."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:495
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:493
 msgid "Todo"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:495
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:493
 msgid ""
 "Abandon Pygments' horrible `llvm` lexer. It just totally gives up on "
 "highlighting this due to the first line."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:536
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:534
 msgid ""
 "When you quit the current demo (by sending an EOF via CTRL+D on Linux or "
 "CTRL+Z and ENTER on Windows), it dumps out the IR for the entire module "
@@ -423,18 +423,18 @@ msgid ""
 "referencing each other."
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:541
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:539
 msgid ""
 "This wraps up the third chapter of the Kaleidoscope tutorial. Up next, we'll "
 "describe how to `add JIT codegen and optimizer support <LangImpl04.html>`_ "
 "to this so we can actually start running code!"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:547
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:545
 msgid "Full Code Listing"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:549
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:547
 msgid ""
 "Here is the complete code listing for our running example, enhanced with the "
 "LLVM code generator. Because this uses the LLVM libraries, we need to link "
@@ -443,10 +443,10 @@ msgid ""
 "to use:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:562
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:560
 msgid "Here is the code:"
 msgstr ""
 
-#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:567
+#: ../../../tutorial/MyFirstLanguageFrontend/LangImpl03.rst:565
 msgid "`Next: Adding JIT and Optimizer Support <LangImpl04.html>`_"
 msgstr ""

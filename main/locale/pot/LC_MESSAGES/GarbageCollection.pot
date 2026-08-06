@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-08 12:58+0000\n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,22 +21,22 @@ msgstr ""
 msgid "Garbage Collection with LLVM"
 msgstr ""
 
-#: ../../../GarbageCollection.md:7
+#: ../../../GarbageCollection.md:4
 msgid "Abstract"
 msgstr ""
 
-#: ../../../GarbageCollection.md:9
+#: ../../../GarbageCollection.md:6
 msgid ""
 "This document covers how to integrate LLVM into a compiler for a language "
 "which supports garbage collection.  **Note that LLVM itself does not provide "
 "a garbage collector.**  You must provide your own."
 msgstr ""
 
-#: ../../../GarbageCollection.md:13
+#: ../../../GarbageCollection.md:10
 msgid "Quick Start"
 msgstr ""
 
-#: ../../../GarbageCollection.md:15
+#: ../../../GarbageCollection.md:12
 msgid ""
 "First, you should pick a collector strategy.  LLVM includes a number of "
 "built-in ones, but you can also implement a loadable plugin with a custom "
@@ -45,21 +45,21 @@ msgid ""
 "not a description of the collector itself."
 msgstr ""
 
-#: ../../../GarbageCollection.md:21
+#: ../../../GarbageCollection.md:18
 msgid ""
 "Next, mark your generated functions as using your chosen collector strategy. "
 "From C++, you can call:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:29
+#: ../../../GarbageCollection.md:26
 msgid "This will produce IR like the following fragment:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:36
+#: ../../../GarbageCollection.md:33
 msgid "When generating LLVM IR for your functions, you will need to:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:38
+#: ../../../GarbageCollection.md:35
 msgid ""
 "Use `@llvm.gcread` and/or `@llvm.gcwrite` in place of standard load and "
 "store instructions.  These intrinsics are used to represent load and store "
@@ -67,13 +67,13 @@ msgid ""
 "this step."
 msgstr ""
 
-#: ../../../GarbageCollection.md:43
+#: ../../../GarbageCollection.md:40
 msgid ""
 "Use the memory allocation routines provided by your garbage collector's "
 "runtime library."
 msgstr ""
 
-#: ../../../GarbageCollection.md:46
+#: ../../../GarbageCollection.md:43
 msgid ""
 "If your collector requires them, generate type maps according to your "
 "runtime's binary interface.  LLVM is not involved in the process.  In "
@@ -81,7 +81,7 @@ msgid ""
 "information through the compiler."
 msgstr ""
 
-#: ../../../GarbageCollection.md:51
+#: ../../../GarbageCollection.md:48
 msgid ""
 "Insert any coordination code required for interacting with your collector. "
 "Many collectors require running application code to periodically check a "
@@ -89,7 +89,7 @@ msgid ""
 "as a safepoint poll."
 msgstr ""
 
-#: ../../../GarbageCollection.md:56
+#: ../../../GarbageCollection.md:53
 msgid ""
 "You will need to identify roots (i.e. references to heap objects your "
 "collector needs to know about) in your generated IR, so that LLVM can encode "
@@ -98,29 +98,29 @@ msgid ""
 "or a `gc.statepoint` relocation sequence."
 msgstr ""
 
-#: ../../../GarbageCollection.md:62
+#: ../../../GarbageCollection.md:59
 msgid ""
 "Don't forget to create a root for each intermediate value that is generated "
 "when evaluating an expression.  In `h(f(), g())`, the result of `f()` could "
 "easily be collected if evaluating `g()` triggers a collection."
 msgstr ""
 
-#: ../../../GarbageCollection.md:66
+#: ../../../GarbageCollection.md:63
 msgid ""
 "Finally, you need to link your runtime library with the generated program "
 "executable (for a static compiler) or ensure the appropriate symbols are "
 "available for the runtime linker (for a JIT compiler)."
 msgstr ""
 
-#: ../../../GarbageCollection.md:71
+#: ../../../GarbageCollection.md:68
 msgid "Introduction"
 msgstr ""
 
-#: ../../../GarbageCollection.md:73
+#: ../../../GarbageCollection.md:70
 msgid "What is Garbage Collection?"
 msgstr ""
 
-#: ../../../GarbageCollection.md:75
+#: ../../../GarbageCollection.md:72
 msgid ""
 "Garbage collection is a widely used technique that frees the programmer from "
 "having to know the lifetimes of heap objects, making software easier to "
@@ -129,7 +129,7 @@ msgid ""
 "collection: conservative and accurate."
 msgstr ""
 
-#: ../../../GarbageCollection.md:81
+#: ../../../GarbageCollection.md:78
 msgid ""
 "Conservative garbage collection often does not require any special support "
 "from either the language or the compiler: it can handle non-type-safe "
@@ -138,7 +138,7 @@ msgid ""
 "gc/) is an example of a state-of-the-art conservative collector."
 msgstr ""
 
-#: ../../../GarbageCollection.md:87
+#: ../../../GarbageCollection.md:84
 msgid ""
 "Accurate garbage collection requires the ability to identify all pointers in "
 "the program at run-time (which requires that the source-language be type-"
@@ -147,7 +147,7 @@ msgid ""
 "including the {ref}`processor stack and registers <gcroot>`."
 msgstr ""
 
-#: ../../../GarbageCollection.md:93
+#: ../../../GarbageCollection.md:90
 msgid ""
 "Conservative garbage collection is attractive because it does not require "
 "any special compiler support, but it does have problems.  In particular, "
@@ -160,7 +160,7 @@ msgid ""
 "rare in practice)."
 msgstr ""
 
-#: ../../../GarbageCollection.md:102
+#: ../../../GarbageCollection.md:99
 msgid ""
 "Accurate garbage collectors do not suffer from any of these problems, but "
 "they can suffer from degraded scalar optimization of the program.  In "
@@ -170,59 +170,59 @@ msgid ""
 "garbage collection techniques dominates any low-level losses."
 msgstr ""
 
-#: ../../../GarbageCollection.md:109
+#: ../../../GarbageCollection.md:106
 msgid ""
 "This document describes the mechanisms and interfaces provided by LLVM to "
 "support accurate garbage collection."
 msgstr ""
 
-#: ../../../GarbageCollection.md:112
+#: ../../../GarbageCollection.md:109
 msgid "Goals and non-goals"
 msgstr ""
 
-#: ../../../GarbageCollection.md:114
+#: ../../../GarbageCollection.md:111
 msgid ""
 "LLVM's intermediate representation provides {ref}`garbage collection "
 "intrinsics <gc_intrinsics>` that offer support for a broad class of "
 "collector models.  For instance, the intrinsics permit:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:117
+#: ../../../GarbageCollection.md:114
 msgid "semi-space collectors"
 msgstr ""
 
-#: ../../../GarbageCollection.md:119
+#: ../../../GarbageCollection.md:116
 msgid "mark-sweep collectors"
 msgstr ""
 
-#: ../../../GarbageCollection.md:121
+#: ../../../GarbageCollection.md:118
 msgid "generational collectors"
 msgstr ""
 
-#: ../../../GarbageCollection.md:123
+#: ../../../GarbageCollection.md:120
 msgid "incremental collectors"
 msgstr ""
 
-#: ../../../GarbageCollection.md:125
+#: ../../../GarbageCollection.md:122
 msgid "concurrent collectors"
 msgstr ""
 
-#: ../../../GarbageCollection.md:127
+#: ../../../GarbageCollection.md:124
 msgid "cooperative collectors"
 msgstr ""
 
-#: ../../../GarbageCollection.md:129
+#: ../../../GarbageCollection.md:126
 msgid "reference counting"
 msgstr ""
 
-#: ../../../GarbageCollection.md:131
+#: ../../../GarbageCollection.md:128
 msgid ""
 "We hope that the support built into the LLVM IR is sufficient to support a "
 "broad class of garbage collected languages including Scheme, ML, Java, C#, "
 "Perl, Python, Lua, Ruby, other scripting languages, and more."
 msgstr ""
 
-#: ../../../GarbageCollection.md:135
+#: ../../../GarbageCollection.md:132
 msgid ""
 "Note that LLVM **does not itself provide a garbage collector** --- this "
 "should be part of your language's runtime library.  LLVM provides a "
@@ -238,62 +238,62 @@ msgid ""
 "mechanism."
 msgstr ""
 
-#: ../../../GarbageCollection.md:147
+#: ../../../GarbageCollection.md:144
 msgid ""
 "The aspects of the binary interface with which LLVM's GC support is "
 "concerned are:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:150
+#: ../../../GarbageCollection.md:147
 msgid ""
 "Creation of GC safepoints within code where collection is allowed to execute "
 "safely."
 msgstr ""
 
-#: ../../../GarbageCollection.md:153
+#: ../../../GarbageCollection.md:150
 msgid ""
 "Computation of the stack map.  For each safe point in the code, object "
 "references within the stack frame must be identified so that the collector "
 "may traverse and perhaps update them."
 msgstr ""
 
-#: ../../../GarbageCollection.md:157
+#: ../../../GarbageCollection.md:154
 msgid ""
 "Write barriers when storing object references to the heap.  These are "
 "commonly used to optimize incremental scans in generational collectors."
 msgstr ""
 
-#: ../../../GarbageCollection.md:160
+#: ../../../GarbageCollection.md:157
 msgid ""
 "Emission of read barriers when loading object references.  These are useful "
 "for interoperating with concurrent collectors."
 msgstr ""
 
-#: ../../../GarbageCollection.md:163
+#: ../../../GarbageCollection.md:160
 msgid "There are additional areas that LLVM does not directly address:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:165
+#: ../../../GarbageCollection.md:162
 msgid "Registration of global roots with the runtime."
 msgstr ""
 
-#: ../../../GarbageCollection.md:167
+#: ../../../GarbageCollection.md:164
 msgid "Registration of stack map entries with the runtime."
 msgstr ""
 
-#: ../../../GarbageCollection.md:169
+#: ../../../GarbageCollection.md:166
 msgid ""
 "The functions used by the program to allocate memory, trigger a collection, "
 "etc."
 msgstr ""
 
-#: ../../../GarbageCollection.md:172
+#: ../../../GarbageCollection.md:169
 msgid ""
 "Computation or compilation of type maps, or registration of them with the "
 "runtime.  These are used to crawl the heap for object references."
 msgstr ""
 
-#: ../../../GarbageCollection.md:175
+#: ../../../GarbageCollection.md:172
 msgid ""
 "In general, LLVM's support for GC does not include features which can be "
 "adequately addressed with other features of the IR and does not specify a "
@@ -307,11 +307,11 @@ msgid ""
 "strategies."
 msgstr ""
 
-#: ../../../GarbageCollection.md:188
+#: ../../../GarbageCollection.md:185
 msgid "LLVM IR Features"
 msgstr ""
 
-#: ../../../GarbageCollection.md:190
+#: ../../../GarbageCollection.md:187
 msgid ""
 "This section describes the garbage collection facilities provided by the "
 "{doc}`LLVM intermediate representation <LangRef>`.  The exact behavior of "
@@ -319,18 +319,18 @@ msgid ""
 "<plugin>`."
 msgstr ""
 
-#: ../../../GarbageCollection.md:194
+#: ../../../GarbageCollection.md:191
 msgid "Specifying GC code generation: `gc \"...\"`"
 msgstr ""
 
-#: ../../../GarbageCollection.md:200
+#: ../../../GarbageCollection.md:197
 msgid ""
 "The `gc` function attribute is used to specify the desired GC strategy to "
 "the compiler.  Its programmatic equivalent is the `setGC` method of "
 "`Function`."
 msgstr ""
 
-#: ../../../GarbageCollection.md:203
+#: ../../../GarbageCollection.md:200
 msgid ""
 "Setting `gc \"name\"` on a function triggers a search for a matching "
 "subclass of GCStrategy.  Some collector strategies are built in.  You can "
@@ -340,17 +340,17 @@ msgid ""
 "raise an error."
 msgstr ""
 
-#: ../../../GarbageCollection.md:209
+#: ../../../GarbageCollection.md:206
 msgid ""
 "Specifying the GC style on a per-function basis allows LLVM to link together "
 "programs that use different garbage collection algorithms (or none at all)."
 msgstr ""
 
-#: ../../../GarbageCollection.md:214
+#: ../../../GarbageCollection.md:211
 msgid "Identifying GC roots on the stack"
 msgstr ""
 
-#: ../../../GarbageCollection.md:216
+#: ../../../GarbageCollection.md:213
 msgid ""
 "LLVM currently supports two different mechanisms for describing references "
 "in compiled code at safepoints.  `llvm.gcroot` is the older mechanism; `gc."
@@ -361,21 +361,21 @@ msgid ""
 "work is focused on `gc.statepoint`."
 msgstr ""
 
-#: ../../../GarbageCollection.md:224
+#: ../../../GarbageCollection.md:221
 msgid "Using `gc.statepoint`"
 msgstr ""
 
-#: ../../../GarbageCollection.md:225
+#: ../../../GarbageCollection.md:222
 msgid ""
 "{doc}`This page <Statepoints>` contains detailed documentation for `gc."
 "statepoint`."
 msgstr ""
 
-#: ../../../GarbageCollection.md:228
+#: ../../../GarbageCollection.md:225
 msgid "Using `llvm.gcwrite`"
 msgstr ""
 
-#: ../../../GarbageCollection.md:234
+#: ../../../GarbageCollection.md:231
 msgid ""
 "The `llvm.gcroot` intrinsic is used to inform LLVM that a stack variable "
 "references an object on the heap and is to be tracked for garbage "
@@ -384,7 +384,7 @@ msgid ""
 "**must** reside inside the first basic block."
 msgstr ""
 
-#: ../../../GarbageCollection.md:240
+#: ../../../GarbageCollection.md:237
 msgid ""
 "The first argument **must** be a value referring to an alloca instruction or "
 "a bitcast of an alloca.  The second contains a pointer to metadata that "
@@ -393,7 +393,7 @@ msgid ""
 "metadata."
 msgstr ""
 
-#: ../../../GarbageCollection.md:245
+#: ../../../GarbageCollection.md:242
 msgid ""
 "A compiler which performs manual SSA construction **must** ensure that SSA "
 "values representing GC references are stored into the alloca passed to the "
@@ -403,7 +403,7 @@ msgid ""
 "pointers into the GC heap."
 msgstr ""
 
-#: ../../../GarbageCollection.md:252
+#: ../../../GarbageCollection.md:249
 msgid ""
 "It is also important to mark intermediate values with `llvm.gcroot`.  For "
 "example, consider `h(f(), g())`.  Beware leaking the result of `f()` in the "
@@ -411,7 +411,7 @@ msgid ""
 "initialized and marked with `llvm.gcroot` in the function's prologue."
 msgstr ""
 
-#: ../../../GarbageCollection.md:257
+#: ../../../GarbageCollection.md:254
 msgid ""
 "The `%metadata` argument can be used to avoid requiring heap objects to have "
 "'isa' pointers or tag bits. [[Appel89](#appel89), [Goldberg91](#goldberg91), "
@@ -419,21 +419,21 @@ msgid ""
 "the location of the pointer in the stack frame."
 msgstr ""
 
-#: ../../../GarbageCollection.md:262
+#: ../../../GarbageCollection.md:259
 msgid "Consider the following fragment of Java code:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:271
+#: ../../../GarbageCollection.md:268
 msgid ""
 "This block (which may be located in the middle of a function or in a loop "
 "nest), could be compiled to this LLVM code:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:300
+#: ../../../GarbageCollection.md:297
 msgid "Reading and writing references in the heap"
 msgstr ""
 
-#: ../../../GarbageCollection.md:302
+#: ../../../GarbageCollection.md:299
 msgid ""
 "Some collectors need to be informed when the mutator (the program that needs "
 "garbage collection) either reads a pointer from or writes a pointer to a "
@@ -444,7 +444,7 @@ msgid ""
 "barrier is tolerable."
 msgstr ""
 
-#: ../../../GarbageCollection.md:309
+#: ../../../GarbageCollection.md:306
 msgid ""
 "Barriers often require access to the *object pointer* rather than the "
 "*derived pointer* (which is a pointer to the field within the object).  "
@@ -453,14 +453,14 @@ msgid ""
 "`%derived` is the derived pointer:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:327
+#: ../../../GarbageCollection.md:324
 msgid ""
 "LLVM does not enforce this relationship between the object and derived "
 "pointer (although a particular {ref}`collector strategy <plugin>` might).  "
 "However, it would be an unusual collector that violated it."
 msgstr ""
 
-#: ../../../GarbageCollection.md:331
+#: ../../../GarbageCollection.md:328
 msgid ""
 "The use of these intrinsics is naturally optional if the target GC does not "
 "require the corresponding barrier.  The GC strategy used with such a "
@@ -468,7 +468,7 @@ msgid ""
 "or `store` instruction if they are used."
 msgstr ""
 
-#: ../../../GarbageCollection.md:336
+#: ../../../GarbageCollection.md:333
 msgid ""
 "One known deficiency with the current design is that the barrier intrinsics "
 "do not include the size or alignment of the underlying operation performed.  "
@@ -476,11 +476,11 @@ msgid ""
 "alignment is assumed to be the target machine's default alignment."
 msgstr ""
 
-#: ../../../GarbageCollection.md:341
+#: ../../../GarbageCollection.md:338
 msgid "Write barrier: `llvm.gcwrite`"
 msgstr ""
 
-#: ../../../GarbageCollection.md:347
+#: ../../../GarbageCollection.md:344
 msgid ""
 "For write barriers, LLVM provides the `llvm.gcwrite` intrinsic function.  It "
 "has exactly the same semantics as a non-volatile `store` to the derived "
@@ -488,18 +488,18 @@ msgid ""
 "Function's selected {ref}`GC strategy <plugin>`."
 msgstr ""
 
-#: ../../../GarbageCollection.md:352
+#: ../../../GarbageCollection.md:349
 msgid ""
 "Many important algorithms require write barriers, including generational and "
 "concurrent collectors.  Additionally, write barriers could be used to "
 "implement reference counting."
 msgstr ""
 
-#: ../../../GarbageCollection.md:356
+#: ../../../GarbageCollection.md:353
 msgid "Read barrier: `llvm.gcread`"
 msgstr ""
 
-#: ../../../GarbageCollection.md:362
+#: ../../../GarbageCollection.md:359
 msgid ""
 "For read barriers, LLVM provides the `llvm.gcread` intrinsic function.  It "
 "has exactly the same semantics as a non-volatile `load` from the derived "
@@ -507,31 +507,31 @@ msgid ""
 "Function's selected {ref}`GC strategy <plugin>`."
 msgstr ""
 
-#: ../../../GarbageCollection.md:367
+#: ../../../GarbageCollection.md:364
 msgid ""
 "Read barriers are needed by fewer algorithms than write barriers, and may "
 "have a greater performance impact since pointer reads are more frequent than "
 "writes."
 msgstr ""
 
-#: ../../../GarbageCollection.md:374
+#: ../../../GarbageCollection.md:371
 msgid "Built-In GC Strategies"
 msgstr ""
 
-#: ../../../GarbageCollection.md:376
+#: ../../../GarbageCollection.md:373
 msgid ""
 "LLVM includes built-in support for several varieties of garbage collectors."
 msgstr ""
 
-#: ../../../GarbageCollection.md:378
+#: ../../../GarbageCollection.md:375
 msgid "The Shadow Stack GC"
 msgstr ""
 
-#: ../../../GarbageCollection.md:380
+#: ../../../GarbageCollection.md:377
 msgid "To use this collector strategy, mark your functions with:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:386
+#: ../../../GarbageCollection.md:383
 msgid ""
 "Unlike many GC algorithms which rely on a cooperative code generator to "
 "compile stack maps, this algorithm carefully maintains a linked list of "
@@ -543,19 +543,19 @@ msgid ""
 "specific code to crawl the machine stack."
 msgstr ""
 
-#: ../../../GarbageCollection.md:394
+#: ../../../GarbageCollection.md:391
 msgid "The tradeoff for this simplicity and portability is:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:396
+#: ../../../GarbageCollection.md:393
 msgid "High overhead per function call."
 msgstr ""
 
-#: ../../../GarbageCollection.md:398
+#: ../../../GarbageCollection.md:395
 msgid "Not thread-safe."
 msgstr ""
 
-#: ../../../GarbageCollection.md:400
+#: ../../../GarbageCollection.md:397
 msgid ""
 "Still, it's an easy way to get started.  After your compiler and runtime are "
 "up and running, writing a {ref}`plugin <plugin>` will allow you to take "
@@ -563,14 +563,14 @@ msgid ""
 "order to improve performance."
 msgstr ""
 
-#: ../../../GarbageCollection.md:406
+#: ../../../GarbageCollection.md:403
 msgid ""
 "The shadow stack doesn't imply a memory allocation algorithm.  A semispace "
 "collector or building atop `malloc` are great places to start, and can be "
 "implemented with very little code."
 msgstr ""
 
-#: ../../../GarbageCollection.md:410
+#: ../../../GarbageCollection.md:407
 msgid ""
 "When it comes time to collect, however, your runtime needs to traverse the "
 "stack roots, and for this it needs to integrate with the shadow stack.  "
@@ -579,11 +579,11 @@ msgid ""
 "code.)"
 msgstr ""
 
-#: ../../../GarbageCollection.md:465
+#: ../../../GarbageCollection.md:462
 msgid "The 'Erlang' and 'OCaml' GCs"
 msgstr ""
 
-#: ../../../GarbageCollection.md:467
+#: ../../../GarbageCollection.md:464
 msgid ""
 "LLVM ships with two example collectors which leverage the `gcroot` "
 "mechanisms.  To our knowledge, these are not actually used by any language "
@@ -593,17 +593,17 @@ msgid ""
 "format using a `gcroot` strategy."
 msgstr ""
 
-#: ../../../GarbageCollection.md:474
+#: ../../../GarbageCollection.md:471
 msgid ""
 "As their names imply, the binary format produced is intended to model that "
 "used by the Erlang and OCaml compilers respectively."
 msgstr ""
 
-#: ../../../GarbageCollection.md:479
+#: ../../../GarbageCollection.md:476
 msgid "The Statepoint Example GC"
 msgstr ""
 
-#: ../../../GarbageCollection.md:485
+#: ../../../GarbageCollection.md:482
 msgid ""
 "This GC provides an example of how one might use the infrastructure provided "
 "by `gc.statepoint`. This example GC is compatible with the {ref}"
@@ -613,13 +613,13 @@ msgid ""
 "you use this one as a starting point."
 msgstr ""
 
-#: ../../../GarbageCollection.md:492
+#: ../../../GarbageCollection.md:489
 msgid ""
 "This GC strategy does not support read or write barriers.  As a result, "
 "these intrinsics are lowered to normal loads and stores."
 msgstr ""
 
-#: ../../../GarbageCollection.md:495
+#: ../../../GarbageCollection.md:492
 msgid ""
 "The stack map format generated by this GC strategy can be found in the {ref}"
 "`stackmap-section` using a format documented {ref}`here <statepoint-stackmap-"
@@ -627,43 +627,43 @@ msgid ""
 "LLVM going forward."
 msgstr ""
 
-#: ../../../GarbageCollection.md:499
+#: ../../../GarbageCollection.md:496
 msgid "The CoreCLR GC"
 msgstr ""
 
-#: ../../../GarbageCollection.md:505
+#: ../../../GarbageCollection.md:502
 msgid ""
 "This GC leverages the `gc.statepoint` mechanism to support the [CoreCLR]"
 "(https://github.com/dotnet/coreclr) runtime."
 msgstr ""
 
-#: ../../../GarbageCollection.md:508
+#: ../../../GarbageCollection.md:505
 msgid ""
 "Support for this GC strategy is a work in progress. This strategy will "
 "differ from {ref}`statepoint-example GC <statepoint_example_gc>` strategy in "
 "certain aspects like:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:513
+#: ../../../GarbageCollection.md:510
 msgid ""
 "Base-pointers of interior pointers are not explicitly tracked and reported."
 msgstr ""
 
-#: ../../../GarbageCollection.md:516
+#: ../../../GarbageCollection.md:513
 msgid "A different format is used for encoding stack maps."
 msgstr ""
 
-#: ../../../GarbageCollection.md:518
+#: ../../../GarbageCollection.md:515
 msgid ""
 "Safe-point polls are only needed before loop-back edges and before tail-"
 "calls (not needed at function-entry)."
 msgstr ""
 
-#: ../../../GarbageCollection.md:521
+#: ../../../GarbageCollection.md:518
 msgid "Custom GC Strategies"
 msgstr ""
 
-#: ../../../GarbageCollection.md:523
+#: ../../../GarbageCollection.md:520
 msgid ""
 "If none of the built-in GC strategy descriptions met your needs above, you "
 "will need to define a custom GCStrategy and possibly, a custom LLVM pass to "
@@ -671,7 +671,7 @@ msgid ""
 "GCStrategy would be to look at one of the built-in strategies."
 msgstr ""
 
-#: ../../../GarbageCollection.md:528
+#: ../../../GarbageCollection.md:525
 msgid ""
 "You may be able to structure this additional code as a loadable plugin "
 "library. Loadable plugins are sufficient if all you need is to enable a "
@@ -682,23 +682,23 @@ msgid ""
 "use case without requiring a custom build."
 msgstr ""
 
-#: ../../../GarbageCollection.md:536
+#: ../../../GarbageCollection.md:533
 msgid "Collector Requirements"
 msgstr ""
 
-#: ../../../GarbageCollection.md:538
+#: ../../../GarbageCollection.md:535
 msgid ""
 "You should be able to leverage any existing collector library that includes "
 "the following elements:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:540
+#: ../../../GarbageCollection.md:537
 msgid ""
 "A memory allocator which exposes an allocation function your compiled code "
 "can call."
 msgstr ""
 
-#: ../../../GarbageCollection.md:543
+#: ../../../GarbageCollection.md:540
 msgid ""
 "A binary format for the stack map.  A stack map describes the location of "
 "references at a safepoint and is used by precise collectors to identify "
@@ -706,19 +706,19 @@ msgid ""
 "which conservatively scan the stack don't require such a structure."
 msgstr ""
 
-#: ../../../GarbageCollection.md:548
+#: ../../../GarbageCollection.md:545
 msgid ""
 "A stack crawler to discover functions on the call stack, and enumerate the "
 "references listed in the stack map for each call site."
 msgstr ""
 
-#: ../../../GarbageCollection.md:551
+#: ../../../GarbageCollection.md:548
 msgid ""
 "A mechanism for identifying references in global locations (e.g. global "
 "variables)."
 msgstr ""
 
-#: ../../../GarbageCollection.md:554
+#: ../../../GarbageCollection.md:551
 msgid ""
 "If your collector requires them, an LLVM IR implementation of your "
 "collector's load and store barriers.  Note that since many collectors don't "
@@ -726,17 +726,17 @@ msgid ""
 "loads and stores unless you arrange otherwise."
 msgstr ""
 
-#: ../../../GarbageCollection.md:560
+#: ../../../GarbageCollection.md:557
 msgid "Implementing a collector plugin"
 msgstr ""
 
-#: ../../../GarbageCollection.md:562
+#: ../../../GarbageCollection.md:559
 msgid ""
 "User code specifies which GC code generation to use with the `gc` function "
 "attribute or, equivalently, with the `setGC` method of `Function`."
 msgstr ""
 
-#: ../../../GarbageCollection.md:565
+#: ../../../GarbageCollection.md:562
 msgid ""
 "To implement a GC plugin, it is necessary to subclass `llvm::GCStrategy`, "
 "which can be accomplished in a few lines of boilerplate code.  LLVM's "
@@ -747,7 +747,7 @@ msgid ""
 "lines of code."
 msgstr ""
 
-#: ../../../GarbageCollection.md:572
+#: ../../../GarbageCollection.md:569
 msgid ""
 "This is not the appropriate place to implement a garbage collected heap or a "
 "garbage collector itself.  That code should exist in the language's runtime "
@@ -756,56 +756,56 @@ msgid ""
 "the {ref}`stack map <stack-map>`."
 msgstr ""
 
-#: ../../../GarbageCollection.md:577
+#: ../../../GarbageCollection.md:574
 msgid "To subclass `llvm::GCStrategy` and register it with the compiler:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:599
+#: ../../../GarbageCollection.md:596
 msgid "This boilerplate collector does nothing.  More specifically:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:601
+#: ../../../GarbageCollection.md:598
 msgid ""
 "`llvm.gcread` calls are replaced with the corresponding `load` instruction."
 msgstr ""
 
-#: ../../../GarbageCollection.md:604
+#: ../../../GarbageCollection.md:601
 msgid ""
 "`llvm.gcwrite` calls are replaced with the corresponding `store` instruction."
 msgstr ""
 
-#: ../../../GarbageCollection.md:607
+#: ../../../GarbageCollection.md:604
 msgid "No safe points are added to the code."
 msgstr ""
 
-#: ../../../GarbageCollection.md:609
+#: ../../../GarbageCollection.md:606
 msgid "The stack map is not compiled into the executable."
 msgstr ""
 
-#: ../../../GarbageCollection.md:611
+#: ../../../GarbageCollection.md:608
 msgid ""
 "Using the LLVM makefiles, this code can be compiled as a plugin using a "
 "simple makefile:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:624
+#: ../../../GarbageCollection.md:621
 msgid ""
 "Once the plugin is compiled, code using it may be compiled using `llc` `-"
 "load=MyGC.so` (though MyGC.so may have some other platform-specific "
 "extension):"
 msgstr ""
 
-#: ../../../GarbageCollection.md:637
+#: ../../../GarbageCollection.md:634
 msgid ""
 "It is also possible to statically link the collector plugin into tools, such "
 "as a language-specific compiler front-end."
 msgstr ""
 
-#: ../../../GarbageCollection.md:642
+#: ../../../GarbageCollection.md:639
 msgid "Overview of available features"
 msgstr ""
 
-#: ../../../GarbageCollection.md:644
+#: ../../../GarbageCollection.md:641
 msgid ""
 "`GCStrategy` provides a range of features through which a plugin may do "
 "useful work.  Some of these are callbacks, some are algorithms that can be "
@@ -814,218 +814,244 @@ msgid ""
 "typically require them."
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "Algorithm"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "Done"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "Shadow stack"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "refcount"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "mark-sweep"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "copying"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "incremental"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "threaded"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "concurrent"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "stack map"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "✓"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "✘"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "initialize<br>roots"
 msgstr ""
 
-#: ../../../GarbageCollection.md:653 ../../../GarbageCollection.md:654
-#: ../../../GarbageCollection.md:655 ../../../GarbageCollection.md:659
-#: ../../../GarbageCollection.md:660 ../../../GarbageCollection.md:661
-#: ../../../GarbageCollection.md:662 ../../../GarbageCollection.md:663
-#: ../../../GarbageCollection.md:664 ../../../GarbageCollection.md:669
-#: ../../../GarbageCollection.md:670
+#: ../../../GarbageCollection.md:650 ../../../GarbageCollection.md:651
+#: ../../../GarbageCollection.md:652 ../../../GarbageCollection.md:656
+#: ../../../GarbageCollection.md:657 ../../../GarbageCollection.md:658
+#: ../../../GarbageCollection.md:659 ../../../GarbageCollection.md:660
+#: ../../../GarbageCollection.md:661 ../../../GarbageCollection.md:666
+#: ../../../GarbageCollection.md:667
 msgid "<br>"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "derived<br>pointers"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "NO"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "**N**\\*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "**custom<br>lowering**"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "*gcroot*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "*gcwrite*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "*gcread*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "**safe<br>points**"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "*in<br>calls*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "*before<br>calls*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "*for<br>loops*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "**N**"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "*before<br>escape*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "emit code<br>at safe<br>points"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "**output**"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "*assembly*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "*JIT*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "**?**"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "*obj*"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "live<br>analysis"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "register<br>map"
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "\\* Derived pointers only pose a hazard to copying collections."
 msgstr ""
 
-#: ../../../GarbageCollection.md:3
+#: ../../../GarbageCollection.md:0
 msgid "**?** denotes a feature which could be utilized if available."
 msgstr ""
 
-#: ../../../GarbageCollection.md:674
+#: ../../../GarbageCollection.md:671
 msgid "To be clear, the collection techniques above are defined as:"
 msgstr ""
 
+#: ../../../GarbageCollection.md:673
+msgid "Shadow Stack"
+msgstr ""
+
+#: ../../../GarbageCollection.md:674
+msgid "The mutator carefully maintains a linked list of stack roots."
+msgstr ""
+
 #: ../../../GarbageCollection.md:676
-msgid ""
-"Shadow Stack : The mutator carefully maintains a linked list of stack roots."
+msgid "Reference Counting"
 msgstr ""
 
-#: ../../../GarbageCollection.md:679
+#: ../../../GarbageCollection.md:677
 msgid ""
-"Reference Counting : The mutator maintains a reference count for each object "
-"and frees an object   when its count falls to zero."
+"The mutator maintains a reference count for each object and frees an object "
+"when its count falls to zero."
 msgstr ""
 
-#: ../../../GarbageCollection.md:683
-msgid ""
-"Mark-Sweep : When the heap is exhausted, the collector marks reachable "
-"objects starting   from the roots, then deallocates unreachable objects in a "
-"sweep phase."
+#: ../../../GarbageCollection.md:680
+msgid "Mark-Sweep"
 msgstr ""
 
-#: ../../../GarbageCollection.md:687
+#: ../../../GarbageCollection.md:681
 msgid ""
-"Copying : As reachability analysis proceeds, the collector copies objects "
-"from one heap   area to another, compacting them in the process.  Copying "
-"collectors enable   highly efficient \"bump pointer\" allocation and can "
-"improve locality of   reference."
+"When the heap is exhausted, the collector marks reachable objects starting "
+"from the roots, then deallocates unreachable objects in a sweep phase."
 msgstr ""
 
-#: ../../../GarbageCollection.md:693
-msgid ""
-"Incremental : (Including generational collectors.) Incremental collectors "
-"generally have all   the properties of a copying collector (regardless of "
-"whether the mature heap   is compacting), but bring the added complexity of "
-"requiring write barriers."
+#: ../../../GarbageCollection.md:684
+msgid "Copying"
 msgstr ""
 
-#: ../../../GarbageCollection.md:698
+#: ../../../GarbageCollection.md:685
 msgid ""
-"Threaded : Denotes a multithreaded mutator; the collector must still stop "
-"the mutator   (\"stop the world\") before beginning reachability analysis.  "
-"Stopping a   multithreaded mutator is a complicated problem.  It generally "
-"requires highly   platform-specific code in the runtime, and the production "
-"of carefully   designed machine code at safe points."
+"As reachability analysis proceeds, the collector copies objects from one "
+"heap area to another, compacting them in the process.  Copying collectors "
+"enable highly efficient \"bump pointer\" allocation and can improve locality "
+"of reference."
 msgstr ""
 
-#: ../../../GarbageCollection.md:705
-msgid ""
-"Concurrent : In this technique, the mutator and the collector run "
-"concurrently, with the   goal of eliminating pause times.  In a "
-"*cooperative* collector, the mutator   further aids with collection should a "
-"pause occur, allowing collection to take   advantage of multiprocessor "
-"hosts.  The \"stop the world\" problem of threaded   collectors is generally "
-"still present to a limited extent.  Sophisticated   marking algorithms are "
-"necessary.  Read barriers may be necessary."
+#: ../../../GarbageCollection.md:690
+msgid "Incremental"
 msgstr ""
 
-#: ../../../GarbageCollection.md:713
+#: ../../../GarbageCollection.md:691
+msgid ""
+"(Including generational collectors.) Incremental collectors generally have "
+"all the properties of a copying collector (regardless of whether the mature "
+"heap is compacting), but bring the added complexity of requiring write "
+"barriers."
+msgstr ""
+
+#: ../../../GarbageCollection.md:695
+msgid "Threaded"
+msgstr ""
+
+#: ../../../GarbageCollection.md:696
+msgid ""
+"Denotes a multithreaded mutator; the collector must still stop the mutator "
+"(\"stop the world\") before beginning reachability analysis.  Stopping a "
+"multithreaded mutator is a complicated problem.  It generally requires "
+"highly platform-specific code in the runtime, and the production of "
+"carefully designed machine code at safe points."
+msgstr ""
+
+#: ../../../GarbageCollection.md:702
+msgid "Concurrent"
+msgstr ""
+
+#: ../../../GarbageCollection.md:703
+msgid ""
+"In this technique, the mutator and the collector run concurrently, with the "
+"goal of eliminating pause times.  In a *cooperative* collector, the mutator "
+"further aids with collection should a pause occur, allowing collection to "
+"take advantage of multiprocessor hosts.  The \"stop the world\" problem of "
+"threaded collectors is generally still present to a limited extent.  "
+"Sophisticated marking algorithms are necessary.  Read barriers may be "
+"necessary."
+msgstr ""
+
+#: ../../../GarbageCollection.md:710
 msgid ""
 "As the matrix indicates, LLVM's garbage collection infrastructure is already "
 "suitable for a wide variety of collectors, but does not currently extend to "
@@ -1033,58 +1059,58 @@ msgid ""
 "interest."
 msgstr ""
 
-#: ../../../GarbageCollection.md:720
+#: ../../../GarbageCollection.md:717
 msgid "Computing stack maps"
 msgstr ""
 
-#: ../../../GarbageCollection.md:722
+#: ../../../GarbageCollection.md:719
 msgid ""
 "LLVM automatically computes a stack map.  One of the most important features "
 "of a `GCStrategy` is to compile this information into the executable in the "
 "binary representation expected by the runtime library."
 msgstr ""
 
-#: ../../../GarbageCollection.md:726
+#: ../../../GarbageCollection.md:723
 msgid ""
 "The stack map consists of the location and identity of each GC root in the "
 "each function in the module.  For each root:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:729
+#: ../../../GarbageCollection.md:726
 msgid "`RootNum`: The index of the root."
 msgstr ""
 
-#: ../../../GarbageCollection.md:731
+#: ../../../GarbageCollection.md:728
 msgid "`StackOffset`: The offset of the object relative to the frame pointer."
 msgstr ""
 
-#: ../../../GarbageCollection.md:733
+#: ../../../GarbageCollection.md:730
 msgid ""
 "`RootMetadata`: The value passed as the `%metadata` parameter to the `@llvm."
 "gcroot` intrinsic."
 msgstr ""
 
-#: ../../../GarbageCollection.md:736
+#: ../../../GarbageCollection.md:733
 msgid "Also, for the function as a whole:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:738
+#: ../../../GarbageCollection.md:735
 msgid ""
 "`getFrameSize()`: The overall size of the function's initial stack frame,  "
 "not accounting for any dynamic allocation."
 msgstr ""
 
-#: ../../../GarbageCollection.md:741
+#: ../../../GarbageCollection.md:738
 msgid "`roots_size()`: The count of roots in the function."
 msgstr ""
 
-#: ../../../GarbageCollection.md:743
+#: ../../../GarbageCollection.md:740
 msgid ""
 "To access the stack map, use `GCFunctionMetadata::roots_begin()` and -"
 "`end()` from the {ref}`GCMetadataPrinter <assembly>`:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:762
+#: ../../../GarbageCollection.md:759
 msgid ""
 "If the `llvm.gcroot` intrinsic is eliminated before code generation by a "
 "custom lowering pass, LLVM will compute an empty stack map.  This may be "
@@ -1092,29 +1118,29 @@ msgid ""
 "stack."
 msgstr ""
 
-#: ../../../GarbageCollection.md:768
+#: ../../../GarbageCollection.md:765
 msgid "Initializing roots to null"
 msgstr ""
 
-#: ../../../GarbageCollection.md:770
+#: ../../../GarbageCollection.md:767
 msgid ""
 "It is recommended that frontends initialize roots explicitly to avoid "
 "potentially confusing the optimizer.  This prevents the GC from visiting "
 "uninitialized pointers, which will almost certainly cause it to crash."
 msgstr ""
 
-#: ../../../GarbageCollection.md:774
+#: ../../../GarbageCollection.md:771
 msgid ""
 "As a fallback, LLVM will automatically initialize each root to `null` upon "
 "entry to the function.  Support for this mode in code generation is largely "
 "a legacy detail to keep old collector implementations working."
 msgstr ""
 
-#: ../../../GarbageCollection.md:778
+#: ../../../GarbageCollection.md:775
 msgid "Custom lowering of intrinsics"
 msgstr ""
 
-#: ../../../GarbageCollection.md:780
+#: ../../../GarbageCollection.md:777
 msgid ""
 "For GCs which use barriers or unusual treatment of stack roots, the "
 "implementor is responsible for providing a custom pass to lower the "
@@ -1125,17 +1151,17 @@ msgid ""
 "ShadowStackGCLowering pass."
 msgstr ""
 
-#: ../../../GarbageCollection.md:788
+#: ../../../GarbageCollection.md:785
 msgid ""
 "There is currently no way to register such a custom lowering pass without "
 "building a custom copy of LLVM."
 msgstr ""
 
-#: ../../../GarbageCollection.md:793
+#: ../../../GarbageCollection.md:790
 msgid "Generating safe points"
 msgstr ""
 
-#: ../../../GarbageCollection.md:795
+#: ../../../GarbageCollection.md:792
 msgid ""
 "LLVM provides support for associating stackmaps with the return address of a "
 "call.  Any loop or return safepoints required by a given collector design "
@@ -1144,11 +1170,11 @@ msgid ""
 "safepoints and will thus have an associated stackmap."
 msgstr ""
 
-#: ../../../GarbageCollection.md:803
+#: ../../../GarbageCollection.md:800
 msgid "Emitting assembly code: `GCMetadataPrinter`"
 msgstr ""
 
-#: ../../../GarbageCollection.md:805
+#: ../../../GarbageCollection.md:802
 msgid ""
 "LLVM allows a plugin to print arbitrary assembly code before and after the "
 "rest of a module's assembly code.  At the end of the module, the GC can "
@@ -1156,7 +1182,7 @@ msgid ""
 "information is not yet computed.)"
 msgstr ""
 
-#: ../../../GarbageCollection.md:810
+#: ../../../GarbageCollection.md:807
 msgid ""
 "Since AsmWriter and CodeGen are separate components of LLVM, a separate "
 "abstract base class and registry is provided for printing assembly code, the "
@@ -1164,17 +1190,17 @@ msgid ""
 "for such a subclass if the `GCStrategy` sets `UsesMetadata`:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:821
+#: ../../../GarbageCollection.md:818
 msgid "This separation allows JIT-only clients to be smaller."
 msgstr ""
 
-#: ../../../GarbageCollection.md:823
+#: ../../../GarbageCollection.md:820
 msgid ""
 "Note that LLVM does not currently have analogous APIs to support code "
 "generation in the JIT, nor using the object writers."
 msgstr ""
 
-#: ../../../GarbageCollection.md:847
+#: ../../../GarbageCollection.md:844
 msgid ""
 "The collector should use `AsmPrinter` to print portable assembly code.  The "
 "collector itself contains the stack map for the entire module, and may "
@@ -1182,30 +1208,30 @@ msgid ""
 "Here's a realistic example:"
 msgstr ""
 
-#: ../../../GarbageCollection.md:932
+#: ../../../GarbageCollection.md:929
 msgid "References"
 msgstr ""
 
-#: ../../../GarbageCollection.md:936
+#: ../../../GarbageCollection.md:933
 msgid ""
 "[Appel89] Runtime Tags Aren't Necessary. Andrew W. Appel. Lisp and Symbolic "
 "Computation 19(7):703-705, July 1989."
 msgstr ""
 
-#: ../../../GarbageCollection.md:941
+#: ../../../GarbageCollection.md:938
 msgid ""
 "[Goldberg91] Tag-free garbage collection for strongly typed programming "
 "languages. Benjamin Goldberg. ACM SIGPLAN PLDI'91."
 msgstr ""
 
-#: ../../../GarbageCollection.md:946
+#: ../../../GarbageCollection.md:943
 msgid ""
 "[Tolmach94] Tag-free garbage collection using explicit type parameters. "
 "Andrew Tolmach. Proceedings of the 1994 ACM conference on LISP and "
 "functional programming."
 msgstr ""
 
-#: ../../../GarbageCollection.md:952
+#: ../../../GarbageCollection.md:949
 msgid ""
 "[Henderson2002] [Accurate Garbage Collection in an Uncooperative Environment]"
 "(http://citeseer.ist.psu.edu/henderson02accurate.html)"
