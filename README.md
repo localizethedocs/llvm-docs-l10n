@@ -1,5 +1,5 @@
 <div align="center">
-<h1 id="localization-of-llvm-documentation">Localization of LLVM Documentation</h1>
+<h1 id="localization-of-the-llvm-documentation">Localization of The LLVM Documentation</h1>
 </div>
 
 <details><summary><strong>Switch Languages</strong></summary>
@@ -60,7 +60,7 @@
 
 <p></p>
 
-The goal of this project is to translate the LLVM documentation into multiple languages. Translations are contributed via the Crowdin platform, automatically synchronized with the GitHub repository, and can be previewed on GitHub Pages.
+The goal of this project is to translate The LLVM Documentation into multiple languages. Translations are contributed via the Crowdin platform, automatically synchronized with the GitHub repository, and can be previewed on GitHub Pages.
 
 > [!NOTE]
 > The translation is <strong>unofficial</strong> and <strong>community-driven</strong>. If you find any inaccuracies, always refer to the <a href="https://llvm.org/docs">official documentation</a> or the <a href="https://github.com/llvm/llvm-project">source repository</a> of the upstream project for the most reliable information.
