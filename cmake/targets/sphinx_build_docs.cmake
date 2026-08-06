@@ -211,7 +211,7 @@ restore_cmake_message_indent()
 
 set(UPSTREAM_DOCS   "https://llvm.org/docs")
 set(UPSTREAM_REPO   "https://github.com/llvm/llvm-project")
-set(INSERT_POINT    "div[role=\"main\"]")
+set(INSERT_POINT    "div[class=\"article-container\"]")
 
 
 message(STATUS "Configuring 'ltd-provenance.js' file to the version subdir of the builder directory...")
