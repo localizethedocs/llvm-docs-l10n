@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-13 08:36+0000\n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,126 +17,126 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../../../ORCv2.rst:3
+#: ../../../ORCv2.md:1
 msgid "ORC Design and Implementation"
 msgstr ""
 
-#: ../../../ORCv2.rst:9
+#: ../../../ORCv2.md:4
 msgid "Introduction"
 msgstr ""
 
-#: ../../../ORCv2.rst:11
+#: ../../../ORCv2.md:6
 msgid ""
 "This document aims to provide a high-level overview of the design and "
 "implementation of the ORC JIT APIs. Except where otherwise stated all "
 "discussion refers to the modern ORCv2 APIs (available since LLVM 7). Clients "
-"wishing to transition from OrcV1 should see Section :ref:"
+"wishing to transition from OrcV1 should see Section {ref}"
 "`transitioning_orcv1_to_orcv2`."
 msgstr ""
 
-#: ../../../ORCv2.rst:17
+#: ../../../ORCv2.md:11
 msgid "Use-cases"
 msgstr ""
 
-#: ../../../ORCv2.rst:19
+#: ../../../ORCv2.md:13
 msgid ""
 "ORC provides a modular API for building JIT compilers. There are a number of "
 "use cases for such an API. For example:"
 msgstr ""
 
-#: ../../../ORCv2.rst:22
+#: ../../../ORCv2.md:16
 msgid ""
-"1. The LLVM tutorials use a simple ORC-based JIT class to execute "
-"expressions compiled from a toy language: Kaleidoscope."
+"The LLVM tutorials use a simple ORC-based JIT class to execute expressions "
+"compiled from a toy language: Kaleidoscope."
 msgstr ""
 
-#: ../../../ORCv2.rst:25
+#: ../../../ORCv2.md:19
 msgid ""
-"2. The LLVM debugger, LLDB, uses a cross-compiling JIT for expression "
+"The LLVM debugger, LLDB, uses a cross-compiling JIT for expression "
 "evaluation. In this use case, cross compilation allows expressions compiled "
 "in the debugger process to be executed on the debug target process, which "
 "may be on a different device/architecture."
 msgstr ""
 
-#: ../../../ORCv2.rst:30
+#: ../../../ORCv2.md:24
 msgid ""
-"3. In high-performance JITs (e.g. JVMs, Julia) that want to make use of "
-"LLVM's optimizations within an existing JIT infrastructure."
+"In high-performance JITs (e.g. JVMs, Julia) that want to make use of LLVM's "
+"optimizations within an existing JIT infrastructure."
 msgstr ""
 
-#: ../../../ORCv2.rst:33
+#: ../../../ORCv2.md:27
 msgid "In interpreters and REPLs, e.g. Cling (C++) and the Swift interpreter."
 msgstr ""
 
-#: ../../../ORCv2.rst:35
+#: ../../../ORCv2.md:29
 msgid ""
 "By adopting a modular, library-based design we aim to make ORC useful in as "
 "many of these contexts as possible."
 msgstr ""
 
-#: ../../../ORCv2.rst:39
+#: ../../../ORCv2.md:32
 msgid "Features"
 msgstr ""
 
-#: ../../../ORCv2.rst:41
+#: ../../../ORCv2.md:34
 msgid "ORC provides the following features:"
 msgstr ""
 
-#: ../../../ORCv2.rst:48
+#: ../../../ORCv2.md:36
 msgid "**JIT-linking**"
 msgstr ""
 
-#: ../../../ORCv2.rst:44
+#: ../../../ORCv2.md:37
 msgid ""
-"ORC provides APIs to link relocatable object files (COFF, ELF, MachO) [1]_ "
+"ORC provides APIs to link relocatable object files (COFF, ELF, MachO) [^1] "
 "into a target process at runtime. The target process may be the same process "
 "that contains the JIT session object and jit-linker, or may be another "
 "process (even one running on a different machine or architecture) that "
 "communicates with the JIT via RPC."
 msgstr ""
 
-#: ../../../ORCv2.rst:52
+#: ../../../ORCv2.md:43
 msgid "**LLVM IR compilation**"
 msgstr ""
 
-#: ../../../ORCv2.rst:51
+#: ../../../ORCv2.md:44
 msgid ""
 "ORC provides off the shelf components (IRCompileLayer, SimpleCompiler, "
 "ConcurrentIRCompiler) that make it easy to add LLVM IR to a JIT'd process."
 msgstr ""
 
-#: ../../../ORCv2.rst:59
+#: ../../../ORCv2.md:47
 msgid "**Eager and lazy compilation**"
 msgstr ""
 
-#: ../../../ORCv2.rst:55
+#: ../../../ORCv2.md:48
 msgid ""
 "By default, ORC will compile symbols as soon as they are looked up in the "
-"JIT session object (``ExecutionSession``). Compiling eagerly by default "
-"makes it easy to use ORC as an in-memory compiler for an existing JIT "
-"(similar to how MCJIT is commonly used). However ORC also provides built-in "
-"support for lazy compilation via lazy-reexports (see :ref:`Laziness`)."
+"JIT session object (`ExecutionSession`). Compiling eagerly by default makes "
+"it easy to use ORC as an in-memory compiler for an existing JIT (similar to "
+"how MCJIT is commonly used). However ORC also provides built-in support for "
+"lazy compilation via lazy-reexports (see {ref}`Laziness`)."
 msgstr ""
 
-#: ../../../ORCv2.rst:66
+#: ../../../ORCv2.md:54
 msgid "**Support for Custom Compilers and Program Representations**"
 msgstr ""
 
-#: ../../../ORCv2.rst:62
+#: ../../../ORCv2.md:55
 msgid ""
 "Clients can supply custom compilers for each symbol that they define in "
 "their JIT session. ORC will run the user-supplied compiler when the a "
 "definition of a symbol is needed. ORC is actually fully language agnostic: "
 "LLVM IR is not treated specially, and is supported via the same wrapper "
-"mechanism (the ``MaterializationUnit`` class) that is used for custom "
+"mechanism (the `MaterializationUnit` class) that is used for custom "
 "compilers."
 msgstr ""
 
-#: ../../../ORCv2.rst:74
+#: ../../../ORCv2.md:61
 msgid "**Concurrent JIT'd code** and **Concurrent Compilation**"
 msgstr ""
 
-#: ../../../ORCv2.rst:69
+#: ../../../ORCv2.md:62
 msgid ""
 "JIT'd code may be executed in multiple threads, may spawn new threads, and "
 "may re-enter the ORC (e.g. to request lazy compilation) concurrently from "
@@ -146,37 +146,37 @@ msgid ""
 "dependencies have also been JIT'd and they are safe to call or use."
 msgstr ""
 
-#: ../../../ORCv2.rst:77
+#: ../../../ORCv2.md:69
 msgid "**Removable Code**"
 msgstr ""
 
-#: ../../../ORCv2.rst:77
+#: ../../../ORCv2.md:70
 msgid "Resources for JIT'd program representations"
 msgstr ""
 
-#: ../../../ORCv2.rst:82
+#: ../../../ORCv2.md:72
 msgid "**Orthogonality** and **Composability**"
 msgstr ""
 
-#: ../../../ORCv2.rst:80
+#: ../../../ORCv2.md:73
 msgid ""
 "Each of the features above can be used independently. It is possible to put "
 "ORC components together to make a non-lazy, in-process, single threaded JIT "
 "or a lazy, out-of-process, concurrent JIT, or anything in between."
 msgstr ""
 
-#: ../../../ORCv2.rst:85
+#: ../../../ORCv2.md:77
 msgid "LLJIT and LLLazyJIT"
 msgstr ""
 
-#: ../../../ORCv2.rst:87
+#: ../../../ORCv2.md:79
 msgid ""
 "ORC provides two basic JIT classes off-the-shelf. These are useful both as "
 "examples of how to assemble ORC components to make a JIT, and as "
 "replacements for earlier LLVM JIT APIs (e.g. MCJIT)."
 msgstr ""
 
-#: ../../../ORCv2.rst:91
+#: ../../../ORCv2.md:83
 msgid ""
 "The LLJIT class uses an IRCompileLayer and RTDyldObjectLinkingLayer to "
 "support compilation of LLVM IR and linking of relocatable object files. All "
@@ -186,7 +186,7 @@ msgid ""
 "features, e.g. JITEventListeners are not supported yet)."
 msgstr ""
 
-#: ../../../ORCv2.rst:98
+#: ../../../ORCv2.md:90
 msgid ""
 "The LLLazyJIT extends LLJIT and adds a CompileOnDemandLayer to enable lazy "
 "compilation of LLVM IR. When an LLVM IR module is added via the "
@@ -195,52 +195,52 @@ msgid ""
 "LLVM's original (pre-MCJIT) JIT API."
 msgstr ""
 
-#: ../../../ORCv2.rst:104
+#: ../../../ORCv2.md:96
 msgid ""
 "LLJIT and LLLazyJIT instances can be created using their respective builder "
 "classes: LLJITBuilder and LLazyJITBuilder. For example, assuming you have a "
-"module ``M`` loaded on a ThreadSafeContext ``Ctx``:"
+"module `M` loaded on a ThreadSafeContext `Ctx`:"
 msgstr ""
 
-#: ../../../ORCv2.rst:132
+#: ../../../ORCv2.md:124
 msgid ""
 "The builder classes provide a number of configuration options that can be "
 "specified before the JIT instance is constructed. For example:"
 msgstr ""
 
-#: ../../../ORCv2.rst:155
+#: ../../../ORCv2.md:147
 msgid ""
 "For users wanting to get started with LLJIT a minimal example program can be "
-"found at ``llvm/examples/HowToUseLLJIT``."
+"found at `llvm/examples/HowToUseLLJIT`."
 msgstr ""
 
-#: ../../../ORCv2.rst:159
+#: ../../../ORCv2.md:150
 msgid "Design Overview"
 msgstr ""
 
-#: ../../../ORCv2.rst:161
+#: ../../../ORCv2.md:152
 msgid ""
 "ORC's JIT program model aims to emulate the linking and symbol resolution "
 "rules used by the static and dynamic linkers. This allows ORC to JIT "
 "arbitrary LLVM IR, including IR produced by an ordinary static compiler (e."
 "g. clang) that uses constructs like symbol linkage and visibility, and weak "
-"[3]_ and common symbol definitions."
+"[^3] and common symbol definitions."
 msgstr ""
 
-#: ../../../ORCv2.rst:167
+#: ../../../ORCv2.md:158
 msgid ""
-"To see how this works, imagine a program ``foo`` which links against a pair "
-"of dynamic libraries: ``libA`` and ``libB``. On the command line, building "
-"this program might look like:"
+"To see how this works, imagine a program `foo` which links against a pair of "
+"dynamic libraries: `libA` and `libB`. On the command line, building this "
+"program might look like:"
 msgstr ""
 
-#: ../../../ORCv2.rst:178
+#: ../../../ORCv2.md:169
 msgid ""
 "In ORC, this would translate into API calls on a hypothetical "
 "CXXCompilingLayer (with error checking omitted for brevity) as:"
 msgstr ""
 
-#: ../../../ORCv2.rst:211
+#: ../../../ORCv2.md:202
 msgid ""
 "This example tells us nothing about *how* or *when* compilation will happen. "
 "That will depend on the implementation of the hypothetical "
@@ -254,7 +254,7 @@ msgid ""
 "dylib, and the main dylib links against LibA before LibB."
 msgstr ""
 
-#: ../../../ORCv2.rst:222
+#: ../../../ORCv2.md:213
 msgid ""
 "Many JIT clients will have no need for this strict adherence to the usual "
 "ahead-of-time linking rules, and should be able to get by just fine by "
@@ -263,7 +263,7 @@ msgid ""
 "linking (e.g. C++) will find that this feature makes life much easier."
 msgstr ""
 
-#: ../../../ORCv2.rst:228
+#: ../../../ORCv2.md:219
 msgid ""
 "Symbol lookup in ORC serves two other important functions, beyond providing "
 "addresses for symbols: (1) It triggers compilation of the symbol(s) searched "
@@ -272,7 +272,7 @@ msgid ""
 "the lookup process is:"
 msgstr ""
 
-#: ../../../ORCv2.rst:242
+#: ../../../ORCv2.md:233
 msgid ""
 "In this context a materializer is something that provides a working "
 "definition of a symbol upon request. Usually materializers are just wrappers "
@@ -284,7 +284,7 @@ msgid ""
 "to generate a symbol definition that is safe to call or access."
 msgstr ""
 
-#: ../../../ORCv2.rst:251
+#: ../../../ORCv2.md:242
 msgid ""
 "As each materializer completes its work it notifies the JITDylib, which in "
 "turn notifies any query objects that are waiting on the newly materialized "
@@ -295,7 +295,7 @@ msgid ""
 "query immediately calls the query handler with an error."
 msgstr ""
 
-#: ../../../ORCv2.rst:259
+#: ../../../ORCv2.md:250
 msgid ""
 "The collected materialization units are sent to the ExecutionSession to be "
 "dispatched, and the dispatch behavior can be set by the client. By default "
@@ -304,43 +304,43 @@ msgid ""
 "thread pool (this is what LLJIT/LLLazyJIT do)."
 msgstr ""
 
-#: ../../../ORCv2.rst:266
+#: ../../../ORCv2.md:256
 msgid "Top Level APIs"
 msgstr ""
 
-#: ../../../ORCv2.rst:268
+#: ../../../ORCv2.md:258
 msgid "Many of ORC's top-level APIs are visible in the example above:"
 msgstr ""
 
-#: ../../../ORCv2.rst:270
+#: ../../../ORCv2.md:260
 msgid ""
 "*ExecutionSession* represents the JIT'd program and provides context for the "
 "JIT: It contains the JITDylibs, error reporting mechanisms, and dispatches "
 "the materializers."
 msgstr ""
 
-#: ../../../ORCv2.rst:274
+#: ../../../ORCv2.md:263
 msgid "*JITDylibs* provide the symbol tables."
 msgstr ""
 
-#: ../../../ORCv2.rst:276
+#: ../../../ORCv2.md:264
 msgid ""
 "*Layers* (ObjLinkingLayer and CXXLayer) are wrappers around compilers and "
 "allow clients to add uncompiled program representations supported by those "
 "compilers to JITDylibs."
 msgstr ""
 
-#: ../../../ORCv2.rst:280
+#: ../../../ORCv2.md:267
 msgid "*ResourceTrackers* allow you to remove code."
 msgstr ""
 
-#: ../../../ORCv2.rst:282
+#: ../../../ORCv2.md:269
 msgid ""
 "Several other important APIs are used explicitly. JIT clients need not be "
 "aware of them, but Layer authors will use them:"
 msgstr ""
 
-#: ../../../ORCv2.rst:285
+#: ../../../ORCv2.md:272
 msgid ""
 "*MaterializationUnit* - When XXXLayer::add is invoked it wraps the given "
 "program representation (in this example, C++ source) in a "
@@ -353,7 +353,7 @@ msgid ""
 "fished out of a Layer member, which would require synchronization)."
 msgstr ""
 
-#: ../../../ORCv2.rst:295
+#: ../../../ORCv2.md:281
 msgid ""
 "*MaterializationResponsibility* - When a MaterializationUnit hands a program "
 "representation back to the layer it comes with an associated "
@@ -362,28 +362,28 @@ msgid ""
 "they are either successfully materialized or a failure occurs."
 msgstr ""
 
-#: ../../../ORCv2.rst:302
+#: ../../../ORCv2.md:287
 msgid "Absolute Symbols, Aliases, and Reexports"
 msgstr ""
 
-#: ../../../ORCv2.rst:304
+#: ../../../ORCv2.md:289
 msgid ""
 "ORC makes it easy to define symbols with absolute addresses, or symbols that "
 "are simply aliases of other symbols:"
 msgstr ""
 
-#: ../../../ORCv2.rst:308
+#: ../../../ORCv2.md:292
 msgid "Absolute Symbols"
 msgstr ""
 
-#: ../../../ORCv2.rst:310
+#: ../../../ORCv2.md:294
 msgid ""
 "Absolute symbols are symbols that map directly to addresses without "
 "requiring further materialization, for example: \"foo\" = 0x1234. One use "
 "case for absolute symbols is allowing resolution of process symbols. E.g."
 msgstr ""
 
-#: ../../../ORCv2.rst:322
+#: ../../../ORCv2.md:306
 msgid ""
 "With this mapping established code added to the JIT can refer to printf "
 "symbolically rather than requiring the address of printf to be \"baked in\". "
@@ -392,10 +392,10 @@ msgid ""
 "changes, only the absolute symbol definition does."
 msgstr ""
 
-#: ../../../ORCv2.rst:328
+#: ../../../ORCv2.md:312
 msgid ""
 "For process and library symbols the DynamicLibrarySearchGenerator utility "
-"(See :ref:`How to Add Process and Library Symbols to JITDylibs "
+"(See {ref}`How to Add Process and Library Symbols to JITDylibs "
 "<ProcessAndLibrarySymbols>`) can be used to automatically build absolute "
 "symbol mappings for you. However the absoluteSymbols function is still "
 "useful for making non-global objects in your JIT visible to JIT'd code. For "
@@ -404,50 +404,50 @@ msgid ""
 "library, but then it would need to be recompiled for each session:"
 msgstr ""
 
-#: ../../../ORCv2.rst:348
+#: ../../../ORCv2.md:331
 msgid "We can turn this into a symbolic reference in the JIT standard library:"
 msgstr ""
 
-#: ../../../ORCv2.rst:356
+#: ../../../ORCv2.md:339
 msgid ""
 "And then make our JIT object visible to the JIT standard library with an "
 "absolute symbol definition when the JIT is started:"
 msgstr ""
 
-#: ../../../ORCv2.rst:371
+#: ../../../ORCv2.md:353
 msgid "Aliases and Reexports"
 msgstr ""
 
-#: ../../../ORCv2.rst:373
+#: ../../../ORCv2.md:355
 msgid ""
 "Aliases and reexports allow you to define new symbols that map to existing "
 "symbols. This can be useful for changing linkage relationships between "
 "symbols across sessions without having to recompile code. For example, "
-"imagine that JIT'd code has access to a log function, ``void log(const "
-"char*)`` for which there are two implementations in the JIT standard "
-"library: ``log_fast`` and ``log_detailed``. Your JIT can choose which one of "
-"these definitions will be used when the ``log`` symbol is referenced by "
-"setting up an alias at JIT startup time:"
+"imagine that JIT'd code has access to a log function, `void log(const "
+"char*)` for which there are two implementations in the JIT standard library: "
+"`log_fast` and `log_detailed`. Your JIT can choose which one of these "
+"definitions will be used when the `log` symbol is referenced by setting up "
+"an alias at JIT startup time:"
 msgstr ""
 
-#: ../../../ORCv2.rst:396
+#: ../../../ORCv2.md:378
 msgid ""
-"The ``symbolAliases`` function allows you to define aliases within a single "
-"JITDylib. The ``reexports`` function provides the same functionality, but "
+"The `symbolAliases` function allows you to define aliases within a single "
+"JITDylib. The `reexports` function provides the same functionality, but "
 "operates across JITDylib boundaries. E.g."
 msgstr ""
 
-#: ../../../ORCv2.rst:411
+#: ../../../ORCv2.md:393
 msgid ""
 "The reexports utility can be handy for composing a single JITDylib interface "
 "by re-exporting symbols from several other JITDylibs."
 msgstr ""
 
-#: ../../../ORCv2.rst:417
+#: ../../../ORCv2.md:398
 msgid "Laziness"
 msgstr ""
 
-#: ../../../ORCv2.rst:419
+#: ../../../ORCv2.md:400
 msgid ""
 "Laziness in ORC is provided by a utility called \"lazy reexports\". A lazy "
 "reexport is similar to a regular reexport or alias: It provides a new name "
@@ -468,7 +468,7 @@ msgid ""
 "concurrent JIT'd code, and speculative compilation."
 msgstr ""
 
-#: ../../../ORCv2.rst:436
+#: ../../../ORCv2.md:417
 msgid ""
 "There is one other key difference between regular reexports and lazy "
 "reexports that some clients must be aware of: The address of a lazy reexport "
@@ -480,36 +480,35 @@ msgid ""
 "materialization of the reexport."
 msgstr ""
 
-#: ../../../ORCv2.rst:444
+#: ../../../ORCv2.md:425
 msgid "Usage example:"
 msgstr ""
 
-#: ../../../ORCv2.rst:446
+#: ../../../ORCv2.md:427
 msgid ""
-"If JITDylib ``JD`` contains definitions for symbols ``foo_body`` and "
-"``bar_body``, we can create lazy entry points ``Foo`` and ``Bar`` in "
-"JITDylib ``JD2`` by calling:"
+"If JITDylib `JD` contains definitions for symbols `foo_body` and `bar_body`, "
+"we can create lazy entry points `Foo` and `Bar` in JITDylib `JD2` by calling:"
 msgstr ""
 
-#: ../../../ORCv2.rst:460
+#: ../../../ORCv2.md:441
 msgid ""
 "A full example of how to use lazyReexports with the LLJIT class can be found "
-"at ``llvm/examples/OrcV2Examples/LLJITWithLazyReexports``."
+"at `llvm/examples/OrcV2Examples/LLJITWithLazyReexports`."
 msgstr ""
 
-#: ../../../ORCv2.rst:464
+#: ../../../ORCv2.md:444
 msgid "Supporting Custom Compilers"
 msgstr ""
 
-#: ../../../ORCv2.rst:466
+#: ../../../ORCv2.md:446
 msgid "TBD."
 msgstr ""
 
-#: ../../../ORCv2.rst:471
+#: ../../../ORCv2.md:450
 msgid "Transitioning from ORCv1 to ORCv2"
 msgstr ""
 
-#: ../../../ORCv2.rst:473
+#: ../../../ORCv2.md:452
 msgid ""
 "Since LLVM 7.0, new ORC development work has focused on adding support for "
 "concurrent JIT compilation. The new APIs (including new layer interfaces and "
@@ -518,210 +517,211 @@ msgid ""
 "and utilities are now referred to as ORCv1."
 msgstr ""
 
-#: ../../../ORCv2.rst:479
+#: ../../../ORCv2.md:458
 msgid ""
 "The majority of the ORCv1 layers and utilities were renamed with a 'Legacy' "
 "prefix in LLVM 8.0, and have deprecation warnings attached in LLVM 9.0. In "
 "LLVM 12.0 ORCv1 will be removed entirely."
 msgstr ""
 
-#: ../../../ORCv2.rst:483
+#: ../../../ORCv2.md:462
 msgid ""
 "Transitioning from ORCv1 to ORCv2 should be easy for most clients. Most of "
-"the ORCv1 layers and utilities have ORCv2 counterparts [2]_ that can be "
+"the ORCv1 layers and utilities have ORCv2 counterparts [^2] that can be "
 "directly substituted. However there are some design differences between "
 "ORCv1 and ORCv2 to be aware of:"
 msgstr ""
 
-#: ../../../ORCv2.rst:488
+#: ../../../ORCv2.md:467
 msgid ""
 "ORCv2 fully adopts the JIT-as-linker model that began with MCJIT. Modules "
-"(and other program representations, e.g. Object Files)  are no longer added "
-"directly to JIT classes or layers. Instead, they are added to ``JITDylib`` "
-"instances *by* layers. The ``JITDylib`` determines *where* the definitions "
+"(and other program representations, e.g. Object Files) are no longer added "
+"directly to JIT classes or layers. Instead, they are added to `JITDylib` "
+"instances *by* layers. The `JITDylib` determines *where* the definitions "
 "reside, the layers determine *how* the definitions will be compiled. Linkage "
-"relationships between ``JITDylibs`` determine how inter-module references "
-"are resolved, and symbol resolvers are no longer used. See the section "
-"`Design Overview`_ for more details."
+"relationships between `JITDylibs` determine how inter-module references are "
+"resolved, and symbol resolvers are no longer used. See the section [Design "
+"Overview](#design-overview) for more details."
 msgstr ""
 
-#: ../../../ORCv2.rst:497
+#: ../../../ORCv2.md:476
 msgid ""
 "Unless multiple JITDylibs are needed to model linkage relationships, ORCv1 "
 "clients should place all code in a single JITDylib. MCJIT clients should use "
-"LLJIT (see `LLJIT and LLLazyJIT`_), and can place code in LLJIT's default "
-"created main JITDylib (See ``LLJIT::getMainJITDylib()``)."
+"LLJIT (see [LLJIT and LLLazyJIT](#lljit-and-lllazyjit)), and can place code "
+"in LLJIT's default created main JITDylib (See `LLJIT::getMainJITDylib()`)."
 msgstr ""
 
-#: ../../../ORCv2.rst:503
+#: ../../../ORCv2.md:482
 msgid ""
-"All JIT stacks now need an ``ExecutionSession`` instance. ExecutionSession "
+"All JIT stacks now need an `ExecutionSession` instance. ExecutionSession "
 "manages the string pool, error reporting, synchronization, and symbol lookup."
 msgstr ""
 
-#: ../../../ORCv2.rst:507
+#: ../../../ORCv2.md:486
 msgid ""
-"ORCv2 uses uniqued strings (``SymbolStringPtr`` instances) rather than "
-"string values in order to reduce memory overhead and improve lookup "
-"performance. See the subsection `How to manage symbol strings`_."
+"ORCv2 uses uniqued strings (`SymbolStringPtr` instances) rather than string "
+"values in order to reduce memory overhead and improve lookup performance. "
+"See the subsection [How to manage symbol strings](#how-to-manage-symbol-"
+"strings)."
 msgstr ""
 
-#: ../../../ORCv2.rst:511
+#: ../../../ORCv2.md:490
 msgid ""
-"IR layers require ThreadSafeModule instances, rather than std::"
-"unique_ptr<Module>s. ThreadSafeModule is a wrapper that ensures that Modules "
-"that use the same LLVMContext are not accessed concurrently. See `How to use "
-"ThreadSafeModule and ThreadSafeContext`_."
+"IR layers require ThreadSafeModule instances, rather than `std::"
+"unique_ptr<Module>`s. ThreadSafeModule is a wrapper that ensures that "
+"Modules that use the same LLVMContext are not accessed concurrently. See "
+"[How to use ThreadSafeModule and ThreadSafeContext](#how-to-use-"
+"threadsafemodule-and-threadsafecontext)."
 msgstr ""
 
-#: ../../../ORCv2.rst:516
+#: ../../../ORCv2.md:495
 msgid ""
-"Symbol lookup is no longer handled by layers. Instead, there is a ``lookup`` "
+"Symbol lookup is no longer handled by layers. Instead, there is a `lookup` "
 "method on JITDylib that takes a list of JITDylibs to scan."
 msgstr ""
 
-#: ../../../ORCv2.rst:527
+#: ../../../ORCv2.md:506
 msgid ""
-"The removeModule/removeObject methods are replaced by ``ResourceTracker::"
-"remove``. See the subsection `How to remove code`_."
+"The removeModule/removeObject methods are replaced by `ResourceTracker::"
+"remove`. See the subsection [How to remove code](#how-to-remove-code)."
 msgstr ""
 
-#: ../../../ORCv2.rst:531
+#: ../../../ORCv2.md:510
 msgid ""
 "For code examples and suggestions of how to use the ORCv2 APIs, please see "
-"the section `How-tos`_."
+"the section [How-tos](#how-tos)."
 msgstr ""
 
-#: ../../../ORCv2.rst:535
+#: ../../../ORCv2.md:513
 msgid "How-tos"
 msgstr ""
 
-#: ../../../ORCv2.rst:538
+#: ../../../ORCv2.md:515
 msgid "How to manage symbol strings"
 msgstr ""
 
-#: ../../../ORCv2.rst:540
+#: ../../../ORCv2.md:517
 msgid ""
 "Symbol strings in ORC are uniqued to improve lookup performance, reduce "
 "memory overhead, and allow symbol names to function as efficient keys. To "
-"get the unique ``SymbolStringPtr`` for a string value, call the "
-"``ExecutionSession::intern`` method:"
+"get the unique `SymbolStringPtr` for a string value, call the "
+"`ExecutionSession::intern` method:"
 msgstr ""
 
-#: ../../../ORCv2.rst:551
+#: ../../../ORCv2.md:528
 msgid ""
 "If you wish to perform lookup using the C/IR name of a symbol you will also "
 "need to apply the platform linker-mangling before interning the string. On "
 "Linux this mangling is a no-op, but on other platforms it usually involves "
-"adding a prefix to the string (e.g. '_' on Darwin). The mangling scheme is "
+"adding a prefix to the string (e.g. `_` on Darwin). The mangling scheme is "
 "based on the DataLayout for the target. Given a DataLayout and an "
 "ExecutionSession, you can create a MangleAndInterner function object that "
 "will perform both jobs for you:"
 msgstr ""
 
-#: ../../../ORCv2.rst:571
+#: ../../../ORCv2.md:547
 msgid "How to create JITDylibs and set up linkage relationships"
 msgstr ""
 
-#: ../../../ORCv2.rst:573
+#: ../../../ORCv2.md:549
 msgid ""
 "In ORC, all symbol definitions reside in JITDylibs. JITDylibs are created by "
-"calling the ``ExecutionSession::createJITDylib`` method with a unique name:"
+"calling the `ExecutionSession::createJITDylib` method with a unique name:"
 msgstr ""
 
-#: ../../../ORCv2.rst:581
+#: ../../../ORCv2.md:557
 msgid ""
-"The JITDylib is owned by the ``ExecutionEngine`` instance and will be freed "
+"The JITDylib is owned by the `ExecutionEngine` instance and will be freed "
 "when it is destroyed."
 msgstr ""
 
-#: ../../../ORCv2.rst:585
+#: ../../../ORCv2.md:560
 msgid "How to remove code"
 msgstr ""
 
-#: ../../../ORCv2.rst:587
+#: ../../../ORCv2.md:562
 msgid ""
 "To remove an individual module from a JITDylib it must first be added using "
-"an explicit ``ResourceTracker``. The module can then be removed by calling "
-"``ResourceTracker::remove``:"
+"an explicit `ResourceTracker`. The module can then be removed by calling "
+"`ResourceTracker::remove`:"
 msgstr ""
 
-#: ../../../ORCv2.rst:601
+#: ../../../ORCv2.md:576
 msgid ""
 "Modules added directly to a JITDylib will be tracked by that JITDylib's "
 "default resource tracker."
 msgstr ""
 
-#: ../../../ORCv2.rst:604
+#: ../../../ORCv2.md:579
 msgid ""
-"All code can be removed from a JITDylib by calling ``JITDylib::clear``. This "
+"All code can be removed from a JITDylib by calling `JITDylib::clear`. This "
 "leaves the cleared JITDylib in an empty but usable state."
 msgstr ""
 
-#: ../../../ORCv2.rst:607
+#: ../../../ORCv2.md:582
 msgid ""
-"JITDylibs can be removed by calling ``ExecutionSession::removeJITDylib``. "
-"This clears the JITDylib and then puts it into a defunct state. No further "
+"JITDylibs can be removed by calling `ExecutionSession::removeJITDylib`. This "
+"clears the JITDylib and then puts it into a defunct state. No further "
 "operations can be performed on the JITDylib, and it will be destroyed as "
 "soon as the last handle to it is released."
 msgstr ""
 
-#: ../../../ORCv2.rst:612
+#: ../../../ORCv2.md:587
 msgid ""
-"An example of how to use the resource management APIs can be found at ``llvm/"
-"examples/OrcV2Examples/LLJITRemovableCode``."
+"An example of how to use the resource management APIs can be found at `llvm/"
+"examples/OrcV2Examples/LLJITRemovableCode`."
 msgstr ""
 
-#: ../../../ORCv2.rst:617
+#: ../../../ORCv2.md:590
 msgid "How to add the support for custom program representation"
 msgstr ""
 
-#: ../../../ORCv2.rst:618
+#: ../../../ORCv2.md:592
 msgid ""
 "In order to add the support for a custom program representation, a custom "
-"``MaterializationUnit`` for the program representation, and a custom "
-"``Layer`` are needed. The Layer will have two operations: ``add`` and "
-"``emit``. The ``add`` operation takes an instance of your program "
-"representation, builds one of your custom ``MaterializationUnits`` to hold "
-"it, then adds it to a ``JITDylib``. The emit operation takes a "
-"``MaterializationResponsibility`` object and an instance of your program "
-"representation and materializes it, usually by compiling it and handing the "
-"resulting object off to an ``ObjectLinkingLayer``."
+"`MaterializationUnit` for the program representation, and a custom `Layer` "
+"are needed. The Layer will have two operations: `add` and `emit`. The `add` "
+"operation takes an instance of your program representation, builds one of "
+"your custom `MaterializationUnits` to hold it, then adds it to a `JITDylib`. "
+"The emit operation takes a `MaterializationResponsibility` object and an "
+"instance of your program representation and materializes it, usually by "
+"compiling it and handing the resulting object off to an `ObjectLinkingLayer`."
 msgstr ""
 
-#: ../../../ORCv2.rst:626
+#: ../../../ORCv2.md:600
 msgid ""
-"Your custom ``MaterializationUnit`` will have two operations: "
-"``materialize`` and ``discard``. The ``materialize`` function will be called "
-"for you when any symbol provided by the unit is looked up, and it should "
-"just call the ``emit`` function on your layer, passing in the given "
-"``MaterializationResponsibility`` and the wrapped program representation. "
-"The ``discard`` function will be called if some weak symbol provided by your "
-"unit is not needed (because the JIT found an overriding definition). You can "
-"use this to drop your definition early, or just ignore it and let the linker "
-"drops the definition later."
+"Your custom `MaterializationUnit` will have two operations: `materialize` "
+"and `discard`. The `materialize` function will be called for you when any "
+"symbol provided by the unit is looked up, and it should just call the `emit` "
+"function on your layer, passing in the given `MaterializationResponsibility` "
+"and the wrapped program representation. The `discard` function will be "
+"called if some weak symbol provided by your unit is not needed (because the "
+"JIT found an overriding definition). You can use this to drop your "
+"definition early, or just ignore it and let the linker drops the definition "
+"later."
 msgstr ""
 
-#: ../../../ORCv2.rst:634
+#: ../../../ORCv2.md:608
 msgid "Here is an example of an ASTLayer:"
 msgstr ""
 
-#: ../../../ORCv2.rst:695
+#: ../../../ORCv2.md:669
 msgid ""
-"Take look at the source code of `Building A JIT's Chapter 4 <tutorial/"
-"BuildingAJIT4.html>`_ for a complete example."
+"Take look at the source code of {doc}`Building A JIT's Chapter 4 <tutorial/"
+"BuildingAJIT4>` for a complete example."
 msgstr ""
 
-#: ../../../ORCv2.rst:698
+#: ../../../ORCv2.md:671
 msgid "How to use ThreadSafeModule and ThreadSafeContext"
 msgstr ""
 
-#: ../../../ORCv2.rst:700
+#: ../../../ORCv2.md:673
 msgid ""
 "ThreadSafeModule and ThreadSafeContext are wrappers around Modules and "
-"LLVMContexts respectively. A ThreadSafeModule is a pair of a std::"
-"unique_ptr<Module> and a (possibly shared) ThreadSafeContext value. A "
-"ThreadSafeContext is a pair of a std::unique_ptr<LLVMContext> and a lock. "
+"LLVMContexts respectively. A ThreadSafeModule is a pair of a `std::"
+"unique_ptr<Module>` and a (possibly shared) ThreadSafeContext value. A "
+"ThreadSafeContext is a pair of a `std::unique_ptr<LLVMContext>` and a lock. "
 "This design serves two purposes: providing a locking scheme and lifetime "
 "management for LLVMContexts. The ThreadSafeContext may be locked to prevent "
 "accidental concurrent access by two Modules that use the same LLVMContext. "
@@ -730,58 +730,58 @@ msgid ""
 "soon as the Modules referring to it are destroyed."
 msgstr ""
 
-#: ../../../ORCv2.rst:711
+#: ../../../ORCv2.md:684
 msgid ""
-"ThreadSafeContexts can be explicitly constructed from a std::"
-"unique_ptr<LLVMContext>:"
+"ThreadSafeContexts can be explicitly constructed from a `std::"
+"unique_ptr<LLVMContext>`:"
 msgstr ""
 
-#: ../../../ORCv2.rst:718
+#: ../../../ORCv2.md:691
 msgid ""
-"ThreadSafeModules can be constructed from a pair of a std::"
-"unique_ptr<Module> and a ThreadSafeContext value. ThreadSafeContext values "
+"ThreadSafeModules can be constructed from a pair of a `std::"
+"unique_ptr<Module>` and a ThreadSafeContext value. ThreadSafeContext values "
 "may be shared between multiple ThreadSafeModules:"
 msgstr ""
 
-#: ../../../ORCv2.rst:730
+#: ../../../ORCv2.md:703
 msgid ""
 "Before using a ThreadSafeContext, clients should ensure that either the "
 "context is only accessible on the current thread, or that the context is "
 "locked. In the example above (where the context is never locked) we rely on "
-"the fact that both ``TSM1`` and ``TSM2``, and TSCtx are all created on one "
+"the fact that both `TSM1` and `TSM2`, and TSCtx are all created on one "
 "thread. If a context is going to be shared between threads then it must be "
 "locked before any accessing or creating any Modules attached to it. E.g."
 msgstr ""
 
-#: ../../../ORCv2.rst:755
+#: ../../../ORCv2.md:728
 msgid ""
 "To make exclusive access to Modules easier to manage the ThreadSafeModule "
-"class provides a convenience function, ``withModuleDo``, that implicitly (1) "
+"class provides a convenience function, `withModuleDo`, that implicitly (1) "
 "locks the associated context, (2) runs a given function object, (3) unlocks "
 "the context, and (3) returns the result generated by the function object. E."
 "g."
 msgstr ""
 
-#: ../../../ORCv2.rst:772
+#: ../../../ORCv2.md:745
 msgid ""
 "Clients wishing to maximize possibilities for concurrent compilation will "
 "want to create every new ThreadSafeModule on a new ThreadSafeContext. For "
 "this reason a convenience constructor for ThreadSafeModule is provided that "
-"implicitly constructs a new ThreadSafeContext value from a std::"
-"unique_ptr<LLVMContext>:"
+"implicitly constructs a new ThreadSafeContext value from a `std::"
+"unique_ptr<LLVMContext>`:"
 msgstr ""
 
-#: ../../../ORCv2.rst:787
+#: ../../../ORCv2.md:760
 msgid ""
 "Clients who plan to run single-threaded may choose to save memory by loading "
 "all modules on the same context:"
 msgstr ""
 
-#: ../../../ORCv2.rst:802
+#: ../../../ORCv2.md:774
 msgid "How to Add Process and Library Symbols to JITDylibs"
 msgstr ""
 
-#: ../../../ORCv2.rst:804
+#: ../../../ORCv2.md:776
 msgid ""
 "JIT'd code may need to access symbols in the host program or in supporting "
 "libraries. The best way to enable this is to reflect these symbols into your "
@@ -790,13 +790,13 @@ msgid ""
 "lookup`, and so visible to the JIT linker during linking)."
 msgstr ""
 
-#: ../../../ORCv2.rst:810
+#: ../../../ORCv2.md:782
 msgid ""
 "One way to reflect external symbols is to add them manually using the "
 "absoluteSymbols function:"
 msgstr ""
 
-#: ../../../ORCv2.rst:826
+#: ../../../ORCv2.md:798
 msgid ""
 "Using absoluteSymbols is reasonable if the set of symbols to be reflected is "
 "small and fixed. On the other hand, if the set of symbols is large or "
@@ -808,21 +808,58 @@ msgid ""
 "lookup proceeds."
 msgstr ""
 
-#: ../../../ORCv2.rst:834
+#: ../../../ORCv2.md:806
 msgid ""
-"ORC provides the ``DynamicLibrarySearchGenerator`` utility for reflecting "
+"ORC provides the `DynamicLibrarySearchGenerator` utility for reflecting "
 "symbols from the process (or a specific dynamic library) for you. For "
 "example, to reflect the whole interface of a runtime library:"
 msgstr ""
 
-#: ../../../ORCv2.rst:854
+#: ../../../ORCv2.md:826
 msgid ""
-"The ``DynamicLibrarySearchGenerator`` utility can also be constructed with a "
+"The `DynamicLibrarySearchGenerator` utility can also be constructed with a "
 "filter function to restrict the set of symbols that may be reflected. For "
 "example, to expose an allowed set of symbols from the main process:"
 msgstr ""
 
-#: ../../../ORCv2.rst:880
+#: ../../../ORCv2.md:852
+msgid ""
+"On Windows/COFF targets, calls to dllimport functions are emitted as "
+"indirect calls through an ``__imp_`` *import address table* (IAT) slot, and "
+"even direct calls to library functions are expected to bind to a thunk "
+"supplied by an import library. ORC provides the ``COFFAutoImportGenerator`` "
+"utility to synthesize these on demand from a dynamic library, so that COFF "
+"objects can be JIT-linked without building import libraries. The generator "
+"is bound to a single DLL: that DLL's export table is the authority on what "
+"may be synthesized, so a reference to a symbol the DLL does not export "
+"remains unresolved and the link fails, exactly as a static link against the "
+"corresponding import library would."
+msgstr ""
+
+#: ../../../ORCv2.md:862
+msgid ".. code-block:: c++"
+msgstr ""
+
+#: ../../../ORCv2.md:877
+msgid ""
+"For each exported function ``X`` that is referenced, the generator "
+"synthesizes an ``__imp_X`` IAT slot holding ``X``'s address in the library "
+"plus an ``X`` thunk that jumps through that slot. It is \"easy mode\": it "
+"assumes every import is a function and makes no attempt to distinguish code "
+"from data, so data imports are unsupported and clients that need them must "
+"supply an import library or use ``__declspec(dllimport)``. Note also that, "
+"because ``X`` resolves to a synthesized thunk, ``&X`` yields the thunk's "
+"address rather than the implementation in the library. "
+"``COFFAutoImportGenerator`` supports whichever architectures JITLink has a "
+"pointer / pointer-jump-stub creator registered for; ``Load`` fails for any "
+"other architecture. It resolves imports through the executor's "
+"``DylibManager``, so it works for both in-process and out-of-process "
+"execution. For the more general case where the underlying symbol is resolved "
+"through the JITDylib's link order rather than a specific library, see "
+"``DLLImportDefinitionGenerator``."
+msgstr ""
+
+#: ../../../ORCv2.md:891
 msgid ""
 "References to process or library symbols could also be hardcoded into your "
 "IR or object files using the symbols' raw addresses, however symbolic "
@@ -831,51 +868,51 @@ msgid ""
 "addresses are difficult to read, and usually only good for one session."
 msgstr ""
 
-#: ../../../ORCv2.rst:887
+#: ../../../ORCv2.md:897
 msgid "Roadmap"
 msgstr ""
 
-#: ../../../ORCv2.rst:889
+#: ../../../ORCv2.md:899
 msgid ""
 "ORC is still undergoing active development. Some current and future works "
 "are listed below."
 msgstr ""
 
-#: ../../../ORCv2.rst:893
+#: ../../../ORCv2.md:902
 msgid "Current Work"
 msgstr ""
 
-#: ../../../ORCv2.rst:895
+#: ../../../ORCv2.md:904
 msgid ""
 "**TargetProcessControl: Improvements to in-tree support for out-of-process "
 "execution**"
 msgstr ""
 
-#: ../../../ORCv2.rst:898
+#: ../../../ORCv2.md:907
 msgid ""
-"The ``TargetProcessControl`` API provides various operations on the JIT "
-"target process (the one which will execute the JIT'd code), including memory "
+"The `TargetProcessControl` API provides various operations on the JIT target "
+"process (the one which will execute the JIT'd code), including memory "
 "allocation, memory writes, function execution, and process queries (e.g. for "
 "the target triple). By targeting this API new components can be developed "
 "which will work equally well for in-process and out-of-process JITing."
 msgstr ""
 
-#: ../../../ORCv2.rst:906
+#: ../../../ORCv2.md:914
 msgid "**ORC RPC based TargetProcessControl implementation**"
 msgstr ""
 
-#: ../../../ORCv2.rst:908
+#: ../../../ORCv2.md:916
 msgid ""
-"An ORC RPC based implementation of the ``TargetProcessControl`` API is "
+"An ORC RPC based implementation of the `TargetProcessControl` API is "
 "currently under development to enable easy out-of-process JITing via file "
 "descriptors / sockets."
 msgstr ""
 
-#: ../../../ORCv2.rst:912
+#: ../../../ORCv2.md:920
 msgid "**Core State Machine Cleanup**"
 msgstr ""
 
-#: ../../../ORCv2.rst:914
+#: ../../../ORCv2.md:922
 msgid ""
 "The core ORC state machine is currently implemented between JITDylib and "
 "ExecutionSession. Methods are slowly being moved to `ExecutionSession`. This "
@@ -885,15 +922,15 @@ msgid ""
 "all references to it have been released)."
 msgstr ""
 
-#: ../../../ORCv2.rst:922
+#: ../../../ORCv2.md:929
 msgid "Near Future Work"
 msgstr ""
 
-#: ../../../ORCv2.rst:924
+#: ../../../ORCv2.md:931
 msgid "**ORC JIT Runtime Libraries**"
 msgstr ""
 
-#: ../../../ORCv2.rst:926
+#: ../../../ORCv2.md:933
 msgid ""
 "We need a runtime library for JIT'd code. This would include things like TLS "
 "registration, reentry functions, registration code for language runtimes (e."
@@ -901,11 +938,11 @@ msgid ""
 "be built in a similar manner to compiler-rt (possibly even as part of it)."
 msgstr ""
 
-#: ../../../ORCv2.rst:931
+#: ../../../ORCv2.md:938
 msgid "**Remote jit_dlopen / jit_dlclose**"
 msgstr ""
 
-#: ../../../ORCv2.rst:933
+#: ../../../ORCv2.md:940
 msgid ""
 "To more fully mimic the environment that static programs operate in we would "
 "like JIT'd code to be able to \"dlopen\" and \"dlclose\" JITDylibs, running "
@@ -913,56 +950,56 @@ msgid ""
 "require support from the runtime library described above."
 msgstr ""
 
-#: ../../../ORCv2.rst:938
+#: ../../../ORCv2.md:945
 msgid "**Debugging support**"
 msgstr ""
 
-#: ../../../ORCv2.rst:940
+#: ../../../ORCv2.md:947
 msgid ""
 "ORC currently supports the GDBRegistrationListener API when using "
 "RuntimeDyld as the underlying JIT linker. We will need a new solution for "
 "JITLink based platforms."
 msgstr ""
 
-#: ../../../ORCv2.rst:945
+#: ../../../ORCv2.md:951
 msgid "Further Future Work"
 msgstr ""
 
-#: ../../../ORCv2.rst:947
+#: ../../../ORCv2.md:953
 msgid "**Speculative Compilation**"
 msgstr ""
 
-#: ../../../ORCv2.rst:949
+#: ../../../ORCv2.md:955
 msgid ""
 "ORC's support for concurrent compilation allows us to easily enable "
 "*speculative* JIT compilation: compilation of code that is not needed yet, "
 "but which we have reason to believe will be needed in the future. This can "
 "be used to hide compile latency and improve JIT throughput. A proof-of-"
 "concept example of speculative compilation with ORC has already been "
-"developed (see ``llvm/examples/SpeculativeJIT``). Future work on this is "
+"developed (see `llvm/examples/SpeculativeJIT`). Future work on this is "
 "likely to focus on re-using and improving existing profiling support "
 "(currently used by PGO) to feed speculation decisions, as well as built-in "
 "tools to simplify use of speculative compilation."
 msgstr ""
 
-#: ../../../ORCv2.rst:959
+#: ../../../ORCv2.md:965
 msgid ""
 "Formats/architectures vary in terms of supported features. MachO and ELF "
 "tend to have better support than COFF. Patches very welcome!"
 msgstr ""
 
-#: ../../../ORCv2.rst:962
+#: ../../../ORCv2.md:968
 msgid ""
-"The ``LazyEmittingLayer``, ``RemoteObjectClientLayer`` and "
-"``RemoteObjectServerLayer`` do not have counterparts in the new system. In "
-"the case of ``LazyEmittingLayer`` it was simply no longer needed: in ORCv2, "
+"The `LazyEmittingLayer`, `RemoteObjectClientLayer` and "
+"`RemoteObjectServerLayer` do not have counterparts in the new system. In the "
+"case of `LazyEmittingLayer` it was simply no longer needed: in ORCv2, "
 "deferring compilation until symbols are looked up is the default. The "
-"removal of ``RemoteObjectClientLayer`` and ``RemoteObjectServerLayer`` means "
+"removal of `RemoteObjectClientLayer` and `RemoteObjectServerLayer` means "
 "that JIT stacks can no longer be split across processes, however this "
 "functionality appears not to have been used."
 msgstr ""
 
-#: ../../../ORCv2.rst:971
+#: ../../../ORCv2.md:976
 msgid ""
 "Weak definitions are currently handled correctly within dylibs, but if "
 "multiple dylibs provide a weak definition of a symbol then each will end up "

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-13 08:36+0000\n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,22 +21,22 @@ msgstr ""
 msgid "LLVM IR Undefined Behavior (UB) Manual"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:10
+#: ../../../UndefinedBehavior.rst:7
 msgid "Abstract"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:11
+#: ../../../UndefinedBehavior.rst:8
 msgid ""
 "This document describes the undefined behavior (UB) in LLVM's IR, including "
 "undef and poison values, as well as the ``freeze`` instruction. We also "
 "provide guidelines on when to use each form of UB."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:17
+#: ../../../UndefinedBehavior.rst:14
 msgid "Introduction"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:18
+#: ../../../UndefinedBehavior.rst:15
 msgid ""
 "Undefined behavior (UB) is used to specify the behavior of corner cases for "
 "which we don't wish to specify the concrete results. UB is also used to "
@@ -46,7 +46,7 @@ msgid ""
 "we are not really interested in the result, we say it is UB."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:25
+#: ../../../UndefinedBehavior.rst:22
 msgid ""
 "There exist two forms of undefined behavior in LLVM: immediate UB and "
 "deferred UB. The latter comes in two flavors: undef and poison values. There "
@@ -55,15 +55,15 @@ msgid ""
 "> concrete value."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:31
+#: ../../../UndefinedBehavior.rst:28
 msgid "We explain each of the concepts in detail below."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:35
+#: ../../../UndefinedBehavior.rst:32
 msgid "Immediate UB"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:36
+#: ../../../UndefinedBehavior.rst:33
 msgid ""
 "Immediate UB is the most severe form of UB. It should be avoided whenever "
 "possible. Immediate UB should be used only for operations that trap in most "
@@ -71,20 +71,20 @@ msgid ""
 "null pointer, etc."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:42
+#: ../../../UndefinedBehavior.rst:39
 msgid ""
 "The reason that immediate UB should be avoided is that it makes "
 "optimizations such as hoisting a lot harder. Consider the following example:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:63
+#: ../../../UndefinedBehavior.rst:60
 msgid ""
 "We might be tempted to simplify this function by removing the branching and "
 "executing the division speculatively because ``%c`` is true most of times. "
 "We would obtain the following IR:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:75
+#: ../../../UndefinedBehavior.rst:72
 msgid ""
 "However, this transformation is not correct! Since division triggers UB when "
 "the divisor is zero, we can only execute speculatively if we are sure we "
@@ -93,18 +93,18 @@ msgid ""
 "optimized."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:81
+#: ../../../UndefinedBehavior.rst:78
 msgid ""
 "This example highlights why we minimize the cases that trigger immediate UB "
 "as much as possible. As a rule of thumb, use immediate UB only for the cases "
 "that trap the CPU for most of the supported architectures."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:88
+#: ../../../UndefinedBehavior.rst:85
 msgid "Time Travel"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:89
+#: ../../../UndefinedBehavior.rst:86
 msgid ""
 "Immediate UB in LLVM IR allows the so-called time travelling. What this "
 "means is that if a program triggers UB, then we are not required to preserve "
@@ -112,18 +112,18 @@ msgid ""
 "function triggers UB after calling ``printf``:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:101
+#: ../../../UndefinedBehavior.rst:98
 msgid ""
 "Since we know that ``printf`` will always return, and because LLVM's UB can "
 "time-travel, it is legal to remove the call to ``printf`` altogether and "
 "optimize the function to simply:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:113
+#: ../../../UndefinedBehavior.rst:110
 msgid "Deferred UB"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:114
+#: ../../../UndefinedBehavior.rst:111
 msgid ""
 "Deferred UB is a lighter form of UB. It enables instructions to be executed "
 "speculatively while marking some corner cases as having erroneous values. "
@@ -131,7 +131,7 @@ msgid ""
 "CPUs differ, but the CPU does not trap."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:119
+#: ../../../UndefinedBehavior.rst:116
 msgid ""
 "As an example, consider the shift instructions. The x86 and ARM "
 "architectures offer different semantics when the shift amount is equal to or "
@@ -145,17 +145,17 @@ msgid ""
 "the shift conditionally, e.g.:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:140
+#: ../../../UndefinedBehavior.rst:137
 msgid ""
 "There are two deferred UB values in LLVM: ``undef`` and ``poison``, which we "
 "describe next."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:145
+#: ../../../UndefinedBehavior.rst:142
 msgid "Undef Values"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:147
+#: ../../../UndefinedBehavior.rst:144
 msgid ""
 "Undef values are deprecated and should be used only when strictly necessary. "
 "Uses of undef values should be restricted to representing loads of "
@@ -163,14 +163,14 @@ msgid ""
 "be replaced with alternatives yet (work in ongoing)."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:152
+#: ../../../UndefinedBehavior.rst:149
 msgid ""
 "An undef value represents any value of a given type. Moreover, each use of "
 "an instruction that depends on undef can observe a different value. For "
 "example:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:164
+#: ../../../UndefinedBehavior.rst:161
 msgid ""
 "Unsurprisingly, the first addition yields ``undef``. However, the result of "
 "the second addition is more subtle. We might be tempted to think that it "
@@ -180,33 +180,33 @@ msgid ""
 "function above is equivalent to:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:178
+#: ../../../UndefinedBehavior.rst:175
 msgid ""
 "Each call to this function may observe a different value, namely any 32-bit "
 "number (even and odd)."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:181
+#: ../../../UndefinedBehavior.rst:178
 msgid ""
 "Because each use of undef can observe a different value, some optimizations "
 "are wrong if we are not sure a value is not undef. Consider a function that "
 "multiplies a number by 2:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:192
+#: ../../../UndefinedBehavior.rst:189
 msgid ""
 "This function is guaranteed to return an even number, even if ``%v`` is "
 "undef. However, as we've seen above, the following function does not:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:203
+#: ../../../UndefinedBehavior.rst:200
 msgid ""
 "This optimization is wrong just because undef values exist, even if they are "
 "not used in this part of the program as LLVM has no way to tell if ``%v`` is "
 "undef or not."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:207
+#: ../../../UndefinedBehavior.rst:204
 msgid ""
 "Looking at the value lattice, ``undef`` values can only be replaced with "
 "either a ``freeze`` instruction or a concrete value. A consequence is that "
@@ -216,22 +216,22 @@ msgid ""
 "it is UB."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:216
+#: ../../../UndefinedBehavior.rst:213
 msgid "Poison Values"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:217
+#: ../../../UndefinedBehavior.rst:214
 msgid ""
 "Poison values are a stronger form of deferred UB than undef. They still "
 "allow instructions to be executed speculatively, but they taint the whole "
 "expression DAG (with some exceptions), akin to floating point NaN values."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:221
+#: ../../../UndefinedBehavior.rst:218
 msgid "Example:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:231
+#: ../../../UndefinedBehavior.rst:228
 msgid ""
 "The ``nsw`` attribute in the additions indicates that the operation yields "
 "poison if there is a signed overflow. If the first addition overflows, "
@@ -239,17 +239,17 @@ msgid ""
 "whole expression DAG."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:236
+#: ../../../UndefinedBehavior.rst:233
 msgid ""
 "Poison values can be replaced with any value of type (undef, concrete "
 "values, or a ``freeze`` instruction)."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:241
+#: ../../../UndefinedBehavior.rst:238
 msgid "Propagation of Poison Through Select"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:242
+#: ../../../UndefinedBehavior.rst:239
 msgid ""
 "Most instructions return poison if any of their inputs is poison. A notable "
 "exception is the ``select`` instruction, which is poison if and only if the "
@@ -258,28 +258,28 @@ msgid ""
 "optimizations can be performed."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:248
+#: ../../../UndefinedBehavior.rst:245
 msgid "For example, consider the following function:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:259
+#: ../../../UndefinedBehavior.rst:256
 msgid ""
 "It is not correct to optimize the ``select`` into an ``and`` because when "
 "``%cmp1`` is false, the ``select`` is only poison if ``%x`` is poison, while "
 "the ``and`` below is poison if either ``%x`` or ``%y`` are poison."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:272
+#: ../../../UndefinedBehavior.rst:269
 msgid ""
 "However, the optimization is possible if all operands of the values are used "
 "in the condition (notice the flipped operands in the ``select``):"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:288
+#: ../../../UndefinedBehavior.rst:285
 msgid "The Freeze Instruction"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:289
+#: ../../../UndefinedBehavior.rst:286
 msgid ""
 "Both undef and poison values sometimes propagate too much down an expression "
 "DAG. Undef values because each transitive use can observe a different value, "
@@ -288,18 +288,18 @@ msgid ""
 "``freeze`` instruction comes in."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:295
+#: ../../../UndefinedBehavior.rst:292
 msgid "Take the following example function:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:327
+#: ../../../UndefinedBehavior.rst:324
 msgid ""
 "Imagine we want to perform loop unswitching on the loop above since the "
 "branch condition inside the loop is loop invariant. We would obtain the "
 "following IR:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:361
+#: ../../../UndefinedBehavior.rst:358
 msgid ""
 "There is a subtle catch: when the function is called with ``%n`` being zero, "
 "the original function did not branch on ``%c``, while the optimized one "
@@ -307,7 +307,7 @@ msgid ""
 "transformation is wrong in general because ``%c`` may be undef or poison."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:366
+#: ../../../UndefinedBehavior.rst:363
 msgid ""
 "Cases like this need a way to tame deferred UB values. This is exactly what "
 "the ``freeze`` instruction is for! When given a concrete value as argument, "
@@ -317,18 +317,18 @@ msgid ""
 "all users."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:374
+#: ../../../UndefinedBehavior.rst:371
 msgid ""
 "Branching on a value returned by ``freeze`` is always safe since it either "
 "evaluates to true or false consistently. We can make the loop unswitching "
 "optimization above correct as follows:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:389
+#: ../../../UndefinedBehavior.rst:386
 msgid "Writing Tests Without Undefined Behavior"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:391
+#: ../../../UndefinedBehavior.rst:388
 msgid ""
 "When writing tests, it is important to ensure that they don't trigger UB "
 "unnecessarily. Some automated test reduces sometimes use undef or poison "
@@ -336,13 +336,13 @@ msgid ""
 "to triggering UB."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:396
+#: ../../../UndefinedBehavior.rst:393
 msgid ""
 "For example, imagine that we want to write a test and we don't care about "
 "the particular divisor value because our optimization kicks in regardless:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:406
+#: ../../../UndefinedBehavior.rst:403
 msgid ""
 "The issue with this test is that it triggers immediate UB. This prevents "
 "verification tools like Alive from validating the correctness of the "
@@ -351,24 +351,24 @@ msgid ""
 "test above should use a dummy function argument instead of using poison:"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:419
+#: ../../../UndefinedBehavior.rst:416
 msgid ""
 "Common sources of immediate UB in tests include branching on undef/poison "
 "conditions and dereferencing undef/poison/null pointers."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:423
+#: ../../../UndefinedBehavior.rst:420
 msgid ""
 "If you need a placeholder value to pass as an argument to an instruction "
 "that may trigger UB, add a new argument to the function rather than using "
 "undef or poison."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:429
+#: ../../../UndefinedBehavior.rst:426
 msgid "Summary"
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:430
+#: ../../../UndefinedBehavior.rst:427
 msgid ""
 "Undefined behavior (UB) in LLVM IR consists of two well-defined concepts: "
 "immediate and deferred UB (undef and poison values). Passing deferred UB "
@@ -376,7 +376,7 @@ msgid ""
 "some cases through the use of the ``freeze`` instruction."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:436
+#: ../../../UndefinedBehavior.rst:433
 msgid ""
 "The lattice of values in LLVM is: immediate UB > poison > undef > "
 "freeze(poison) > concrete value. It is only valid to transform values from "
@@ -384,7 +384,7 @@ msgid ""
 "value, but not the other way around)."
 msgstr ""
 
-#: ../../../UndefinedBehavior.rst:441
+#: ../../../UndefinedBehavior.rst:438
 msgid ""
 "Undef is now deprecated and should be used only to represent loads of "
 "uninitialized memory."

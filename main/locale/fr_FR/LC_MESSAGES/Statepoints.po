@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-13 08:36+0000\n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,11 +21,11 @@ msgstr ""
 msgid "Garbage Collection Safepoints in LLVM"
 msgstr ""
 
-#: ../../../Statepoints.rst:10
+#: ../../../Statepoints.rst:7
 msgid "Status"
 msgstr "Statut"
 
-#: ../../../Statepoints.rst:12
+#: ../../../Statepoints.rst:9
 msgid ""
 "This document describes a set of extensions to LLVM to support garbage "
 "collection.  By now, these mechanisms are well proven with commercial java "
@@ -34,7 +34,7 @@ msgid ""
 "out below."
 msgstr ""
 
-#: ../../../Statepoints.rst:18
+#: ../../../Statepoints.rst:15
 msgid ""
 "They are still listed as \"experimental\" to indicate that no forward or "
 "backward compatibility guarantees are offered across versions.  If your use "
@@ -42,7 +42,7 @@ msgid ""
 "please raise the issue on the llvm-dev mailing list."
 msgstr ""
 
-#: ../../../Statepoints.rst:23
+#: ../../../Statepoints.rst:20
 msgid ""
 "LLVM still supports an alternate mechanism for conservative garbage "
 "collection support using the ``gcroot`` intrinsic.  The ``gcroot`` mechanism "
@@ -51,11 +51,11 @@ msgid ""
 "language frontends and is still supported."
 msgstr ""
 
-#: ../../../Statepoints.rst:30
+#: ../../../Statepoints.rst:27
 msgid "Overview & Core Concepts"
 msgstr ""
 
-#: ../../../Statepoints.rst:32
+#: ../../../Statepoints.rst:29
 msgid ""
 "To collect dead objects, garbage collectors must be able to identify any "
 "references to objects contained within executing code, and, depending on the "
@@ -67,7 +67,7 @@ msgid ""
 "directly reachable from running code, a higher standard is required."
 msgstr ""
 
-#: ../../../Statepoints.rst:42
+#: ../../../Statepoints.rst:39
 msgid ""
 "One additional challenge is that the compiler may compute intermediate "
 "results (\"derived pointers\") which point outside of the allocation or even "
@@ -80,14 +80,14 @@ msgid ""
 "provide a mapping, for each pointer, to an indication of its allocation."
 msgstr ""
 
-#: ../../../Statepoints.rst:53
+#: ../../../Statepoints.rst:50
 msgid ""
 "To simplify the interaction between a collector and the compiled code, most "
 "garbage collectors are organized in terms of three abstractions: load "
 "barriers, store barriers, and safepoints."
 msgstr ""
 
-#: ../../../Statepoints.rst:57
+#: ../../../Statepoints.rst:54
 msgid ""
 "A load barrier is a bit of code executed immediately after the machine load "
 "instruction, but before any use of the value loaded. Depending on the "
@@ -95,7 +95,7 @@ msgid ""
 "particular type (in the original source language), or none at all."
 msgstr ""
 
-#: ../../../Statepoints.rst:63
+#: ../../../Statepoints.rst:60
 msgid ""
 "Analogously, a store barrier is a code fragment that runs immediately before "
 "the machine store instruction, but after the computation of the value "
@@ -103,7 +103,7 @@ msgid ""
 "in a generational garbage collector."
 msgstr ""
 
-#: ../../../Statepoints.rst:69
+#: ../../../Statepoints.rst:66
 msgid ""
 "A safepoint is a location at which pointers visible to the compiled code (i."
 "e. currently in registers or on the stack) are allowed to change.  After the "
@@ -111,7 +111,7 @@ msgid ""
 "'object' (as seen by the source language) pointed to will not."
 msgstr ""
 
-#: ../../../Statepoints.rst:75
+#: ../../../Statepoints.rst:72
 msgid ""
 "Note that the term 'safepoint' is somewhat overloaded.  It refers to both "
 "the location at which the machine state is parsable and the coordination "
@@ -120,7 +120,7 @@ msgid ""
 "in this document refers exclusively to the former."
 msgstr ""
 
-#: ../../../Statepoints.rst:82
+#: ../../../Statepoints.rst:79
 msgid ""
 "This document focuses on the last item - compiler support for safepoints in "
 "generated code.  We will assume that an outside mechanism has decided where "
@@ -129,32 +129,32 @@ msgid ""
 "compiled code, the collector must be able to:"
 msgstr ""
 
-#: ../../../Statepoints.rst:89
+#: ../../../Statepoints.rst:86
 msgid ""
 "identify every copy of a pointer (including copies introduced by the "
 "compiler itself) at the safepoint,"
 msgstr ""
 
-#: ../../../Statepoints.rst:91
+#: ../../../Statepoints.rst:88
 msgid "identify which object each pointer relates to, and"
 msgstr ""
 
-#: ../../../Statepoints.rst:92
+#: ../../../Statepoints.rst:89
 msgid "potentially update each of those copies."
 msgstr ""
 
-#: ../../../Statepoints.rst:94
+#: ../../../Statepoints.rst:91
 msgid ""
 "This document describes the mechanism by which an LLVM based compiler can "
 "provide this information to a language runtime/collector, and ensure that "
 "all pointers can be read and updated if desired."
 msgstr ""
 
-#: ../../../Statepoints.rst:99
+#: ../../../Statepoints.rst:96
 msgid "Abstract Machine Model"
 msgstr ""
 
-#: ../../../Statepoints.rst:101
+#: ../../../Statepoints.rst:98
 msgid ""
 "At a high level, LLVM has been extended to support compiling to an abstract "
 "machine which extends the actual target with a non-integral pointer type "
@@ -165,7 +165,7 @@ msgid ""
 "objects without visible effects."
 msgstr ""
 
-#: ../../../Statepoints.rst:109
+#: ../../../Statepoints.rst:106
 msgid ""
 "This high level abstract machine model is used for most of the optimizer.  "
 "As a result, transform passes do not need to be extended to look through "
@@ -174,7 +174,7 @@ msgid ""
 "is an implementation detail."
 msgstr ""
 
-#: ../../../Statepoints.rst:115
+#: ../../../Statepoints.rst:112
 msgid ""
 "Note that most of the value of the abstract machine model comes for "
 "collectors which need to model potentially relocatable objects.  For a "
@@ -182,7 +182,7 @@ msgid ""
 "consider starting with the fully explicit form."
 msgstr ""
 
-#: ../../../Statepoints.rst:120
+#: ../../../Statepoints.rst:117
 msgid ""
 "Warning: There is one currently known semantic hole in the definition of non-"
 "integral pointers which has not been addressed upstream.  To work around "
@@ -193,32 +193,32 @@ msgid ""
 "well isolated to isSafeToSpeculate in ValueTracking.cpp."
 msgstr ""
 
-#: ../../../Statepoints.rst:129
+#: ../../../Statepoints.rst:126
 msgid "Explicit Representation"
 msgstr ""
 
-#: ../../../Statepoints.rst:131
+#: ../../../Statepoints.rst:128
 msgid ""
 "A frontend could directly generate this low level explicit form, but doing "
 "so may inhibit optimization.  Instead, it is recommended that compilers with "
 "relocating collectors target the abstract machine model just described."
 msgstr ""
 
-#: ../../../Statepoints.rst:136
+#: ../../../Statepoints.rst:133
 msgid ""
 "The heart of the explicit approach is to construct (or rewrite) the IR in a "
 "manner where the possible updates performed by the garbage collector are "
 "explicitly visible in the IR.  Doing so requires that we:"
 msgstr ""
 
-#: ../../../Statepoints.rst:140
+#: ../../../Statepoints.rst:137
 msgid ""
 "create a new SSA value for each potentially relocated pointer, and ensure "
 "that no uses of the original (non relocated) value is reachable after the "
 "safepoint,"
 msgstr ""
 
-#: ../../../Statepoints.rst:143
+#: ../../../Statepoints.rst:140
 msgid ""
 "specify the relocation in a way which is opaque to the compiler to ensure "
 "that the optimizer can not introduce new uses of an unrelocated value after "
@@ -226,13 +226,13 @@ msgid ""
 "optimizations."
 msgstr ""
 
-#: ../../../Statepoints.rst:147
+#: ../../../Statepoints.rst:144
 msgid ""
 "recording a mapping of live pointers (and the allocation they're associated "
 "with) for each statepoint."
 msgstr ""
 
-#: ../../../Statepoints.rst:150
+#: ../../../Statepoints.rst:147
 msgid ""
 "At the most abstract level, inserting a safepoint can be thought of as "
 "replacing a call instruction with a call to a multiple return value function "
@@ -240,7 +240,7 @@ msgid ""
 "returns updated values for any live pointers to garbage collected objects."
 msgstr ""
 
-#: ../../../Statepoints.rst:156
+#: ../../../Statepoints.rst:153
 msgid ""
 "Note that the task of identifying all live pointers to garbage collected "
 "values, transforming the IR to expose a pointer giving the base object for "
@@ -249,17 +249,17 @@ msgid ""
 "use the :ref:`utility passes <statepoint-utilities>` described below."
 msgstr ""
 
-#: ../../../Statepoints.rst:163
+#: ../../../Statepoints.rst:160
 msgid ""
 "This abstract function call is concretely represented by a sequence of "
 "intrinsic calls known collectively as a \"statepoint relocation sequence\"."
 msgstr ""
 
-#: ../../../Statepoints.rst:166
+#: ../../../Statepoints.rst:163
 msgid "Let's consider a simple call in LLVM IR:"
 msgstr ""
 
-#: ../../../Statepoints.rst:177
+#: ../../../Statepoints.rst:174
 msgid ""
 "Depending on our language we may need to allow a safepoint during the "
 "execution of ``foo``. If so, we need to let the collector update local "
@@ -267,7 +267,7 @@ msgid ""
 "invalid reference once we eventually return from the call."
 msgstr ""
 
-#: ../../../Statepoints.rst:182
+#: ../../../Statepoints.rst:179
 msgid ""
 "In this example, we need to relocate the SSA value ``%obj``.  Since we can't "
 "actually change the value in the SSA value ``%obj``, we need to introduce a "
@@ -276,7 +276,7 @@ msgid ""
 "appropriately.  The resulting relocation sequence is:"
 msgstr ""
 
-#: ../../../Statepoints.rst:197
+#: ../../../Statepoints.rst:194
 msgid ""
 "Ideally, this sequence would have been represented as a M argument, N return "
 "value function (where M is the number of values being relocated + the "
@@ -284,7 +284,7 @@ msgid ""
 "value), but LLVM does not easily support such a representation."
 msgstr ""
 
-#: ../../../Statepoints.rst:203
+#: ../../../Statepoints.rst:200
 msgid ""
 "Instead, the statepoint intrinsic marks the actual site of the safepoint or "
 "statepoint.  The statepoint returns a token value (which exists only at "
@@ -296,11 +296,11 @@ msgid ""
 "entirety of a parseable call or 'statepoint'."
 msgstr ""
 
-#: ../../../Statepoints.rst:212
+#: ../../../Statepoints.rst:209
 msgid "When lowered, this example would generate the following x86 assembly:"
 msgstr ""
 
-#: ../../../Statepoints.rst:225
+#: ../../../Statepoints.rst:222
 msgid ""
 "Each of the potentially relocated values has been spilled to the stack, and "
 "a record of that location has been recorded to the :ref:`Stack Map section "
@@ -308,22 +308,22 @@ msgid ""
 "pointers during the call, it knows exactly what to change."
 msgstr ""
 
-#: ../../../Statepoints.rst:231
+#: ../../../Statepoints.rst:228
 msgid "The relevant parts of the StackMap section for our example are:"
 msgstr ""
 
-#: ../../../Statepoints.rst:250
+#: ../../../Statepoints.rst:247
 msgid ""
 "This example was taken from the tests for the :ref:`RewriteStatepointsForGC` "
 "utility pass.  As such, its full StackMap can be easily examined with the "
 "following command."
 msgstr ""
 
-#: ../../../Statepoints.rst:259
+#: ../../../Statepoints.rst:256
 msgid "Simplifications for Non-Relocating GCs"
 msgstr ""
 
-#: ../../../Statepoints.rst:261
+#: ../../../Statepoints.rst:258
 msgid ""
 "Some of the complexity in the previous example is unnecessary for a non-"
 "relocating collector.  While a non-relocating collector still needs the "
@@ -333,17 +333,17 @@ msgid ""
 "calls and leave uses in terms of the original reference value."
 msgstr ""
 
-#: ../../../Statepoints.rst:268
+#: ../../../Statepoints.rst:265
 msgid ""
 "Here's the explicit lowering for the previous example for a non-relocating "
 "collector:"
 msgstr ""
 
-#: ../../../Statepoints.rst:283
+#: ../../../Statepoints.rst:280
 msgid "Recording On Stack Regions"
 msgstr ""
 
-#: ../../../Statepoints.rst:285
+#: ../../../Statepoints.rst:282
 msgid ""
 "In addition to the explicit relocation form previously described, the "
 "statepoint infrastructure also allows the listing of allocas within the gc "
@@ -351,13 +351,13 @@ msgid ""
 "pointer values and relocations."
 msgstr ""
 
-#: ../../../Statepoints.rst:290
+#: ../../../Statepoints.rst:287
 msgid ""
 "An alloca in the gc region of the statepoint operand list will cause the "
 "address of the stack region to be listed in the stackmap for the statepoint."
 msgstr ""
 
-#: ../../../Statepoints.rst:293
+#: ../../../Statepoints.rst:290
 msgid ""
 "This mechanism can be used to describe explicit spill slots if desired.  It "
 "then becomes the generator's responsibility to ensure that values are spill/"
@@ -367,7 +367,7 @@ msgid ""
 "the associated collector can derive the object base from the pointer itself."
 msgstr ""
 
-#: ../../../Statepoints.rst:301
+#: ../../../Statepoints.rst:298
 msgid ""
 "This mechanism can be used to describe on stack objects containing "
 "references provided that the collector can map from the location on the "
@@ -375,7 +375,7 @@ msgid ""
 "collector needs to process."
 msgstr ""
 
-#: ../../../Statepoints.rst:306
+#: ../../../Statepoints.rst:303
 msgid ""
 "WARNING: At the moment, this alternate form is not well exercised.  It is "
 "recommended to use this with caution and expect to have to fix a few bugs. "
@@ -383,11 +383,11 @@ msgid ""
 "for allocas today."
 msgstr ""
 
-#: ../../../Statepoints.rst:312
+#: ../../../Statepoints.rst:309
 msgid "Base & Derived Pointers"
 msgstr ""
 
-#: ../../../Statepoints.rst:314
+#: ../../../Statepoints.rst:311
 msgid ""
 "A \"base pointer\" is one which points to the starting address of an "
 "allocation (object).  A \"derived pointer\" is one which is offset from a "
@@ -396,14 +396,14 @@ msgid ""
 "allocation to the same offset from the new address."
 msgstr ""
 
-#: ../../../Statepoints.rst:320
+#: ../../../Statepoints.rst:317
 msgid ""
 "\"Interior derived pointers\" remain within the bounds of the allocation "
 "they're associated with.  As a result, the base object can be found at "
 "runtime provided the bounds of allocations are known to the runtime system."
 msgstr ""
 
-#: ../../../Statepoints.rst:324
+#: ../../../Statepoints.rst:321
 msgid ""
 "\"Exterior derived pointers\" are outside the bounds of the associated "
 "object; they may even fall within *another* allocations address range.  As a "
@@ -412,7 +412,7 @@ msgid ""
 "needed."
 msgstr ""
 
-#: ../../../Statepoints.rst:329
+#: ../../../Statepoints.rst:326
 msgid ""
 "The ``gc.relocate`` intrinsic supports an explicit operand for describing "
 "the allocation associated with a derived pointer.  This operand is "
@@ -425,11 +425,11 @@ msgid ""
 "unused afterwards."
 msgstr ""
 
-#: ../../../Statepoints.rst:342
+#: ../../../Statepoints.rst:339
 msgid "GC Transitions"
 msgstr ""
 
-#: ../../../Statepoints.rst:344
+#: ../../../Statepoints.rst:341
 msgid ""
 "As a practical consideration, many garbage-collected systems allow code that "
 "is collector-aware (\"managed code\") to call code that is not collector-"
@@ -443,7 +443,7 @@ msgid ""
 "arguments to the statepoint."
 msgstr ""
 
-#: ../../../Statepoints.rst:355
+#: ../../../Statepoints.rst:352
 msgid ""
 "Note that although in many cases statepoints may be inferred to be GC "
 "transitions based on the function symbols involved (e.g. a call from a "
@@ -453,7 +453,7 @@ msgid ""
 "transitions are explicitly marked."
 msgstr ""
 
-#: ../../../Statepoints.rst:362
+#: ../../../Statepoints.rst:359
 msgid ""
 "Let's revisit the sample given above, this time treating the call to "
 "``@foo`` as a GC transition. Depending on our target, the transition code "
@@ -464,13 +464,13 @@ msgid ""
 "is:"
 msgstr ""
 
-#: ../../../Statepoints.rst:381
+#: ../../../Statepoints.rst:378
 msgid ""
 "During lowering, this will result in an instruction selection DAG that looks "
 "something like:"
 msgstr ""
 
-#: ../../../Statepoints.rst:394
+#: ../../../Statepoints.rst:391
 msgid ""
 "In order to generate the necessary transition code, the backend for each "
 "target supported by \"hypothetical-gc\" must be modified to lower "
@@ -480,7 +480,7 @@ msgid ""
 "would be:"
 msgstr ""
 
-#: ../../../Statepoints.rst:413
+#: ../../../Statepoints.rst:410
 msgid ""
 "Note that the design as presented above is not fully implemented: in "
 "particular, strategy-specific lowering is not present, and all GC "
@@ -489,7 +489,7 @@ msgid ""
 "machine instruction elimination."
 msgstr ""
 
-#: ../../../Statepoints.rst:418
+#: ../../../Statepoints.rst:415
 msgid ""
 "Before the abstract machine model is lowered to the explicit statepoint "
 "model of relocations by the :ref:`RewriteStatepointsForGC` pass it is "
@@ -499,11 +499,11 @@ msgid ""
 "`RewriteStatepointsForGC` pass and must not be used after this pass."
 msgstr ""
 
-#: ../../../Statepoints.rst:429
+#: ../../../Statepoints.rst:426
 msgid "Stack Map Format"
 msgstr ""
 
-#: ../../../Statepoints.rst:431
+#: ../../../Statepoints.rst:428
 msgid ""
 "Locations for each pointer value which may need read and/or updated by the "
 "runtime or collector are provided in a separate section of the generated "
@@ -511,7 +511,7 @@ msgid ""
 "section is encoded per the :ref:`Stack Map format <stackmap-format>`."
 msgstr ""
 
-#: ../../../Statepoints.rst:437
+#: ../../../Statepoints.rst:434
 msgid ""
 "The general expectation is that a JIT compiler will parse and discard this "
 "format; it is not particularly memory efficient.  If you need an alternate "
@@ -519,11 +519,11 @@ msgid ""
 "`open work items <OpenWork>` below."
 msgstr ""
 
-#: ../../../Statepoints.rst:442
+#: ../../../Statepoints.rst:439
 msgid "Each statepoint generates the following Locations:"
 msgstr ""
 
-#: ../../../Statepoints.rst:444
+#: ../../../Statepoints.rst:441
 msgid ""
 "Constant which describes the calling convention of the call target. This "
 "constant is a valid :ref:`calling convention identifier <callingconv>` for "
@@ -532,17 +532,17 @@ msgid ""
 "elsewhere w.r.t. these identifiers."
 msgstr ""
 
-#: ../../../Statepoints.rst:449
+#: ../../../Statepoints.rst:446
 msgid "Constant which describes the flags passed to the statepoint intrinsic"
 msgstr ""
 
-#: ../../../Statepoints.rst:450
+#: ../../../Statepoints.rst:447
 msgid ""
 "Constant which describes number of following deopt *Locations* (not "
 "operands).  Will be 0 if no \"deopt\" bundle is provided."
 msgstr ""
 
-#: ../../../Statepoints.rst:452
+#: ../../../Statepoints.rst:449
 msgid ""
 "Variable number of Locations, one for each deopt parameter listed in the "
 "\"deopt\" operand bundle.  At the moment, only deopt parameters with a "
@@ -552,13 +552,13 @@ msgid ""
 "(assuming zero extension to the original bitwidth)."
 msgstr ""
 
-#: ../../../Statepoints.rst:458
+#: ../../../Statepoints.rst:455
 msgid ""
 "Variable number of relocation records, each of which consists of exactly two "
 "Locations.  Relocation records are described in detail below."
 msgstr ""
 
-#: ../../../Statepoints.rst:462
+#: ../../../Statepoints.rst:459
 msgid ""
 "Each relocation record provides sufficient information for a collector to "
 "relocate one or more derived pointers.  Each record consists of a pair of "
@@ -571,20 +571,20 @@ msgid ""
 "Additionally:"
 msgstr ""
 
-#: ../../../Statepoints.rst:471
+#: ../../../Statepoints.rst:468
 msgid ""
 "It is guaranteed that the base pointer must also appear explicitly as a "
 "relocation pair if used after the statepoint."
 msgstr ""
 
-#: ../../../Statepoints.rst:473
+#: ../../../Statepoints.rst:470
 msgid ""
 "There may be fewer relocation records then gc parameters in the IR "
 "statepoint. Each *unique* pair will occur at least once; duplicates are "
 "possible."
 msgstr ""
 
-#: ../../../Statepoints.rst:476
+#: ../../../Statepoints.rst:473
 msgid ""
 "The Locations within each record may either be of pointer size or a multiple "
 "of pointer size.  In the later case, the record must be interpreted as "
@@ -594,24 +594,24 @@ msgid ""
 "be assumed to be of the same size."
 msgstr ""
 
-#: ../../../Statepoints.rst:483
+#: ../../../Statepoints.rst:480
 msgid ""
 "Note that the Locations used in each section may describe the same physical "
 "location.  e.g. A stack slot may appear as a deopt location, a gc base "
 "pointer, and a gc derived pointer."
 msgstr ""
 
-#: ../../../Statepoints.rst:487
+#: ../../../Statepoints.rst:484
 msgid ""
 "The LiveOut section of the StkMapRecord will be empty for a statepoint "
 "record."
 msgstr ""
 
-#: ../../../Statepoints.rst:491
+#: ../../../Statepoints.rst:488
 msgid "Safepoint Semantics & Verification"
 msgstr ""
 
-#: ../../../Statepoints.rst:493
+#: ../../../Statepoints.rst:490
 msgid ""
 "The fundamental correctness property for the compiled code's correctness w.r."
 "t. the garbage collector is a dynamic one.  It must be the case that there "
@@ -622,7 +622,7 @@ msgid ""
 "performed before the safepoint."
 msgstr ""
 
-#: ../../../Statepoints.rst:502
+#: ../../../Statepoints.rst:499
 msgid ""
 "To understand why this 'observable-after' property is required, consider a "
 "null comparison performed on the original copy of a relocated pointer.  "
@@ -632,7 +632,7 @@ msgid ""
 "The compiler is free to make either scheduling choice."
 msgstr ""
 
-#: ../../../Statepoints.rst:510
+#: ../../../Statepoints.rst:507
 msgid ""
 "The actual correctness property implemented is slightly stronger than this.  "
 "We require that there be no *static path* on which a potentially relocated "
@@ -642,13 +642,13 @@ msgid ""
 "compiled code."
 msgstr ""
 
-#: ../../../Statepoints.rst:517
+#: ../../../Statepoints.rst:514
 msgid ""
 "By construction, this property will be upheld by the optimizer if correctly "
 "established in the source IR.  This is a key invariant of the design."
 msgstr ""
 
-#: ../../../Statepoints.rst:521
+#: ../../../Statepoints.rst:518
 msgid ""
 "The existing IR Verifier pass has been extended to check most of the local "
 "restrictions on the intrinsics mentioned in their respective documentation.  "
@@ -658,15 +658,15 @@ msgid ""
 "version."
 msgstr ""
 
-#: ../../../Statepoints.rst:531
+#: ../../../Statepoints.rst:528
 msgid "Utility Passes for Safepoint Insertion"
 msgstr ""
 
-#: ../../../Statepoints.rst:536
+#: ../../../Statepoints.rst:533
 msgid "RewriteStatepointsForGC"
 msgstr ""
 
-#: ../../../Statepoints.rst:538
+#: ../../../Statepoints.rst:535
 msgid ""
 "The pass RewriteStatepointsForGC transforms a function's IR to lower from "
 "the abstract machine model described above to the explicit statepoint model "
@@ -675,22 +675,22 @@ msgid ""
 "full relocation sequence, including all required ``gc.relocates``."
 msgstr ""
 
-#: ../../../Statepoints.rst:544
+#: ../../../Statepoints.rst:541
 msgid ""
 "This pass only applies to GCStrategy instances where the ``UseRS4GC`` flag "
 "is set. The two builtin GC strategies with this set are the \"statepoint-"
 "example\" and \"coreclr\" strategies."
 msgstr ""
 
-#: ../../../Statepoints.rst:548
+#: ../../../Statepoints.rst:545
 msgid "As an example, given this code:"
 msgstr ""
 
-#: ../../../Statepoints.rst:558
+#: ../../../Statepoints.rst:555
 msgid "The pass would produce this IR:"
 msgstr ""
 
-#: ../../../Statepoints.rst:568
+#: ../../../Statepoints.rst:565
 msgid ""
 "In the above examples, the addrspace(1) marker on the pointers is the "
 "mechanism that the ``statepoint-example`` GC strategy uses to distinguish "
@@ -701,7 +701,7 @@ msgid ""
 "strategies don't have to follow this convention."
 msgstr ""
 
-#: ../../../Statepoints.rst:576
+#: ../../../Statepoints.rst:573
 msgid ""
 "This pass can be used an utility function by a language frontend that "
 "doesn't want to manually reason about liveness, base pointers, or relocation "
@@ -709,7 +709,7 @@ msgid ""
 "must be run after SSA construction (i.e. mem2ref)."
 msgstr ""
 
-#: ../../../Statepoints.rst:581
+#: ../../../Statepoints.rst:578
 msgid ""
 "RewriteStatepointsForGC will ensure that appropriate base pointers are "
 "listed for every relocation created.  It will do so by duplicating code as "
@@ -723,7 +723,7 @@ msgid ""
 "from an arbitrary interior derived pointer."
 msgstr ""
 
-#: ../../../Statepoints.rst:592
+#: ../../../Statepoints.rst:589
 msgid ""
 "By default RewriteStatepointsForGC passes in ``0xABCDEF00`` as the "
 "statepoint ID and ``0`` as the number of patchable bytes to the newly "
@@ -740,7 +740,7 @@ msgid ""
 "invoke if they could be successfully parsed."
 msgstr ""
 
-#: ../../../Statepoints.rst:607
+#: ../../../Statepoints.rst:604
 msgid ""
 "In practice, RewriteStatepointsForGC should be run much later in the pass "
 "pipeline, after most optimization is already done.  This helps to improve "
@@ -748,34 +748,34 @@ msgid ""
 "support."
 msgstr ""
 
-#: ../../../Statepoints.rst:614
+#: ../../../Statepoints.rst:611
 msgid "RewriteStatepointsForGC intrinsic lowering"
 msgstr ""
 
-#: ../../../Statepoints.rst:616
+#: ../../../Statepoints.rst:613
 msgid ""
 "As a part of lowering to the explicit model of relocations "
 "RewriteStatepointsForGC performs GC specific lowering for the following "
 "intrinsics:"
 msgstr ""
 
-#: ../../../Statepoints.rst:620
+#: ../../../Statepoints.rst:617
 msgid "``gc.get.pointer.base``"
 msgstr ""
 
-#: ../../../Statepoints.rst:621
+#: ../../../Statepoints.rst:618
 msgid "``gc.get.pointer.offset``"
 msgstr ""
 
-#: ../../../Statepoints.rst:622
+#: ../../../Statepoints.rst:619
 msgid "``llvm.memcpy.element.unordered.atomic.*``"
 msgstr ""
 
-#: ../../../Statepoints.rst:623
+#: ../../../Statepoints.rst:620
 msgid "``llvm.memmove.element.unordered.atomic.*``"
 msgstr ""
 
-#: ../../../Statepoints.rst:625
+#: ../../../Statepoints.rst:622
 msgid ""
 "There are two possible lowerings for the memcpy and memmove operations: GC "
 "leaf lowering and GC parseable lowering. If a call is explicitly marked with "
@@ -789,7 +789,7 @@ msgid ""
 "without taking a safepoint."
 msgstr ""
 
-#: ../../../Statepoints.rst:636
+#: ../../../Statepoints.rst:633
 msgid ""
 "GC parseable calls to '``llvm.memcpy.element.unordered.atomic.*``', '``llvm."
 "memmove.element.unordered.atomic.*``' intrinsics are lowered to calls to "
@@ -799,7 +799,7 @@ msgid ""
 "operations with and without safepoints."
 msgstr ""
 
-#: ../../../Statepoints.rst:643
+#: ../../../Statepoints.rst:640
 msgid ""
 "GC parseable lowering also involves adjusting the arguments for the call. "
 "Memcpy and memmove intrinsics take derived pointers as source and "
@@ -810,11 +810,11 @@ msgid ""
 "pointers with base pointer and offset pairs. For example:"
 msgstr ""
 
-#: ../../../Statepoints.rst:662
+#: ../../../Statepoints.rst:659
 msgid "PlaceSafepoints"
 msgstr ""
 
-#: ../../../Statepoints.rst:664
+#: ../../../Statepoints.rst:661
 msgid ""
 "The pass PlaceSafepoints inserts safepoint polls sufficient to ensure "
 "running code checks for a safepoint request on a timely manner. This pass is "
@@ -822,15 +822,15 @@ msgid ""
 "full relocation sequences."
 msgstr ""
 
-#: ../../../Statepoints.rst:669
+#: ../../../Statepoints.rst:666
 msgid "As an example, given input IR of the following:"
 msgstr ""
 
-#: ../../../Statepoints.rst:685
+#: ../../../Statepoints.rst:682
 msgid "This pass would produce the following IR:"
 msgstr ""
 
-#: ../../../Statepoints.rst:695
+#: ../../../Statepoints.rst:692
 msgid ""
 "In this case, we've added an (unconditional) entry safepoint poll.  Note "
 "that despite appearances, the entry poll is not necessarily redundant.  We'd "
@@ -839,14 +839,14 @@ msgid ""
 "definition to contain a conditional branch of some form."
 msgstr ""
 
-#: ../../../Statepoints.rst:701
+#: ../../../Statepoints.rst:698
 msgid ""
 "At the moment, PlaceSafepoints can insert safepoint polls at method entry "
 "and loop backedges locations.  Extending this to work with return polls "
 "would be straight forward if desired."
 msgstr ""
 
-#: ../../../Statepoints.rst:705
+#: ../../../Statepoints.rst:702
 msgid ""
 "PlaceSafepoints includes a number of optimizations to avoid placing "
 "safepoint polls at particular sites unless needed to ensure timely execution "
@@ -855,7 +855,7 @@ msgid ""
 "system paging."
 msgstr ""
 
-#: ../../../Statepoints.rst:710
+#: ../../../Statepoints.rst:707
 msgid ""
 "The implementation of a safepoint poll action is specified by looking up a "
 "function of the name ``gc.safepoint_poll`` in the containing Module.  The "
@@ -864,7 +864,7 @@ msgid ""
 "recursive poll insertion is not performed."
 msgstr ""
 
-#: ../../../Statepoints.rst:716
+#: ../../../Statepoints.rst:713
 msgid ""
 "This pass is useful for any language frontend which only has to support "
 "garbage collection semantics at safepoints.  If you need other abstract "
@@ -875,25 +875,25 @@ msgid ""
 "documented here."
 msgstr ""
 
-#: ../../../Statepoints.rst:726
+#: ../../../Statepoints.rst:723
 msgid "Supported Architectures"
 msgstr ""
 
-#: ../../../Statepoints.rst:728
+#: ../../../Statepoints.rst:725
 msgid ""
 "Support for statepoint generation requires some code for each backend. "
 "Today, only Aarch64 and X86_64 are supported."
 msgstr ""
 
-#: ../../../Statepoints.rst:734
+#: ../../../Statepoints.rst:731
 msgid "Limitations and Half Baked Ideas"
 msgstr ""
 
-#: ../../../Statepoints.rst:737
+#: ../../../Statepoints.rst:734
 msgid "Mixing References and Raw Pointers"
 msgstr ""
 
-#: ../../../Statepoints.rst:739
+#: ../../../Statepoints.rst:736
 msgid ""
 "Support for languages which allow unmanaged pointers to garbage collected "
 "objects (i.e. pass a pointer to an object to a C routine) in the abstract "
@@ -907,17 +907,17 @@ msgid ""
 "problems here."
 msgstr ""
 
-#: ../../../Statepoints.rst:751
+#: ../../../Statepoints.rst:748
 msgid "Objects on the Stack"
 msgstr ""
 
-#: ../../../Statepoints.rst:753
+#: ../../../Statepoints.rst:750
 msgid ""
 "As noted above, the explicit lowering supports objects allocated on the "
 "stack provided the collector can find a heap map given the stack address."
 msgstr ""
 
-#: ../../../Statepoints.rst:756
+#: ../../../Statepoints.rst:753
 msgid ""
 "The missing pieces are a) integration with rewriting (RS4GC) from the "
 "abstract machine model and b) support for optionally decomposing on stack "
@@ -925,11 +925,11 @@ msgid ""
 "ease of integration with some collectors."
 msgstr ""
 
-#: ../../../Statepoints.rst:762
+#: ../../../Statepoints.rst:759
 msgid "Lowering Quality and Representation Overhead"
 msgstr ""
 
-#: ../../../Statepoints.rst:764
+#: ../../../Statepoints.rst:761
 msgid ""
 "The current statepoint lowering is known to be somewhat poor.  In the very "
 "long term, we'd like to integrate statepoints with the register allocator; "
@@ -938,7 +938,7 @@ msgid ""
 "inliner bugs."
 msgstr ""
 
-#: ../../../Statepoints.rst:770
+#: ../../../Statepoints.rst:767
 msgid ""
 "Concerns have been raised that the statepoint representation results in a "
 "large amount of IR being produced for some examples and that this "
@@ -947,11 +947,11 @@ msgid ""
 "explored in the future."
 msgstr ""
 
-#: ../../../Statepoints.rst:777
+#: ../../../Statepoints.rst:774
 msgid "Relocations Along Exceptional Edges"
 msgstr ""
 
-#: ../../../Statepoints.rst:779
+#: ../../../Statepoints.rst:776
 msgid ""
 "Relocations along exceptional paths are currently broken in ToT.  In "
 "particular, there is current no way to represent a rethrow on a path which "
@@ -959,11 +959,11 @@ msgid ""
 "com/forum/#!topic/llvm-dev/AE417XjgxvI>`_ for more detail."
 msgstr ""
 
-#: ../../../Statepoints.rst:786
+#: ../../../Statepoints.rst:783
 msgid "Bugs and Enhancements"
 msgstr ""
 
-#: ../../../Statepoints.rst:788
+#: ../../../Statepoints.rst:785
 msgid ""
 "Currently known bugs and enhancements under consideration can be tracked by "
 "performing a `bugzilla search <https://bugs.llvm.org/buglist.cgi?"

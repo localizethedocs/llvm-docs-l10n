@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-08 12:58+0000\n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,11 +21,11 @@ msgstr ""
 msgid "MemorySSA"
 msgstr ""
 
-#: ../../../MemorySSA.md:7
+#: ../../../MemorySSA.md:4
 msgid "Introduction"
 msgstr ""
 
-#: ../../../MemorySSA.md:9
+#: ../../../MemorySSA.md:6
 msgid ""
 "`MemorySSA` is an analysis that allows us to cheaply reason about the "
 "interactions between various memory operations. Its goal is to replace "
@@ -38,7 +38,7 @@ msgid ""
 "hoist out of a loop can't happen)."
 msgstr ""
 
-#: ../../../MemorySSA.md:19
+#: ../../../MemorySSA.md:16
 msgid ""
 "At a high level, one of the goals of `MemorySSA` is to provide an SSA based "
 "form for memory, complete with def-use and use-def chains, which enables "
@@ -47,13 +47,13 @@ msgid ""
 "memory, and associate memory operations with those versions."
 msgstr ""
 
-#: ../../../MemorySSA.md:25
+#: ../../../MemorySSA.md:22
 msgid ""
 "This document goes over how `MemorySSA` is structured, and some basic "
 "intuition on how `MemorySSA` works."
 msgstr ""
 
-#: ../../../MemorySSA.md:28
+#: ../../../MemorySSA.md:25
 msgid ""
 "A paper on MemorySSA (with notes about how it's implemented in GCC) [can be "
 "found here](http://www.airs.com/dnovillo/Papers/mem-ssa.pdf). Though, it's "
@@ -62,34 +62,34 @@ msgid ""
 "GCC's, LLVM's MemorySSA is intraprocedural."
 msgstr ""
 
-#: ../../../MemorySSA.md:35
+#: ../../../MemorySSA.md:32
 msgid "MemorySSA Structure"
 msgstr ""
 
-#: ../../../MemorySSA.md:37
+#: ../../../MemorySSA.md:34
 msgid ""
 "MemorySSA is a virtual IR. After it's built, `MemorySSA` will contain a "
 "structure that maps `Instruction`s to `MemoryAccess`es, which are "
 "`MemorySSA`'s parallel to LLVM `Instruction`s."
 msgstr ""
 
-#: ../../../MemorySSA.md:41
+#: ../../../MemorySSA.md:38
 msgid "Each `MemoryAccess` can be one of three types:"
 msgstr ""
 
-#: ../../../MemorySSA.md:43
+#: ../../../MemorySSA.md:40
 msgid "`MemoryDef`"
 msgstr ""
 
-#: ../../../MemorySSA.md:44
+#: ../../../MemorySSA.md:41
 msgid "`MemoryPhi`"
 msgstr ""
 
-#: ../../../MemorySSA.md:45
+#: ../../../MemorySSA.md:42
 msgid "`MemoryUse`"
 msgstr ""
 
-#: ../../../MemorySSA.md:47
+#: ../../../MemorySSA.md:44
 msgid ""
 "`MemoryDef`s are operations which may either modify memory, or which "
 "introduce some kind of ordering constraints. Examples of `MemoryDef`s "
@@ -101,7 +101,7 @@ msgid ""
 "all the `Def`s, either directly or indirectly. For example in:"
 msgstr ""
 
-#: ../../../MemorySSA.md:64
+#: ../../../MemorySSA.md:61
 msgid ""
 "`d` is connected directly with `c` and indirectly with `b`. This means that "
 "`d` potentially clobbers (see below) `c` *or* `b` *or* both. This in turn "
@@ -109,7 +109,7 @@ msgid ""
 "`MemoryDef` clobbers every other `MemoryDef`."
 msgstr ""
 
-#: ../../../MemorySSA.md:69
+#: ../../../MemorySSA.md:66
 msgid ""
 "`MemoryPhi`s are `PhiNode`s, but for memory operations. If at any point we "
 "have two (or more) `MemoryDef`s that could flow into a `BasicBlock`, the "
@@ -119,7 +119,7 @@ msgid ""
 "`Instruction`s are mapped to `MemoryUse`s and `MemoryDef`s."
 msgstr ""
 
-#: ../../../MemorySSA.md:77
+#: ../../../MemorySSA.md:74
 msgid ""
 "Note also that in SSA, Phi nodes merge must-reach definitions (that is, "
 "definitions that *must* be new versions of variables). In MemorySSA, PHI "
@@ -127,13 +127,13 @@ msgid ""
 "versions that reach a phi node may or may not clobber a given variable)."
 msgstr ""
 
-#: ../../../MemorySSA.md:82
+#: ../../../MemorySSA.md:79
 msgid ""
 "`MemoryUse`s are operations which use but don't modify memory. An example of "
 "a `MemoryUse` is a `load`, or a `readonly` function call."
 msgstr ""
 
-#: ../../../MemorySSA.md:85
+#: ../../../MemorySSA.md:82
 msgid ""
 "Every function that exists has a special `MemoryDef` called `liveOnEntry`. "
 "It dominates every `MemoryAccess` in the function that `MemorySSA` is being "
@@ -143,7 +143,7 @@ msgid ""
 "function begins."
 msgstr ""
 
-#: ../../../MemorySSA.md:92
+#: ../../../MemorySSA.md:89
 msgid ""
 "An example of all of this overlaid on LLVM IR (obtained by running `opt -"
 "passes='print<memoryssa>' -disable-output` on an `.ll` file) is below. When "
@@ -153,7 +153,7 @@ msgid ""
 "clobber for other `MemoryAccess`es."
 msgstr ""
 
-#: ../../../MemorySSA.md:99
+#: ../../../MemorySSA.md:96
 msgid ""
 "If a `MemoryAccess` is a *clobber* of another, it means that these two "
 "`MemoryAccess`es may access the same memory. For example, `x = MemoryDef(y)` "
@@ -166,7 +166,7 @@ msgid ""
 "`MemoryUse(x)` are in the same loop, the use can't be hoisted outside alone)."
 msgstr ""
 
-#: ../../../MemorySSA.md:111
+#: ../../../MemorySSA.md:108
 msgid ""
 "Another useful way of looking at it is in terms of memory versions. In that "
 "view, operands of a given `MemoryAccess` are the version of the entire "
@@ -175,7 +175,7 @@ msgid ""
 "operation."
 msgstr ""
 
-#: ../../../MemorySSA.md:154
+#: ../../../MemorySSA.md:151
 msgid ""
 "The `MemorySSA` IR is shown in comments that precede the instructions they "
 "map to (if such an instruction exists). For example, `1 = "
@@ -185,22 +185,22 @@ msgid ""
 "can refer to `load i8, ptr"
 msgstr ""
 
-#: ../../../MemorySSA.md:160
+#: ../../../MemorySSA.md:157
 msgid "Instruction, so the line directly below a `MemoryPhi` isn't special."
 msgstr ""
 
-#: ../../../MemorySSA.md:162
+#: ../../../MemorySSA.md:159
 msgid "Going from the top down:"
 msgstr ""
 
-#: ../../../MemorySSA.md:164
+#: ../../../MemorySSA.md:161
 msgid ""
 "`6 = MemoryPhi({entry,1},{if.end,4})` notes that, when entering `while."
 "cond`, the reaching definition for it is either `1` or `4`. This `MemoryPhi` "
 "is referred to in the textual IR by the number `6`."
 msgstr ""
 
-#: ../../../MemorySSA.md:167
+#: ../../../MemorySSA.md:164
 msgid ""
 "`2 = MemoryDef(6)` notes that `store i8 0, ptr %p1` is a definition, and its "
 "reaching definition before it is `6`, or the `MemoryPhi` after `while.cond`. "
@@ -209,31 +209,31 @@ msgid ""
 "to a separate, disambiguated `MemoryPhi`.)"
 msgstr ""
 
-#: ../../../MemorySSA.md:172
+#: ../../../MemorySSA.md:169
 msgid ""
 "`3 = MemoryDef(6)` notes that `store i8 0, ptr %p2` is a definition; its "
 "reaching definition is also `6`."
 msgstr ""
 
-#: ../../../MemorySSA.md:174
+#: ../../../MemorySSA.md:171
 msgid ""
 "`5 = MemoryPhi({if.then,2},{if.else,3})` notes that the clobber before this "
 "block could either be `2` or `3`."
 msgstr ""
 
-#: ../../../MemorySSA.md:176
+#: ../../../MemorySSA.md:173
 msgid ""
 "`MemoryUse(5)` notes that `load i8, ptr %p1` is a use of memory, and that "
 "it's clobbered by `5`."
 msgstr ""
 
-#: ../../../MemorySSA.md:178
+#: ../../../MemorySSA.md:175
 msgid ""
 "`4 = MemoryDef(5)` notes that `store i8 2, ptr %p2` is a definition; its "
 "reaching definition is `5`."
 msgstr ""
 
-#: ../../../MemorySSA.md:180
+#: ../../../MemorySSA.md:177
 msgid ""
 "`MemoryUse(1)` notes that `load i8, ptr %p3` is just a user of memory, and "
 "the last thing that could clobber this use is above `while.cond` (e.g. the "
@@ -242,17 +242,17 @@ msgid ""
 "since then."
 msgstr ""
 
-#: ../../../MemorySSA.md:186
+#: ../../../MemorySSA.md:183
 msgid ""
 "As an aside, `MemoryAccess` is a `Value` mostly for convenience; it's not "
 "meant to interact with LLVM IR."
 msgstr ""
 
-#: ../../../MemorySSA.md:189
+#: ../../../MemorySSA.md:186
 msgid "Design of MemorySSA"
 msgstr ""
 
-#: ../../../MemorySSA.md:191
+#: ../../../MemorySSA.md:188
 msgid ""
 "`MemorySSA` is an analysis that can be built for any arbitrary function. "
 "When it's built, it does a pass over the function's IR in order to build up "
@@ -261,17 +261,17 @@ msgid ""
 "`MemoryAccess` for any given `Instruction` ."
 msgstr ""
 
-#: ../../../MemorySSA.md:197
+#: ../../../MemorySSA.md:194
 msgid ""
 "When `MemorySSA` is done building, it also hands you a `MemorySSAWalker` "
 "that you can use (see below)."
 msgstr ""
 
-#: ../../../MemorySSA.md:201
+#: ../../../MemorySSA.md:198
 msgid "The walker"
 msgstr ""
 
-#: ../../../MemorySSA.md:203
+#: ../../../MemorySSA.md:200
 msgid ""
 "A structure that helps `MemorySSA` do its job is the `MemorySSAWalker`, or "
 "the walker, for short. The goal of the walker is to provide answers to "
@@ -279,14 +279,14 @@ msgid ""
 "example, given:"
 msgstr ""
 
-#: ../../../MemorySSA.md:221
+#: ../../../MemorySSA.md:218
 msgid ""
 "The store to `%a` is clearly not a clobber for the store to `%b`. It would "
 "be the walker's goal to figure this out, and return `liveOnEntry` when "
 "queried for the clobber of `MemoryAccess` `2`."
 msgstr ""
 
-#: ../../../MemorySSA.md:225
+#: ../../../MemorySSA.md:222
 msgid ""
 "By default, `MemorySSA` provides a walker that can optimize `MemoryDef`s and "
 "`MemoryUse`s by consulting whatever alias analysis stack you happen to be "
@@ -296,24 +296,24 @@ msgid ""
 "nodes, etc)."
 msgstr ""
 
-#: ../../../MemorySSA.md:231
+#: ../../../MemorySSA.md:228
 msgid "Default walker APIs"
 msgstr ""
 
-#: ../../../MemorySSA.md:233
+#: ../../../MemorySSA.md:230
 msgid ""
 "There are two main APIs used to retrieve the clobbering access using the "
 "walker:"
 msgstr ""
 
-#: ../../../MemorySSA.md:235
+#: ../../../MemorySSA.md:232
 msgid ""
 "`MemoryAccess *getClobberingMemoryAccess(MemoryAccess *MA);` return the "
 "clobbering memory access for `MA`, caching all intermediate results computed "
 "along the way as part of each access queried."
 msgstr ""
 
-#: ../../../MemorySSA.md:239
+#: ../../../MemorySSA.md:236
 msgid ""
 "`MemoryAccess *getClobberingMemoryAccess(MemoryAccess *MA, const "
 "MemoryLocation &Loc);` returns the access clobbering memory location `Loc`, "
@@ -321,11 +321,11 @@ msgid ""
 "a specific memory access, there are no results that can be cached."
 msgstr ""
 
-#: ../../../MemorySSA.md:244
+#: ../../../MemorySSA.md:241
 msgid "Locating clobbers yourself"
 msgstr ""
 
-#: ../../../MemorySSA.md:246
+#: ../../../MemorySSA.md:243
 msgid ""
 "If you choose to make your own walker, you can find the clobber for a "
 "`MemoryAccess` by walking every `MemoryDef` that dominates said "
@@ -336,11 +336,11 @@ msgid ""
 "`MemoryDef` or `MemoryPhi` of said `MemoryDef`."
 msgstr ""
 
-#: ../../../MemorySSA.md:255
+#: ../../../MemorySSA.md:252
 msgid "Use and Def optimization"
 msgstr ""
 
-#: ../../../MemorySSA.md:257
+#: ../../../MemorySSA.md:254
 msgid ""
 "`MemoryUse`s keep a single operand, which is their defining or optimized "
 "access. Traditionally `MemorySSA` optimized `MemoryUse`s at build-time, up "
@@ -357,7 +357,7 @@ msgid ""
 "are recommended to call `ensureOptimizedUses()`."
 msgstr ""
 
-#: ../../../MemorySSA.md:273
+#: ../../../MemorySSA.md:270
 msgid ""
 "Initially it was not possible to optimize `MemoryDef`s in the same way, as "
 "we restricted `MemorySSA` to one operand per access. This was changed and "
@@ -371,30 +371,30 @@ msgid ""
 "complexity and is not done by default."
 msgstr ""
 
-#: ../../../MemorySSA.md:286
+#: ../../../MemorySSA.md:283
 msgid ""
 "A walk of the uses for any MemoryDef can find the accesses that were "
 "optimized to it. A code snippet for such a walk looks like this:"
 msgstr ""
 
-#: ../../../MemorySSA.md:304
+#: ../../../MemorySSA.md:301
 msgid ""
 "When `MemoryUse`s are optimized, for a given store,  you can find all loads "
 "clobbered by that store by walking the immediate and transitive uses of the "
 "store."
 msgstr ""
 
-#: ../../../MemorySSA.md:328
+#: ../../../MemorySSA.md:325
 msgid ""
 "An example of similar traversals can be found in the DeadStoreElimination "
 "pass."
 msgstr ""
 
-#: ../../../MemorySSA.md:330
+#: ../../../MemorySSA.md:327
 msgid "Invalidation and updating"
 msgstr ""
 
-#: ../../../MemorySSA.md:332
+#: ../../../MemorySSA.md:329
 msgid ""
 "Because `MemorySSA` keeps track of LLVM IR, it needs to be updated whenever "
 "the IR is updated. \"Update\", in this case, includes the addition, "
@@ -406,17 +406,17 @@ msgid ""
 "`MemoryAccesses`es."
 msgstr ""
 
-#: ../../../MemorySSA.md:342
+#: ../../../MemorySSA.md:339
 msgid "Phi placement"
 msgstr ""
 
-#: ../../../MemorySSA.md:344
+#: ../../../MemorySSA.md:341
 msgid ""
 "`MemorySSA` only places `MemoryPhi`s where they're actually needed. That is, "
 "it is a pruned SSA form, like LLVM's SSA form.  For example, consider:"
 msgstr ""
 
-#: ../../../MemorySSA.md:380
+#: ../../../MemorySSA.md:377
 msgid ""
 "Because we removed the stores from `if.then` and `if.else`, a `MemoryPhi` "
 "for `if.end` would be pointless, so we don't place one. So, if you need to "
@@ -424,18 +424,18 @@ msgid ""
 "`MemoryPhi` for `if.end`."
 msgstr ""
 
-#: ../../../MemorySSA.md:385
+#: ../../../MemorySSA.md:382
 msgid ""
 "If it turns out that this is a large burden, we can just place `MemoryPhi`s "
 "everywhere. Because we have Walkers that are capable of optimizing above "
 "said phis, doing so shouldn't prohibit optimizations."
 msgstr ""
 
-#: ../../../MemorySSA.md:390
+#: ../../../MemorySSA.md:387
 msgid "Non-Goals"
 msgstr ""
 
-#: ../../../MemorySSA.md:392
+#: ../../../MemorySSA.md:389
 msgid ""
 "`MemorySSA` is meant to reason about the relation between memory operations, "
 "and enable quicker querying. It isn't meant to be the single source of truth "
@@ -444,21 +444,21 @@ msgid ""
 "operations, as in:"
 msgstr ""
 
-#: ../../../MemorySSA.md:415
+#: ../../../MemorySSA.md:412
 msgid ""
 "Going solely by `MemorySSA`'s analysis, hoisting the `load` to `entry` may "
 "seem legal. Because it's a volatile load, though, it's not."
 msgstr ""
 
-#: ../../../MemorySSA.md:419
+#: ../../../MemorySSA.md:416
 msgid "Design tradeoffs"
 msgstr ""
 
-#: ../../../MemorySSA.md:421
+#: ../../../MemorySSA.md:418
 msgid "Precision"
 msgstr ""
 
-#: ../../../MemorySSA.md:423
+#: ../../../MemorySSA.md:420
 msgid ""
 "`MemorySSA` in LLVM deliberately trades off precision for speed. Let us "
 "think about memory variables as if they were disjoint partitions of the "
@@ -467,7 +467,7 @@ msgid ""
 "disjoint portion of the memory)"
 msgstr ""
 
-#: ../../../MemorySSA.md:429
+#: ../../../MemorySSA.md:426
 msgid ""
 "First, because alias analysis results conflict with each other, and each "
 "result may be what an analysis wants (IE TBAA may say no-alias, and "
@@ -480,11 +480,11 @@ msgid ""
 "variables, phi nodes, etc."
 msgstr ""
 
-#: ../../../MemorySSA.md:440
+#: ../../../MemorySSA.md:437
 msgid "Each of these variables may be clobbered at multiple def sites."
 msgstr ""
 
-#: ../../../MemorySSA.md:442
+#: ../../../MemorySSA.md:439
 msgid ""
 "To give an example, if you were to split up struct fields into individual "
 "variables, all aliasing operations that may-def multiple struct fields, will "
@@ -492,7 +492,7 @@ msgid ""
 "stores, etc)."
 msgstr ""
 
-#: ../../../MemorySSA.md:447
+#: ../../../MemorySSA.md:444
 msgid ""
 "Experience with SSA forms for memory in other compilers has shown that it is "
 "simply not possible to do this precisely, and in fact, doing it precisely is "
@@ -500,7 +500,7 @@ msgid ""
 "of virtual variables and phi nodes."
 msgstr ""
 
-#: ../../../MemorySSA.md:452
+#: ../../../MemorySSA.md:449
 msgid ""
 "So we partition.  At the point at which you partition, again, experience has "
 "shown us there is no point in partitioning to more than one variable.  It "
@@ -508,15 +508,15 @@ msgid ""
 "disambiguate further anyway."
 msgstr ""
 
-#: ../../../MemorySSA.md:457
+#: ../../../MemorySSA.md:454
 msgid "As a result, LLVM partitions to one variable."
 msgstr ""
 
-#: ../../../MemorySSA.md:459
+#: ../../../MemorySSA.md:456
 msgid "Precision in practice"
 msgstr ""
 
-#: ../../../MemorySSA.md:461
+#: ../../../MemorySSA.md:458
 msgid ""
 "In practice, there are implementation details in LLVM that also affect the "
 "results' precision provided by `MemorySSA`. For example, AliasAnalysis has "
@@ -539,17 +539,17 @@ msgid ""
 "isolation."
 msgstr ""
 
-#: ../../../MemorySSA.md:481
+#: ../../../MemorySSA.md:478
 msgid "LLVM Developers Meeting presentations"
 msgstr ""
 
-#: ../../../MemorySSA.md:483
+#: ../../../MemorySSA.md:480
 msgid ""
 "[2016 LLVM Developers' Meeting: G. Burgess - MemorySSA in Five Minutes]"
 "(https://www.youtube.com/watch?v=bdxWmryoHak)."
 msgstr ""
 
-#: ../../../MemorySSA.md:484
+#: ../../../MemorySSA.md:481
 msgid ""
 "[2020 LLVM Developers' Meeting: S. Baziotis & S. Moll - Finding Your Way "
 "Around the LLVM Dependence Analysis Zoo](https://www.youtube.com/watch?"

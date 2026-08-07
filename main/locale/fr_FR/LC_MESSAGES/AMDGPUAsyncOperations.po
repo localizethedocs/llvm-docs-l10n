@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-08 12:58+0000\n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,203 +17,221 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../../../AMDGPUAsyncOperations.rst:5
+#: ../../../AMDGPUAsyncOperations.md:3
 msgid "AMDGPU Asynchronous Operations"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:11
+#: ../../../AMDGPUAsyncOperations.md:6
 msgid "Introduction"
 msgstr "Introduction"
 
-#: ../../../AMDGPUAsyncOperations.rst:13
+#: ../../../AMDGPUAsyncOperations.md:8
 msgid ""
-"Asynchronous operations are memory transfers (usually between the global "
-"memory and LDS) that are completed independently at an unspecified scope. A "
-"thread that requests one or more asynchronous transfers can use *asyncmarks* "
-"to track their completion. The thread waits for each asyncmark to be "
-"*completed*, which indicates that requests initiated in *program-order* "
-"before this asyncmark have also completed."
+"Asynchronous operations are operations whose completion is not tracked "
+"internally by the compiler. A thread that initiates one or more async "
+"operations can use *asyncmarks* to track their completion."
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:21
-msgid "Operations"
+#: ../../../AMDGPUAsyncOperations.md:12
+msgid "Most {ref}`DMA operations <amdgpu-dma-operations>` are asynchronous."
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:24
-msgid "Memory Accesses"
+#: ../../../AMDGPUAsyncOperations.md:14
+msgid "Asyncmarks"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:26
+#: ../../../AMDGPUAsyncOperations.md:16
 msgid ""
-"The following instructions request asynchronous transfer of data between "
-"global memory and LDS memory."
+"An *asyncmark* created by a thread can be used to track async operations "
+"initiated by that thread."
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:31
-msgid ""
-"These listings are *merely representative*. The actual function signatures "
-"and supported architectures are documented in the :ref:`amdgpu-usage-guide`."
+#: ../../../AMDGPUAsyncOperations.md:19
+msgid "Current Sequence"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:34
-msgid "**GFX9 Async Instructions (LDS DMA)**"
-msgstr ""
-
-#: ../../../AMDGPUAsyncOperations.rst:45
-msgid "**GFX12 Async Instructions**"
-msgstr ""
-
-#: ../../../AMDGPUAsyncOperations.rst:53
-msgid "**GFX1250 Tensor DMA Instructions**"
-msgstr ""
-
-#: ../../../AMDGPUAsyncOperations.rst:61
-msgid "Asyncmark Operations"
-msgstr ""
-
-#: ../../../AMDGPUAsyncOperations.rst:63
-msgid ""
-"An *asyncmark* in the abstract machine tracks all the async operations that "
-"are *program-ordered* before that asyncmark. An asyncmark M is said to be "
-"*completed* only when all async operations *program-ordered* before M are "
-"reported by the implementation as having finished, and it is said to be "
-"*outstanding* otherwise."
-msgstr ""
-
-#: ../../../AMDGPUAsyncOperations.rst:68
-msgid "Thus we have the following sufficient condition:"
-msgstr ""
-
-#: ../../../AMDGPUAsyncOperations.rst:70
-msgid ""
-"An async operation X is *completed* at a program point P if there exists an "
-"asyncmark M such that X is *program-ordered* before M, M is *program-"
-"ordered* before P, and M is completed. X is said to be *outstanding* at P "
-"otherwise."
-msgstr ""
-
-#: ../../../AMDGPUAsyncOperations.rst:74
+#: ../../../AMDGPUAsyncOperations.md:21
 msgid ""
 "The abstract machine maintains a sequence of asyncmarks during the execution "
 "of a function body, which excludes any asyncmarks produced by calls to other "
-"functions encountered in the currently executing function."
+"functions encountered in the currently executing function. The state of this "
+"sequence at each program point in the function is called the *current "
+"sequence*."
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:79
-msgid "``@llvm.amdgcn.asyncmark()``"
+#: ../../../AMDGPUAsyncOperations.md:26
+msgid "`@llvm.amdgcn.asyncmark()`"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:81
+#: ../../../AMDGPUAsyncOperations.md:28
+msgid "Produces an asyncmark and appends it to the current sequence."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:30
+msgid "`@llvm.amdgcn.wait.asyncmark(i16 %N)`"
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:32
 msgid ""
-"When executed, inserts an asyncmark in the sequence associated with the "
-"currently executing function body."
+"Ensures that the length of the current sequence is at most `N` by removing "
+"asyncmarks from the start of the sequence if it is more than `N`."
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:85
-msgid "``@llvm.amdgcn.wait.asyncmark(i16 %N)``"
+#: ../../../AMDGPUAsyncOperations.md:35
+msgid "Completion of Asyncmarks"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:87
+#: ../../../AMDGPUAsyncOperations.md:37
 msgid ""
-"Waits until there are at most N outstanding asyncmarks in the sequence "
-"associated with the currently executing function body."
+"An `asyncmark()` operation `X` that produces an asyncmark `M` is *completed-"
+"at* a `wait.asyncmark()` operation `Y` in the same function body if:"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:91
-msgid "Memory Consistency Model"
+#: ../../../AMDGPUAsyncOperations.md:41
+msgid "`X` is *program-ordered* before `Y`, and"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:93
+#: ../../../AMDGPUAsyncOperations.md:42
 msgid ""
-"Each asynchronous operation consists of a non-atomic read on the source and "
-"a non-atomic write on the destination. Async \"LDS DMA\" intrinsics result "
-"in async accesses that guarantee visibility relative to other memory "
-"operations as follows:"
+"`M` is not in the current sequence at any operation `Z` that immediately "
+"follows `Y` in *program-order*."
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:98
+#: ../../../AMDGPUAsyncOperations.md:45
+msgid "Completion of Async Operations"
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:47
 msgid ""
-"An asynchronous operation `A` program ordered before an overlapping memory "
-"operation `X` happens-before `X` only if `A` is completed before `X`."
+"An async operation executes outside the thread that initiated it, i.e., it "
+"is not related in *program-order* with any other operations from that "
+"thread. But the thread can use an asyncmark to ensure that the async "
+"operation is *completed-at* some later operation."
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:101
+#: ../../../AMDGPUAsyncOperations.md:52
 msgid ""
-"A memory operation `X` program ordered before an overlapping asynchronous "
-"operation `A` happens-before `A`."
+"An async operation `A` *initiated-by* an instruction `I` is *completed-at* "
+"some `wait.asyncmark()` operation `Y` if there exists an `asyncmark()` "
+"operation `X` such that:"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:106
+#: ../../../AMDGPUAsyncOperations.md:55
+msgid "`I` is *program-ordered* before `X`, and"
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:56
+msgid "`X` is *completed-at* `Y`."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:58
+msgid "happens-before"
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:60
 msgid ""
-"The *only if* in the above wording implies that unlike the default LLVM "
-"memory model, certain program order edges are not automatically included in "
-"``happens-before``."
+"When an instruction `I` initiates an async operation `A`, `I` *happens-"
+"before* `A`."
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:111
+#: ../../../AMDGPUAsyncOperations.md:63
+msgid ""
+"If `A` is *completed-at* a `wait.asyncmark()` operation `Y`, then `A` "
+"*happens-before* `Y`."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:66
 msgid "Examples"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:114
-msgid "Uneven blocks of async transfers"
+#: ../../../AMDGPUAsyncOperations.md:68
+msgid "Uneven blocks of async operations"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:143
+#: ../../../AMDGPUAsyncOperations.md:96
 msgid "Software pipeline"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:176
+#: ../../../AMDGPUAsyncOperations.md:128
 msgid "Ordinary function call"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:200
+#: ../../../AMDGPUAsyncOperations.md:154
 msgid "Implementation notes"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:202
+#: ../../../AMDGPUAsyncOperations.md:156
 msgid "[This section is informational.]"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:205
-msgid "Optimization"
+#: ../../../AMDGPUAsyncOperations.md:158
+msgid "Function Calls"
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:207
-msgid ""
-"The implementation may eliminate asyncmark/wait intrinsics in the following "
-"cases:"
-msgstr ""
-
-#: ../../../AMDGPUAsyncOperations.rst:209
-msgid ""
-"An ``asyncmark`` operation which is not included in the wait count of a "
-"later wait operation in the current function. In particular, an "
-"``asyncmark`` which is not post-dominated by any ``wait.asyncmark``."
-msgstr ""
-
-#: ../../../AMDGPUAsyncOperations.rst:212
-msgid ""
-"A ``wait.asyncmark`` whose wait count is more than the outstanding async "
-"asyncmarks at that point. In particular, a ``wait.asyncmark`` that is not "
-"dominated by any ``asyncmark``."
-msgstr ""
-
-#: ../../../AMDGPUAsyncOperations.rst:216
+#: ../../../AMDGPUAsyncOperations.md:160
 msgid ""
 "In general, at a function call, if the caller uses sufficient waits to track "
 "its own async operations, the actions performed by the callee cannot affect "
 "correctness. But inlining such a call may result in redundant waits."
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:233
+#: ../../../AMDGPUAsyncOperations.md:179
 msgid ""
-"Before inlining, the ``wait.asyncmark`` waits for asyncmark B to be "
-"completed."
+"Before inlining, it is unspecified whether `X` is *completed-at* `D`, while "
+"`C` is **not** *completed-at* `D`. The programmer can only rely on `B` being "
+"*completed-at* `D`."
 msgstr ""
 
-#: ../../../AMDGPUAsyncOperations.rst:247
+#: ../../../AMDGPUAsyncOperations.md:194
 msgid ""
-"After inlining, the ``wait.asyncmark`` now waits for asyncmark C to "
-"complete, which is longer than necessary. Ideally, the optimizer should have "
-"eliminated asyncmark A in the body of foo() itself."
+"After inlining, `C` is also *completed-at* `D` and `X` is **not** *completed-"
+"at* `D`."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:197
+msgid ""
+"Conversely, a `wait.asyncmark` call inside a callee cannot be used to track "
+"asyncmarks from the caller, since this `wait.asyncmark` can only observe the "
+"current sequence of the callee."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:216
+msgid ""
+"In the above example, it is unspecified whether `B` and `C` in `bar()` are "
+"*completed-at* `Y`, because they are not included in the sequence that can "
+"be examined at `Y`."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:231
+msgid "After inlining, both `B` and `C` are *completed-at* `Y`."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:233
+msgid "Optimization"
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:235
+msgid ""
+"The implementation may eliminate asyncmark/wait intrinsics in the following "
+"cases. These are just examples and not meant to be an exhaustive list."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:238
+msgid ""
+"An `asyncmark` operation which remains in the current sequence along every "
+"path that reaches the function exit."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:249
+msgid "Here, `X` can be eliminated."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:251
+msgid ""
+"A `wait.asyncmark` which sees an empty sequence of asyncmarks along every "
+"path that reaches it."
+msgstr ""
+
+#: ../../../AMDGPUAsyncOperations.md:262
+msgid "Here, `Y` can be eliminated."
 msgstr ""

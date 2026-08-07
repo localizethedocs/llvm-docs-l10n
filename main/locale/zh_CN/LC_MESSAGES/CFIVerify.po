@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-13 08:36+0000\n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,60 +17,60 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../../../CFIVerify.rst:3
+#: ../../../CFIVerify.md:1
 msgid "Control Flow Verification Tool Design Document"
 msgstr ""
 
-#: ../../../CFIVerify.rst:9
+#: ../../../CFIVerify.md:4
 msgid "Objective"
 msgstr ""
 
-#: ../../../CFIVerify.rst:11
+#: ../../../CFIVerify.md:6
 msgid ""
 "This document provides an overview of an external tool to verify the "
 "protection mechanisms implemented by Clang's *Control Flow Integrity* (CFI) "
-"schemes (``-fsanitize=cfi``). This tool, given a binary or DSO, should infer "
+"schemes (`-fsanitize=cfi`). This tool, given a binary or DSO, should infer "
 "whether indirect control flow operations are protected by CFI, and should "
 "output these results in a human-readable form."
 msgstr ""
 
-#: ../../../CFIVerify.rst:17
+#: ../../../CFIVerify.md:12
 msgid ""
 "This tool should also be added as part of Clang's continuous integration "
 "testing framework, where modifications to the compiler ensure that CFI "
 "protection schemes are still present in the final binary."
 msgstr ""
 
-#: ../../../CFIVerify.rst:22
+#: ../../../CFIVerify.md:16
 msgid "Location"
 msgstr ""
 
-#: ../../../CFIVerify.rst:24
+#: ../../../CFIVerify.md:18
 msgid ""
 "This tool will be present as a part of the LLVM toolchain, and will reside "
-"in the ``/llvm/tools/llvm-cfi-verify`` directory, relative to the LLVM "
-"trunk. It will be tested in two methods:"
+"in the `/llvm/tools/llvm-cfi-verify` directory, relative to the LLVM trunk. "
+"It will be tested in two methods:"
 msgstr ""
 
-#: ../../../CFIVerify.rst:28
+#: ../../../CFIVerify.md:22
 msgid ""
-"Unit tests to validate code sections, present in ``/llvm/unittests/tools/"
-"llvm-cfi-verify``."
+"Unit tests to validate code sections, present in `/llvm/unittests/tools/llvm-"
+"cfi-verify`."
 msgstr ""
 
-#: ../../../CFIVerify.rst:30
+#: ../../../CFIVerify.md:24
 msgid ""
-"Integration tests, present in ``/llvm/tools/clang/test/LLVMCFIVerify``. "
-"These integration tests are part of clang as part of a continuous "
-"integration framework, ensuring updates to the compiler that reduce CFI "
-"coverage on indirect control flow instructions are identified."
+"Integration tests, present in `/llvm/tools/clang/test/LLVMCFIVerify`. These "
+"integration tests are part of clang as part of a continuous integration "
+"framework, ensuring updates to the compiler that reduce CFI coverage on "
+"indirect control flow instructions are identified."
 msgstr ""
 
-#: ../../../CFIVerify.rst:36
+#: ../../../CFIVerify.md:29
 msgid "Background"
 msgstr ""
 
-#: ../../../CFIVerify.rst:38
+#: ../../../CFIVerify.md:31
 msgid ""
 "This tool will continuously validate that CFI directives are properly "
 "implemented around all indirect control flows by analysing the output "
@@ -79,7 +79,7 @@ msgid ""
 "the final shipped binary."
 msgstr ""
 
-#: ../../../CFIVerify.rst:44
+#: ../../../CFIVerify.md:37
 msgid ""
 "Unprotected indirect control flow instructions will be flagged for manual "
 "review. These unexpected control flows may not have been accounted for in "
@@ -87,7 +87,7 @@ msgid ""
 "switch statements may not be fully protected)."
 msgstr ""
 
-#: ../../../CFIVerify.rst:49
+#: ../../../CFIVerify.md:42
 msgid ""
 "It may be possible in the future to extend this tool to flag unnecessary CFI "
 "directives (e.g., CFI directives around a static call to a non-polymorphic "
@@ -95,35 +95,35 @@ msgid ""
 "present performance impacts."
 msgstr ""
 
-#: ../../../CFIVerify.rst:55
+#: ../../../CFIVerify.md:47
 msgid "Design Ideas"
 msgstr ""
 
-#: ../../../CFIVerify.rst:57
+#: ../../../CFIVerify.md:49
 msgid ""
 "This tool will disassemble binaries and DSO's from their machine code format "
 "and analyse the disassembled machine code. The tool will inspect virtual "
 "calls and indirect function calls. This tool will also inspect indirect "
 "jumps, as inlined functions and jump tables should also be subject to CFI "
-"protections. Non-virtual calls (``-fsanitize=cfi-nvcall``) and cast checks "
-"(``-fsanitize=cfi-*cast*``) are not implemented due to a lack of information "
+"protections. Non-virtual calls (`-fsanitize=cfi-nvcall`) and cast checks (`-"
+"fsanitize=cfi-*cast*`) are not implemented due to a lack of information "
 "provided by the bytecode."
 msgstr ""
 
-#: ../../../CFIVerify.rst:64
+#: ../../../CFIVerify.md:56
 msgid ""
 "The tool would operate by searching for indirect control flow instructions "
 "in the disassembly. A control flow graph would be generated from a small "
 "buffer of the instructions surrounding the 'target' control flow "
 "instruction. If the target instruction is branched-to, the fallthrough of "
-"the branch should be the CFI trap (on x86, this is a ``ud2`` instruction). "
-"If the target instruction is the fallthrough (i.e., immediately succeeds) of "
-"a conditional jump, the conditional jump target should be the CFI trap. If "
-"an indirect control flow instruction does not conform to one of these "
-"formats, the target will be noted as being CFI-unprotected."
+"the branch should be the CFI trap (on x86, this is a `ud2` instruction). If "
+"the target instruction is the fallthrough (i.e., immediately succeeds) of a "
+"conditional jump, the conditional jump target should be the CFI trap. If an "
+"indirect control flow instruction does not conform to one of these formats, "
+"the target will be noted as being CFI-unprotected."
 msgstr ""
 
-#: ../../../CFIVerify.rst:74
+#: ../../../CFIVerify.md:66
 msgid ""
 "Note that in the second case outlined above (where the target instruction is "
 "the fallthrough of a conditional jump), if the target represents a vcall "
@@ -135,11 +135,11 @@ msgid ""
 "CFI-protected."
 msgstr ""
 
-#: ../../../CFIVerify.rst:83
+#: ../../../CFIVerify.md:74
 msgid "Other Design Notes"
 msgstr ""
 
-#: ../../../CFIVerify.rst:85
+#: ../../../CFIVerify.md:76
 msgid ""
 "Only machine code sections that are marked as executable will be subject to "
 "this analysis. Non-executable sections do not require analysis as any "
@@ -147,7 +147,7 @@ msgid ""
 "integrity."
 msgstr ""
 
-#: ../../../CFIVerify.rst:89
+#: ../../../CFIVerify.md:80
 msgid ""
 "Suitable extensions may be made at a later date to include analysis for "
 "indirect control flow operations across DSO boundaries. Currently, these CFI "
@@ -155,7 +155,7 @@ msgid ""
 "for analysis."
 msgstr ""
 
-#: ../../../CFIVerify.rst:93
+#: ../../../CFIVerify.md:84
 msgid ""
 "The tool currently only supports the x86, x86_64, and AArch64 architectures."
 msgstr ""
