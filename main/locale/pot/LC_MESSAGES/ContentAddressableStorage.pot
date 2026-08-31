@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-13 08:36+0000\n"
+"POT-Creation-Date: 2026-08-31 15:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -121,10 +121,20 @@ msgid ""
 msgstr ""
 
 #: ../../../ContentAddressableStorage.md:64
+msgid ""
+"To get a lifetime-extended buffer, call `getStandaloneMemoryBuffer()`, which "
+"returns a `MemoryBuffer` that remains valid after the `ObjectStore` is "
+"destroyed. A CAS can provide a customized implementation that is cheaper "
+"than a copy; the on-disk CAS re-reads the object's file where it has one, "
+"which lets the pages be shared and reclaimed rather than charged to the "
+"process."
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:70
 msgid "CASID"
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:66
+#: ../../../ContentAddressableStorage.md:72
 msgid ""
 "`CASID` is the hash identifier for CASObjects. It owns the underlying "
 "storage for hash value so it can be expensive to copy and compare depending "
@@ -133,56 +143,63 @@ msgid ""
 "instances with the same hashing schema."
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:72
+#: ../../../ContentAddressableStorage.md:78
 msgid "ObjectStore"
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:74
+#: ../../../ContentAddressableStorage.md:80
 msgid ""
 "`ObjectStore` is the CAS-like object storage. It provides API to save and "
 "load CASObjects, for example:"
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:83
+#: ../../../ContentAddressableStorage.md:89
 msgid ""
 "It also provides APIs to convert between `ObjectRef`, `ObjectProxy` and "
 "`CASID`."
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:86
+#: ../../../ContentAddressableStorage.md:92
 msgid "ActionCache"
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:88
+#: ../../../ContentAddressableStorage.md:94
 msgid ""
 "`ActionCache` is a key value storage can be used to associate two CASIDs. It "
 "is usually used with an `ObjectStore` to map an input CASObject to an output "
 "CASObject with their CASIDs."
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:92
+#: ../../../ContentAddressableStorage.md:98
 msgid "`ActionCache` has APIs like following:"
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:101
+#: ../../../ContentAddressableStorage.md:107
 msgid "CAS Library Implementation Guide"
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:103
+#: ../../../ContentAddressableStorage.md:109
 msgid ""
 "The LLVM ObjectStore API was designed so that it is easy to add customized "
 "CAS implementations that are interchangeable with the builtin ones."
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:107
+#: ../../../ContentAddressableStorage.md:113
 msgid ""
 "To add your own implementation, you just need to add a subclass to `llvm::"
-"cas::ObjectStore` and implement all its pure virtual methods. To be "
-"interchangeable with LLVM ObjectStore, the new CAS implementation needs to "
-"conform to following contracts:"
+"cas::ObjectStore` and implement all its pure virtual methods. "
+"`getStandaloneMemoryBufferImpl()` is an optional customization point; it "
+"copies by default, so override it only if the implementation can hand out "
+"storage that outlives itself."
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:112
+#: ../../../ContentAddressableStorage.md:119
+msgid ""
+"To be interchangeable with LLVM ObjectStore, the new CAS implementation "
+"needs to conform to following contracts:"
+msgstr ""
+
+#: ../../../ContentAddressableStorage.md:122
 msgid ""
 "Different CASObjects stored in the ObjectStore need to have a different hash "
 "and result in a different `ObjectRef`. Similarly, the same CASObject should "
@@ -191,13 +208,13 @@ msgid ""
 "objects."
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:116
+#: ../../../ContentAddressableStorage.md:126
 msgid ""
 "`ObjectRef`s are only comparable within the same `ObjectStore` instance, and "
 "can be used to determine the equality of the underlying CASObjects."
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:118
+#: ../../../ContentAddressableStorage.md:128
 msgid ""
 "The loaded objects from the ObjectStore need to have a lifetime at least as "
 "long as the ObjectStore itself so it is always legal to access the loaded "
@@ -205,7 +222,7 @@ msgid ""
 "destroyed."
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:123
+#: ../../../ContentAddressableStorage.md:133
 msgid ""
 "If not specified, the behavior can be implementation defined. For example, "
 "`ObjectRef` can be used to point to a loaded CASObject so `ObjectStore` "
@@ -215,7 +232,7 @@ msgid ""
 "comparing such `ObjectRef` from different `ObjectStore` is still illegal."
 msgstr ""
 
-#: ../../../ContentAddressableStorage.md:130
+#: ../../../ContentAddressableStorage.md:140
 msgid ""
 "For CAS library implementers, there is also an `ObjectHandle` class that is "
 "an internal representation of a loaded CASObject reference. `ObjectProxy` is "
