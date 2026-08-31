@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 11:32+0000\n"
+"POT-Creation-Date: 2026-08-31 15:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2085,7 +2085,7 @@ msgid ""
 "to do this, providing various trade-offs."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:1947 ../../../ProgrammersManual.md:2186
+#: ../../../ProgrammersManual.md:1947 ../../../ProgrammersManual.md:2187
 msgid "A sorted 'vector'"
 msgstr ""
 
@@ -2252,8 +2252,8 @@ msgstr ""
 #: ../../../ProgrammersManual.md:2060
 msgid ""
 "`FoldingSet` is an aggregate class that is really good at uniquing expensive-"
-"to-create or polymorphic objects.  It is a combination of a chained hash "
-"table with intrusive links (uniqued objects are required to inherit from "
+"to-create or polymorphic objects.  It is a linear-probed hash table whose "
+"buckets point to the uniqued objects (which are required to inherit from "
 "`FoldingSetNode`) that uses {ref}`SmallVector <dss_smallvector>` as part of "
 "its ID process."
 msgstr ""
@@ -2280,18 +2280,19 @@ msgstr ""
 
 #: ../../../ProgrammersManual.md:2079
 msgid ""
-"Because `FoldingSet` uses intrusive links, it can support polymorphic "
+"Because the buckets are pointers, `FoldingSet` can support polymorphic "
 "objects in the set (for example, you can have `SDNode` instances mixed with "
 "`LoadSDNodes`). Because the elements are individually allocated, pointers to "
 "the elements are stable: inserting or removing elements does not invalidate "
-"any pointers to other elements."
+"any pointers to other elements.  The iterators, however, are invalidated "
+"whenever an insertion or erasure occurs, as in `DenseMap` and `StringMap`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2087
+#: ../../../ProgrammersManual.md:2088
 msgid "`<set>`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2089
+#: ../../../ProgrammersManual.md:2090
 msgid ""
 "`std::set` is a reasonable all-around set class, which is decent at many "
 "things but great at nothing.  `std::set` allocates memory for each element "
@@ -2303,7 +2304,7 @@ msgid ""
 "constant factors for lookup, insertion and removal."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2098
+#: ../../../ProgrammersManual.md:2099
 msgid ""
 "The advantages of `std::set` are that its iterators are stable (deleting or "
 "inserting an element from the set does not affect iterators or pointers to "
@@ -2313,11 +2314,11 @@ msgid ""
 "elements of the set are small, `std::set` is almost never a good choice."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2107
+#: ../../../ProgrammersManual.md:2108
 msgid "llvm/ADT/SetVector.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2109
+#: ../../../ProgrammersManual.md:2110
 msgid ""
 "LLVM's `SetVector<Type>` is an adapter class that combines your choice of a "
 "set-like container along with a {ref}`Sequential Container <ds_sequential>` "
@@ -2328,7 +2329,7 @@ msgid ""
 "sequential container for iteration."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2117
+#: ../../../ProgrammersManual.md:2118
 msgid ""
 "The difference between `SetVector` and other sets is that the order of "
 "iteration is guaranteed to match the order of insertion into the "
@@ -2338,7 +2339,7 @@ msgid ""
 "the set will not be in a well-defined order."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2124
+#: ../../../ProgrammersManual.md:2125
 msgid ""
 "The drawback of `SetVector` is that it requires twice as much space as a "
 "normal set and has the sum of constant factors from the set-like container "
@@ -2348,7 +2349,7 @@ msgid ""
 "\"pop_back\" method, which is faster."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2131
+#: ../../../ProgrammersManual.md:2132
 msgid ""
 "`SetVector` is an adapter class that defaults to using `std::vector` and a "
 "size 16 `SmallSet` for the underlying containers, so it is quite expensive. "
@@ -2358,11 +2359,11 @@ msgid ""
 "save a lot of heap traffic."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2140
+#: ../../../ProgrammersManual.md:2141
 msgid "llvm/ADT/UniqueVector.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2142
+#: ../../../ProgrammersManual.md:2143
 msgid ""
 "UniqueVector is similar to {ref}`SetVector <dss_setvector>` but it retains a "
 "unique ID for each element inserted into the set.  It internally contains a "
@@ -2370,18 +2371,18 @@ msgid ""
 "the set."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2146
+#: ../../../ProgrammersManual.md:2147
 msgid ""
 "UniqueVector is very expensive: its cost is the sum of the cost of "
 "maintaining both the map and vector, it has high complexity, high constant "
 "factors, and produces a lot of malloc traffic.  It should be avoided."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2152
+#: ../../../ProgrammersManual.md:2153
 msgid "llvm/ADT/ImmutableSet.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2154
+#: ../../../ProgrammersManual.md:2155
 msgid ""
 "`ImmutableSet` is an immutable (functional) set implementation based on an "
 "AVL tree.  Adding or removing elements is done through a Factory object and "
@@ -2392,24 +2393,24 @@ msgid ""
 "the original set."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2161
+#: ../../../ProgrammersManual.md:2162
 msgid ""
 "There is no method for returning an element of the set, you can only check "
 "for membership."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2166
+#: ../../../ProgrammersManual.md:2167
 msgid "Other Set-Like Container Options"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2168
+#: ../../../ProgrammersManual.md:2169
 msgid ""
 "The STL provides several other options, such as `std::multiset` and `std::"
 "unordered_set`.  We never use containers like `unordered_set` because they "
 "are generally very expensive (each insertion requires a malloc)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2172
+#: ../../../ProgrammersManual.md:2173
 msgid ""
 "`std::multiset` is useful if you're not interested in elimination of "
 "duplicates, but has all the drawbacks of {ref}`std::set <dss_set>`.  A "
@@ -2417,31 +2418,95 @@ msgid ""
 "approach is almost always better."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2179
+#: ../../../ProgrammersManual.md:2180
 msgid "Map-Like Containers (std::map, DenseMap, etc)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2181
+#: ../../../ProgrammersManual.md:2182
 msgid ""
 "Map-like containers are useful when you want to associate data to a key.  As "
 "usual, there are a lot of different ways to do this. :)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2188
+#: ../../../ProgrammersManual.md:2189
 msgid ""
 "If your usage pattern follows a strict insert-then-query approach, you can "
 "trivially use the same approach as {ref}`sorted vectors for set-like "
 "containers <dss_sortedvectorset>`.  The only difference is that your query "
 "function (which uses `std::lower_bound` to get efficient log(n) lookup) "
 "should only compare the key, not both the key and value.  This yields the "
-"same advantages as sorted vectors for sets."
-msgstr ""
-
-#: ../../../ProgrammersManual.md:2196
-msgid "llvm/ADT/StringMap.h"
+"same advantages as sorted vectors for sets.  If you need a map-like "
+"container with incremental insertions backed by a sorted vector, see {ref}"
+"`SortedVectorMap <dss_sortedvectormap_class>`."
 msgstr ""
 
 #: ../../../ProgrammersManual.md:2198
+msgid "llvm/ADT/SortedVectorMap.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2200
+msgid ""
+"`SortedVectorMap<KeyT, ValueT, N, KeyCompare>` is a map backed by a sorted "
+"`SmallVector`. It provides a `std::map`-like interface with $O(\\log N)$ "
+"binary search lookup while maintaining contiguous memory layout and cache "
+"locality."
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2204
+msgid "`SortedVectorMap` is intended for:"
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2205
+msgid ""
+"Small maps where memory footprint is a primary concern. In particular, it "
+"avoids the initial bucket overhead of `DenseMap` (e.g. 64 buckets by "
+"default) when only a few elements are stored."
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2208
+msgid "Use cases that require iteration in sorted key order."
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2210
+msgid "Trade-offs:"
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2211
+msgid ""
+"Lookups take $O(\\log N)$ time via binary search rather than $O(1)$ in "
+"`DenseMap`."
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2212
+msgid ""
+"Insertions and deletions take $O(N)$ time due to shifting elements in the "
+"underlying vector, making it best suited for small $N$ or mostly-read data."
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2214
+msgid ""
+"Like other vector-based containers (and unlike `std::map`), iterators and "
+"references are invalidated by insertions (due to element shifting or "
+"reallocations) and erasures (due to element shifting)."
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2217
+msgid ""
+"Compared to `std::map`, elements are stored contiguously, eliminating per-"
+"node heap allocations and pointer chasing."
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2219
+msgid ""
+"Compared to `MapVector`, elements are ordered by key rather than insertion "
+"order, with zero auxiliary hash table overhead."
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2224
+msgid "llvm/ADT/StringMap.h"
+msgstr ""
+
+#: ../../../ProgrammersManual.md:2226
 msgid ""
 "Strings are commonly used as keys in maps, and they are difficult to support "
 "efficiently: they are variable length, inefficient to hash and compare when "
@@ -2450,7 +2515,7 @@ msgid ""
 "of bytes to an arbitrary other object."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2204
+#: ../../../ProgrammersManual.md:2232
 msgid ""
 "The ``StringMap`` implementation uses a linear-probed hash table, where the "
 "buckets store a pointer to the heap allocated entries (and some other "
@@ -2461,7 +2526,7 @@ msgid ""
 "to the key string for a value."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2212
+#: ../../../ProgrammersManual.md:2240
 msgid ""
 "The `StringMap` is very fast for several reasons: linear probing is very "
 "cache efficient for lookups, the hash value of strings in buckets is not "
@@ -2473,30 +2538,30 @@ msgid ""
 "a pair)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2220
+#: ../../../ProgrammersManual.md:2248
 msgid ""
 "`StringMap` also provides query methods that take byte ranges, so it only "
 "ever copies a string if a value is inserted into the table."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2223
+#: ../../../ProgrammersManual.md:2251
 msgid ""
 "`StringMap` iteration order, however, is not guaranteed to be deterministic, "
 "so any uses which require that should instead use a `std::map`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2226
+#: ../../../ProgrammersManual.md:2254
 msgid ""
 "Like `DenseMap`, `StringMap` iterators are invalidated whenever an insertion "
 "or erasure occurs. To erase matching elements in a single pass, use the "
 "`remove_if` member instead of erasing while iterating."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2232
+#: ../../../ProgrammersManual.md:2260
 msgid "llvm/ADT/IndexedMap.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2234
+#: ../../../ProgrammersManual.md:2262
 msgid ""
 "`IndexedMap` is a specialized container for mapping small dense integers (or "
 "values that can be mapped to small dense integers) to some other type.  It "
@@ -2504,18 +2569,18 @@ msgid ""
 "keys to the dense integer range."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2239
+#: ../../../ProgrammersManual.md:2267
 msgid ""
 "This is useful for cases like virtual registers in the LLVM code generator: "
 "they have a dense mapping that is offset by a compile-time constant (the "
 "first virtual register ID)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2245
+#: ../../../ProgrammersManual.md:2273
 msgid "llvm/ADT/DenseMap.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2247
+#: ../../../ProgrammersManual.md:2275
 msgid ""
 "`DenseMap` is a simple linearly probed hash table.  It excels at supporting "
 "small keys and values: it uses a single allocation to hold all of the pairs "
@@ -2523,7 +2588,7 @@ msgid ""
 "pointers to pointers, or map other small types to each other."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2252
+#: ../../../ProgrammersManual.md:2280
 msgid ""
 "There are several aspects of `DenseMap` that you should be aware of, "
 "however. The iterators in a `DenseMap` are invalidated whenever an insertion "
@@ -2536,7 +2601,7 @@ msgid ""
 "the map) that it needs internally."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2262
+#: ../../../ProgrammersManual.md:2290
 msgid ""
 "`DenseMap`'s `find_as()` method supports lookup operations using an "
 "alternate key type.  This is useful in cases where the normal key type is "
@@ -2545,18 +2610,18 @@ msgid ""
 "each alternate key type used."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2268
+#: ../../../ProgrammersManual.md:2296
 msgid ""
 "`DenseMap.h` also contains a `SmallDenseMap` variant, that similar to {ref}"
 "`SmallVector <dss_smallvector>` performs no heap allocation until the number "
 "of elements in the template parameter N are exceeded."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2274
+#: ../../../ProgrammersManual.md:2302
 msgid "llvm/IR/ValueMap.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2276
+#: ../../../ProgrammersManual.md:2304
 msgid ""
 "ValueMap is a wrapper around a {ref}`DenseMap <dss_densemap>` mapping "
 "`Value*`s (or subclasses) to another type.  When a Value is deleted or "
@@ -2566,11 +2631,11 @@ msgid ""
 "events, by passing a `Config` parameter to the `ValueMap` template."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2285
+#: ../../../ProgrammersManual.md:2313
 msgid "llvm/ADT/IntervalMap.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2287
+#: ../../../ProgrammersManual.md:2315
 msgid ""
 "`IntervalMap` is a compact map for small keys and values.  It maps key "
 "intervals instead of single keys, and it will automatically coalesce "
@@ -2578,35 +2643,35 @@ msgid ""
 "stored in the map object itself to avoid allocations."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2292
+#: ../../../ProgrammersManual.md:2320
 msgid ""
 "The `IntervalMap` iterators are quite big, so they should not be passed "
 "around as STL iterators.  The heavyweight iterators allow a smaller data "
 "structure."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2297
+#: ../../../ProgrammersManual.md:2325
 msgid "llvm/ADT/IntervalTree.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2299
+#: ../../../ProgrammersManual.md:2327
 msgid ""
 "`llvm::IntervalTree` is a light tree data structure to hold intervals. It "
 "allows finding all intervals that overlap with any given point. At this "
 "time, it does not support any deletion or rebalancing operations."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2303
+#: ../../../ProgrammersManual.md:2331
 msgid ""
 "The `IntervalTree` is designed to be set up once, and then queried without "
 "any further additions."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2308
+#: ../../../ProgrammersManual.md:2336
 msgid "`<map>`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2310
+#: ../../../ProgrammersManual.md:2338
 msgid ""
 "`std::map` has similar characteristics to {ref}`std::set <dss_set>`: it uses "
 "a single allocation per pair inserted into the map, it offers log(n) lookup "
@@ -2614,7 +2679,7 @@ msgid ""
 "pointers per pair in the map, etc."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2315
+#: ../../../ProgrammersManual.md:2343
 msgid ""
 "`std::map` is most useful when your keys or values are very large, if you "
 "need to iterate over the collection in sorted order, or if you need stable "
@@ -2622,11 +2687,11 @@ msgid ""
 "deletion of another element takes place)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2322
+#: ../../../ProgrammersManual.md:2350
 msgid "llvm/ADT/MapVector.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2324
+#: ../../../ProgrammersManual.md:2352
 msgid ""
 "`MapVector<KeyT,ValueT>` provides a subset of the `DenseMap` interface.  The "
 "main difference is that the iteration order is guaranteed to be the "
@@ -2634,7 +2699,7 @@ msgid ""
 "deterministic iteration over maps of pointers."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2329
+#: ../../../ProgrammersManual.md:2357
 msgid ""
 "It is implemented by mapping from key to an index in a vector of key,value "
 "pairs.  This provides fast lookup and iteration, but has two main drawbacks: "
@@ -2643,11 +2708,11 @@ msgid ""
 "`remove_if()`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2337
+#: ../../../ProgrammersManual.md:2365
 msgid "llvm/ADT/IntEqClasses.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2339
+#: ../../../ProgrammersManual.md:2367
 msgid ""
 "`IntEqClasses` provides a compact representation of equivalence classes of "
 "small integers.  Initially, each integer in the range 0..n-1 has its own "
@@ -2656,7 +2721,7 @@ msgid ""
 "class when `findLeader()` returns the same representative."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2345
+#: ../../../ProgrammersManual.md:2373
 msgid ""
 "Once all equivalence classes are formed, the map can be compressed so each "
 "integer 0..n-1 maps to an equivalence class number in the range 0..m-1, "
@@ -2664,11 +2729,11 @@ msgid ""
 "uncompressed before it can be edited again."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2352
+#: ../../../ProgrammersManual.md:2380
 msgid "llvm/ADT/ImmutableMap.h"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2354
+#: ../../../ProgrammersManual.md:2382
 msgid ""
 "`ImmutableMap` is an immutable (functional) map implementation based on an "
 "AVL tree.  Adding or removing elements is done through a Factory object and "
@@ -2679,35 +2744,35 @@ msgid ""
 "the original map."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2363
+#: ../../../ProgrammersManual.md:2391
 msgid "Other Map-Like Container Options"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2365
+#: ../../../ProgrammersManual.md:2393
 msgid ""
 "The STL provides several other options, such as `std::multimap` and `std::"
 "unordered_map`.  We never use containers like `unordered_map` because they "
 "are generally very expensive (each insertion requires a malloc)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2369
+#: ../../../ProgrammersManual.md:2397
 msgid ""
 "`std::multimap` is useful if you want to map a key to multiple values, but "
 "has all the drawbacks of `std::map`.  A sorted vector or some other approach "
 "is almost always better."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2375
+#: ../../../ProgrammersManual.md:2403
 msgid "Bit storage containers"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2377
+#: ../../../ProgrammersManual.md:2405
 msgid ""
 "There are several bit storage containers, and choosing when to use each is "
 "relatively straightforward."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2380
+#: ../../../ProgrammersManual.md:2408
 msgid ""
 "One additional option is `std::vector<bool>`: we discourage its use for two "
 "reasons 1) the implementation in many common compilers (e.g.,  commonly "
@@ -2716,11 +2781,11 @@ msgid ""
 "significantly somehow.  In any case, please don't use it."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2388
+#: ../../../ProgrammersManual.md:2416
 msgid "BitVector"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2390
+#: ../../../ProgrammersManual.md:2418
 msgid ""
 "The `BitVector` container provides a dynamic size set of bits for "
 "manipulation. It supports individual bit setting/testing, as well as set "
@@ -2731,11 +2796,11 @@ msgid ""
 "be high (i.e., a dense set)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2399
+#: ../../../ProgrammersManual.md:2427
 msgid "SmallBitVector"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2401
+#: ../../../ProgrammersManual.md:2429
 msgid ""
 "The SmallBitVector container provides the same interface as BitVector, but "
 "it is optimized for the case where only a small number of bits, less than 25 "
@@ -2744,17 +2809,17 @@ msgid ""
 "only be used when larger counts are rare."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2407
+#: ../../../ProgrammersManual.md:2435
 msgid ""
 "At this time, SmallBitVector does not support set operations (and, or, xor), "
 "and its operator[] does not provide an assignable lvalue."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2412
+#: ../../../ProgrammersManual.md:2440
 msgid "SparseBitVector"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2414
+#: ../../../ProgrammersManual.md:2442
 msgid ""
 "The `SparseBitVector` container is much like `BitVector`, with one major "
 "difference: Only the bits that are set, are stored.  This makes the "
@@ -2769,11 +2834,11 @@ msgid ""
 "`SparseBitVector` is O(distance away from last set bit)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2427
+#: ../../../ProgrammersManual.md:2455
 msgid "CoalescingBitVector"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2429
+#: ../../../ProgrammersManual.md:2457
 msgid ""
 "The `CoalescingBitVector` container is similar in principle to a "
 "`SparseBitVector`, but is optimized to represent large contiguous ranges of "
@@ -2782,7 +2847,7 @@ msgid ""
 "between contiguous ranges))."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2434
+#: ../../../ProgrammersManual.md:2462
 msgid ""
 "`CoalescingBitVector` is a better choice than `BitVector` when gaps between "
 "ranges of set bits are large. It's a better choice than `SparseBitVector` "
@@ -2791,11 +2856,11 @@ msgid ""
 "ranges. E.g. the set `{2*x : x \\in [0, n)}` would be a pathological input."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2442
+#: ../../../ProgrammersManual.md:2470
 msgid "Useful Utility Functions"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2444
+#: ../../../ProgrammersManual.md:2472
 msgid ""
 "LLVM implements a number of general utility functions used across the "
 "codebase. You can find the most common ones in `STLExtras.h` ([doxygen]"
@@ -2803,28 +2868,28 @@ msgid ""
 "C++ standard library functions, while others are unique to LLVM."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2451
+#: ../../../ProgrammersManual.md:2479
 msgid "Iterating over ranges"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2453
+#: ../../../ProgrammersManual.md:2481
 msgid ""
 "Sometimes you may want to iterate over more than range at a time or know the "
 "index of the index. LLVM provides custom utility functions to make that "
 "easier, without having to manually manage all iterators and/or indices:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2459
+#: ../../../ProgrammersManual.md:2487
 msgid "The `zip`* functions"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2461
+#: ../../../ProgrammersManual.md:2489
 msgid ""
 "`zip`* functions allow for iterating over elements from two or more ranges "
 "at the same time. For example:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2470
+#: ../../../ProgrammersManual.md:2498
 msgid ""
 "Note that the elements are provided through a 'reference wrapper' proxy type "
 "(tuple of references), which combined with the structured bindings "
@@ -2833,40 +2898,40 @@ msgid ""
 "`Counts`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2475
+#: ../../../ProgrammersManual.md:2503
 msgid "The `zip`* functions support temporary ranges, for example:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2481
+#: ../../../ProgrammersManual.md:2509
 msgid ""
 "The difference between the functions in the `zip` family is how they behave "
 "when the supplied ranges have different lengths:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2484
+#: ../../../ProgrammersManual.md:2512
 msgid "`zip_equal` -- requires all input ranges have the same length."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2485
+#: ../../../ProgrammersManual.md:2513
 msgid "`zip` -- iteration stops when the end of the shortest range is reached."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2486
+#: ../../../ProgrammersManual.md:2514
 msgid "`zip_first` -- requires the first range is the shortest one."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2487
+#: ../../../ProgrammersManual.md:2515
 msgid ""
 "`zip_longest` -- iteration continues until the end of the longest range is "
 "reached. The non-existent elements of shorter ranges are replaced with `std::"
 "nullopt`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2491
+#: ../../../ProgrammersManual.md:2519
 msgid "The length requirements are checked with `assert`s."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2493
+#: ../../../ProgrammersManual.md:2521
 msgid ""
 "As a rule of thumb, prefer to use `zip_equal` when you expect all ranges to "
 "have the same lengths, and consider alternative `zip` functions only when "
@@ -2874,24 +2939,24 @@ msgid ""
 "same-length assumption and has the best (release-mode) runtime performance."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2500
+#: ../../../ProgrammersManual.md:2528
 msgid "`enumerate`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2502
+#: ../../../ProgrammersManual.md:2530
 msgid ""
 "The `enumerate` functions allows to iterate over one or more ranges while "
 "keeping track of the index of the current loop iteration. For example:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2510
+#: ../../../ProgrammersManual.md:2538
 msgid ""
 "The current element index is provided as the first structured bindings "
 "element. Alternatively, the index and the element value can be obtained with "
 "the `index()` and `value()` member functions:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2519
+#: ../../../ProgrammersManual.md:2547
 msgid ""
 "Note that `enumerate` has `zip_equal` semantics and provides elements "
 "through a 'reference wrapper' proxy, which makes them modifiable when "
@@ -2900,26 +2965,26 @@ msgid ""
 "lengths (checked with an `assert`)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2527
+#: ../../../ProgrammersManual.md:2555
 msgid "Debugging"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2529
+#: ../../../ProgrammersManual.md:2557
 msgid "See {doc}`Debugging LLVM <DebuggingLLVM>`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2533
+#: ../../../ProgrammersManual.md:2561
 msgid "Helpful Hints for Common Operations"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2535
+#: ../../../ProgrammersManual.md:2563
 msgid ""
 "This section describes how to perform some very simple transformations of "
 "LLVM code.  This is meant to give examples of common idioms used, showing "
 "the practical side of LLVM transformations."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2539
+#: ../../../ProgrammersManual.md:2567
 msgid ""
 "Because this is a \"how-to\" section, you should also read about the main "
 "classes that you will be working with.  The {ref}`Core LLVM Class Hierarchy "
@@ -2927,11 +2992,11 @@ msgid ""
 "classes that you should know about."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2545
+#: ../../../ProgrammersManual.md:2573
 msgid "Basic Inspection and Traversal Routines"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2547
+#: ../../../ProgrammersManual.md:2575
 msgid ""
 "The LLVM compiler infrastructure have many different data structures that "
 "may be traversed.  Following the example of the C++ standard template "
@@ -2943,7 +3008,7 @@ msgid ""
 "type that is common between the two operations."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2556
+#: ../../../ProgrammersManual.md:2584
 msgid ""
 "Because the pattern for iteration is common across many different aspects of "
 "the program representation, the standard template library algorithms may be "
@@ -2952,11 +3017,11 @@ msgid ""
 "data structures are traversed in very similar ways."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2564
+#: ../../../ProgrammersManual.md:2592
 msgid "Iterating over the `BasicBlock` in a `Function`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2566
+#: ../../../ProgrammersManual.md:2594
 msgid ""
 "It's quite common to have a `Function` instance that you'd like to transform "
 "in some way; in particular, you'd like to manipulate its `BasicBlock`s.  To "
@@ -2965,18 +3030,18 @@ msgid ""
 "of a `BasicBlock` and the number of `Instruction`s it contains:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2582
+#: ../../../ProgrammersManual.md:2610
 msgid "Iterating over the `Instruction` in a `BasicBlock`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2584
+#: ../../../ProgrammersManual.md:2612
 msgid ""
 "Just like when dealing with `BasicBlock`s in `Function`s, it's easy to "
 "iterate over the individual instructions that make up `BasicBlock`s.  Here's "
 "a code snippet that prints out each instruction in a `BasicBlock`:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2595
+#: ../../../ProgrammersManual.md:2623
 msgid ""
 "However, this isn't really the best way to print out the contents of a "
 "`BasicBlock`!  Since the ostream operators are overloaded for virtually "
@@ -2984,11 +3049,11 @@ msgid ""
 "the basic block itself: `errs() << BB << \"\\n\";`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2602
+#: ../../../ProgrammersManual.md:2630
 msgid "Iterating over the `Instruction` in a `Function`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2604
+#: ../../../ProgrammersManual.md:2632
 msgid ""
 "If you're finding that you commonly iterate over a `Function`'s "
 "`BasicBlock`s and then that `BasicBlock`'s `Instruction`s, `InstIterator` "
@@ -2999,7 +3064,7 @@ msgid ""
 "stream:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2618
+#: ../../../ProgrammersManual.md:2646
 msgid ""
 "Easy, isn't it?  You can also use `InstIterator`s to fill a work list with "
 "its initial contents.  For example, if you wanted to initialize a work list "
@@ -3007,17 +3072,17 @@ msgid ""
 "something like:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2630
+#: ../../../ProgrammersManual.md:2658
 msgid ""
 "The STL set `worklist` would now contain all instructions in the `Function` "
 "pointed to by F."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2635
+#: ../../../ProgrammersManual.md:2663
 msgid "Turning an iterator into a class pointer (and vice-versa)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2637
+#: ../../../ProgrammersManual.md:2665
 msgid ""
 "Sometimes, it'll be useful to grab a reference (or pointer) to a class "
 "instance when all you've got at hand is an iterator.  Well, extracting a "
@@ -3026,7 +3091,7 @@ msgid ""
 "const_iterator`:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2647
+#: ../../../ProgrammersManual.md:2675
 msgid ""
 "It's also possible to turn a class pointer into the corresponding iterator, "
 "and this is a constant time operation (very efficient).  The following code "
@@ -3035,11 +3100,11 @@ msgid ""
 "something without actually obtaining it via iteration over some structure:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2662
+#: ../../../ProgrammersManual.md:2690
 msgid "Finding call sites: a slightly more complex example"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2664
+#: ../../../ProgrammersManual.md:2692
 msgid ""
 "Say that you're writing a FunctionPass and would like to count all the "
 "locations in the entire module (that is, across every `Function`) where a "
@@ -3050,18 +3115,18 @@ msgid ""
 "this is what we want to do:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2680
+#: ../../../ProgrammersManual.md:2708
 msgid ""
 "And the actual code is (remember, because we're writing a `FunctionPass`, "
 "our `FunctionPass`-derived class simply has to override the `runOnFunction` "
 "method):"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2711
+#: ../../../ProgrammersManual.md:2739
 msgid "Iterating over def-use & use-def chains"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2713
+#: ../../../ProgrammersManual.md:2741
 msgid ""
 "Frequently, we might have an instance of the `Value` class ([doxygen]"
 "(https://llvm.org/doxygen/classllvm_1_1Value.html)) and we want to determine "
@@ -3072,7 +3137,7 @@ msgid ""
 "chain of `F`:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2729
+#: ../../../ProgrammersManual.md:2757
 msgid ""
 "Alternatively, it's common to have an instance of the `User` Class ([doxygen]"
 "(https://llvm.org/doxygen/classllvm_1_1User.html)) and need to know what "
@@ -3082,7 +3147,7 @@ msgid ""
 "instruction uses (that is, the operands of the particular `Instruction`):"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2743
+#: ../../../ProgrammersManual.md:2771
 msgid ""
 "Declaring objects as `const` is an important tool of enforcing mutation free "
 "algorithms (such as analyses, etc.).  For this purpose above iterators come "
@@ -3092,26 +3157,26 @@ msgid ""
 "return `const Use*`s.  Otherwise the above patterns remain unchanged."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2753
+#: ../../../ProgrammersManual.md:2781
 msgid "Iterating over predecessors & successors of blocks"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2755
+#: ../../../ProgrammersManual.md:2783
 msgid ""
 "Iterating over the predecessors and successors of a block is quite easy with "
 "the routines defined in `\"llvm/IR/CFG.h\"`.  Just use code like this to "
 "iterate over all predecessors of BB:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2767
+#: ../../../ProgrammersManual.md:2795
 msgid "Similarly, to iterate over successors use `successors`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2771
+#: ../../../ProgrammersManual.md:2799
 msgid "Making simple changes"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2773
+#: ../../../ProgrammersManual.md:2801
 msgid ""
 "There are some primitive transformation operations present in the LLVM "
 "infrastructure that are worth knowing about.  When performing "
@@ -3120,15 +3185,15 @@ msgid ""
 "gives example code."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2780
+#: ../../../ProgrammersManual.md:2808
 msgid "Creating and inserting new `Instruction`s"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2782
+#: ../../../ProgrammersManual.md:2810
 msgid "*Instantiating Instructions*"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2784
+#: ../../../ProgrammersManual.md:2812
 msgid ""
 "Creation of `Instruction`s is straightforward: simply call the constructor "
 "for the kind of instruction to instantiate and provide the necessary "
@@ -3136,7 +3201,7 @@ msgid ""
 "`Type`.  Thus:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2791
+#: ../../../ProgrammersManual.md:2819
 msgid ""
 "will create an `AllocaInst` instance that represents the allocation of one "
 "integer in the current stack frame, at run time.  Each `Instruction` "
@@ -3146,11 +3211,11 @@ msgid ""
 "html) that you're interested in instantiating."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2797
+#: ../../../ProgrammersManual.md:2825
 msgid "*Naming values*"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2799
+#: ../../../ProgrammersManual.md:2827
 msgid ""
 "It is very useful to name the values of instructions when you're able to, as "
 "this facilitates the debugging of your transformations.  If you end up "
@@ -3166,34 +3231,34 @@ msgid ""
 "I might do:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2814
+#: ../../../ProgrammersManual.md:2842
 msgid ""
 "where `indexLoc` is now the logical name of the instruction's execution "
 "value, which is a pointer to an integer on the run time stack."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2817
+#: ../../../ProgrammersManual.md:2845
 msgid "*Inserting instructions*"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2819
+#: ../../../ProgrammersManual.md:2847
 msgid ""
 "There are essentially three ways to insert an `Instruction` into an existing "
 "sequence of instructions that form a `BasicBlock`:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2822
+#: ../../../ProgrammersManual.md:2850
 msgid "Insertion into the instruction list of the `BasicBlock`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2824
+#: ../../../ProgrammersManual.md:2852
 msgid ""
 "Given a `BasicBlock* pb`, an `Instruction* pi` within that `BasicBlock`, and "
 "a newly-created instruction we wish to insert before `*pi`, we do the "
 "following:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2835
+#: ../../../ProgrammersManual.md:2863
 msgid ""
 "Appending to the end of a `BasicBlock` is so common that the `Instruction` "
 "class and `Instruction`-derived classes provide constructors which take a "
@@ -3201,21 +3266,21 @@ msgid ""
 "like:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2846
+#: ../../../ProgrammersManual.md:2874
 msgid "becomes:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2852
+#: ../../../ProgrammersManual.md:2880
 msgid ""
 "which is much cleaner, especially if you are creating long instruction "
 "streams."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2855
+#: ../../../ProgrammersManual.md:2883
 msgid "Insertion using an instance of `IRBuilder`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2857
+#: ../../../ProgrammersManual.md:2885
 msgid ""
 "Inserting several `Instruction`s can be quite laborious using the previous "
 "methods. The `IRBuilder` is a convenience class that can be used to add "
@@ -3224,7 +3289,7 @@ msgid ""
 "registers (see `IRBuilder`'s template arguments)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2863
+#: ../../../ProgrammersManual.md:2891
 msgid ""
 "The example below demonstrates a very simple use of the `IRBuilder` where "
 "three instructions are inserted before the instruction `pi`. The first two "
@@ -3232,54 +3297,54 @@ msgid ""
 "return value of the two calls."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2875
+#: ../../../ProgrammersManual.md:2903
 msgid ""
 "The example below is similar to the above example except that the created "
 "`IRBuilder` inserts instructions at the end of the `BasicBlock` `pb`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2885
+#: ../../../ProgrammersManual.md:2913
 msgid "See {doc}`tutorial/LangImpl03` for a practical use of the `IRBuilder`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2890 ../../../ProgrammersManual.md:2916
+#: ../../../ProgrammersManual.md:2918 ../../../ProgrammersManual.md:2944
 msgid "Deleting Instructions"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2892
+#: ../../../ProgrammersManual.md:2920
 msgid ""
 "Deleting an instruction from an existing sequence of instructions that form "
 "a `BasicBlock` is very straightforward: just call the instruction's "
 "`eraseFromParent()` method.  For example:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2900
+#: ../../../ProgrammersManual.md:2928
 msgid ""
 "This unlinks the instruction from its containing basic block and deletes "
 "it.  If you'd just like to unlink the instruction from its containing basic "
 "block but not delete it, you can use the `removeFromParent()` method."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2906
+#: ../../../ProgrammersManual.md:2934
 msgid "Replacing an Instruction with another Value"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2908
+#: ../../../ProgrammersManual.md:2936
 msgid "Replacing individual instructions"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2910
+#: ../../../ProgrammersManual.md:2938
 msgid ""
 "Including \"[llvm/Transforms/Utils/BasicBlockUtils.h](https://llvm.org/"
 "doxygen/BasicBlockUtils_8h_source.html)\" permits use of two very useful "
 "replace functions: `ReplaceInstWithValue` and `ReplaceInstWithInst`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2918
+#: ../../../ProgrammersManual.md:2946
 msgid "`ReplaceInstWithValue`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2920
+#: ../../../ProgrammersManual.md:2948
 msgid ""
 "This function replaces all uses of a given instruction with a value, and "
 "then removes the original instruction.  The following example illustrates "
@@ -3287,11 +3352,11 @@ msgid ""
 "memory for a single integer with a null pointer to an integer."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2931
+#: ../../../ProgrammersManual.md:2959
 msgid "`ReplaceInstWithInst`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2933
+#: ../../../ProgrammersManual.md:2961
 msgid ""
 "This function replaces a particular instruction with another instruction, "
 "inserting the new instruction into the basic block at the location where the "
@@ -3300,11 +3365,11 @@ msgid ""
 "`AllocaInst` with another."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2946
+#: ../../../ProgrammersManual.md:2974
 msgid "Replacing multiple uses of Users and Values"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2948
+#: ../../../ProgrammersManual.md:2976
 msgid ""
 "You can use `Value::replaceAllUsesWith` and `User::replaceUsesOfWith` to "
 "change more than one use at a time.  See the doxygen documentation for the "
@@ -3313,11 +3378,11 @@ msgid ""
 "more information."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2955
+#: ../../../ProgrammersManual.md:2983
 msgid "Deleting GlobalVariables"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2957
+#: ../../../ProgrammersManual.md:2985
 msgid ""
 "Deleting a global variable from a module is just as easy as deleting an "
 "Instruction.  First, you must have a pointer to the global variable that you "
@@ -3325,18 +3390,18 @@ msgid ""
 "module. For example:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2969
+#: ../../../ProgrammersManual.md:2997
 msgid "Threads and LLVM"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2971
+#: ../../../ProgrammersManual.md:2999
 msgid ""
 "This section describes the interaction of the LLVM APIs with multithreading, "
 "both on the part of client applications, and in the JIT, in the hosted "
 "application."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2975
+#: ../../../ProgrammersManual.md:3003
 msgid ""
 "Note that LLVM's support for multithreading is still relatively young.  Up "
 "through version 2.5, the execution of threaded hosted applications was "
@@ -3345,7 +3410,7 @@ msgid ""
 "ensure proper operation in multithreaded mode."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2981
+#: ../../../ProgrammersManual.md:3009
 msgid ""
 "Note that, on Unix-like platforms, LLVM requires the presence of GCC's "
 "atomic intrinsics in order to support threaded operation.  If you need a "
@@ -3355,21 +3420,21 @@ msgid ""
 "support."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2990
+#: ../../../ProgrammersManual.md:3018
 msgid "Ending Execution with `llvm_shutdown()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2992
+#: ../../../ProgrammersManual.md:3020
 msgid ""
 "When you are done using the LLVM APIs, you should call `llvm_shutdown()` to "
 "deallocate memory used for internal structures."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2997
+#: ../../../ProgrammersManual.md:3025
 msgid "Lazy Initialization with `ManagedStatic`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:2999
+#: ../../../ProgrammersManual.md:3027
 msgid ""
 "`ManagedStatic` is a utility class in LLVM used to implement static "
 "initialization of static resources, such as the global type tables.  In a "
@@ -3378,11 +3443,11 @@ msgid ""
 "uses double-checked locking to implement thread-safe lazy initialization."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3007
+#: ../../../ProgrammersManual.md:3035
 msgid "Achieving Isolation with `LLVMContext`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3009
+#: ../../../ProgrammersManual.md:3037
 msgid ""
 "`LLVMContext` is an opaque class in the LLVM API which clients can use to "
 "operate multiple, isolated instances of LLVM concurrently within the same "
@@ -3393,7 +3458,7 @@ msgid ""
 "Fortunately, `LLVMContext` exists to enable just this kind of scenario!"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3017
+#: ../../../ProgrammersManual.md:3045
 msgid ""
 "Conceptually, `LLVMContext` provides isolation.  Every LLVM entity "
 "(`Module`s, `Value`s, `Type`s, `Constant`s, etc.) in LLVM's in-memory IR "
@@ -3405,7 +3470,7 @@ msgid ""
 "same context."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3026
+#: ../../../ProgrammersManual.md:3054
 msgid ""
 "In practice, very few places in the API require the explicit specification "
 "of a `LLVMContext`, other than the `Type` creation/lookup APIs.  Because "
@@ -3415,11 +3480,11 @@ msgid ""
 "interface design."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3035
+#: ../../../ProgrammersManual.md:3063
 msgid "Threads and the JIT"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3037
+#: ../../../ProgrammersManual.md:3065
 msgid ""
 "LLVM's \"eager\" JIT compiler is safe to use in threaded programs.  Multiple "
 "threads can call `ExecutionEngine::getPointerToFunction()` or "
@@ -3432,7 +3497,7 @@ msgid ""
 "the `LLVMContext`'s thread."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3047
+#: ../../../ProgrammersManual.md:3075
 msgid ""
 "When the JIT is configured to compile lazily (using `ExecutionEngine::"
 "DisableLazyCompilation(false)`), there is currently a [race condition]"
@@ -3443,11 +3508,11 @@ msgid ""
 "suggest using only the eager JIT in threaded programs."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3056
+#: ../../../ProgrammersManual.md:3084
 msgid "Advanced Topics"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3058
+#: ../../../ProgrammersManual.md:3086
 msgid ""
 "This section describes some of the advanced or obscure API's that most "
 "clients do not need to be aware of.  These API's tend manage the inner "
@@ -3455,11 +3520,11 @@ msgid ""
 "circumstances."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3064
+#: ../../../ProgrammersManual.md:3092
 msgid "The `ValueSymbolTable` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3066
+#: ../../../ProgrammersManual.md:3094
 msgid ""
 "The `ValueSymbolTable` ([doxygen](https://llvm.org/doxygen/"
 "classllvm_1_1ValueSymbolTable.html)) class provides a symbol table that the "
@@ -3468,7 +3533,7 @@ msgid ""
 "`Value <Value>`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3070
+#: ../../../ProgrammersManual.md:3098
 msgid ""
 "Note that the `SymbolTable` class should not be directly accessed by most "
 "clients.  It should only be used when iteration over the symbol table names "
@@ -3477,7 +3542,7 @@ msgid ""
 "have an empty name) do not exist in the symbol table."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3076
+#: ../../../ProgrammersManual.md:3104
 msgid ""
 "Symbol tables support iteration over the values in the symbol table with "
 "`begin/end/iterator` and supports querying to see if a specific name is in "
@@ -3486,11 +3551,11 @@ msgid ""
 "will autoinsert it into the appropriate symbol table."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3084
+#: ../../../ProgrammersManual.md:3112
 msgid "The `User` and owned `Use` classes' memory layout"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3086
+#: ../../../ProgrammersManual.md:3114
 msgid ""
 "The `User` ([doxygen](https://llvm.org/doxygen/classllvm_1_1User.html)) "
 "class provides a basis for expressing the ownership of `User` towards other "
@@ -3500,11 +3565,11 @@ msgid ""
 "and removal."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3095
+#: ../../../ProgrammersManual.md:3123
 msgid "Interaction and relationship between `User` and `Use` objects"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3097
+#: ../../../ProgrammersManual.md:3125
 msgid ""
 "A subclass of `User` can choose between incorporating its `Use` objects or "
 "refer to them out-of-line by means of a pointer.  A mixed variant (some "
@@ -3512,31 +3577,31 @@ msgid ""
 "the `Use` objects belonging to the same `User` form a contiguous array."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3102
+#: ../../../ProgrammersManual.md:3130
 msgid "We have 2 different layouts in the `User` (sub)classes:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3104
+#: ../../../ProgrammersManual.md:3132
 msgid "Layout a)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3106
+#: ../../../ProgrammersManual.md:3134
 msgid ""
 "The `Use` object(s) are inside (resp. at fixed offset) of the `User` object "
 "and there are a fixed number of them."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3109
+#: ../../../ProgrammersManual.md:3137
 msgid "Layout b)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3111
+#: ../../../ProgrammersManual.md:3139
 msgid ""
 "The `Use` object(s) are referenced by a pointer to an array from the `User` "
 "object and there may be a variable number of them."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3114
+#: ../../../ProgrammersManual.md:3142
 msgid ""
 "As of v2.4 each layout still possesses a direct pointer to the start of the "
 "array of `Use`s.  Though not mandatory for layout a), we stick to this "
@@ -3545,32 +3610,32 @@ msgid ""
 "calculated given the scheme presented below.)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3120
+#: ../../../ProgrammersManual.md:3148
 msgid ""
 "Special forms of allocation operators (`operator new`) enforce the following "
 "memory layouts:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3123
+#: ../../../ProgrammersManual.md:3151
 msgid ""
 "Layout a) is modelled by prepending the `User` object by the `Use[]` array."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3131
+#: ../../../ProgrammersManual.md:3159
 msgid "Layout b) is modelled by pointing at the `Use[]` array."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3143
+#: ../../../ProgrammersManual.md:3171
 msgid ""
 "*(In the above figures* '`P`' *stands for the* `Use**` *that is stored in "
 "each* `Use` *object in the member* `Use::Prev` *)*"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3148
+#: ../../../ProgrammersManual.md:3176
 msgid "Designing Type Hierarchies and Polymorphic Interfaces"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3150
+#: ../../../ProgrammersManual.md:3178
 msgid ""
 "There are two different design patterns that tend to result in the use of "
 "virtual dispatch for methods in a type hierarchy in C++ programs. The first "
@@ -3580,7 +3645,7 @@ msgid ""
 "or `Type` type hierarchies."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3157
+#: ../../../ProgrammersManual.md:3185
 msgid ""
 "A second is the desire to dispatch dynamically across a collection of "
 "polymorphic interface implementations. This latter use case can be modeled "
@@ -3593,7 +3658,7 @@ msgid ""
 "implementations."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3167
+#: ../../../ProgrammersManual.md:3195
 msgid ""
 "The preferred implementation strategy for the second use case is that of "
 "generic programming (sometimes called \"compile-time duck typing\" or "
@@ -3612,36 +3677,36 @@ msgid ""
 "papers:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3182
+#: ../../../ProgrammersManual.md:3210
 msgid ""
 "[Inheritance Is The Base Class of Evil](https://learn.microsoft.com/en-us/"
 "shows/goingnative-2013/inheritance-base-class-of-evil)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3183
+#: ../../../ProgrammersManual.md:3211
 msgid ""
 "The GoingNative 2013 talk describing this technique, and probably the best "
 "place to start."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3185
+#: ../../../ProgrammersManual.md:3213
 msgid ""
 "[Value Semantics and Concepts-based Polymorphism](http://www.youtube.com/"
 "watch?v=_BpMYeUFXv8) - The C++Now! 2012 talk describing this technique in "
 "more detail."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3187
+#: ../../../ProgrammersManual.md:3215
 msgid ""
 "[Sean Parent's Papers and Presentations](https://sean-parent.stlab.cc/papers-"
 "and-presentations)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3188
+#: ../../../ProgrammersManual.md:3216
 msgid "Links to slides, videos, and sometimes code."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3190
+#: ../../../ProgrammersManual.md:3218
 msgid ""
 "When deciding between creating a type hierarchy (with either tagged or "
 "virtual dispatch) and using templates or concepts-based polymorphism, "
@@ -3654,7 +3719,7 @@ msgid ""
 "or the other to be used."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3199
+#: ../../../ProgrammersManual.md:3227
 msgid ""
 "If you do need to introduce a type hierarchy, we prefer to use explicitly "
 "closed type hierarchies with manual tagged dispatch and/or RTTI rather than "
@@ -3670,11 +3735,11 @@ msgid ""
 "can implement this pattern for use with the LLVM helpers."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3213
+#: ../../../ProgrammersManual.md:3241
 msgid "ABI Breaking Checks"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3215
+#: ../../../ProgrammersManual.md:3243
 msgid ""
 "Checks and asserts that alter the LLVM C++ ABI are predicated on the "
 "preprocessor symbol `LLVM_ENABLE_ABI_BREAKING_CHECKS` -- LLVM libraries "
@@ -3687,24 +3752,24 @@ msgid ""
 "`LLVM_ENABLE_ASSERTIONS`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3228
+#: ../../../ProgrammersManual.md:3256
 msgid "The Core LLVM Class Hierarchy Reference"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3230
+#: ../../../ProgrammersManual.md:3258
 msgid "`#include \"llvm/IR/Type.h\"`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3232
+#: ../../../ProgrammersManual.md:3260
 msgid "header source: [Type.h](https://llvm.org/doxygen/Type_8h_source.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3234
+#: ../../../ProgrammersManual.md:3262
 msgid ""
 "doxygen info: [Type Classes](https://llvm.org/doxygen/classllvm_1_1Type.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3236
+#: ../../../ProgrammersManual.md:3264
 msgid ""
 "The Core LLVM classes are the primary means of representing the program "
 "being inspected or transformed.  The core LLVM classes are defined in header "
@@ -3713,11 +3778,11 @@ msgid ""
 "called `libLLVMCore.so`, not `libLLVMIR.so` as you might expect."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3244
+#: ../../../ProgrammersManual.md:3272
 msgid "The Type class and Derived Types"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3246
+#: ../../../ProgrammersManual.md:3274
 msgid ""
 "`Type` is a superclass of all type classes.  Every `Value` has a `Type`. "
 "`Type` cannot be instantiated directly but only through its subclasses. "
@@ -3727,7 +3792,7 @@ msgid ""
 "distinguish themselves from other subclasses of `Type`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3253
+#: ../../../ProgrammersManual.md:3281
 msgid ""
 "All other types are subclasses of `DerivedType`.  Types can be named, but "
 "this is not a requirement.  There exists exactly one instance of a given "
@@ -3736,74 +3801,74 @@ msgid ""
 "the types are identical if the pointers are identical."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3261
+#: ../../../ProgrammersManual.md:3289
 msgid "Important Public Methods"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3263
+#: ../../../ProgrammersManual.md:3291
 msgid "`bool isIntegerTy() const`: Returns true for any integer type."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3265
+#: ../../../ProgrammersManual.md:3293
 msgid ""
 "`bool isFloatingPointTy()`: Return true if this is one of the five floating "
 "point types."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3268
+#: ../../../ProgrammersManual.md:3296
 msgid ""
 "`bool isSized()`: Return true if the type has known size.  Things that don't "
 "have a size are abstract types, labels and void."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3273
+#: ../../../ProgrammersManual.md:3301
 msgid "Important Derived Types"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3275
+#: ../../../ProgrammersManual.md:3303
 msgid ""
 "`IntegerType`   Subclass of DerivedType that represents integer types of any "
 "bit width.  Any   bit width between `IntegerType::MIN_INT_BITS` (1) and   "
 "`IntegerType::MAX_INT_BITS` (~8 million) can be represented."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3280
+#: ../../../ProgrammersManual.md:3308
 msgid ""
 "`static const IntegerType* get(unsigned NumBits)`: get an integer type of a "
 "specific bit width."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3283
+#: ../../../ProgrammersManual.md:3311
 msgid "`unsigned getBitWidth() const`: Get the bit width of an integer type."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3285
+#: ../../../ProgrammersManual.md:3313
 msgid "`SequentialType`   This is subclassed by ArrayType and VectorType."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3288
+#: ../../../ProgrammersManual.md:3316
 msgid ""
 "`const Type * getElementType() const`: Returns the type of each of the "
 "elements in the sequential type."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3291
+#: ../../../ProgrammersManual.md:3319
 msgid ""
 "`uint64_t getNumElements() const`: Returns the number of elements in the "
 "sequential type."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3294
+#: ../../../ProgrammersManual.md:3322
 msgid ""
 "`ArrayType`   This is a subclass of SequentialType and defines the interface "
 "for array   types."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3298
+#: ../../../ProgrammersManual.md:3326
 msgid "`PointerType`   Subclass of Type for pointer types."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3301
+#: ../../../ProgrammersManual.md:3329
 msgid ""
 "`VectorType`   Subclass of SequentialType for vector types.  A vector type "
 "is similar to an   ArrayType but is distinguished because it is a first "
@@ -3812,56 +3877,56 @@ msgid ""
 "type."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3307
+#: ../../../ProgrammersManual.md:3335
 msgid "`StructType`   Subclass of DerivedTypes for struct types."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3312
+#: ../../../ProgrammersManual.md:3340
 msgid "`FunctionType`   Subclass of DerivedTypes for function types."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3315
+#: ../../../ProgrammersManual.md:3343
 msgid "`bool isVarArg() const`: Returns true if it's a vararg function."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3317
+#: ../../../ProgrammersManual.md:3345
 msgid ""
 "`const Type * getReturnType() const`: Returns the return type of the "
 "function."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3320
+#: ../../../ProgrammersManual.md:3348
 msgid ""
 "`const Type * getParamType (unsigned i)`: Returns the type of the ith "
 "parameter."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3323
+#: ../../../ProgrammersManual.md:3351
 msgid ""
 "`const unsigned getNumParams() const`: Returns the number of formal "
 "parameters."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3328
+#: ../../../ProgrammersManual.md:3356
 msgid "The `Module` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3330
+#: ../../../ProgrammersManual.md:3358
 msgid "`#include \"llvm/IR/Module.h\"`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3332
+#: ../../../ProgrammersManual.md:3360
 msgid ""
 "header source: [Module.h](https://llvm.org/doxygen/Module_8h_source.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3334
+#: ../../../ProgrammersManual.md:3362
 msgid ""
 "doxygen info: [Module Class](https://llvm.org/doxygen/classllvm_1_1Module."
 "html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3336
+#: ../../../ProgrammersManual.md:3364
 msgid ""
 "The `Module` class represents the top level structure present in LLVM "
 "programs.  An LLVM module is effectively either a translation unit of the "
@@ -3872,21 +3937,21 @@ msgid ""
 "member functions that try to make common operations easy."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3345
+#: ../../../ProgrammersManual.md:3373
 msgid "Important Public Members of the `Module` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3347
+#: ../../../ProgrammersManual.md:3375
 msgid "`Module::Module(std::string name = \"\")`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3349
+#: ../../../ProgrammersManual.md:3377
 msgid ""
 "Constructing a {ref}`Module <Module>` is easy.  You can optionally provide a "
 "name for it (probably based on the name of the translation unit)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3352
+#: ../../../ProgrammersManual.md:3380
 msgid ""
 "`Module::iterator` - Typedef for function list iterator\\ `Module::"
 "const_iterator` - Typedef for const_iterator.\\ `begin()`, `end()`, "
@@ -3901,24 +3966,24 @@ msgstr ""
 msgid "\\\\\n"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3356
+#: ../../../ProgrammersManual.md:3384
 msgid ""
 "These are forwarding methods that make it easy to access the contents of a "
 "`Module` object's {ref}`Function <c_Function>` list."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3359
+#: ../../../ProgrammersManual.md:3387
 msgid "`Module::FunctionListType &getFunctionList()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3361
+#: ../../../ProgrammersManual.md:3389
 msgid ""
 "Returns the list of {ref}`Function <c_Function>`s.  This is necessary to use "
 "when you need to update the list or perform a complex action that doesn't "
 "have a forwarding method."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3367
+#: ../../../ProgrammersManual.md:3395
 msgid ""
 "`Module::global_iterator` - Typedef for global variable list iterator\\ "
 "`Module::const_global_iterator` - Typedef for const_iterator.\\ `Module::"
@@ -3929,38 +3994,38 @@ msgid ""
 "`global_empty()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3374
+#: ../../../ProgrammersManual.md:3402
 msgid ""
 "These are forwarding methods that make it easy to access the contents of a "
 "`Module` object's {ref}`GlobalVariable <GlobalVariable>` list."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3379 ../../../ProgrammersManual.md:3826
+#: ../../../ProgrammersManual.md:3407 ../../../ProgrammersManual.md:3854
 msgid "`SymbolTable *getSymbolTable()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3381
+#: ../../../ProgrammersManual.md:3409
 msgid ""
 "Return a reference to the {ref}`SymbolTable <SymbolTable>` for this `Module`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3385
+#: ../../../ProgrammersManual.md:3413
 msgid "`Function *getFunction(StringRef Name) const`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3387
+#: ../../../ProgrammersManual.md:3415
 msgid ""
 "Look up the specified function in the `Module` {ref}`SymbolTable "
 "<SymbolTable>`.  If it does not exist, return `null`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3390
+#: ../../../ProgrammersManual.md:3418
 msgid ""
 "`FunctionCallee getOrInsertFunction(const std::string &Name, const "
 "FunctionType *T)`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3393
+#: ../../../ProgrammersManual.md:3421
 msgid ""
 "Look up the specified function in the `Module` {ref}`SymbolTable "
 "<SymbolTable>`.  If it does not exist, add an external declaration for the "
@@ -3971,46 +4036,46 @@ msgid ""
 "`Function*` with potentially an unexpected signature."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3402
+#: ../../../ProgrammersManual.md:3430
 msgid "`std::string getTypeName(const Type *Ty)`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3404
+#: ../../../ProgrammersManual.md:3432
 msgid ""
 "If there is at least one entry in the {ref}`SymbolTable <SymbolTable>` for "
 "the specified {ref}`Type <Type>`, return it.  Otherwise return the empty "
 "string."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3407
+#: ../../../ProgrammersManual.md:3435
 msgid "`bool addTypeName(const std::string &Name, const Type *Ty)`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3409
+#: ../../../ProgrammersManual.md:3437
 msgid ""
 "Insert an entry in the {ref}`SymbolTable <SymbolTable>` mapping `Name` to "
 "`Ty`.  If there is already an entry for this name, true is returned and the "
 "{ref}`SymbolTable <SymbolTable>` is not modified."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3415
+#: ../../../ProgrammersManual.md:3443
 msgid "The `Value` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3417
+#: ../../../ProgrammersManual.md:3445
 msgid "`#include \"llvm/IR/Value.h\"`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3419
+#: ../../../ProgrammersManual.md:3447
 msgid "header source: [Value.h](https://llvm.org/doxygen/Value_8h_source.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3421
+#: ../../../ProgrammersManual.md:3449
 msgid ""
 "doxygen info: [Value Class](https://llvm.org/doxygen/classllvm_1_1Value.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3423
+#: ../../../ProgrammersManual.md:3451
 msgid ""
 "The `Value` class is the most important class in the LLVM Source base.  It "
 "represents a typed value that may be used (among other things) as an operand "
@@ -4019,7 +4084,7 @@ msgid ""
 "<Instruction>`s and {ref}`Function <c_Function>`s are `Value`s."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3428
+#: ../../../ProgrammersManual.md:3456
 msgid ""
 "A particular `Value` may be used many times in the LLVM representation for a "
 "program.  For example, an incoming argument to a function (represented with "
@@ -4032,7 +4097,7 @@ msgid ""
 "`use_*` methods, shown below."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3437
+#: ../../../ProgrammersManual.md:3465
 msgid ""
 "Because LLVM is a typed representation, every LLVM `Value` is typed, and "
 "this {ref}`Type <Type>` is available through the `getType()` method.  In "
@@ -4040,7 +4105,7 @@ msgid ""
 "symbolic string printed in the LLVM code:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3447
+#: ../../../ProgrammersManual.md:3475
 msgid ""
 "The name of this instruction is \"foo\". **NOTE** that the name of any value "
 "may be missing (an empty string), so names should **ONLY** be used for "
@@ -4049,7 +4114,7 @@ msgid ""
 "purpose, use a `std::map` of pointers to the `Value` itself instead."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3453
+#: ../../../ProgrammersManual.md:3481
 msgid ""
 "One important aspect of LLVM is that there is no distinction between an SSA "
 "variable and the operation that produces it.  Because of this, any reference "
@@ -4060,11 +4125,11 @@ msgid ""
 "to manipulate."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3462
+#: ../../../ProgrammersManual.md:3490
 msgid "Important Public Members of the `Value` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3464
+#: ../../../ProgrammersManual.md:3492
 msgid ""
 "`Value::use_iterator` - Typedef for iterator over the use-list\\ `Value::"
 "const_use_iterator` - Typedef for const_iterator over the   use-list\\ "
@@ -4075,34 +4140,34 @@ msgid ""
 "`User *use_back()` - Returns the last element in the list."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3474
+#: ../../../ProgrammersManual.md:3502
 msgid ""
 "These methods are the interface to access the def-use information in LLVM. "
 "As with all other iterators in LLVM, the naming conventions follow the "
 "conventions defined by the {ref}`STL <stl>`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3478
+#: ../../../ProgrammersManual.md:3506
 msgid "`Type *getType() const` This method returns the Type of the Value."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3481
+#: ../../../ProgrammersManual.md:3509
 msgid ""
 "`bool hasName() const`\\ `std::string getName() const`\\ `void setName(const "
 "std::string &Name)`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3485
+#: ../../../ProgrammersManual.md:3513
 msgid ""
 "This family of methods is used to access and assign a name to a `Value`, be "
 "aware of the {ref}`precaution above <nameWarning>`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3488
+#: ../../../ProgrammersManual.md:3516
 msgid "`void replaceAllUsesWith(Value *V)`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3490
+#: ../../../ProgrammersManual.md:3518
 msgid ""
 "This method traverses the use list of a `Value` changing all {ref}`User "
 "<User>`s of the current value to refer to \"`V`\" instead.  For example, if "
@@ -4111,28 +4176,28 @@ msgid ""
 "the constant like this:"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3501
+#: ../../../ProgrammersManual.md:3529
 msgid "The `User` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3503
+#: ../../../ProgrammersManual.md:3531
 msgid "`#include \"llvm/IR/User.h\"`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3505
+#: ../../../ProgrammersManual.md:3533
 msgid "header source: [User.h](https://llvm.org/doxygen/User_8h_source.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3507
+#: ../../../ProgrammersManual.md:3535
 msgid ""
 "doxygen info: [User Class](https://llvm.org/doxygen/classllvm_1_1User.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3509 ../../../ProgrammersManual.md:3894
+#: ../../../ProgrammersManual.md:3537 ../../../ProgrammersManual.md:3922
 msgid "Superclass: {ref}`Value <Value>`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3511
+#: ../../../ProgrammersManual.md:3539
 msgid ""
 "The `User` class is the common base class of all LLVM nodes that may refer "
 "to `Value`s.  It exposes a list of \"Operands\" that are all of the `Value`s "
@@ -4140,7 +4205,7 @@ msgid ""
 "`Value`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3516
+#: ../../../ProgrammersManual.md:3544
 msgid ""
 "The operands of a `User` point directly to the LLVM `Value` that it refers "
 "to.  Because LLVM uses Static Single Assignment (SSA) form, there can only "
@@ -4148,27 +4213,27 @@ msgid ""
 "connection provides the use-def information in LLVM."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3523
+#: ../../../ProgrammersManual.md:3551
 msgid "Important Public Members of the `User` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3525
+#: ../../../ProgrammersManual.md:3553
 msgid ""
 "The `User` class exposes the operand list in two ways: through an index "
 "access interface and through an iterator based interface."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3528
+#: ../../../ProgrammersManual.md:3556
 msgid "`Value *getOperand(unsigned i)`\\ `unsigned getNumOperands()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3531
+#: ../../../ProgrammersManual.md:3559
 msgid ""
 "These two methods expose the operands of the `User` in a convenient form for "
 "direct access."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3534
+#: ../../../ProgrammersManual.md:3562
 msgid ""
 "`User::op_iterator` - Typedef for iterator over the operand list\\ "
 "`op_iterator op_begin()` - Get an iterator to the start of the operand   "
@@ -4176,37 +4241,37 @@ msgid ""
 "list."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3539
+#: ../../../ProgrammersManual.md:3567
 msgid ""
 "Together, these methods make up the iterator based interface to the operands "
 "of a `User`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3545
+#: ../../../ProgrammersManual.md:3573
 msgid "The `Instruction` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3547
+#: ../../../ProgrammersManual.md:3575
 msgid "`#include \"llvm/IR/Instruction.h\"`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3549
+#: ../../../ProgrammersManual.md:3577
 msgid ""
 "header source: [Instruction.h](https://llvm.org/doxygen/"
 "Instruction_8h_source.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3551
+#: ../../../ProgrammersManual.md:3579
 msgid ""
 "doxygen info: [Instruction Class](https://llvm.org/doxygen/"
 "classllvm_1_1Instruction.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3553
+#: ../../../ProgrammersManual.md:3581
 msgid "Superclasses: {ref}`User <User>`, {ref}`Value <Value>`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3555
+#: ../../../ProgrammersManual.md:3583
 msgid ""
 "The `Instruction` class is the common base class for all LLVM instructions. "
 "It provides only a few methods, but is a very commonly used class.  The "
@@ -4216,7 +4281,7 @@ msgid ""
 "instruction, one of many subclasses of `Instruction` are used."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3562
+#: ../../../ProgrammersManual.md:3590
 msgid ""
 "Because the `Instruction` class subclasses the {ref}`User <User>` class, its "
 "operands can be accessed in the same way as for other `User`s (with the "
@@ -4232,85 +4297,85 @@ msgid ""
 "(https://llvm.org/doxygen/classllvm_1_1Instruction.html)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3576
+#: ../../../ProgrammersManual.md:3604
 msgid "Important Subclasses of the `Instruction` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3580
+#: ../../../ProgrammersManual.md:3608
 msgid "`BinaryOperator`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3582
+#: ../../../ProgrammersManual.md:3610
 msgid ""
 "This subclass represents all two operand instructions whose operands must be "
 "the same type, except for the comparison instructions."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3587
+#: ../../../ProgrammersManual.md:3615
 msgid ""
 "`CastInst` This subclass is the parent of the 12 casting instructions.  It "
 "provides common operations on cast instructions."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3593
+#: ../../../ProgrammersManual.md:3621
 msgid "`CmpInst`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3595
+#: ../../../ProgrammersManual.md:3623
 msgid ""
 "This subclass represents the two comparison instructions, {ref}`ICmpInst "
 "<i_icmp>` (integer operands), and {ref}`FCmpInst <i_fcmp>` (floating point "
 "operands)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3601
+#: ../../../ProgrammersManual.md:3629
 msgid "Important Public Members of the `Instruction` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3603
+#: ../../../ProgrammersManual.md:3631
 msgid "`BasicBlock *getParent()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3605
+#: ../../../ProgrammersManual.md:3633
 msgid ""
 "Returns the {ref}`BasicBlock <BasicBlock>` that this `Instruction` is "
 "embedded into."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3608
+#: ../../../ProgrammersManual.md:3636
 msgid "`bool mayWriteToMemory()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3610
+#: ../../../ProgrammersManual.md:3638
 msgid ""
 "Returns true if the instruction writes to memory, i.e., it is a `call`, "
 "`free`, `invoke`, or `store`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3613
+#: ../../../ProgrammersManual.md:3641
 msgid "`unsigned getOpcode()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3615
+#: ../../../ProgrammersManual.md:3643
 msgid "Returns the opcode for the `Instruction`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3617
+#: ../../../ProgrammersManual.md:3645
 msgid "`Instruction *clone() const`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3619
+#: ../../../ProgrammersManual.md:3647
 msgid ""
 "Returns another instance of the specified instruction, identical in all ways "
 "to the original except that the instruction has no parent (i.e., it's not "
 "embedded into a {ref}`BasicBlock <BasicBlock>`), and it has no name."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3625
+#: ../../../ProgrammersManual.md:3653
 msgid "The `Constant` class and subclasses"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3627
+#: ../../../ProgrammersManual.md:3655
 msgid ""
 "Constant represents a base class for different types of constants.  It is "
 "subclassed by ConstantInt, ConstantArray, etc. for representing the various "
@@ -4318,23 +4383,23 @@ msgid ""
 "which represents the address of a global variable or function."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3634
+#: ../../../ProgrammersManual.md:3662
 msgid "Important Subclasses of Constant"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3636
+#: ../../../ProgrammersManual.md:3664
 msgid ""
 "ConstantInt : This subclass of Constant represents an integer constant of "
 "any width."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3639
+#: ../../../ProgrammersManual.md:3667
 msgid ""
 "`const APInt& getValue() const`: Returns the underlying value of this "
 "constant, an `APInt` value."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3642
+#: ../../../ProgrammersManual.md:3670
 msgid ""
 "`int64_t getSExtValue() const`: Converts the underlying APInt value to an "
 "`int64_t` via sign extension.  If the value (not the bit width) of the APInt "
@@ -4342,7 +4407,7 @@ msgid ""
 "reason, use of this method is discouraged."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3647
+#: ../../../ProgrammersManual.md:3675
 msgid ""
 "`uint64_t getZExtValue() const`: Converts the underlying `APInt` value to a "
 "`uint64_t` via zero extension.  If the value (not the bit width) of the "
@@ -4350,76 +4415,76 @@ msgid ""
 "this reason, use of this method is discouraged."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3652
+#: ../../../ProgrammersManual.md:3680
 msgid ""
 "`static ConstantInt* get(const APInt& Val)`: Returns the ConstantInt object "
 "that represents the value provided by `Val`.  The type is implied as the "
 "IntegerType that corresponds to the bit width of `Val`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3656
+#: ../../../ProgrammersManual.md:3684
 msgid ""
 "`static ConstantInt* get(const Type *Ty, uint64_t Val)`: Returns the "
 "ConstantInt object that represents the value provided by `Val` for integer "
 "type `Ty`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3660
+#: ../../../ProgrammersManual.md:3688
 msgid "ConstantFP : This class represents a floating point constant."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3662
+#: ../../../ProgrammersManual.md:3690
 msgid ""
 "`double getValue() const`: Returns the underlying value of this constant."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3664
+#: ../../../ProgrammersManual.md:3692
 msgid "ConstantArray : This represents a constant array."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3666 ../../../ProgrammersManual.md:3671
+#: ../../../ProgrammersManual.md:3694 ../../../ProgrammersManual.md:3699
 msgid ""
 "`const std::vector<Use> &getValues() const`: Returns a vector of component "
 "constants that makeup this array."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3669
+#: ../../../ProgrammersManual.md:3697
 msgid "ConstantStruct : This represents a constant struct."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3674
+#: ../../../ProgrammersManual.md:3702
 msgid ""
 "GlobalValue : This represents either a global variable or a function.  In "
 "either case, the value is a constant fixed address (after linking)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3679
+#: ../../../ProgrammersManual.md:3707
 msgid "The `GlobalValue` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3681
+#: ../../../ProgrammersManual.md:3709
 msgid "`#include \"llvm/IR/GlobalValue.h\"`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3683
+#: ../../../ProgrammersManual.md:3711
 msgid ""
 "header source: [GlobalValue.h](https://llvm.org/doxygen/"
 "GlobalValue_8h_source.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3685
+#: ../../../ProgrammersManual.md:3713
 msgid ""
 "doxygen info: [GlobalValue Class](https://llvm.org/doxygen/"
 "classllvm_1_1GlobalValue.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3687
+#: ../../../ProgrammersManual.md:3715
 msgid ""
 "Superclasses: {ref}`Constant <Constant>`, {ref}`User <User>`, {ref}`Value "
 "<Value>`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3689
+#: ../../../ProgrammersManual.md:3717
 msgid ""
 "Global values ( {ref}`GlobalVariable <GlobalVariable>`s or {ref}`Function "
 "<c_Function>`s) are the only LLVM values that are visible in the bodies of "
@@ -4431,7 +4496,7 @@ msgid ""
 "enumeration."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3696
+#: ../../../ProgrammersManual.md:3724
 msgid ""
 "If a `GlobalValue` has internal linkage (equivalent to being `static` in C), "
 "it is not visible to code outside the current translation unit, and does not "
@@ -4441,7 +4506,7 @@ msgid ""
 "are currently part of."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3702
+#: ../../../ProgrammersManual.md:3730
 msgid ""
 "Because `GlobalValue`s are memory objects, they are always referred to by "
 "their **address**.  As such, the {ref}`Type <Type>` of a global is always a "
@@ -4458,57 +4523,57 @@ msgid ""
 "explained in the {ref}`LLVM Language Reference Manual <globalvars>`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3717
+#: ../../../ProgrammersManual.md:3745
 msgid "Important Public Members of the `GlobalValue` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3719
+#: ../../../ProgrammersManual.md:3747
 msgid ""
 "`bool hasInternalLinkage() const`\\ `bool hasExternalLinkage() const`\\ "
 "`void setInternalLinkage(bool HasInternalLinkage)`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3723
+#: ../../../ProgrammersManual.md:3751
 msgid ""
 "These methods manipulate the linkage characteristics of the `GlobalValue`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3725
+#: ../../../ProgrammersManual.md:3753
 msgid "`Module *getParent()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3727
+#: ../../../ProgrammersManual.md:3755
 msgid ""
 "This returns the {ref}`Module <Module>` that the GlobalValue is currently "
 "embedded into."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3732
+#: ../../../ProgrammersManual.md:3760
 msgid "The `Function` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3734
+#: ../../../ProgrammersManual.md:3762
 msgid "`#include \"llvm/IR/Function.h\"`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3736
+#: ../../../ProgrammersManual.md:3764
 msgid ""
 "header source: [Function.h](https://llvm.org/doxygen/Function_8h_source.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3738
+#: ../../../ProgrammersManual.md:3766
 msgid ""
 "doxygen info: [Function Class](https://llvm.org/doxygen/"
 "classllvm_1_1Function.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3740 ../../../ProgrammersManual.md:3840
+#: ../../../ProgrammersManual.md:3768 ../../../ProgrammersManual.md:3868
 msgid ""
 "Superclasses: {ref}`GlobalValue <GlobalValue>`, {ref}`Constant <Constant>`, "
 "{ref}`User <User>`, {ref}`Value <Value>`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3742
+#: ../../../ProgrammersManual.md:3770
 msgid ""
 "The `Function` class represents a single procedure in LLVM.  It is actually "
 "one of the more complex classes in the LLVM hierarchy because it must keep "
@@ -4517,7 +4582,7 @@ msgid ""
 "<Argument>`s, and a {ref}`SymbolTable <SymbolTable>`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3747
+#: ../../../ProgrammersManual.md:3775
 msgid ""
 "The list of {ref}`BasicBlock <BasicBlock>`s is the most commonly used part "
 "of `Function` objects.  The list imposes an implicit ordering of the blocks "
@@ -4531,7 +4596,7 @@ msgid ""
 "function hasn't been linked in yet."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3757
+#: ../../../ProgrammersManual.md:3785
 msgid ""
 "In addition to a list of {ref}`BasicBlock <BasicBlock>`s, the `Function` "
 "class also keeps track of the list of formal {ref}`Argument <Argument>`s "
@@ -4540,7 +4605,7 @@ msgid ""
 "list does for the {ref}`BasicBlock <BasicBlock>`s."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3762
+#: ../../../ProgrammersManual.md:3790
 msgid ""
 "The {ref}`SymbolTable <SymbolTable>` is a very rarely used LLVM feature that "
 "is only used when you have to look up a value by name.  Aside from that, the "
@@ -4550,24 +4615,24 @@ msgid ""
 "function body."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3767
+#: ../../../ProgrammersManual.md:3795
 msgid ""
 "Note that `Function` is a {ref}`GlobalValue <GlobalValue>` and therefore "
 "also a {ref}`Constant <Constant>`.  The value of the function is its address "
 "(after linking) which is guaranteed to be constant."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3773
+#: ../../../ProgrammersManual.md:3801
 msgid "Important Public Members of the `Function`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3775
+#: ../../../ProgrammersManual.md:3803
 msgid ""
 "`Function(const FunctionType *Ty, LinkageTypes Linkage, const std::string &N "
 "= \"\", Module* Parent = 0)`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3778
+#: ../../../ProgrammersManual.md:3806
 msgid ""
 "Constructor used when you need to create new `Function`s to add the "
 "program.  The constructor must specify the type of the function to create "
@@ -4579,102 +4644,102 @@ msgid ""
 "will automatically be inserted into that module's list of functions."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3787
+#: ../../../ProgrammersManual.md:3815
 msgid "`bool isDeclaration()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3789
+#: ../../../ProgrammersManual.md:3817
 msgid ""
 "Return whether or not the `Function` has a body defined.  If the function is "
 "\"external\", it does not have a body, and thus must be resolved by linking "
 "with a function defined in a different translation unit."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3793
+#: ../../../ProgrammersManual.md:3821
 msgid ""
 "`Function::iterator` - Typedef for basic block list iterator\\ `Function::"
 "const_iterator` - Typedef for const_iterator.\\ `begin()`, `end()`, "
 "`size()`, `empty()`, `insert()`,   `splice()`, `erase()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3798
+#: ../../../ProgrammersManual.md:3826
 msgid ""
 "These are forwarding methods that make it easy to access the contents of a "
 "`Function` object's {ref}`BasicBlock <BasicBlock>` list."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3801
+#: ../../../ProgrammersManual.md:3829
 msgid ""
 "`Function::arg_iterator` - Typedef for the argument list iterator\\ "
 "`Function::const_arg_iterator` - Typedef for const_iterator.\\ "
 "`arg_begin()`, `arg_end()`, `arg_size()`, `arg_empty()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3805
+#: ../../../ProgrammersManual.md:3833
 msgid ""
 "These are forwarding methods that make it easy to access the contents of a "
 "`Function` object's {ref}`Argument <Argument>` list."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3808
+#: ../../../ProgrammersManual.md:3836
 msgid "`Function::ArgumentListType &getArgumentList()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3810
+#: ../../../ProgrammersManual.md:3838
 msgid ""
 "Returns the list of {ref}`Argument <Argument>`.  This is necessary to use "
 "when you need to update the list or perform a complex action that doesn't "
 "have a forwarding method."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3814
+#: ../../../ProgrammersManual.md:3842
 msgid "`BasicBlock &getEntryBlock()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3816
+#: ../../../ProgrammersManual.md:3844
 msgid ""
 "Returns the entry `BasicBlock` for the function.  Because the entry block "
 "for the function is always the first block, this returns the first block of "
 "the `Function`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3820
+#: ../../../ProgrammersManual.md:3848
 msgid "`Type *getReturnType()`\\ `FunctionType *getFunctionType()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3823
+#: ../../../ProgrammersManual.md:3851
 msgid ""
 "This traverses the {ref}`Type <Type>` of the `Function` and returns the "
 "return type of the function, or the {ref}`FunctionType <FunctionType>` of "
 "the actual function."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3828
+#: ../../../ProgrammersManual.md:3856
 msgid ""
 "Return a pointer to the {ref}`SymbolTable <SymbolTable>` for this `Function`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3832
+#: ../../../ProgrammersManual.md:3860
 msgid "The `GlobalVariable` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3834
+#: ../../../ProgrammersManual.md:3862
 msgid "`#include \"llvm/IR/GlobalVariable.h\"`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3836
+#: ../../../ProgrammersManual.md:3864
 msgid ""
 "header source: [GlobalVariable.h](https://llvm.org/doxygen/"
 "GlobalVariable_8h_source.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3838
+#: ../../../ProgrammersManual.md:3866
 msgid ""
 "doxygen info: [GlobalVariable Class](https://llvm.org/doxygen/"
 "classllvm_1_1GlobalVariable.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3842
+#: ../../../ProgrammersManual.md:3870
 msgid ""
 "Global variables are represented with the (surprise surprise) "
 "`GlobalVariable` class.  Like functions, `GlobalVariable`s are also "
@@ -4687,18 +4752,18 @@ msgid ""
 "their contents never change at runtime)."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3853
+#: ../../../ProgrammersManual.md:3881
 msgid "Important Public Members of the `GlobalVariable` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3855
+#: ../../../ProgrammersManual.md:3883
 msgid ""
 "`GlobalVariable(const Type *Ty, bool isConstant, LinkageTypes &Linkage, "
 "Constant *Initializer = 0, const std::string &Name = \"\", Module* Parent = "
 "0)`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3858
+#: ../../../ProgrammersManual.md:3886
 msgid ""
 "Create a new global variable of the specified type.  If `isConstant` is true "
 "then the global variable will be marked as unchanging for the program.  The "
@@ -4714,55 +4779,55 @@ msgid ""
 "may be specified for the global variable as well."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3870
+#: ../../../ProgrammersManual.md:3898
 msgid "`bool isConstant() const`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3872
+#: ../../../ProgrammersManual.md:3900
 msgid ""
 "Returns true if this is a global variable that is known not to be modified "
 "at runtime."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3875
+#: ../../../ProgrammersManual.md:3903
 msgid "`bool hasInitializer()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3877
+#: ../../../ProgrammersManual.md:3905
 msgid "Returns true if this `GlobalVariable` has an initializer."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3879
+#: ../../../ProgrammersManual.md:3907
 msgid "`Constant *getInitializer()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3881
+#: ../../../ProgrammersManual.md:3909
 msgid ""
 "Returns the initial value for a `GlobalVariable`.  It is not legal to call "
 "this method if there is no initializer."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3886
+#: ../../../ProgrammersManual.md:3914
 msgid "The `BasicBlock` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3888
+#: ../../../ProgrammersManual.md:3916
 msgid "`#include \"llvm/IR/BasicBlock.h\"`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3890
+#: ../../../ProgrammersManual.md:3918
 msgid ""
 "header source: [BasicBlock.h](https://llvm.org/doxygen/BasicBlock_8h_source."
 "html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3892
+#: ../../../ProgrammersManual.md:3920
 msgid ""
 "doxygen info: [BasicBlock Class](https://llvm.org/doxygen/"
 "classllvm_1_1BasicBlock.html)"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3896
+#: ../../../ProgrammersManual.md:3924
 msgid ""
 "This class represents a single entry single exit section of the code, "
 "commonly known as a basic block by the compiler community.  The `BasicBlock` "
@@ -4771,29 +4836,29 @@ msgid ""
 "this list of instructions is always a terminator instruction."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3902
+#: ../../../ProgrammersManual.md:3930
 msgid ""
 "In addition to tracking the list of instructions that make up the block, the "
 "`BasicBlock` class also keeps track of the {ref}`Function <c_Function>` that "
 "it is embedded into."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3906
+#: ../../../ProgrammersManual.md:3934
 msgid ""
 "Note that `BasicBlock`s themselves are {ref}`Value <Value>`s, because they "
 "are referenced by instructions like branches and can go in the switch "
 "tables. `BasicBlock`s have type `label`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3912
+#: ../../../ProgrammersManual.md:3940
 msgid "Important Public Members of the `BasicBlock` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3914
+#: ../../../ProgrammersManual.md:3942
 msgid "`BasicBlock(const std::string &Name = \"\", Function *Parent = 0)`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3916
+#: ../../../ProgrammersManual.md:3944
 msgid ""
 "The `BasicBlock` constructor is used to create new basic blocks for "
 "insertion into a function.  The constructor optionally takes a name for the "
@@ -4804,7 +4869,7 @@ msgid ""
 "`Function <c_Function>`."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3923
+#: ../../../ProgrammersManual.md:3951
 msgid ""
 "`BasicBlock::iterator` - Typedef for instruction list iterator\\ "
 "`BasicBlock::const_iterator` - Typedef for const_iterator.\\ `begin()`, "
@@ -4812,7 +4877,7 @@ msgid ""
 "functions for accessing the instruction list."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3929
+#: ../../../ProgrammersManual.md:3957
 msgid ""
 "These methods and typedefs are forwarding functions that have the same "
 "semantics as the standard library methods of the same names.  These methods "
@@ -4820,21 +4885,21 @@ msgid ""
 "easy to manipulate."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3934
+#: ../../../ProgrammersManual.md:3962
 msgid "`Function *getParent()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3936
+#: ../../../ProgrammersManual.md:3964
 msgid ""
 "Returns a pointer to {ref}`Function <c_Function>` the block is embedded "
 "into, or a null pointer if it is homeless."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3939
+#: ../../../ProgrammersManual.md:3967
 msgid "`Instruction *getTerminator()`"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3941
+#: ../../../ProgrammersManual.md:3969
 msgid ""
 "Returns a pointer to the terminator instruction that appears at the end of "
 "the `BasicBlock`.  If there is no terminator instruction, or if the last "
@@ -4842,11 +4907,11 @@ msgid ""
 "returned."
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3947
+#: ../../../ProgrammersManual.md:3975
 msgid "The `Argument` class"
 msgstr ""
 
-#: ../../../ProgrammersManual.md:3949
+#: ../../../ProgrammersManual.md:3977
 msgid ""
 "This subclass of Value defines the interface for incoming formal arguments "
 "to a function.  A Function maintains a list of its formal arguments.  An "
