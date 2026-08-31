@@ -1,0 +1,1074 @@
+<!doctype html>
+<html class="no-js" lang="fr-FR" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Recherche" href="search.html" /><link rel="next" title="Stack Safety Analysis" href="StackSafetyAnalysis.html" /><link rel="prev" title="KernelInfo" href="KernelInfo.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/LoopFusion.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Loop Fusion in LLVM - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Recherche" name="q" aria-label="Recherche">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural “diff”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/LoopFusion.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="loop-fusion-in-llvm">
+<h1>Loop Fusion in LLVM<a class="headerlink" href="#loop-fusion-in-llvm" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>1. Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>Loop fusion (also called loop jamming) is a compiler optimization that
+merges two adjacent loops into a single loop, provided the
+transformation preserves the program’s original semantics. The
+motivation is straightforward: by executing the bodies of two loops in
+a single pass over the iteration space, we reduce loop overhead (fewer
+branch instructions, fewer induction variable updates), improve
+temporal data locality (data written by the first loop body and read
+by the second is still in cache), and create new opportunities for
+subsequent optimizations such as instruction scheduling and register
+allocation.</p>
+<p>LLVM’s implementation resides in
+<code class="docutils literal notranslate"><span class="pre">llvm/lib/Transforms/Scalar/LoopFuse.cpp</span></code> and is based on
+Christopher Barton’s MSc thesis, <em>« Code Transformations to Augment the
+Scope of Loop Fusion in a Production Compiler »</em>. The pass operates on
+LLVM IR, leveraging several core analysis frameworks –
+Scalar Evolution (SCEV), Dependence Analysis
+(DA), and Dominator/Post-Dominator Trees – to determine legality and
+perform the CFG rewiring that fuses two loops into one.</p>
+</section>
+<section id="prerequisite-concepts">
+<h2>2. Prerequisite Concepts<a class="headerlink" href="#prerequisite-concepts" title="Link to this heading">#</a></h2>
+<p>The fusion pass relies on several standard LLVM loop concepts that
+are documented elsewhere: simplified loop form, rotated loop form,
+loop guard branches, dominator and post-dominator trees, Scalar
+Evolution (SCEV), and trip count with peeling. The analysis that
+drives the most involved legality check – Dependence Analysis (DA)
+– is summarized below, because later sections refer directly to its
+dependence kinds and direction vectors.</p>
+<p>DA determines the dependence relation between pairs of memory
+accesses. A dependence from instruction S1 to S2 is characterized by:</p>
+<ul class="simple">
+<li><p><strong>Flow (true) dependence</strong>: S1 writes, S2 reads the same location
+(read-after-write).</p></li>
+<li><p><strong>Anti dependence</strong>: S1 reads, S2 writes (write-after-read).</p></li>
+<li><p><strong>Output dependence</strong>: Both S1 and S2 write (write-after-write).</p></li>
+</ul>
+<p>Each dependence carries a <em>direction vector</em> at each loop nesting
+level, indicating whether the source iteration is less than (<code class="docutils literal notranslate"><span class="pre">&lt;</span></code>),
+equal to (<code class="docutils literal notranslate"><span class="pre">=</span></code>), or greater than (<code class="docutils literal notranslate"><span class="pre">&gt;</span></code>) the sink iteration at that
+level. A dependence with a <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> component at the current loop level
+represents a <em>backward loop-carried dependence</em> (also called a
+negative-distance dependence). Such dependences are the critical
+hazard that loop fusion must respect.</p>
+</section>
+<section id="high-level-algorithm">
+<h2>3. High-Level Algorithm<a class="headerlink" href="#high-level-algorithm" title="Link to this heading">#</a></h2>
+<p>The pass operates in a top-down, level-by-level fashion over the loop
+nest tree. At each nesting depth, it:</p>
+<ol class="arabic simple">
+<li><p><strong>Collects fusion candidates</strong>: Identifies each eligible loop and
+partitions the eligible loops into ordered chains of
+<em>control-flow equivalent, strictly adjacent</em> loops sorted in
+dominance order.</p></li>
+<li><p><strong>Attempts pairwise fusion</strong>: Walks each chain linearly, testing
+every consecutive pair <code class="docutils literal notranslate"><span class="pre">(FC0,</span> <span class="pre">FC1)</span></code> against the four legality
+conditions. If all conditions hold, the pair is fused and replaced
+by the fused loop in the chain, which is then considered for
+further fusion with its successor.</p></li>
+<li><p><strong>Descends to inner loops</strong>: After processing all sibling groups at
+the current depth, the pass descends one level and repeats.</p></li>
+</ol>
+<p>This strategy means outermost loops are fused first. Fusing inner
+loops is handled in subsequent iterations of the outer while-loop.</p>
+</section>
+<section id="phase-1-candidate-collection">
+<h2>4. Phase 1: Candidate Collection<a class="headerlink" href="#phase-1-candidate-collection" title="Link to this heading">#</a></h2>
+<p>For each group of sibling loops (loops sharing a parent) at the
+current depth, the pass gathers the loops that are eligible for
+fusion.</p>
+<section id="eligibility-check">
+<h3>4.1 Eligibility Check<a class="headerlink" href="#eligibility-check" title="Link to this heading">#</a></h3>
+<p>Each loop is first scanned for disqualifying properties. A loop is
+rejected immediately if any of its blocks has its address taken, if
+any instruction in the loop may throw, or if the loop contains a
+volatile or atomic memory access. The pass cannot reason about
+exception-based control flow, volatile ordering, or the
+synchronization semantics of atomics, so these are hard blockers.</p>
+<p>Surviving loops must additionally satisfy four structural
+requirements:</p>
+<ol class="arabic simple">
+<li><p><strong>Structural validity</strong>: preheader, header, exiting block, exit
+block, and latch all exist. This implicitly requires simplified
+form.</p></li>
+<li><p><strong>Computable trip count</strong>: SCEV must be able to compute a
+loop-invariant backedge-taken count. If not, the pass cannot
+compare trip counts.</p></li>
+<li><p><strong>Simplified form</strong>: the loop must be in simplified form (single
+preheader, dedicated exit blocks, single latch).</p></li>
+<li><p><strong>Rotated form</strong>: the loop must be in rotated form (do-while
+shape, with the exit test at the latch). The exiting block must
+be the latch.</p></li>
+</ol>
+<p>If any check fails, the loop is discarded and an optimization remark
+is emitted explaining why.</p>
+</section>
+<section id="grouping-by-adjacency">
+<h3>4.2 Grouping by Adjacency<a class="headerlink" href="#grouping-by-adjacency" title="Link to this heading">#</a></h3>
+<p>Eligible loops are partitioned into ordered chains based on <em>strict
+adjacency</em>. Two loops FC0 and FC1 are strictly adjacent if:</p>
+<ul class="simple">
+<li><p><strong>Unguarded loops</strong>: FC0’s exit block is exactly FC1’s preheader
+(i.e., there is no intervening code between the two loops).</p></li>
+<li><p><strong>Guarded loops</strong>: FC0’s entry block dominates FC1’s entry block,
+and FC0’s exit block has a unique successor that is FC1’s entry
+block.</p></li>
+</ul>
+<p>The algorithm appends each new loop to the first existing chain whose
+last element is strictly adjacent to it. If no such chain exists, a
+new chain is started. Because the input loops are already supplied in
+dominance (program) order, this single-pass grouping correctly
+partitions eligible loops into maximal chains of adjacent loops.</p>
+</section>
+</section>
+<section id="phase-2-pairwise-fusion-attempts">
+<h2>5. Phase 2: Pairwise Fusion Attempts<a class="headerlink" href="#phase-2-pairwise-fusion-attempts" title="Link to this heading">#</a></h2>
+<p>The pass iterates over each chain and attempts to fuse consecutive
+pairs <code class="docutils literal notranslate"><span class="pre">(FC0,</span> <span class="pre">FC1)</span></code>. The following legality conditions are checked
+in order, with early exit on failure.</p>
+<section id="condition-1-identical-trip-counts-conformance">
+<h3>5.1 Condition 1: Identical Trip Counts (Conformance)<a class="headerlink" href="#condition-1-identical-trip-counts-conformance" title="Link to this heading">#</a></h3>
+<p>The conformance check uses SCEV to retrieve the backedge-taken count
+of both loops. If the SCEV expressions are identical (pointer equality
+after canonicalization), the loops are conforming.</p>
+<p>If they differ but both are small constants, the pass computes the
+arithmetic difference. If the first loop has more iterations than the
+second, and the difference does not exceed the command-line limit
+<code class="docutils literal notranslate"><span class="pre">-loop-fusion-peel-max-count</span></code> (default 0), the pass marks the pair
+as eligible for peeling. Peeling the first loop by the difference
+will equalize the trip counts.</p>
+<p>The current implementation does not support the case where the second
+loop has more iterations than the first.</p>
+</section>
+<section id="condition-2-compatible-guard-structure">
+<h3>5.2 Condition 2: Compatible Guard Structure<a class="headerlink" href="#condition-2-compatible-guard-structure" title="Link to this heading">#</a></h3>
+<p>Both loops must be either both guarded or both unguarded. If one is
+guarded and the other is not, fusion is rejected. When both are
+guarded, the guard-comparison check ensures that:</p>
+<ol class="arabic simple">
+<li><p>The guard condition instructions are structurally identical
+(same opcode, same operands).</p></li>
+<li><p>The true/false successors have the same polarity relative to the
+loop (i.e., both guards branch to the preheader on the same
+condition outcome).</p></li>
+</ol>
+<p>Additionally, for guarded loops, the pass verifies that instructions
+in FC0’s exit block can be safely moved before FC1’s exit block, and
+that FC1’s guard block instructions can be safely moved before FC0’s
+guard block terminator. These moves reuse LLVM’s generic code-motion
+safety helpers.</p>
+</section>
+<section id="condition-3-no-negative-distance-dependencies">
+<h3>5.3 Condition 3: No Negative-Distance Dependencies<a class="headerlink" href="#condition-3-no-negative-distance-dependencies" title="Link to this heading">#</a></h3>
+<p>The dependence check is the most involved legality analysis. It
+examines all pairs of memory accesses where at least one is a write:</p>
+<ul class="simple">
+<li><p>(FC0 writes) x (FC1 writes) – output dependences</p></li>
+<li><p>(FC0 writes) x (FC1 reads) – flow dependences</p></li>
+<li><p>(FC1 writes) x (FC0 reads) – anti dependences</p></li>
+</ul>
+<p>Additionally, it checks for <em>cross-loop def-use chains</em>: if any
+instruction in FC1 uses a value defined inside FC0, fusion is rejected
+outright. This is because after fusion, the definition from a given
+iteration of the original FC0 would need to be available to the same
+iteration of FC1, but the interleaved execution order may not preserve
+this.</p>
+<p>For each memory pair, the pass invokes one of three dependence
+analysis strategies, selectable via
+<code class="docutils literal notranslate"><span class="pre">--loop-fusion-dependence-analysis</span></code>. The default is DA-based
+analysis (<code class="docutils literal notranslate"><span class="pre">da</span></code>); the SCEV-based and combined modes are retained as
+opt-ins. The SCEV-based path is expected to be removed in a future
+change.</p>
+<p><strong>SCEV-based analysis</strong>:
+Rewrites the access function of FC0’s instruction into FC1’s loop
+iteration space by substituting FC0’s loop with FC1’s loop inside
+every add-recurrence subexpression. The pass then asks SCEV whether
+FC0’s address is known to be greater than or equal to FC1’s address.
+A non-negative difference means no backward dependence.</p>
+<p><strong>DA-based analysis</strong>:
+Queries LLVM’s dependence analysis on the pair. If no dependence
+exists, fusion is safe. If a dependence exists, the pass examines its
+direction vector:</p>
+<ol class="arabic simple">
+<li><p>At outer loop levels (levels above the current fusion level): if
+any level has a direction that excludes equality (<code class="docutils literal notranslate"><span class="pre">EQ</span></code>), the
+outer indices differ and the dependence does not constrain fusion
+at the current level.</p></li>
+<li><p>At the current level: if the direction excludes <code class="docutils literal notranslate"><span class="pre">GT</span></code>
+(greater-than), there is no backward loop-carried dependence, and
+fusion is safe. For example, a pure <code class="docutils literal notranslate"><span class="pre">LT</span></code> direction indicates a
+forward dependence like <code class="docutils literal notranslate"><span class="pre">A[i]</span> <span class="pre">=</span> <span class="pre">...;</span> <span class="pre">...</span> <span class="pre">=</span> <span class="pre">A[i-1]</span></code>, which
+remains valid after fusion.</p></li>
+<li><p>Loop-invariant (scalar) non-anti dependences at the current level
+are also safe.</p></li>
+</ol>
+<p><strong>Combined analysis</strong>:
+Accepts the pair if either SCEV-based or DA-based analysis approves
+it.</p>
+</section>
+<section id="condition-4-empty-or-movable-preheader">
+<h3>5.4 Condition 4: Empty or Movable Preheader<a class="headerlink" href="#condition-4-empty-or-movable-preheader" title="Link to this heading">#</a></h3>
+<p>FC1’s preheader must be empty (containing only the terminator branch)
+or all its instructions must be safely movable. The preheader-motion
+check classifies each preheader instruction as either hoistable (to
+FC0’s preheader) or sinkable (into FC1’s body after the fused loop):</p>
+<ul class="simple">
+<li><p><strong>Hoisting</strong>: An instruction can be hoisted if all its operands
+either dominate FC0’s preheader target or have already been
+classified as hoistable. PHI nodes cannot be hoisted. Memory
+instructions can be hoisted only if they have no flow, anti, or
+output dependences with non-hoisted preheader instructions or with
+FC0’s memory accesses.</p></li>
+<li><p><strong>Sinking</strong>: An instruction can be sunk if none of its users are
+inside FC1’s loop body, and it has no flow or output dependences
+with FC1’s memory accesses.</p></li>
+<li><p>Atomic and volatile instructions cannot be moved.</p></li>
+</ul>
+<p>If any instruction is neither hoistable nor sinkable, fusion is
+abandoned for this pair.</p>
+</section>
+<section id="profitability">
+<h3>5.5 Profitability<a class="headerlink" href="#profitability" title="Link to this heading">#</a></h3>
+<p>The profitability check currently always reports that fusion is
+beneficial. This is intentional for testing coverage and is expected
+to evolve to include cost-model heuristics (e.g., register pressure
+estimation, cache footprint analysis) in the future.</p>
+</section>
+</section>
+<section id="phase-3-the-fusion-transformation">
+<h2>6. Phase 3: The Fusion Transformation<a class="headerlink" href="#phase-3-the-fusion-transformation" title="Link to this heading">#</a></h2>
+<p>Once all legality checks pass, the transformation proceeds in two
+stages: an optional peeling step and the actual CFG rewiring.</p>
+<section id="loop-peeling-optional">
+<h3>6.1 Loop Peeling (Optional)<a class="headerlink" href="#loop-peeling-optional" title="Link to this heading">#</a></h3>
+<p>If the trip counts differ by a constant <code class="docutils literal notranslate"><span class="pre">d</span></code>, the pass peels <code class="docutils literal notranslate"><span class="pre">d</span></code>
+iterations from FC0. This extracts the first <code class="docutils literal notranslate"><span class="pre">d</span></code> iterations as
+straight-line code before the loop, so the remaining loop has the
+same trip count as FC1. After peeling:</p>
+<ol class="arabic simple">
+<li><p>The post-dominator tree is recalculated.</p></li>
+<li><p>FC0’s cached block pointers are refreshed.</p></li>
+<li><p>The peeled iteration blocks” branches are rewritten to remove edges
+to FC1’s preheader, ensuring FC0’s entry block still dominates
+FC1’s entry block.</p></li>
+</ol>
+</section>
+<section id="cfg-rewiring-non-guarded-loops">
+<h3>6.2 CFG Rewiring (Non-Guarded Loops)<a class="headerlink" href="#cfg-rewiring-non-guarded-loops" title="Link to this heading">#</a></h3>
+<p>For non-guarded loops, the CFG transformation performs these steps:</p>
+<ol class="arabic simple">
+<li><p><strong>Merge preheaders</strong>: Move all instructions from FC1’s preheader
+into FC0’s preheader (before the terminator).</p></li>
+<li><p><strong>Rewire FC0’s exiting block</strong>: Instead of branching to FC1’s
+preheader (which is about to be deleted), the exiting block now
+targets FC1’s header directly.</p></li>
+<li><p><strong>Delete FC1’s preheader</strong>: It has no predecessors left; replace
+its terminator with <code class="docutils literal notranslate"><span class="pre">unreachable</span></code>.</p></li>
+<li><p><strong>Move PHI nodes</strong>: All PHI nodes from FC1’s header are moved to
+FC0’s header. If a PHI has no uses, it is deleted.</p></li>
+<li><p><strong>Introduce intermediate PHI nodes</strong>: If FC0’s exiting block is
+not the latch (a rare case given the rotated form requirement),
+new PHI nodes are inserted in FC1’s header. These select the
+loop-carried value from FC0 when arriving via FC0’s latch, or
+<code class="docutils literal notranslate"><span class="pre">poison</span></code> when arriving via FC0’s exiting block (which means the
+loop is exiting and the value is dead).</p></li>
+<li><p><strong>Reconnect latches</strong>:</p>
+<ul class="simple">
+<li><p>FC0’s latch, which previously branched back to FC0’s header, now
+branches to FC1’s header.</p></li>
+<li><p>FC1’s latch, which previously branched back to FC1’s header, now
+branches to FC0’s header.</p></li>
+<li><p>FC0’s latch branch is simplified to unconditional (both targets
+are now FC1’s header).</p></li>
+</ul>
+</li>
+<li><p><strong>Transfer loop blocks</strong>: All basic blocks belonging to FC1 are
+moved into FC0. All child loops of FC1 are re-parented under FC0.</p></li>
+<li><p><strong>Merge latches</strong>: Instructions from FC0’s old latch are moved to
+FC1’s latch (which is now the single latch of the fused loop). If
+FC0’s latch has a unique successor, the blocks are merged.</p></li>
+<li><p><strong>Cleanup</strong>: FC1 is erased from the function’s loop information.
+SCEV caches for both loops are invalidated, and the dominator and
+post-dominator trees are updated in a single batched transaction.</p></li>
+</ol>
+<p>The resulting fused loop has:</p>
+<ul class="simple">
+<li><p>FC0’s preheader as its preheader.</p></li>
+<li><p>FC0’s header as its header.</p></li>
+<li><p>A body containing blocks from both FC0 and FC1.</p></li>
+<li><p>FC1’s latch as its latch.</p></li>
+<li><p>FC1’s exit block as its exit block.</p></li>
+</ul>
+</section>
+<section id="cfg-rewiring-guarded-loops">
+<h3>6.3 CFG Rewiring (Guarded Loops)<a class="headerlink" href="#cfg-rewiring-guarded-loops" title="Link to this heading">#</a></h3>
+<p>The guarded-loop fusion path handles the additional complexity of
+guard branches and exit blocks:</p>
+<ol class="arabic simple">
+<li><p>FC0’s guard is updated to use FC1’s non-loop block as its bypass
+target, effectively making FC0’s guard protect both loops.</p></li>
+<li><p>FC0’s exit block instructions are moved to FC1’s exit block.</p></li>
+<li><p>FC1’s guard block is disconnected and deleted.</p></li>
+<li><p>FC0’s exit block is disconnected and deleted.</p></li>
+<li><p>The latch rewiring and block transfer proceed identically to the
+non-guarded case.</p></li>
+</ol>
+</section>
+<section id="post-fusion-bookkeeping">
+<h3>6.4 Post-Fusion Bookkeeping<a class="headerlink" href="#post-fusion-bookkeeping" title="Link to this heading">#</a></h3>
+<p>After fusion, the fused loop replaces the original pair in the chain
+and becomes the new left operand for the next pairwise attempt. This
+enables <em>cascading fusion</em>: if three adjacent loops A, B, C are all
+fusible, A+B is fused first, then (A+B)+C is attempted.</p>
+<p>FC1’s loop is also recorded as removed so that it is skipped when the
+pass descends to inner nesting levels.</p>
+</section>
+</section>
+<section id="limitations">
+<h2>7. Limitations<a class="headerlink" href="#limitations" title="Link to this heading">#</a></h2>
+<p>The current implementation is purely opportunistic: it fuses only
+loop pairs that already satisfy the four legality conditions. It does
+not reshape the surrounding code to create new fusion opportunities,
+and several legality checks are intentionally conservative.</p>
+<section id="algorithmic-scope">
+<h3>7.1 Algorithmic Scope<a class="headerlink" href="#algorithmic-scope" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>No loop reshaping to enable fusion.</strong> The pass does not insert
+guards, rotate loops, run loop-simplify, or otherwise modify loops
+that miss a legality condition. Loops that are not already in
+rotated, simplified form with a computable trip count are discarded
+as ineligible.</p></li>
+<li><p><strong>No profitability cost model.</strong> The profitability check
+unconditionally reports every legal pair as beneficial. Fusion
+proceeds regardless of cache footprint, register pressure, or any
+interaction with downstream vectorization.</p></li>
+<li><p><strong>Cross-loop def-use chains are always rejected.</strong> If any
+instruction in FC1 uses a value produced inside FC0, the pair is
+rejected outright. Patterns such as a reduction whose result is
+consumed by the next loop are blocked even when the producing value
+is loop-invariant and could legally be hoisted.</p></li>
+</ul>
+</section>
+<section id="trip-count-equalization">
+<h3>7.2 Trip-Count Equalization<a class="headerlink" href="#trip-count-equalization" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Peeling is disabled by default.</strong> The maximum number of
+iterations the pass may peel is controlled by the command-line
+option <code class="docutils literal notranslate"><span class="pre">-loop-fusion-peel-max-count</span></code>, which defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+Peeling therefore never fires unless the user opts in explicitly.</p></li>
+<li><p><strong>Peeling shrinks only the first loop.</strong> If the second loop has
+more iterations than the first, fusion is rejected. There is no
+attempt to peel the second loop or extend the first.</p></li>
+<li><p><strong>Peeling requires constant trip counts with a single exit.</strong> Both
+loops must have a small constant trip count for the peel distance
+to be computed. Symbolic trip-count differences are not handled.</p></li>
+</ul>
+</section>
+<section id="preheader-and-block-handling">
+<h3>7.4 Preheader and Block Handling<a class="headerlink" href="#preheader-and-block-handling" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Volatile or atomic preheader instructions block fusion.</strong> Such
+instructions cannot be moved, so a non-empty preheader that
+contains them prevents fusion.</p></li>
+<li><p><strong>Memory-reading preheader instructions are handled
+conservatively.</strong> The pass does try to move memory-reading
+preheader instructions, but only when dependence checks prove
+hoisting or sinking is safe. This conservative filtering can still
+reject fusible-looking cases.</p></li>
+<li><p><strong>FC1’s preheader must reduce to a single terminator.</strong> After
+hoisting and sinking, the simple (non-guarded) fusion path requires
+FC1’s preheader to contain exactly one instruction – its branch.
+Any instruction that is neither hoistable nor sinkable prevents
+fusion rather than being preserved by block merging.</p></li>
+<li><p><strong>Blocks are rewired, not merged.</strong> Preheaders, latches, and exit
+blocks are reconnected to new successors during fusion, but never
+merged with their neighbors. The fused Control-Flow Graph (CFG)
+therefore retains more basic blocks than strictly necessary.</p></li>
+</ul>
+</section>
+<section id="eligibility-blockers">
+<h3>7.5 Eligibility Blockers<a class="headerlink" href="#eligibility-blockers" title="Link to this heading">#</a></h3>
+<p>A loop is rejected during candidate construction if any of the
+following properties holds:</p>
+<ul class="simple">
+<li><p>A block in the loop has its address taken (for example, used as a
+<code class="docutils literal notranslate"><span class="pre">blockaddress</span></code> operand).</p></li>
+<li><p>Any instruction in the loop may throw.</p></li>
+<li><p>The loop contains a volatile memory access.</p></li>
+<li><p>The loop contains an atomic memory access.</p></li>
+</ul>
+<p>These conditions are hard blockers, not soft preferences: the pass
+never attempts to work around them.</p>
+<p><strong>Atomic accesses are rejected conservatively.</strong> Any atomic
+instruction – atomic <code class="docutils literal notranslate"><span class="pre">load</span></code> and <code class="docutils literal notranslate"><span class="pre">store</span></code>, <code class="docutils literal notranslate"><span class="pre">atomicrmw</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cmpxchg</span></code>, and <code class="docutils literal notranslate"><span class="pre">fence</span></code> – disqualifies the loop, mirroring the
+volatile blocker. The underlying dependence analysis reasons about
+address-based data dependence rather than inter-thread
+synchronization (the synchronizes-with / fence semantics of the
+memory model), so fusing two loops interleaves their bodies and
+could reorder atomics in ways that change observable multi-threaded
+behavior even when the dependence check reports no conflict. The
+rejection covers the <code class="docutils literal notranslate"><span class="pre">unordered</span></code> ordering and higher, so even
+<code class="docutils literal notranslate"><span class="pre">unordered</span></code> atomics (which carry no cross-thread ordering) are
+rejected.</p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="StackSafetyAnalysis.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Stack Safety Analysis</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="KernelInfo.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">KernelInfo</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Loop Fusion in LLVM</a><ul>
+<li><a class="reference internal" href="#introduction">1. Introduction</a></li>
+<li><a class="reference internal" href="#prerequisite-concepts">2. Prerequisite Concepts</a></li>
+<li><a class="reference internal" href="#high-level-algorithm">3. High-Level Algorithm</a></li>
+<li><a class="reference internal" href="#phase-1-candidate-collection">4. Phase 1: Candidate Collection</a><ul>
+<li><a class="reference internal" href="#eligibility-check">4.1 Eligibility Check</a></li>
+<li><a class="reference internal" href="#grouping-by-adjacency">4.2 Grouping by Adjacency</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#phase-2-pairwise-fusion-attempts">5. Phase 2: Pairwise Fusion Attempts</a><ul>
+<li><a class="reference internal" href="#condition-1-identical-trip-counts-conformance">5.1 Condition 1: Identical Trip Counts (Conformance)</a></li>
+<li><a class="reference internal" href="#condition-2-compatible-guard-structure">5.2 Condition 2: Compatible Guard Structure</a></li>
+<li><a class="reference internal" href="#condition-3-no-negative-distance-dependencies">5.3 Condition 3: No Negative-Distance Dependencies</a></li>
+<li><a class="reference internal" href="#condition-4-empty-or-movable-preheader">5.4 Condition 4: Empty or Movable Preheader</a></li>
+<li><a class="reference internal" href="#profitability">5.5 Profitability</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#phase-3-the-fusion-transformation">6. Phase 3: The Fusion Transformation</a><ul>
+<li><a class="reference internal" href="#loop-peeling-optional">6.1 Loop Peeling (Optional)</a></li>
+<li><a class="reference internal" href="#cfg-rewiring-non-guarded-loops">6.2 CFG Rewiring (Non-Guarded Loops)</a></li>
+<li><a class="reference internal" href="#cfg-rewiring-guarded-loops">6.3 CFG Rewiring (Guarded Loops)</a></li>
+<li><a class="reference internal" href="#post-fusion-bookkeeping">6.4 Post-Fusion Bookkeeping</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#limitations">7. Limitations</a><ul>
+<li><a class="reference internal" href="#algorithmic-scope">7.1 Algorithmic Scope</a></li>
+<li><a class="reference internal" href="#trip-count-equalization">7.2 Trip-Count Equalization</a></li>
+<li><a class="reference internal" href="#preheader-and-block-handling">7.4 Preheader and Block Handling</a></li>
+<li><a class="reference internal" href="#eligibility-blockers">7.5 Eligibility Blockers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=711a3ba7"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=a56f2464"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

@@ -1,0 +1,1341 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜索" href="search.html" /><link rel="next" title="libFuzzer – a library for coverage-guided fuzz testing." href="LibFuzzer.html" /><link rel="prev" title="Garbage Collection with LLVM" href="GarbageCollection.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/Statepoints.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Garbage Collection Safepoints in LLVM - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜索" name="q" aria-label="搜索">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="Reference.html">Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/Statepoints.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="garbage-collection-safepoints-in-llvm">
+<h1>Garbage Collection Safepoints in LLVM<a class="headerlink" href="#garbage-collection-safepoints-in-llvm" title="Link to this heading">#</a></h1>
+<section id="status">
+<h2>Status<a class="headerlink" href="#status" title="Link to this heading">#</a></h2>
+<p>This document describes a set of extensions to LLVM to support garbage
+collection.  By now, these mechanisms are well proven with commercial java
+implementation with a fully relocating collector having shipped using them.
+There are a couple places where bugs might still linger; these are called out
+below.</p>
+<p>They are still listed as “experimental” to indicate that no forward or backward
+compatibility guarantees are offered across versions.  If your use case is such
+that you need some form of forward compatibility guarantee, please raise the
+issue on the llvm-dev mailing list.</p>
+<p>LLVM still supports an alternate mechanism for conservative garbage collection
+support using the <code class="docutils literal notranslate"><span class="pre">gcroot</span></code> intrinsic.  The <code class="docutils literal notranslate"><span class="pre">gcroot</span></code> mechanism is mostly of
+historical interest at this point with one exception - its implementation of
+shadow stacks has been used successfully by a number of language frontends and
+is still supported.</p>
+</section>
+<section id="overview-core-concepts">
+<h2>Overview &amp; Core Concepts<a class="headerlink" href="#overview-core-concepts" title="Link to this heading">#</a></h2>
+<p>To collect dead objects, garbage collectors must be able to identify
+any references to objects contained within executing code, and,
+depending on the collector, potentially update them.  The collector
+does not need this information at all points in code - that would make
+the problem much harder - but only at well-defined points in the
+execution known as ‘safepoints’ For most collectors, it is sufficient
+to track at least one copy of each unique pointer value.  However, for
+a collector which wishes to relocate objects directly reachable from
+running code, a higher standard is required.</p>
+<p>One additional challenge is that the compiler may compute intermediate
+results (“derived pointers”) which point outside of the allocation or
+even into the middle of another allocation.  The eventual use of this
+intermediate value must yield an address within the bounds of the
+allocation, but such “exterior derived pointers” may be visible to the
+collector.  Given this, a garbage collector can not safely rely on the
+runtime value of an address to indicate the object it is associated
+with.  If the garbage collector wishes to move any object, the
+compiler must provide a mapping, for each pointer, to an indication of
+its allocation.</p>
+<p>To simplify the interaction between a collector and the compiled code,
+most garbage collectors are organized in terms of three abstractions:
+load barriers, store barriers, and safepoints.</p>
+<ol class="arabic simple">
+<li><p>A load barrier is a bit of code executed immediately after the
+machine load instruction, but before any use of the value loaded.
+Depending on the collector, such a barrier may be needed for all
+loads, merely loads of a particular type (in the original source
+language), or none at all.</p></li>
+<li><p>Analogously, a store barrier is a code fragment that runs
+immediately before the machine store instruction, but after the
+computation of the value stored.  The most common use of a store
+barrier is to update a ‘card table’ in a generational garbage
+collector.</p></li>
+<li><p>A safepoint is a location at which pointers visible to the compiled
+code (i.e. currently in registers or on the stack) are allowed to
+change.  After the safepoint completes, the actual pointer value
+may differ, but the ‘object’ (as seen by the source language)
+pointed to will not.</p></li>
+</ol>
+<blockquote>
+<div><p>Note that the term ‘safepoint’ is somewhat overloaded.  It refers to
+both the location at which the machine state is parsable and the
+coordination protocol involved in bring application threads to a
+point at which the collector can safely use that information.  The
+term “statepoint” as used in this document refers exclusively to the
+former.</p>
+</div></blockquote>
+<p>This document focuses on the last item - compiler support for
+safepoints in generated code.  We will assume that an outside
+mechanism has decided where to place safepoints.  From our
+perspective, all safepoints will be function calls.  To support
+relocation of objects directly reachable from values in compiled code,
+the collector must be able to:</p>
+<ol class="arabic simple">
+<li><p>identify every copy of a pointer (including copies introduced by
+the compiler itself) at the safepoint,</p></li>
+<li><p>identify which object each pointer relates to, and</p></li>
+<li><p>potentially update each of those copies.</p></li>
+</ol>
+<p>This document describes the mechanism by which an LLVM based compiler
+can provide this information to a language runtime/collector, and
+ensure that all pointers can be read and updated if desired.</p>
+<section id="abstract-machine-model">
+<h3>Abstract Machine Model<a class="headerlink" href="#abstract-machine-model" title="Link to this heading">#</a></h3>
+<p>At a high level, LLVM has been extended to support compiling to an abstract
+machine which extends the actual target with a non-integral pointer type
+suitable for representing a garbage collected reference to an object.  In
+particular, such non-integral pointer type have no defined mapping to an
+integer representation.  This semantic quirk allows the runtime to pick a
+integer mapping for each point in the program allowing relocations of objects
+without visible effects.</p>
+<p>This high level abstract machine model is used for most of the optimizer.  As
+a result, transform passes do not need to be extended to look through explicit
+relocation sequence.  Before starting code generation, we switch
+representations to an explicit form.  The exact location chosen for lowering
+is an implementation detail.</p>
+<p>Note that most of the value of the abstract machine model comes for collectors
+which need to model potentially relocatable objects.  For a compiler which
+supports only a non-relocating collector, you may wish to consider starting
+with the fully explicit form.</p>
+<p>Warning: There is one currently known semantic hole in the definition of
+non-integral pointers which has not been addressed upstream.  To work around
+this, you need to disable speculation of loads unless the memory type
+(non-integral pointer vs anything else) is known to unchanged.  That is, it is
+not safe to speculate a load if doing causes a non-integral pointer value to
+be loaded as any other type or vice versa.  In practice, this restriction is
+well isolated to isSafeToSpeculate in ValueTracking.cpp.</p>
+</section>
+<section id="explicit-representation">
+<h3>Explicit Representation<a class="headerlink" href="#explicit-representation" title="Link to this heading">#</a></h3>
+<p>A frontend could directly generate this low level explicit form, but
+doing so may inhibit optimization.  Instead, it is recommended that
+compilers with relocating collectors target the abstract machine model just
+described.</p>
+<p>The heart of the explicit approach is to construct (or rewrite) the IR in a
+manner where the possible updates performed by the garbage collector are
+explicitly visible in the IR.  Doing so requires that we:</p>
+<ol class="arabic simple">
+<li><p>create a new SSA value for each potentially relocated pointer, and
+ensure that no uses of the original (non relocated) value is
+reachable after the safepoint,</p></li>
+<li><p>specify the relocation in a way which is opaque to the compiler to
+ensure that the optimizer can not introduce new uses of an
+unrelocated value after a statepoint. This prevents the optimizer
+from performing unsound optimizations.</p></li>
+<li><p>recording a mapping of live pointers (and the allocation they’re
+associated with) for each statepoint.</p></li>
+</ol>
+<p>At the most abstract level, inserting a safepoint can be thought of as
+replacing a call instruction with a call to a multiple return value
+function which both calls the original target of the call, returns
+its result, and returns updated values for any live pointers to
+garbage collected objects.</p>
+<blockquote>
+<div><p>Note that the task of identifying all live pointers to garbage
+collected values, transforming the IR to expose a pointer giving the
+base object for every such live pointer, and inserting all the
+intrinsics correctly is explicitly out of scope for this document.
+The recommended approach is to use the <a class="reference internal" href="#statepoint-utilities"><span class="std std-ref">utility passes</span></a> described below.</p>
+</div></blockquote>
+<p>This abstract function call is concretely represented by a sequence of
+intrinsic calls known collectively as a “statepoint relocation sequence”.</p>
+<p>Let’s consider a simple call in LLVM IR:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">declare</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@foo</span><span class="p">()</span>
+<span class="k">define</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="vg">@test1</span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%obj</span><span class="p">)</span>
+<span class="w">       </span><span class="k">gc</span><span class="w"> </span><span class="s">&quot;statepoint-example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@foo</span><span class="p">()</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%obj</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Depending on our language we may need to allow a safepoint during the execution
+of <code class="docutils literal notranslate"><span class="pre">foo</span></code>. If so, we need to let the collector update local values in the
+current frame.  If we don’t, we’ll be accessing a potential invalid reference
+once we eventually return from the call.</p>
+<p>In this example, we need to relocate the SSA value <code class="docutils literal notranslate"><span class="pre">%obj</span></code>.  Since we can’t
+actually change the value in the SSA value <code class="docutils literal notranslate"><span class="pre">%obj</span></code>, we need to introduce a new
+SSA value <code class="docutils literal notranslate"><span class="pre">%obj.relocated</span></code> which represents the potentially changed value of
+<code class="docutils literal notranslate"><span class="pre">%obj</span></code> after the safepoint and update any following uses appropriately.  The
+resulting relocation sequence is:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="vg">@test</span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%obj</span><span class="p">)</span>
+<span class="w">       </span><span class="k">gc</span><span class="w"> </span><span class="s">&quot;statepoint-example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%safepoint</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="k">token</span><span class="w"> </span><span class="p">(</span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span><span class="w"> </span><span class="vg">@llvm.experimental.gc.statepoint.p0f_isVoidf</span><span class="p">(</span><span class="kt">i64</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="err">element</span><span class="k">type</span><span class="p">(</span><span class="k">void</span><span class="w"> </span><span class="p">())</span><span class="w"> </span><span class="vg">@foo</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;gc-live&quot;</span><span class="w"> </span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%obj</span><span class="p">)]</span>
+<span class="w">  </span><span class="nv">%obj.relocated</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="vg">@llvm.experimental.gc.relocate.p1</span><span class="p">(</span><span class="k">token</span><span class="w"> </span><span class="nv">%safepoint</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">)</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%obj.relocated</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Ideally, this sequence would have been represented as a M argument, N
+return value function (where M is the number of values being
+relocated + the original call arguments and N is the original return
+value + each relocated value), but LLVM does not easily support such a
+representation.</p>
+<p>Instead, the statepoint intrinsic marks the actual site of the
+safepoint or statepoint.  The statepoint returns a token value (which
+exists only at compile time).  To get back the original return value
+of the call, we use the <code class="docutils literal notranslate"><span class="pre">gc.result</span></code> intrinsic.  To get the relocation
+of each pointer in turn, we use the <code class="docutils literal notranslate"><span class="pre">gc.relocate</span></code> intrinsic with the
+appropriate index.  Note that both the <code class="docutils literal notranslate"><span class="pre">gc.relocate</span></code> and <code class="docutils literal notranslate"><span class="pre">gc.result</span></code> are
+tied to the statepoint.  The combination forms a “statepoint relocation
+sequence” and represents the entirety of a parseable call or ‘statepoint’.</p>
+<p>When lowered, this example would generate the following x86 assembly:</p>
+<div class="highlight-gas notranslate"><div class="highlight"><pre><span></span><span class="w">        </span><span class="na">.globl</span><span class="w">        </span><span class="no">test1</span>
+<span class="w">        </span><span class="na">.align</span><span class="w">        </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">0x90</span>
+<span class="w">        </span><span class="nf">pushq</span><span class="w"> </span><span class="nv">%rax</span>
+<span class="w">        </span><span class="nf">callq</span><span class="w"> </span><span class="no">foo</span>
+<span class="nl">.Ltmp1:</span>
+<span class="w">        </span><span class="nf">movq</span><span class="w">  </span><span class="p">(</span><span class="nv">%rsp</span><span class="p">),</span><span class="w"> </span><span class="nv">%rax</span><span class="w">  </span><span class="c1"># This load is redundant (oops!)</span>
+<span class="w">        </span><span class="nf">popq</span><span class="w">  </span><span class="nv">%rdx</span>
+<span class="w">        </span><span class="nf">retq</span>
+</pre></div>
+</div>
+<p>Each of the potentially relocated values has been spilled to the
+stack, and a record of that location has been recorded to the
+<a class="reference internal" href="StackMaps.html#stackmap-section"><span class="std std-ref">Stack Map section</span></a>.  If the garbage collector
+needs to update any of these pointers during the call, it knows
+exactly what to change.</p>
+<p>The relevant parts of the StackMap section for our example are:</p>
+<div class="highlight-gas notranslate"><div class="highlight"><pre><span></span><span class="c1"># This describes the call site</span>
+<span class="c1"># Stack Maps: callsite 2882400000</span>
+<span class="w">        </span><span class="na">.quad</span><span class="w"> </span><span class="mi">2882400000</span>
+<span class="w">        </span><span class="na">.long</span><span class="w"> </span><span class="no">.Ltmp1-test1</span>
+<span class="w">        </span><span class="na">.short</span><span class="w">        </span><span class="mi">0</span>
+<span class="c1"># .. 8 entries skipped ..</span>
+<span class="c1"># This entry describes the spill slot which is directly addressable</span>
+<span class="c1"># off RSP with offset 0.  Given the value was spilled with a pushq,</span>
+<span class="c1"># that makes sense.</span>
+<span class="c1"># Stack Maps:   Loc 8: Direct RSP     [encoding: .byte 2, .byte 8, .short 7, .int 0]</span>
+<span class="w">        </span><span class="na">.byte</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">        </span><span class="na">.byte</span><span class="w"> </span><span class="mi">8</span>
+<span class="w">        </span><span class="na">.short</span><span class="w">        </span><span class="mi">7</span>
+<span class="w">        </span><span class="na">.long</span><span class="w"> </span><span class="mi">0</span>
+</pre></div>
+</div>
+<p>This example was taken from the tests for the <a class="reference internal" href="#rewritestatepointsforgc"><span class="std std-ref">RewriteStatepointsForGC</span></a>
+utility pass.  As such, its full StackMap can be easily examined with the
+following command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>opt<span class="w"> </span>-rewrite-statepoints-for-gc<span class="w"> </span>test/Transforms/RewriteStatepointsForGC/basics.ll<span class="w"> </span>-S<span class="w"> </span><span class="p">|</span><span class="w"> </span>llc<span class="w"> </span>-debug-only<span class="o">=</span>stackmaps
+</pre></div>
+</div>
+</section>
+<section id="simplifications-for-non-relocating-gcs">
+<h3>Simplifications for Non-Relocating GCs<a class="headerlink" href="#simplifications-for-non-relocating-gcs" title="Link to this heading">#</a></h3>
+<p>Some of the complexity in the previous example is unnecessary for a
+non-relocating collector.  While a non-relocating collector still needs the
+information about which location contain live references, it doesn’t need to
+represent explicit relocations.  As such, the previously described explicit
+lowering can be simplified to remove all of the <code class="docutils literal notranslate"><span class="pre">gc.relocate</span></code> intrinsic
+calls and leave uses in terms of the original reference value.</p>
+<p>Here’s the explicit lowering for the previous example for a non-relocating
+collector:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@manual_frame</span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%a</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%b</span><span class="p">)</span><span class="w"> </span><span class="k">gc</span><span class="w"> </span><span class="s">&quot;statepoint-example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%alloca</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">alloca</span><span class="w"> </span><span class="kt">ptr</span>
+<span class="w">  </span><span class="nv">%allocb</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">alloca</span><span class="w"> </span><span class="kt">ptr</span>
+<span class="w">  </span><span class="k">store</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%a</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%alloca</span>
+<span class="w">  </span><span class="k">store</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%b</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%allocb</span>
+<span class="w">  </span><span class="k">call</span><span class="w"> </span><span class="k">token</span><span class="w"> </span><span class="p">(</span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span><span class="w"> </span><span class="vg">@llvm.experimental.gc.statepoint.p0</span><span class="p">(</span><span class="kt">i64</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="err">element</span><span class="k">type</span><span class="p">(</span><span class="k">void</span><span class="w"> </span><span class="p">())</span><span class="w"> </span><span class="vg">@func</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;gc-live&quot;</span><span class="w"> </span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%alloca</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%allocb</span><span class="p">)]</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="k">void</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="recording-on-stack-regions">
+<h3>Recording On Stack Regions<a class="headerlink" href="#recording-on-stack-regions" title="Link to this heading">#</a></h3>
+<p>In addition to the explicit relocation form previously described, the
+statepoint infrastructure also allows the listing of allocas within the gc
+pointer list.  Allocas can be listed with or without additional explicit gc
+pointer values and relocations.</p>
+<p>An alloca in the gc region of the statepoint operand list will cause the
+address of the stack region to be listed in the stackmap for the statepoint.</p>
+<p>This mechanism can be used to describe explicit spill slots if desired.  It
+then becomes the generator’s responsibility to ensure that values are
+spill/filled to/from the alloca as needed on either side of the safepoint.
+Note that there is no way to indicate a corresponding base pointer for such
+an explicitly specified spill slot, so usage is restricted to values for
+which the associated collector can derive the object base from the pointer
+itself.</p>
+<p>This mechanism can be used to describe on stack objects containing
+references provided that the collector can map from the location on the
+stack to a heap map describing the internal layout of the references the
+collector needs to process.</p>
+<p>WARNING: At the moment, this alternate form is not well exercised.  It is
+recommended to use this with caution and expect to have to fix a few bugs.
+In particular, the RewriteStatepointsForGC utility pass does not do
+anything for allocas today.</p>
+</section>
+<section id="base-derived-pointers">
+<h3>Base &amp; Derived Pointers<a class="headerlink" href="#base-derived-pointers" title="Link to this heading">#</a></h3>
+<p>A “base pointer” is one which points to the starting address of an allocation
+(object).  A “derived pointer” is one which is offset from a base pointer by
+some amount.  When relocating objects, a garbage collector needs to be able
+to relocate each derived pointer associated with an allocation to the same
+offset from the new address.</p>
+<p>“Interior derived pointers” remain within the bounds of the allocation
+they’re associated with.  As a result, the base object can be found at
+runtime provided the bounds of allocations are known to the runtime system.</p>
+<p>“Exterior derived pointers” are outside the bounds of the associated object;
+they may even fall within <em>another</em> allocations address range.  As a result,
+there is no way for a garbage collector to determine which allocation they
+are associated with at runtime and compiler support is needed.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">gc.relocate</span></code> intrinsic supports an explicit operand for describing the
+allocation associated with a derived pointer.  This operand is frequently
+referred to as the base operand, but does not strictly speaking have to be
+a base pointer, but it does need to lie within the bounds of the associated
+allocation.  Some collectors may require that the operand be an actual base
+pointer rather than merely an internal derived pointer. Note that during
+lowering both the base and derived pointer operands are required to be live
+over the associated call safepoint even if the base is otherwise unused
+afterwards.</p>
+</section>
+<section id="gc-transitions">
+<span id="gc-transition-args"></span><h3>GC Transitions<a class="headerlink" href="#gc-transitions" title="Link to this heading">#</a></h3>
+<p>As a practical consideration, many garbage-collected systems allow code that is
+collector-aware (“managed code”) to call code that is not collector-aware
+(“unmanaged code”). It is common that such calls must also be safepoints, since
+it is desirable to allow the collector to run during the execution of
+unmanaged code. Furthermore, it is common that coordinating the transition from
+managed to unmanaged code requires extra code generation at the call site to
+inform the collector of the transition. In order to support these needs, a
+statepoint may be marked as a GC transition, and data that is necessary to
+perform the transition (if any) may be provided as additional arguments to the
+statepoint.</p>
+<blockquote>
+<div><p>Note that although in many cases statepoints may be inferred to be GC
+transitions based on the function symbols involved (e.g. a call from a
+function with GC strategy “foo” to a function with GC strategy “bar”),
+indirect calls that are also GC transitions must also be supported. This
+requirement is the driving force behind the decision to require that GC
+transitions are explicitly marked.</p>
+</div></blockquote>
+<p>Let’s revisit the sample given above, this time treating the call to <code class="docutils literal notranslate"><span class="pre">&#64;foo</span></code>
+as a GC transition. Depending on our target, the transition code may need to
+access some extra state in order to inform the collector of the transition.
+Let’s assume a hypothetical GC–somewhat unimaginatively named “hypothetical-gc”
+–that requires that a TLS variable must be written to before and after a call
+to unmanaged code. The resulting relocation sequence is:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="vg">@flag</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">thread_local</span><span class="w"> </span><span class="k">global</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="k">align</span><span class="w"> </span><span class="m">4</span>
+
+<span class="k">define</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)*</span><span class="w"> </span><span class="vg">@test1</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="p">*</span><span class="nv">%obj</span><span class="p">)</span>
+<span class="w">       </span><span class="k">gc</span><span class="w"> </span><span class="s">&quot;hypothetical-gc&quot;</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">  </span><span class="nv nv-Anonymous">%0</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="k">token</span><span class="w"> </span><span class="p">(</span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="p">()*,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="p">...)*</span><span class="w"> </span><span class="vg">@llvm.experimental.gc.statepoint.p0f_isVoidf</span><span class="p">(</span><span class="kt">i64</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="p">()*</span><span class="w"> </span><span class="vg">@foo</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">*</span><span class="w"> </span><span class="vg">@Flag</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)*</span><span class="w"> </span><span class="nv">%obj</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">%obj.relocated</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="k">coldcc</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)*</span><span class="w"> </span><span class="vg">@llvm.experimental.gc.relocate.p1i8</span><span class="p">(</span><span class="k">token</span><span class="w"> </span><span class="nv nv-Anonymous">%0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">7</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">7</span><span class="p">)</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)*</span><span class="w"> </span><span class="nv">%obj.relocated</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>During lowering, this will result in an instruction selection DAG that looks
+something like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CALLSEQ_START</span>
+<span class="o">...</span>
+<span class="n">GC_TRANSITION_START</span> <span class="p">(</span><span class="n">lowered</span> <span class="n">i32</span> <span class="o">*</span><span class="nd">@Flag</span><span class="p">),</span> <span class="n">SRCVALUE</span> <span class="n">i32</span><span class="o">*</span> <span class="n">Flag</span>
+<span class="n">STATEPOINT</span>
+<span class="n">GC_TRANSITION_END</span> <span class="p">(</span><span class="n">lowered</span> <span class="n">i32</span> <span class="o">*</span><span class="nd">@Flag</span><span class="p">),</span> <span class="n">SRCVALUE</span> <span class="n">i32</span> <span class="o">*</span><span class="n">Flag</span>
+<span class="o">...</span>
+<span class="n">CALLSEQ_END</span>
+</pre></div>
+</div>
+<p>In order to generate the necessary transition code, the backend for each target
+supported by “hypothetical-gc” must be modified to lower <code class="docutils literal notranslate"><span class="pre">GC_TRANSITION_START</span></code>
+and <code class="docutils literal notranslate"><span class="pre">GC_TRANSITION_END</span></code> nodes appropriately when the “hypothetical-gc”
+strategy is in use for a particular function. Assuming that such lowering has
+been added for X86, the generated assembly would be:</p>
+<div class="highlight-gas notranslate"><div class="highlight"><pre><span></span><span class="w">        </span><span class="na">.globl</span><span class="w">        </span><span class="no">test1</span>
+<span class="w">        </span><span class="na">.align</span><span class="w">        </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">0x90</span>
+<span class="w">        </span><span class="nf">pushq</span><span class="w"> </span><span class="nv">%rax</span>
+<span class="w">        </span><span class="nf">movl</span><span class="w"> </span><span class="no">$1</span><span class="p">,</span><span class="w"> </span><span class="nv">%fs</span><span class="p">:</span><span class="no">Flag@TPOFF</span>
+<span class="w">        </span><span class="nf">callq</span><span class="w"> </span><span class="no">foo</span>
+<span class="w">        </span><span class="nf">movl</span><span class="w"> </span><span class="no">$0</span><span class="p">,</span><span class="w"> </span><span class="nv">%fs</span><span class="p">:</span><span class="no">Flag@TPOFF</span>
+<span class="nl">.Ltmp1:</span>
+<span class="w">        </span><span class="nf">movq</span><span class="w">  </span><span class="p">(</span><span class="nv">%rsp</span><span class="p">),</span><span class="w"> </span><span class="nv">%rax</span><span class="w">  </span><span class="c1"># This load is redundant (oops!)</span>
+<span class="w">        </span><span class="nf">popq</span><span class="w">  </span><span class="nv">%rdx</span>
+<span class="w">        </span><span class="nf">retq</span>
+</pre></div>
+</div>
+<p>Note that the design as presented above is not fully implemented: in particular,
+strategy-specific lowering is not present, and all GC transitions are emitted as
+as single no-op before and after the call instruction. These no-ops are often
+removed by the backend during dead machine instruction elimination.</p>
+<p>Before the abstract machine model is lowered to the explicit statepoint model
+of relocations by the <a class="reference internal" href="#rewritestatepointsforgc"><span class="std std-ref">RewriteStatepointsForGC</span></a> pass it is possible for
+any derived pointer to get its base pointer and offset from the base pointer
+by using the <code class="docutils literal notranslate"><span class="pre">gc.get.pointer.base</span></code> and the <code class="docutils literal notranslate"><span class="pre">gc.get.pointer.offset</span></code>
+intrinsics respectively. These intrinsics are inlined by the
+<a class="reference internal" href="#rewritestatepointsforgc"><span class="std std-ref">RewriteStatepointsForGC</span></a> pass and must not be used after this pass.</p>
+</section>
+</section>
+<section id="stack-map-format">
+<span id="statepoint-stackmap-format"></span><h2>Stack Map Format<a class="headerlink" href="#stack-map-format" title="Link to this heading">#</a></h2>
+<p>Locations for each pointer value which may need read and/or updated by
+the runtime or collector are provided in a separate section of the
+generated object file as specified in the PatchPoint documentation.
+This special section is encoded per the
+<a class="reference internal" href="StackMaps.html#stackmap-format"><span class="std std-ref">Stack Map format</span></a>.</p>
+<p>The general expectation is that a JIT compiler will parse and discard this
+format; it is not particularly memory efficient.  If you need an alternate
+format (e.g. for an ahead of time compiler), see discussion under
+:ref: <cite>open work items &lt;OpenWork&gt;</cite> below.</p>
+<p>Each statepoint generates the following Locations:</p>
+<ul class="simple">
+<li><p>Constant which describes the calling convention of the call target. This
+constant is a valid <a class="reference internal" href="LangRef.html#callingconv"><span class="std std-ref">calling convention identifier</span></a> for
+the version of LLVM used to generate the stackmap. No additional compatibility
+guarantees are made for this constant over what LLVM provides elsewhere w.r.t.
+these identifiers.</p></li>
+<li><p>Constant which describes the flags passed to the statepoint intrinsic</p></li>
+<li><p>Constant which describes number of following deopt <em>Locations</em> (not
+operands).  Will be 0 if no “deopt” bundle is provided.</p></li>
+<li><p>Variable number of Locations, one for each deopt parameter listed in the
+“deopt” operand bundle.  At the moment, only deopt parameters with a bitwidth
+of 64 bits or less are supported.  Values of a type larger than 64 bits can be
+specified and reported only if a) the value is constant at the call site, and
+b) the constant can be represented with less than 64 bits (assuming zero
+extension to the original bitwidth).</p></li>
+<li><p>Variable number of relocation records, each of which consists of
+exactly two Locations.  Relocation records are described in detail
+below.</p></li>
+</ul>
+<p>Each relocation record provides sufficient information for a collector to
+relocate one or more derived pointers.  Each record consists of a pair of
+Locations.  The second element in the record represents the pointer (or
+pointers) which need updated.  The first element in the record provides a
+pointer to the base of the object with which the pointer(s) being relocated is
+associated.  This information is required for handling generalized derived
+pointers since a pointer may be outside the bounds of the original allocation,
+but still needs to be relocated with the allocation.  Additionally:</p>
+<ul class="simple">
+<li><p>It is guaranteed that the base pointer must also appear explicitly as a
+relocation pair if used after the statepoint.</p></li>
+<li><p>There may be fewer relocation records then gc parameters in the IR
+statepoint. Each <em>unique</em> pair will occur at least once; duplicates
+are possible.</p></li>
+<li><p>The Locations within each record may either be of pointer size or a
+multiple of pointer size.  In the later case, the record must be
+interpreted as describing a sequence of pointers and their corresponding
+base pointers. If the Location is of size N x sizeof(pointer), then
+there will be N records of one pointer each contained within the Location.
+Both Locations in a pair can be assumed to be of the same size.</p></li>
+</ul>
+<p>Note that the Locations used in each section may describe the same
+physical location.  e.g. A stack slot may appear as a deopt location,
+a gc base pointer, and a gc derived pointer.</p>
+<p>The LiveOut section of the StkMapRecord will be empty for a statepoint
+record.</p>
+</section>
+<section id="safepoint-semantics-verification">
+<h2>Safepoint Semantics &amp; Verification<a class="headerlink" href="#safepoint-semantics-verification" title="Link to this heading">#</a></h2>
+<p>The fundamental correctness property for the compiled code’s
+correctness w.r.t. the garbage collector is a dynamic one.  It must be
+the case that there is no dynamic trace such that an operation
+involving a potentially relocated pointer is observably-after a
+safepoint which could relocate it.  ‘observably-after’ is this usage
+means that an outside observer could observe this sequence of events
+in a way which precludes the operation being performed before the
+safepoint.</p>
+<p>To understand why this ‘observable-after’ property is required,
+consider a null comparison performed on the original copy of a
+relocated pointer.  Assuming that control flow follows the safepoint,
+there is no way to observe externally whether the null comparison is
+performed before or after the safepoint.  (Remember, the original
+Value is unmodified by the safepoint.)  The compiler is free to make
+either scheduling choice.</p>
+<p>The actual correctness property implemented is slightly stronger than
+this.  We require that there be no <em>static path</em> on which a
+potentially relocated pointer is ‘observably-after’ it may have been
+relocated.  This is slightly stronger than is strictly necessary (and
+thus may disallow some otherwise valid programs), but greatly
+simplifies reasoning about correctness of the compiled code.</p>
+<p>By construction, this property will be upheld by the optimizer if
+correctly established in the source IR.  This is a key invariant of
+the design.</p>
+<p>The existing IR Verifier pass has been extended to check most of the
+local restrictions on the intrinsics mentioned in their respective
+documentation.  The current implementation in LLVM does not check the
+key relocation invariant, but this is ongoing work on developing such
+a verifier.  Please ask on llvm-dev if you’re interested in
+experimenting with the current version.</p>
+</section>
+<section id="utility-passes-for-safepoint-insertion">
+<span id="statepoint-utilities"></span><h2>Utility Passes for Safepoint Insertion<a class="headerlink" href="#utility-passes-for-safepoint-insertion" title="Link to this heading">#</a></h2>
+<section id="rewritestatepointsforgc">
+<span id="id1"></span><h3>RewriteStatepointsForGC<a class="headerlink" href="#rewritestatepointsforgc" title="Link to this heading">#</a></h3>
+<p>The pass RewriteStatepointsForGC transforms a function’s IR to lower from the
+abstract machine model described above to the explicit statepoint model of
+relocations.  To do this, it replaces all calls or invokes of functions which
+might contain a safepoint poll with a <code class="docutils literal notranslate"><span class="pre">gc.statepoint</span></code> and associated full
+relocation sequence, including all required <code class="docutils literal notranslate"><span class="pre">gc.relocates</span></code>.</p>
+<p>This pass only applies to GCStrategy instances where the <code class="docutils literal notranslate"><span class="pre">UseRS4GC</span></code> flag
+is set. The two builtin GC strategies with this set are the
+“statepoint-example” and “coreclr” strategies.</p>
+<p>As an example, given this code:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="vg">@test1</span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%obj</span><span class="p">)</span>
+<span class="w">       </span><span class="k">gc</span><span class="w"> </span><span class="s">&quot;statepoint-example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@foo</span><span class="p">()</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%obj</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The pass would produce this IR:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="vg">@test_rs4gc</span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%obj</span><span class="p">)</span><span class="w"> </span><span class="k">gc</span><span class="w"> </span><span class="s">&quot;statepoint-example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%statepoint_token</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="k">token</span><span class="w"> </span><span class="p">(</span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span><span class="w"> </span><span class="vg">@llvm.experimental.gc.statepoint.p0</span><span class="p">(</span><span class="kt">i64</span><span class="w"> </span><span class="m">2882400000</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="err">element</span><span class="k">type</span><span class="p">(</span><span class="k">void</span><span class="w"> </span><span class="p">())</span><span class="w"> </span><span class="vg">@foo</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s">&quot;gc-live&quot;</span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%obj</span><span class="p">)</span><span class="w"> </span><span class="p">]</span>
+<span class="w">  </span><span class="nv">%obj.relocated</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="k">coldcc</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="vg">@llvm.experimental.gc.relocate.p1</span><span class="p">(</span><span class="k">token</span><span class="w"> </span><span class="nv">%statepoint_token</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="c">; (%obj, %obj)</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%obj.relocated</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In the above examples, the addrspace(1) marker on the pointers is the mechanism
+that the <code class="docutils literal notranslate"><span class="pre">statepoint-example</span></code> GC strategy uses to distinguish references from
+non references.  This is controlled via GCStrategy::isGCManagedPointer. The
+<code class="docutils literal notranslate"><span class="pre">statepoint-example</span></code> and <code class="docutils literal notranslate"><span class="pre">coreclr</span></code> strategies (the only two default
+strategies that support statepoints) both use addrspace(1) to determine which
+pointers are references, however custom strategies don’t have to follow this
+convention.</p>
+<p>This pass can be used an utility function by a language frontend that doesn’t
+want to manually reason about liveness, base pointers, or relocation when
+constructing IR.  As currently implemented, RewriteStatepointsForGC must be
+run after SSA construction (i.e. mem2ref).</p>
+<p>RewriteStatepointsForGC will ensure that appropriate base pointers are listed
+for every relocation created.  It will do so by duplicating code as needed to
+propagate the base pointer associated with each pointer being relocated to
+the appropriate safepoints.  The implementation assumes that the following
+IR constructs produce base pointers: loads from the heap, addresses of global
+variables, function arguments, function return values. Constant pointers (such
+as null) are also assumed to be base pointers.  In practice, this constraint
+can be relaxed to producing interior derived pointers provided the target
+collector can find the associated allocation from an arbitrary interior
+derived pointer.</p>
+<p>By default RewriteStatepointsForGC passes in <code class="docutils literal notranslate"><span class="pre">0xABCDEF00</span></code> as the statepoint
+ID and <code class="docutils literal notranslate"><span class="pre">0</span></code> as the number of patchable bytes to the newly constructed
+<code class="docutils literal notranslate"><span class="pre">gc.statepoint</span></code>.  These values can be configured on a per-callsite
+basis using the attributes <code class="docutils literal notranslate"><span class="pre">&quot;statepoint-id&quot;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">&quot;statepoint-num-patch-bytes&quot;</span></code>.  If a call site is marked with a
+<code class="docutils literal notranslate"><span class="pre">&quot;statepoint-id&quot;</span></code> function attribute and its value is a positive
+integer (represented as a string), then that value is used as the ID
+of the newly constructed <code class="docutils literal notranslate"><span class="pre">gc.statepoint</span></code>.  If a call site is marked
+with a <code class="docutils literal notranslate"><span class="pre">&quot;statepoint-num-patch-bytes&quot;</span></code> function attribute and its
+value is a positive integer, then that value is used as the ‘num patch
+bytes’ parameter of the newly constructed <code class="docutils literal notranslate"><span class="pre">gc.statepoint</span></code>.  The
+<code class="docutils literal notranslate"><span class="pre">&quot;statepoint-id&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;statepoint-num-patch-bytes&quot;</span></code> attributes
+are not propagated to the <code class="docutils literal notranslate"><span class="pre">gc.statepoint</span></code> call or invoke if they
+could be successfully parsed.</p>
+<p>In practice, RewriteStatepointsForGC should be run much later in the pass
+pipeline, after most optimization is already done.  This helps to improve
+the quality of the generated code when compiled with garbage collection support.</p>
+</section>
+<section id="rewritestatepointsforgc-intrinsic-lowering">
+<span id="id2"></span><h3>RewriteStatepointsForGC intrinsic lowering<a class="headerlink" href="#rewritestatepointsforgc-intrinsic-lowering" title="Link to this heading">#</a></h3>
+<p>As a part of lowering to the explicit model of relocations
+RewriteStatepointsForGC performs GC specific lowering for the following
+intrinsics:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gc.get.pointer.base</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gc.get.pointer.offset</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">llvm.memcpy.element.unordered.atomic.*</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">llvm.memmove.element.unordered.atomic.*</span></code></p></li>
+</ul>
+<p>There are two possible lowerings for the memcpy and memmove operations:
+GC leaf lowering and GC parseable lowering. If a call is explicitly marked with
+“gc-leaf-function” attribute the call is lowered to a GC leaf call to
+‘<code class="docutils literal notranslate"><span class="pre">__llvm_memcpy_element_unordered_atomic_*</span></code>’ or
+‘<code class="docutils literal notranslate"><span class="pre">__llvm_memmove_element_unordered_atomic_*</span></code>’ symbol. Such a call can not
+take a safepoint. Otherwise, the call is made GC parseable by wrapping the
+call into a statepoint. This makes it possible to take a safepoint during
+copy operation. Note that a GC parseable copy operation is not required to
+take a safepoint. For example, a short copy operation may be performed without
+taking a safepoint.</p>
+<p>GC parseable calls to ‘<code class="docutils literal notranslate"><span class="pre">llvm.memcpy.element.unordered.atomic.*</span></code>’,
+‘<code class="docutils literal notranslate"><span class="pre">llvm.memmove.element.unordered.atomic.*</span></code>’ intrinsics are lowered to calls
+to ‘<code class="docutils literal notranslate"><span class="pre">__llvm_memcpy_element_unordered_atomic_safepoint_*</span></code>’,
+‘<code class="docutils literal notranslate"><span class="pre">__llvm_memmove_element_unordered_atomic_safepoint_*</span></code>’ symbols respectively.
+This way the runtime can provide implementations of copy operations with and
+without safepoints.</p>
+<p>GC parseable lowering also involves adjusting the arguments for the call.
+Memcpy and memmove intrinsics take derived pointers as source and destination
+arguments. If a copy operation takes a safepoint it might need to relocate the
+underlying source and destination objects. This requires the corresponding base
+pointers to be available in the copy operation. In order to make the base
+pointers available RewriteStatepointsForGC replaces derived pointers with base
+pointer and offset pairs. For example:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">declare</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@__llvm_memcpy_element_unordered_atomic_safepoint_1</span><span class="p">(</span>
+<span class="w">  </span><span class="kt">i8</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)*</span><span class="w">  </span><span class="nv">%dest_base</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="nv">%dest_offset</span><span class="p">,</span>
+<span class="w">  </span><span class="kt">i8</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)*</span><span class="w">  </span><span class="nv">%src_base</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="nv">%src_offset</span><span class="p">,</span>
+<span class="w">  </span><span class="kt">i64</span><span class="w"> </span><span class="nv">%length</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="placesafepoints">
+<span id="id3"></span><h3>PlaceSafepoints<a class="headerlink" href="#placesafepoints" title="Link to this heading">#</a></h3>
+<p>The pass PlaceSafepoints inserts safepoint polls sufficient to ensure running
+code checks for a safepoint request on a timely manner. This pass is expected
+to be run before RewriteStatepointsForGC and thus does not produce full
+relocation sequences.</p>
+<p>As an example, given input IR of the following:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@test</span><span class="p">()</span><span class="w"> </span><span class="k">gc</span><span class="w"> </span><span class="s">&quot;statepoint-example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@foo</span><span class="p">()</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="k">void</span>
+<span class="p">}</span>
+
+<span class="k">declare</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@do_safepoint</span><span class="p">()</span>
+<span class="k">define</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@gc.safepoint_poll</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@do_safepoint</span><span class="p">()</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="k">void</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This pass would produce the following IR:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@test</span><span class="p">()</span><span class="w"> </span><span class="k">gc</span><span class="w"> </span><span class="s">&quot;statepoint-example&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@do_safepoint</span><span class="p">()</span>
+<span class="w">  </span><span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@foo</span><span class="p">()</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="k">void</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In this case, we’ve added an (unconditional) entry safepoint poll.  Note that
+despite appearances, the entry poll is not necessarily redundant.  We’d have to
+know that <code class="docutils literal notranslate"><span class="pre">foo</span></code> and <code class="docutils literal notranslate"><span class="pre">test</span></code> were not mutually recursive for the poll to be
+redundant.  In practice, you’d probably want to your poll definition to contain
+a conditional branch of some form.</p>
+<p>At the moment, PlaceSafepoints can insert safepoint polls at method entry and
+loop backedges locations.  Extending this to work with return polls would be
+straight forward if desired.</p>
+<p>PlaceSafepoints includes a number of optimizations to avoid placing safepoint
+polls at particular sites unless needed to ensure timely execution of a poll
+under normal conditions.  PlaceSafepoints does not attempt to ensure timely
+execution of a poll under worst case conditions such as heavy system paging.</p>
+<p>The implementation of a safepoint poll action is specified by looking up a
+function of the name <code class="docutils literal notranslate"><span class="pre">gc.safepoint_poll</span></code> in the containing Module.  The body
+of this function is inserted at each poll site desired.  While calls or invokes
+inside this method are transformed to a <code class="docutils literal notranslate"><span class="pre">gc.statepoints</span></code>, recursive poll
+insertion is not performed.</p>
+<p>This pass is useful for any language frontend which only has to support
+garbage collection semantics at safepoints.  If you need other abstract
+frame information at safepoints (e.g. for deoptimization or introspection),
+you can insert safepoint polls in the frontend.  If you have the later case,
+please ask on llvm-dev for suggestions.  There’s been a good amount of work
+done on making such a scheme work well in practice which is not yet documented
+here.</p>
+</section>
+</section>
+<section id="supported-architectures">
+<h2>Supported Architectures<a class="headerlink" href="#supported-architectures" title="Link to this heading">#</a></h2>
+<p>Support for statepoint generation requires some code for each backend.
+Today, only Aarch64 and X86_64 are supported.</p>
+</section>
+<section id="limitations-and-half-baked-ideas">
+<span id="openwork"></span><h2>Limitations and Half Baked Ideas<a class="headerlink" href="#limitations-and-half-baked-ideas" title="Link to this heading">#</a></h2>
+<section id="mixing-references-and-raw-pointers">
+<h3>Mixing References and Raw Pointers<a class="headerlink" href="#mixing-references-and-raw-pointers" title="Link to this heading">#</a></h3>
+<p>Support for languages which allow unmanaged pointers to garbage collected
+objects (i.e. pass a pointer to an object to a C routine) in the abstract
+machine model.  At the moment, the best idea on how to approach this
+involves an intrinsic or opaque function which hides the connection between
+the reference value and the raw pointer.  The problem is that having a
+ptrtoint or inttoptr cast (which is common for such use cases) breaks the
+rules used for inferring base pointers for arbitrary references when
+lowering out of the abstract model to the explicit physical model.  Note
+that a frontend which lowers directly to the physical model doesn’t have
+any problems here.</p>
+</section>
+<section id="objects-on-the-stack">
+<h3>Objects on the Stack<a class="headerlink" href="#objects-on-the-stack" title="Link to this heading">#</a></h3>
+<p>As noted above, the explicit lowering supports objects allocated on the
+stack provided the collector can find a heap map given the stack address.</p>
+<p>The missing pieces are a) integration with rewriting (RS4GC) from the
+abstract machine model and b) support for optionally decomposing on stack
+objects so as not to require heap maps for them.  The later is required
+for ease of integration with some collectors.</p>
+</section>
+<section id="lowering-quality-and-representation-overhead">
+<h3>Lowering Quality and Representation Overhead<a class="headerlink" href="#lowering-quality-and-representation-overhead" title="Link to this heading">#</a></h3>
+<p>The current statepoint lowering is known to be somewhat poor.  In the very
+long term, we’d like to integrate statepoints with the register allocator;
+in the near term this is unlikely to happen.  We’ve found the quality of
+lowering to be relatively unimportant as hot-statepoints are almost always
+inliner bugs.</p>
+<p>Concerns have been raised that the statepoint representation results in a
+large amount of IR being produced for some examples and that this
+contributes to higher than expected memory usage and compile times.  There’s
+no immediate plans to make changes due to this, but alternate models may be
+explored in the future.</p>
+</section>
+<section id="relocations-along-exceptional-edges">
+<h3>Relocations Along Exceptional Edges<a class="headerlink" href="#relocations-along-exceptional-edges" title="Link to this heading">#</a></h3>
+<p>Relocations along exceptional paths are currently broken in ToT.  In
+particular, there is current no way to represent a rethrow on a path which
+also has relocations.  See <a class="reference external" href="https://groups.google.com/forum/#!topic/llvm-dev/AE417XjgxvI">this llvm-dev discussion</a> for more
+detail.</p>
+</section>
+</section>
+<section id="bugs-and-enhancements">
+<h2>Bugs and Enhancements<a class="headerlink" href="#bugs-and-enhancements" title="Link to this heading">#</a></h2>
+<p>Currently known bugs and enhancements under consideration can be
+tracked by performing a <a class="reference external" href="https://bugs.llvm.org/buglist.cgi?cmdtype=runnamed&amp;namedcmd=Statepoint%20Bugs&amp;list_id=64342">bugzilla search</a>
+for [Statepoint] in the summary field. When filing new bugs, please
+use this tag so that interested parties see the newly filed bug.  As
+with most LLVM features, design discussions take place on the <a class="reference external" href="https://discourse.llvm.org">Discourse forums</a> and patches
+should be sent to <a class="reference external" href="http://lists.llvm.org/mailman/listinfo/llvm-commits">llvm-commits</a> for review.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="LibFuzzer.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">libFuzzer – a library for coverage-guided fuzz testing.</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="GarbageCollection.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Garbage Collection with LLVM</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Garbage Collection Safepoints in LLVM</a><ul>
+<li><a class="reference internal" href="#status">Status</a></li>
+<li><a class="reference internal" href="#overview-core-concepts">Overview &amp; Core Concepts</a><ul>
+<li><a class="reference internal" href="#abstract-machine-model">Abstract Machine Model</a></li>
+<li><a class="reference internal" href="#explicit-representation">Explicit Representation</a></li>
+<li><a class="reference internal" href="#simplifications-for-non-relocating-gcs">Simplifications for Non-Relocating GCs</a></li>
+<li><a class="reference internal" href="#recording-on-stack-regions">Recording On Stack Regions</a></li>
+<li><a class="reference internal" href="#base-derived-pointers">Base &amp; Derived Pointers</a></li>
+<li><a class="reference internal" href="#gc-transitions">GC Transitions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#stack-map-format">Stack Map Format</a></li>
+<li><a class="reference internal" href="#safepoint-semantics-verification">Safepoint Semantics &amp; Verification</a></li>
+<li><a class="reference internal" href="#utility-passes-for-safepoint-insertion">Utility Passes for Safepoint Insertion</a><ul>
+<li><a class="reference internal" href="#rewritestatepointsforgc">RewriteStatepointsForGC</a></li>
+<li><a class="reference internal" href="#rewritestatepointsforgc-intrinsic-lowering">RewriteStatepointsForGC intrinsic lowering</a></li>
+<li><a class="reference internal" href="#placesafepoints">PlaceSafepoints</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#supported-architectures">Supported Architectures</a></li>
+<li><a class="reference internal" href="#limitations-and-half-baked-ideas">Limitations and Half Baked Ideas</a><ul>
+<li><a class="reference internal" href="#mixing-references-and-raw-pointers">Mixing References and Raw Pointers</a></li>
+<li><a class="reference internal" href="#objects-on-the-stack">Objects on the Stack</a></li>
+<li><a class="reference internal" href="#lowering-quality-and-representation-overhead">Lowering Quality and Representation Overhead</a></li>
+<li><a class="reference internal" href="#relocations-along-exceptional-edges">Relocations Along Exceptional Edges</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bugs-and-enhancements">Bugs and Enhancements</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=7d86a446"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

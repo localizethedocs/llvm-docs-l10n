@@ -1,0 +1,949 @@
+<!doctype html>
+<html class="no-js" lang="zh-TW" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜尋" href="search.html" /><link rel="next" title="FaultMaps and implicit checks" href="FaultMaps.html" /><link rel="prev" title="XRay Instrumentation" href="XRay.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/XRayExample.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Debugging with XRay - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜尋" name="q" aria-label="搜尋">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">常見問題集（FAQ）</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="Reference.html">參考</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of 參考</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural 『diff』</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">簡介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM 語言參考手冊</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM 測試基礎設施指南</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM 測試基礎設施指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="UserGuides.html">使用者指南</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of 使用者指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">使用 CMake 建置 LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">進階建置組態</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen 概覽</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen 概覽</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU 指令語法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub 使用者指南</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse 遷移指南</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM 開發者方針</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/XRayExample.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="debugging-with-xray">
+<h1>Debugging with XRay<a class="headerlink" href="#debugging-with-xray" title="Link to this heading">#</a></h1>
+<p>This document shows an example of how you would go about analyzing applications
+built with XRay instrumentation. Here we will attempt to debug <code class="docutils literal notranslate"><span class="pre">llc</span></code>
+compiling some sample LLVM IR generated by Clang.</p>
+<section id="building-with-xray">
+<h2>Building with XRay<a class="headerlink" href="#building-with-xray" title="Link to this heading">#</a></h2>
+<p>To debug an application with XRay instrumentation, we need to build it with a
+Clang that supports the <code class="docutils literal notranslate"><span class="pre">-fxray-instrument</span></code> option. See <a class="reference external" href="XRay.html">XRay</a>
+for more technical details of how XRay works for background information.</p>
+<p>In our example, we need to add <code class="docutils literal notranslate"><span class="pre">-fxray-instrument</span></code> to the list of flags
+passed to Clang when building a binary. Note that we need to link with Clang as
+well to get the XRay runtime linked in appropriately. For building <code class="docutils literal notranslate"><span class="pre">llc</span></code> with
+XRay, we do something similar below for our LLVM build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ mkdir -p llvm-build &amp;&amp; cd llvm-build
+# Assume that the LLVM sources are at ../llvm
+$ cmake -GNinja ../llvm -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_FLAGS_RELEASE=&quot;-fxray-instrument&quot; -DCMAKE_CXX_FLAGS=&quot;-fxray-instrument&quot; \
+# Once this finishes, we should build llc
+$ ninja llc
+</pre></div>
+</div>
+<p>To verify that we have an XRay instrumented binary, we can use <code class="docutils literal notranslate"><span class="pre">objdump</span></code> to
+look for the <code class="docutils literal notranslate"><span class="pre">xray_instr_map</span></code> section.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ objdump -h -j xray_instr_map ./bin/llc
+./bin/llc:     file format elf64-x86-64
+
+Sections:
+Idx Name          Size      VMA               LMA               File off  Algn
+ 14 xray_instr_map 00002fc0  00000000041516c6  00000000041516c6  03d516c6  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+</pre></div>
+</div>
+</section>
+<section id="getting-traces">
+<h2>Getting Traces<a class="headerlink" href="#getting-traces" title="Link to this heading">#</a></h2>
+<p>By default, XRay does not write out the trace files or patch the application
+before main starts. If we run <code class="docutils literal notranslate"><span class="pre">llc</span></code> it should work like a normally built
+binary. If we want to get a full trace of the application’s operations (of the
+functions we do end up instrumenting with XRay) then we need to enable XRay
+at application start. To do this, XRay checks the <code class="docutils literal notranslate"><span class="pre">XRAY_OPTIONS</span></code> environment
+variable.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># The following doesn&#39;t create an XRay trace by default.
+$ ./bin/llc input.ll
+
+# We need to set the XRAY_OPTIONS to enable some features.
+$ XRAY_OPTIONS=&quot;patch_premain=true xray_mode=xray-basic verbosity=1&quot; ./bin/llc input.ll
+==69819==XRay: Log file in &#39;xray-log.llc.m35qPB&#39;
+</pre></div>
+</div>
+<p>At this point we now have an XRay trace we can start analysing.</p>
+</section>
+<section id="the-llvm-xray-tool">
+<h2>The <code class="docutils literal notranslate"><span class="pre">llvm-xray</span></code> Tool<a class="headerlink" href="#the-llvm-xray-tool" title="Link to this heading">#</a></h2>
+<p>Having a trace then allows us to do basic accounting of the functions that were
+instrumented, and how much time we’re spending in parts of the code. To make
+sense of this data, we use the <code class="docutils literal notranslate"><span class="pre">llvm-xray</span></code> tool which has a few subcommands
+to help us understand our trace.</p>
+<p>One of the things we can do is to get an accounting of the functions that have
+been instrumented. We can see an example accounting with <code class="docutils literal notranslate"><span class="pre">llvm-xray</span> <span class="pre">account</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ llvm-xray account xray-log.llc.m35qPB --top=10 --sort=sum --sortorder=dsc --instr_map=./bin/llc
+Functions with latencies: 29
+   funcid      count [      min,       med,       90p,       99p,       max]       sum  function
+      187        360 [ 0.000000,  0.000001,  0.000014,  0.000032,  0.000075]  0.001596  LLLexer.cpp:446:0: llvm::LLLexer::LexIdentifier()
+       85        130 [ 0.000000,  0.000000,  0.000018,  0.000023,  0.000156]  0.000799  X86ISelDAGToDAG.cpp:1984:0: (anonymous namespace)::X86DAGToDAGISel::Select(llvm::SDNode*)
+      138        130 [ 0.000000,  0.000000,  0.000017,  0.000155,  0.000155]  0.000774  SelectionDAGISel.cpp:2963:0: llvm::SelectionDAGISel::SelectCodeCommon(llvm::SDNode*, unsigned char const*, unsigned int)
+      188        103 [ 0.000000,  0.000000,  0.000003,  0.000123,  0.000214]  0.000737  LLParser.cpp:2692:0: llvm::LLParser::ParseValID(llvm::ValID&amp;, llvm::LLParser::PerFunctionState*)
+       88          1 [ 0.000562,  0.000562,  0.000562,  0.000562,  0.000562]  0.000562  X86ISelLowering.cpp:83:0: llvm::X86TargetLowering::X86TargetLowering(llvm::X86TargetMachine const&amp;, llvm::X86Subtarget const&amp;)
+      125        102 [ 0.000001,  0.000003,  0.000010,  0.000017,  0.000049]  0.000471  Verifier.cpp:3714:0: (anonymous namespace)::Verifier::visitInstruction(llvm::Instruction&amp;)
+       90          8 [ 0.000023,  0.000035,  0.000106,  0.000106,  0.000106]  0.000342  X86ISelLowering.cpp:3363:0: llvm::X86TargetLowering::LowerCall(llvm::TargetLowering::CallLoweringInfo&amp;, llvm::SmallVectorImpl&lt;llvm::SDValue&gt;&amp;) const
+      124         32 [ 0.000003,  0.000007,  0.000016,  0.000041,  0.000041]  0.000310  Verifier.cpp:1967:0: (anonymous namespace)::Verifier::visitFunction(llvm::Function const&amp;)
+      123          1 [ 0.000302,  0.000302,  0.000302,  0.000302,  0.000302]  0.000302  LLVMContextImpl.cpp:54:0: llvm::LLVMContextImpl::~LLVMContextImpl()
+      139         46 [ 0.000000,  0.000002,  0.000006,  0.000008,  0.000019]  0.000138  TargetLowering.cpp:506:0: llvm::TargetLowering::SimplifyDemandedBits(llvm::SDValue, llvm::APInt const&amp;, llvm::APInt&amp;, llvm::APInt&amp;, llvm::TargetLowering::TargetLoweringOpt&amp;, unsigned int, bool) const
+</pre></div>
+</div>
+<p>This shows us that for our input file, <code class="docutils literal notranslate"><span class="pre">llc</span></code> spent the most cumulative time
+in the lexer (a total of 1 millisecond). If we wanted for example to work with
+this data in a spreadsheet, we can output the results as CSV using the
+<code class="docutils literal notranslate"><span class="pre">-format=csv</span></code> option to the command for further analysis.</p>
+<p>If we want to get a textual representation of the raw trace we can use the
+<code class="docutils literal notranslate"><span class="pre">llvm-xray</span> <span class="pre">convert</span></code> tool to get YAML output. The first few lines of that
+output for an example trace would look like the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ llvm-xray convert -f yaml --symbolize --instr_map=./bin/llc xray-log.llc.m35qPB
+---
+header:
+  version:         1
+  type:            0
+  constant-tsc:    true
+  nonstop-tsc:     true
+  cycle-frequency: 2601000000
+records:
+  - { type: 0, func-id: 110, function: __cxx_global_var_init.8, cpu: 37, thread: 69819, kind: function-enter, tsc: 5434426023268520 }
+  - { type: 0, func-id: 110, function: __cxx_global_var_init.8, cpu: 37, thread: 69819, kind: function-exit, tsc: 5434426023523052 }
+  - { type: 0, func-id: 164, function: __cxx_global_var_init, cpu: 37, thread: 69819, kind: function-enter, tsc: 5434426029925386 }
+  - { type: 0, func-id: 164, function: __cxx_global_var_init, cpu: 37, thread: 69819, kind: function-exit, tsc: 5434426030031128 }
+  - { type: 0, func-id: 142, function: &#39;(anonymous namespace)::CommandLineParser::ParseCommandLineOptions(int, char const* const*, llvm::StringRef, llvm::raw_ostream*)&#39;, cpu: 37, thread: 69819, kind: function-enter, tsc: 5434426046951388 }
+  - { type: 0, func-id: 142, function: &#39;(anonymous namespace)::CommandLineParser::ParseCommandLineOptions(int, char const* const*, llvm::StringRef, llvm::raw_ostream*)&#39;, cpu: 37, thread: 69819, kind: function-exit, tsc: 5434426047282020 }
+  - { type: 0, func-id: 187, function: &#39;llvm::LLLexer::LexIdentifier()&#39;, cpu: 37, thread: 69819, kind: function-enter, tsc: 5434426047857332 }
+  - { type: 0, func-id: 187, function: &#39;llvm::LLLexer::LexIdentifier()&#39;, cpu: 37, thread: 69819, kind: function-exit, tsc: 5434426047984152 }
+  - { type: 0, func-id: 187, function: &#39;llvm::LLLexer::LexIdentifier()&#39;, cpu: 37, thread: 69819, kind: function-enter, tsc: 5434426048036584 }
+  - { type: 0, func-id: 187, function: &#39;llvm::LLLexer::LexIdentifier()&#39;, cpu: 37, thread: 69819, kind: function-exit, tsc: 5434426048042292 }
+  - { type: 0, func-id: 187, function: &#39;llvm::LLLexer::LexIdentifier()&#39;, cpu: 37, thread: 69819, kind: function-enter, tsc: 5434426048055056 }
+  - { type: 0, func-id: 187, function: &#39;llvm::LLLexer::LexIdentifier()&#39;, cpu: 37, thread: 69819, kind: function-exit, tsc: 5434426048067316 }
+</pre></div>
+</div>
+</section>
+<section id="controlling-fidelity">
+<h2>Controlling Fidelity<a class="headerlink" href="#controlling-fidelity" title="Link to this heading">#</a></h2>
+<p>So far in our examples, we haven’t been getting full coverage of the functions
+we have in the binary. To get that, we need to modify the compiler flags so
+that we can instrument more (if not all) the functions we have in the binary.
+We have two options for doing that, and we explore both of these below.</p>
+<section id="instruction-threshold">
+<h3>Instruction Threshold<a class="headerlink" href="#instruction-threshold" title="Link to this heading">#</a></h3>
+<p>The first 「blunt」 way of doing this is by setting the minimum threshold for
+function bodies to 1. We can do that with the
+<code class="docutils literal notranslate"><span class="pre">-fxray-instruction-threshold=N</span></code> flag when building our binary. We rebuild
+<code class="docutils literal notranslate"><span class="pre">llc</span></code> with this option and observe the results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ rm CMakeCache.txt
+$ cmake -GNinja ../llvm -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_FLAGS_RELEASE=&quot;-fxray-instrument -fxray-instruction-threshold=1&quot; \
+    -DCMAKE_CXX_FLAGS=&quot;-fxray-instrument -fxray-instruction-threshold=1&quot;
+$ ninja llc
+$ XRAY_OPTIONS=&quot;patch_premain=true&quot; ./bin/llc input.ll
+==69819==XRay: Log file in &#39;xray-log.llc.5rqxkU&#39;
+
+$ llvm-xray account xray-log.llc.5rqxkU --top=10 --sort=sum --sortorder=dsc --instr_map=./bin/llc
+Functions with latencies: 36652
+ funcid      count [      min,       med,       90p,       99p,       max]       sum  function
+     75          1 [ 0.672368,  0.672368,  0.672368,  0.672368,  0.672368]  0.672368  llc.cpp:271:0: main
+     78          1 [ 0.626455,  0.626455,  0.626455,  0.626455,  0.626455]  0.626455  llc.cpp:381:0: compileModule(char**, llvm::LLVMContext&amp;)
+ 139617          1 [ 0.472618,  0.472618,  0.472618,  0.472618,  0.472618]  0.472618  LegacyPassManager.cpp:1723:0: llvm::legacy::PassManager::run(llvm::Module&amp;)
+ 139610          1 [ 0.472618,  0.472618,  0.472618,  0.472618,  0.472618]  0.472618  LegacyPassManager.cpp:1681:0: llvm::legacy::PassManagerImpl::run(llvm::Module&amp;)
+ 139612          1 [ 0.470948,  0.470948,  0.470948,  0.470948,  0.470948]  0.470948  LegacyPassManager.cpp:1564:0: (anonymous namespace)::MPPassManager::runOnModule(llvm::Module&amp;)
+ 139607          2 [ 0.147345,  0.315994,  0.315994,  0.315994,  0.315994]  0.463340  LegacyPassManager.cpp:1530:0: llvm::FPPassManager::runOnModule(llvm::Module&amp;)
+ 139605         21 [ 0.000002,  0.000002,  0.102593,  0.213336,  0.213336]  0.463331  LegacyPassManager.cpp:1491:0: llvm::FPPassManager::runOnFunction(llvm::Function&amp;)
+ 139563      26096 [ 0.000002,  0.000002,  0.000037,  0.000063,  0.000215]  0.225708  LegacyPassManager.cpp:1083:0: llvm::PMDataManager::findAnalysisPass(void const*, bool)
+ 108055        188 [ 0.000002,  0.000120,  0.001375,  0.004523,  0.062624]  0.159279  MachineFunctionPass.cpp:38:0: llvm::MachineFunctionPass::runOnFunction(llvm::Function&amp;)
+  62635         22 [ 0.000041,  0.000046,  0.000050,  0.126744,  0.126744]  0.127715  X86TargetMachine.cpp:242:0: llvm::X86TargetMachine::getSubtargetImpl(llvm::Function const&amp;) const
+</pre></div>
+</div>
+</section>
+<section id="instrumentation-attributes">
+<h3>Instrumentation Attributes<a class="headerlink" href="#instrumentation-attributes" title="Link to this heading">#</a></h3>
+<p>The other way is to use configuration files for selecting which functions
+should always be instrumented by the compiler. This gives us a way of ensuring
+that certain functions are either always or never instrumented by not having to
+add the attribute to the source.</p>
+<p>To use this feature, you can define one file for the functions to always
+instrument, and another for functions to never instrument. The format of these
+files are exactly the same as the SanitizerLists files that control similar
+things for the sanitizer implementations. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># xray-attr-list.txt</span>
+<span class="c1"># always instrument functions that match the following filters:</span>
+<span class="p">[</span><span class="n">always</span><span class="p">]</span>
+<span class="n">fun</span><span class="p">:</span><span class="n">main</span>
+
+<span class="c1"># never instrument functions that match the following filters:</span>
+<span class="p">[</span><span class="n">never</span><span class="p">]</span>
+<span class="n">fun</span><span class="p">:</span><span class="n">__cxx_</span><span class="o">*</span>
+</pre></div>
+</div>
+<p>Given the file above we can re-build by providing it to the
+<code class="docutils literal notranslate"><span class="pre">-fxray-attr-list=</span></code> flag to clang. You can have multiple files, each defining
+different sets of attribute sets, to be combined into a single list by clang.</p>
+</section>
+</section>
+<section id="the-xray-stack-tool">
+<h2>The XRay stack tool<a class="headerlink" href="#the-xray-stack-tool" title="Link to this heading">#</a></h2>
+<p>Given a trace, and optionally an instrumentation map, the <code class="docutils literal notranslate"><span class="pre">llvm-xray</span> <span class="pre">stack</span></code>
+command can be used to analyze a call stack graph constructed from the function
+call timeline.</p>
+<p>The way to use the command is to output the top stacks by call count and time spent.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ llvm-xray stack xray-log.llc.5rqxkU --instr_map=./bin/llc
+
+Unique Stacks: 3069
+Top 10 Stacks by leaf sum:
+
+Sum: 9633790
+lvl   function                                                            count              sum
+#0    main                                                                    1         58421550
+#1    compileModule(char**, llvm::LLVMContext&amp;)                               1         51440360
+#2    llvm::legacy::PassManagerImpl::run(llvm::Module&amp;)                       1         40535375
+#3    llvm::FPPassManager::runOnModule(llvm::Module&amp;)                         2         39337525
+#4    llvm::FPPassManager::runOnFunction(llvm::Function&amp;)                     6         39331465
+#5    llvm::PMDataManager::verifyPreservedAnalysis(llvm::Pass*)             399         16628590
+#6    llvm::PMTopLevelManager::findAnalysisPass(void const*)               4584         15155600
+#7    llvm::PMDataManager::findAnalysisPass(void const*, bool)            32088          9633790
+
+..etc..
+</pre></div>
+</div>
+<p>In the default mode, identical stacks on different threads are independently
+aggregated. In a multithreaded program, you may end up having identical call
+stacks fill your list of top calls.</p>
+<p>To address this, you may specify the <code class="docutils literal notranslate"><span class="pre">--aggregate-threads</span></code> or
+<code class="docutils literal notranslate"><span class="pre">--per-thread-stacks</span></code> flags. <code class="docutils literal notranslate"><span class="pre">--per-thread-stacks</span></code> treats the thread id as an
+implicit root in each call stack tree, while <code class="docutils literal notranslate"><span class="pre">--aggregate-threads</span></code> combines
+identical stacks from all threads.</p>
+</section>
+<section id="flame-graph-generation">
+<h2>Flame Graph Generation<a class="headerlink" href="#flame-graph-generation" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">llvm-xray</span> <span class="pre">stack</span></code> tool may also be used to generate flamegraphs for
+visualizing your instrumented invocations. The tool does not generate the graphs
+themselves, but instead generates a format that can be used with Brendan Gregg’s
+FlameGraph tool, currently available on <a class="reference external" href="https://github.com/brendangregg/FlameGraph">github</a>.</p>
+<p>To generate output for a flamegraph, a few more options are necessary.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--all-stacks</span></code> - Emits all of the stacks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--stack-format</span></code> - Choose the flamegraph output format 『flame』.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--aggregation-type</span></code> - Choose the metric to graph.</p></li>
+</ul>
+<p>You may pipe the command output directly to the flamegraph tool to obtain an
+svg file.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ llvm-xray stack xray-log.llc.5rqxkU --instr_map=./bin/llc --stack-format=flame --aggregation-type=time --all-stacks | \
+/path/to/FlameGraph/flamegraph.pl &gt; flamegraph.svg
+</pre></div>
+</div>
+<p>If you open the svg in a browser, mouse events allow exploring the call stacks.</p>
+</section>
+<section id="chrome-trace-viewer-visualization">
+<h2>Chrome Trace Viewer Visualization<a class="headerlink" href="#chrome-trace-viewer-visualization" title="Link to this heading">#</a></h2>
+<p>We can also generate a trace which can be loaded by the Chrome Trace Viewer
+from the same generated trace:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ llvm-xray convert --symbolize --instr_map=./bin/llc \
+  --output-format=trace_event xray-log.llc.5rqxkU \
+    | gzip &gt; llc-trace.txt.gz
+</pre></div>
+</div>
+<p>From a Chrome browser, navigating to <code class="docutils literal notranslate"><span class="pre">chrome:///tracing</span></code> allows us to load
+the <code class="docutils literal notranslate"><span class="pre">sample-trace.txt.gz</span></code> file to visualize the execution trace.</p>
+</section>
+<section id="further-exploration">
+<h2>Further Exploration<a class="headerlink" href="#further-exploration" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">llvm-xray</span></code> tool has a few other subcommands that are in various stages
+of being developed. One interesting subcommand that can highlight a few
+interesting things is the <code class="docutils literal notranslate"><span class="pre">graph</span></code> subcommand. Given for example the following
+toy program that we build with XRay instrumentation, we can see how the
+generated graph may be a helpful indicator of where time is being spent for the
+application.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// sample.cc</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;thread&gt;</span>
+
+<span class="p">[[</span><span class="n">clang</span><span class="o">::</span><span class="n">xray_always_instrument</span><span class="p">]]</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">f</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="p">[[</span><span class="n">clang</span><span class="o">::</span><span class="n">xray_always_instrument</span><span class="p">]]</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">g</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;-&#39;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="w"> </span><span class="n">t1</span><span class="p">([]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">      </span><span class="n">f</span><span class="p">();</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="kr">thread</span><span class="w"> </span><span class="nf">t2</span><span class="p">([]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">g</span><span class="p">();</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="w">  </span><span class="n">t1</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+<span class="w">  </span><span class="n">t2</span><span class="p">.</span><span class="n">join</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>We then build the above with XRay instrumentation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ clang++ -o sample -O3 sample.cc -std=c++11 -fxray-instrument -fxray-instruction-threshold=1
+$ XRAY_OPTIONS=&quot;patch_premain=true xray_mode=xray-basic&quot; ./sample
+</pre></div>
+</div>
+<p>We can then explore the graph rendering of the trace generated by this sample
+application. We assume you have the graphviz tools available in your system,
+including both <code class="docutils literal notranslate"><span class="pre">unflatten</span></code> and <code class="docutils literal notranslate"><span class="pre">dot</span></code>. If you prefer rendering or exploring
+the graph using another tool, then that should be feasible as well. <code class="docutils literal notranslate"><span class="pre">llvm-xray</span>
+<span class="pre">graph</span></code> will create DOT format graphs which should be usable in most graph
+rendering applications. One example invocation of the <code class="docutils literal notranslate"><span class="pre">llvm-xray</span> <span class="pre">graph</span></code>
+command should yield some interesting insights to the workings of C++
+applications:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ llvm-xray graph xray-log.sample.* -m sample --color-edges=sum --edge-label=sum \
+    | unflatten -f -l10 | dot -Tsvg -o sample.svg
+</pre></div>
+</div>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p>If you have some interesting analyses you’d like to implement as part of the
+llvm-xray tool, please feel free to propose them on the llvm-dev&#64; mailing list.
+The following are some ideas to inspire you in getting involved and potentially
+making things better.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Implement a query/filtering library that allows for finding patterns in the
+XRay traces.</p></li>
+<li><p>Collecting function call stacks and how often they’re encountered in the
+XRay trace.</p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="FaultMaps.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">FaultMaps and implicit checks</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="XRay.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">XRay Instrumentation</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Debugging with XRay</a><ul>
+<li><a class="reference internal" href="#building-with-xray">Building with XRay</a></li>
+<li><a class="reference internal" href="#getting-traces">Getting Traces</a></li>
+<li><a class="reference internal" href="#the-llvm-xray-tool">The <code class="docutils literal notranslate"><span class="pre">llvm-xray</span></code> Tool</a></li>
+<li><a class="reference internal" href="#controlling-fidelity">Controlling Fidelity</a><ul>
+<li><a class="reference internal" href="#instruction-threshold">Instruction Threshold</a></li>
+<li><a class="reference internal" href="#instrumentation-attributes">Instrumentation Attributes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-xray-stack-tool">The XRay stack tool</a></li>
+<li><a class="reference internal" href="#flame-graph-generation">Flame Graph Generation</a></li>
+<li><a class="reference internal" href="#chrome-trace-viewer-visualization">Chrome Trace Viewer Visualization</a></li>
+<li><a class="reference internal" href="#further-exploration">Further Exploration</a></li>
+<li><a class="reference internal" href="#next-steps">Next Steps</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=0d9984b1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=d9a6981e"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

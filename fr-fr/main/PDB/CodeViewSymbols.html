@@ -1,0 +1,1142 @@
+<!doctype html>
+<html class="no-js" lang="fr-FR" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Recherche" href="../search.html" /><link rel="next" title="CodeView Type Records" href="CodeViewTypes.html" /><link rel="prev" title="The PDB Serialized Hash Table Format" href="HashTable.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/PDB/CodeViewSymbols.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>CodeView Symbol Records - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="../ltd-provenance.js"></script>
+<script type="text/javascript" src="../ltd-current.js"></script>
+<script type="text/javascript" src="../../../ltd-config.js"></script>
+<script type="text/javascript" src="../../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Recherche" name="q" aria-label="Recherche">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../Reference.html">Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-diff.html">llvm-diff - LLVM structural “diff”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="index.html">The PDB File Format</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../UserGuides.html">User Guides</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/PDB/CodeViewSymbols.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="codeview-symbol-records">
+<h1>CodeView Symbol Records<a class="headerlink" href="#codeview-symbol-records" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<span id="symbols-intro"></span><h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>This document describes the usage and serialization format of the various
+CodeView symbol records that LLVM understands.  Like
+<a class="reference internal" href="CodeViewTypes.html"><span class="doc">CodeView Type Records</span></a>, we describe only the important
+types which are generated by modern C++ toolchains.</p>
+</section>
+<section id="record-categories">
+<h2>Record Categories<a class="headerlink" href="#record-categories" title="Link to this heading">#</a></h2>
+<p>Symbol records share one major similarity with <a class="reference internal" href="CodeViewTypes.html"><span class="doc">type records</span></a>:
+They start with the same <a class="reference internal" href="CodeViewTypes.html#leaf-types"><span class="std std-ref">record prefix</span></a>, which we will not describe
+again (refer to the previous link for a description).  As a result of this, a sequence
+of symbol records can be processed with largely the same code as that which processes
+type records.  There are several important differences between symbol and type records:</p>
+<ul class="simple">
+<li><p>Symbol records only appear in the <a class="reference internal" href="PublicStream.html"><span class="doc">The PDB Public Symbol Stream</span></a>, <a class="reference internal" href="GlobalStream.html"><span class="doc">The PDB Global Symbol Stream</span></a>, and
+<a class="reference internal" href="ModiStream.html"><span class="doc">Module Info Streams</span></a>.</p></li>
+<li><p>Type records only appear in the <a class="reference internal" href="TpiStream.html"><span class="doc">TPI &amp; IPI streams</span></a>.</p></li>
+<li><p>While types are referenced from other CodeView records via <a class="reference internal" href="TpiStream.html#type-indices"><span class="std std-ref">type indices</span></a>,
+symbol records are referenced by the byte offset of the record in the stream that it appears
+in.</p></li>
+<li><p>Types can reference types (via type indices), and symbols can reference both types (via type
+indices) and symbols (via offsets), but types can never reference symbols.</p></li>
+<li><p>There is no notion of <a class="reference internal" href="CodeViewTypes.html#leaf-types"><span class="std std-ref">Leaf Records</span></a> and <a class="reference internal" href="CodeViewTypes.html#member-types"><span class="std std-ref">Member Records</span></a>
+as there are with types.  Every symbol record describes is own length.</p></li>
+<li><p>Certain special symbol records begin a « scope ».  For these records, all following records
+up until the next <code class="docutils literal notranslate"><span class="pre">S_END</span></code> record are « children » of this symbol record.  For example,
+given a symbol record which describes a certain function, all local variables of this
+function would appear following the function up until the corresponding <code class="docutils literal notranslate"><span class="pre">S_END</span></code> record.</p></li>
+</ul>
+<p>Finally, there are three general categories of symbol record, grouped by where they are legal
+to appear in a PDB file.  Public Symbols (which appear only in the
+<a class="reference internal" href="PublicStream.html"><span class="doc">publics stream</span></a>), Global Symbols (which appear only in the
+<a class="reference internal" href="GlobalStream.html"><span class="doc">globals stream</span></a>) and module symbols (which appear in the
+<a class="reference internal" href="ModiStream.html"><span class="doc">module info stream</span></a>).</p>
+<section id="public-symbols">
+<span id="id1"></span><h3>Public Symbols<a class="headerlink" href="#public-symbols" title="Link to this heading">#</a></h3>
+<p>Public symbols are the CodeView equivalent of DWARF <code class="docutils literal notranslate"><span class="pre">.debug_pubnames</span></code>.  There
+is one public symbol record for every function or variable in the program that
+has a mangled name.  The <a class="reference internal" href="PublicStream.html"><span class="doc">Publics Stream</span></a>, which contains these
+records, additionally contains a hash table that allows one to quickly locate a
+record by mangled name.</p>
+<section id="s-pub32-0x110e">
+<h4>S_PUB32 (0x110e)<a class="headerlink" href="#s-pub32-0x110e" title="Link to this heading">#</a></h4>
+<p>There is only type of public symbol, an <code class="docutils literal notranslate"><span class="pre">S_PUB32</span></code> which describes a mangled
+name, a flag indicating what kind of symbol it is (e.g. function, variable), and
+the symbol’s address.  The <a class="reference internal" href="DbiStream.html#dbi-section-map-substream"><span class="std std-ref">Section Map Substream</span></a> of the
+<a class="reference internal" href="DbiStream.html"><span class="doc">DBI Stream</span></a> can be consulted to determine what module this address
+corresponds to, and from there that module’s <a class="reference internal" href="ModiStream.html"><span class="doc">module debug stream</span></a>
+can be consulted to locate full information for the symbol with the given address.</p>
+</section>
+</section>
+<section id="global-symbols">
+<span id="id2"></span><h3>Global Symbols<a class="headerlink" href="#global-symbols" title="Link to this heading">#</a></h3>
+<p>While there is one <a class="reference internal" href="#public-symbols"><span class="std std-ref">public symbol</span></a> for every symbol in the
+program with <cite>external</cite> linkage, there is one global symbol for every symbol in the
+program with linkage (including internal linkage).  As a result, global symbols do
+not describe a mangled name <em>or</em> an address, since symbols with internal linkage
+need not have any mangling at all, and also may not have an address.  Thus, all
+global symbols simply refer directly to the full symbol record via a module/offset
+combination.</p>
+<p>Similarly to <a class="reference internal" href="#public-symbols"><span class="std std-ref">public symbols</span></a>, all global symbols are contained
+in a single <a class="reference internal" href="GlobalStream.html"><span class="doc">Globals Stream</span></a>, which contains a hash table mapping
+fully qualified name to the corresponding record in the globals stream (which as
+mentioned, then contains information allowing one to locate the full record in the
+corresponding module symbol stream).</p>
+<p>Note that a consequence and limitation of this design is that program-wide lookup
+by anything other than an exact textually matching fully-qualified name of whatever
+the compiler decided to emit is impractical.  This differs from DWARF, where even
+though we don’t necessarily have O(1) lookup by basename within a given scope (including
+O(1) scope, we at least have O(n) access within a given scope).</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Program-wide lookup of names by anything other than an exact textually matching fully
+qualified name is not possible.</p>
+</div>
+<section id="s-gdata32">
+<h4>S_GDATA32<a class="headerlink" href="#s-gdata32" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-gthread32-0x1113">
+<h4>S_GTHREAD32 (0x1113)<a class="headerlink" href="#s-gthread32-0x1113" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-procref-0x1125">
+<h4>S_PROCREF (0x1125)<a class="headerlink" href="#s-procref-0x1125" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-lprocref-0x1127">
+<h4>S_LPROCREF (0x1127)<a class="headerlink" href="#s-lprocref-0x1127" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-gmandata-0x111d">
+<h4>S_GMANDATA (0x111d)<a class="headerlink" href="#s-gmandata-0x111d" title="Link to this heading">#</a></h4>
+</section>
+</section>
+<section id="module-symbols">
+<span id="id3"></span><h3>Module Symbols<a class="headerlink" href="#module-symbols" title="Link to this heading">#</a></h3>
+<section id="s-end-0x0006">
+<h4>S_END (0x0006)<a class="headerlink" href="#s-end-0x0006" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-frameproc-0x1012">
+<h4>S_FRAMEPROC (0x1012)<a class="headerlink" href="#s-frameproc-0x1012" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-objname-0x1101">
+<h4>S_OBJNAME (0x1101)<a class="headerlink" href="#s-objname-0x1101" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-thunk32-0x1102">
+<h4>S_THUNK32 (0x1102)<a class="headerlink" href="#s-thunk32-0x1102" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-block32-0x1103">
+<h4>S_BLOCK32 (0x1103)<a class="headerlink" href="#s-block32-0x1103" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-label32-0x1105">
+<h4>S_LABEL32 (0x1105)<a class="headerlink" href="#s-label32-0x1105" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-register-0x1106">
+<h4>S_REGISTER (0x1106)<a class="headerlink" href="#s-register-0x1106" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-bprel32-0x110b">
+<h4>S_BPREL32 (0x110b)<a class="headerlink" href="#s-bprel32-0x110b" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-lproc32-0x110f">
+<h4>S_LPROC32 (0x110f)<a class="headerlink" href="#s-lproc32-0x110f" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-gproc32-0x1110">
+<h4>S_GPROC32 (0x1110)<a class="headerlink" href="#s-gproc32-0x1110" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-regrel32-0x1111">
+<h4>S_REGREL32 (0x1111)<a class="headerlink" href="#s-regrel32-0x1111" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-compile2-0x1116">
+<h4>S_COMPILE2 (0x1116)<a class="headerlink" href="#s-compile2-0x1116" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-unamespace-0x1124">
+<h4>S_UNAMESPACE (0x1124)<a class="headerlink" href="#s-unamespace-0x1124" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-trampoline-0x112c">
+<h4>S_TRAMPOLINE (0x112c)<a class="headerlink" href="#s-trampoline-0x112c" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-section-0x1136">
+<h4>S_SECTION (0x1136)<a class="headerlink" href="#s-section-0x1136" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-coffgroup-0x1137">
+<h4>S_COFFGROUP (0x1137)<a class="headerlink" href="#s-coffgroup-0x1137" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-export-0x1138">
+<h4>S_EXPORT (0x1138)<a class="headerlink" href="#s-export-0x1138" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-callsiteinfo-0x1139">
+<h4>S_CALLSITEINFO (0x1139)<a class="headerlink" href="#s-callsiteinfo-0x1139" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-framecookie-0x113a">
+<h4>S_FRAMECOOKIE (0x113a)<a class="headerlink" href="#s-framecookie-0x113a" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-compile3-0x113c">
+<h4>S_COMPILE3 (0x113c)<a class="headerlink" href="#s-compile3-0x113c" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-envblock-0x113d">
+<h4>S_ENVBLOCK (0x113d)<a class="headerlink" href="#s-envblock-0x113d" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-local-0x113e">
+<span id="s-local"></span><h4>S_LOCAL (0x113e)<a class="headerlink" href="#s-local-0x113e" title="Link to this heading">#</a></h4>
+<p>Defines a local variable.
+This record is followed by a series of <code class="docutils literal notranslate"><span class="pre">S_DEFRANGE*</span></code> records that define the
+live range of this variable.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">LocalSym</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// The type of this variable (TPI type index).</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">Type</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// See enum below.</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Flags</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Name of the variable. A zero terminated string.</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="n">Name</span><span class="p">[];</span>
+<span class="p">};</span>
+<span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">LocalSymFlags</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">None</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsParameter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsAddressTaken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsCompilerGenerated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsAggregate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsAggregated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsAliased</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsAlias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsReturnValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsOptimizedOut</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsEnregisteredGlobal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span>
+<span class="w">  </span><span class="n">IsEnregisteredStatic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>All <code class="docutils literal notranslate"><span class="pre">S_DEFRANGE*</span></code> records consist of a header followed by
+<code class="docutils literal notranslate"><span class="pre">LocalVariableAddrRange</span></code> and a list of <code class="docutils literal notranslate"><span class="pre">LocalVariableAddrGap</span></code> (until the
+record length is reached) except for the
+<a class="reference external" href="_defrange_framepointer_rel_full_scope">S_DEFRANGE_FRAMEPOINTER_REL_FULL_SCOPE</a>
+record.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">/// A live range of a variable.</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">LocalVariableAddrRange</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// Starting offset in the section</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">OffsetStart</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Index of the section</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">ISectStart</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Size of the range</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Range</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="c1">/// A subrange of a `LocalVariableAddrRange` where a variable is _not_ live.</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">LocalVariableAddrGap</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// Start of the range, relative to `LocalVariableAddrRange::OffsetStart`</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">GapStartOffset</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Size of the range</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Range</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The following records only describe the header.</p>
+</section>
+<section id="s-defrange-0x113f">
+<h4>S_DEFRANGE (0x113f)<a class="headerlink" href="#s-defrange-0x113f" title="Link to this heading">#</a></h4>
+<p>A live range expressed as a DIA program.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DefrangeSymHeader</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// DIA program to evaluate the value of the symbol</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">Program</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="s-defrange-subfield-0x1140">
+<h4>S_DEFRANGE_SUBFIELD (0x1140)<a class="headerlink" href="#s-defrange-subfield-0x1140" title="Link to this heading">#</a></h4>
+<p>A live range of sub field of variable (e.g. <code class="docutils literal notranslate"><span class="pre">local.i</span></code>).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DefrangeSubfieldSymHeader</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// DIA program to evaluate the value of the symbol</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">Program</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Offset in parent variable.</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">OffsetInParent</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="s-defrange-register-0x1141">
+<h4>S_DEFRANGE_REGISTER (0x1141)<a class="headerlink" href="#s-defrange-register-0x1141" title="Link to this heading">#</a></h4>
+<p>A live range of a variable living in a register.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DefrangeRegisterSymHeader</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// Register to hold the value of the symbol</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Register</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// May have no user name on one control flow path</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">MayHaveNoName</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Padding</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">15</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="s-defrange-framepointer-rel-0x1142">
+<h4>S_DEFRANGE_FRAMEPOINTER_REL (0x1142)<a class="headerlink" href="#s-defrange-framepointer-rel-0x1142" title="Link to this heading">#</a></h4>
+<p>A live range of frame variable. The register for the frame pointer is specified in <code class="docutils literal notranslate"><span class="pre">S_FRAMEPROC</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DefrangeFramepointerSymHeader</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// Offset from the frame pointer</span>
+<span class="w">  </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">Offset</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="s-defrange-subfield-register-0x1143">
+<h4>S_DEFRANGE_SUBFIELD_REGISTER (0x1143)<a class="headerlink" href="#s-defrange-subfield-register-0x1143" title="Link to this heading">#</a></h4>
+<p>A live range of sub field of variable (e.g. <code class="docutils literal notranslate"><span class="pre">local.i</span></code>).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DefrangeSubfieldRegisterSymHeader</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// Register to hold the value of the symbol</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Register</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// May have no user name on one of control flow path</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">MayHaveNoName</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Padding1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">15</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Offset in parent variable</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">OffsetInParent</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">12</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">Padding2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="s-defrange-framepointer-rel-full-scope-0x1144">
+<span id="defrange-framepointer-rel-full-scope"></span><h4>S_DEFRANGE_FRAMEPOINTER_REL_FULL_SCOPE (0x1144)<a class="headerlink" href="#s-defrange-framepointer-rel-full-scope-0x1144" title="Link to this heading">#</a></h4>
+<p>A frame variable valid in all function scope.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DefrangeFramepointerRelFullScopeSymHeader</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// Offset from the frame pointer</span>
+<span class="w">  </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">Offset</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="s-defrange-register-rel-0x1145">
+<h4>S_DEFRANGE_REGISTER_REL (0x1145)<a class="headerlink" href="#s-defrange-register-rel-0x1145" title="Link to this heading">#</a></h4>
+<p>A live range of variable relative to a register (range version of <code class="docutils literal notranslate"><span class="pre">S_REGREL32</span></code>).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DefrangeRegisterRelSymHeader</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// Register to hold the base pointer of the symbol</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Register</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Spilled member for s.i</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">SpilledUdtMember</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Padding</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Offset in parent variable.</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">OffsetInParent</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">12</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Offset to register</span>
+<span class="w">  </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">BasePointerOffset</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="s-defrange-register-rel-indir-0x1177">
+<h4>S_DEFRANGE_REGISTER_REL_INDIR (0x1177)<a class="headerlink" href="#s-defrange-register-rel-indir-0x1177" title="Link to this heading">#</a></h4>
+<p>A live range of variable indirectly relative to a register (range version of <code class="docutils literal notranslate"><span class="pre">S_REGREL32_INDIR</span></code>).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DefrangeRegisterRelIndirSymHeader</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">/// Register to hold the base pointer of the symbol</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Register</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Spilled member for s.i</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">SpilledUdtMember</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">Padding</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Offset in parent variable.</span>
+<span class="w">  </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">OffsetInParent</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">12</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Offset to register</span>
+<span class="w">  </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">BasePointerOffset</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">/// Offset to add after dereferencing `Register + BasePointerOffset`</span>
+<span class="w">  </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">OffsetInUdt</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="s-lproc32-id-0x1146">
+<h4>S_LPROC32_ID (0x1146)<a class="headerlink" href="#s-lproc32-id-0x1146" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-gproc32-id-0x1147">
+<h4>S_GPROC32_ID (0x1147)<a class="headerlink" href="#s-gproc32-id-0x1147" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-buildinfo-0x114c">
+<h4>S_BUILDINFO (0x114c)<a class="headerlink" href="#s-buildinfo-0x114c" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-inlinesite-0x114d">
+<h4>S_INLINESITE (0x114d)<a class="headerlink" href="#s-inlinesite-0x114d" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-inlinesite-end-0x114e">
+<h4>S_INLINESITE_END (0x114e)<a class="headerlink" href="#s-inlinesite-end-0x114e" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-proc-id-end-0x114f">
+<h4>S_PROC_ID_END (0x114f)<a class="headerlink" href="#s-proc-id-end-0x114f" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-filestatic-0x1153">
+<h4>S_FILESTATIC (0x1153)<a class="headerlink" href="#s-filestatic-0x1153" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-lproc32-dpc-0x1155">
+<h4>S_LPROC32_DPC (0x1155)<a class="headerlink" href="#s-lproc32-dpc-0x1155" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-lproc32-dpc-id-0x1156">
+<h4>S_LPROC32_DPC_ID (0x1156)<a class="headerlink" href="#s-lproc32-dpc-id-0x1156" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-callees-0x115a">
+<h4>S_CALLEES (0x115a)<a class="headerlink" href="#s-callees-0x115a" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-callers-0x115b">
+<h4>S_CALLERS (0x115b)<a class="headerlink" href="#s-callers-0x115b" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-heapallocsite-0x115e">
+<h4>S_HEAPALLOCSITE (0x115e)<a class="headerlink" href="#s-heapallocsite-0x115e" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-fastlink-0x1167">
+<h4>S_FASTLINK (0x1167)<a class="headerlink" href="#s-fastlink-0x1167" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-inlinees-0x1168">
+<h4>S_INLINEES (0x1168)<a class="headerlink" href="#s-inlinees-0x1168" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-regrel32-indir-0x1171">
+<h4>S_REGREL32_INDIR (0x1171)<a class="headerlink" href="#s-regrel32-indir-0x1171" title="Link to this heading">#</a></h4>
+<p>This encodes a variable at the location <code class="docutils literal notranslate"><span class="pre">*($Register</span> <span class="pre">+</span> <span class="pre">Offset)</span> <span class="pre">+</span> <span class="pre">OffsetInUdt</span></code>.
+It’s equivalent to the following DWARF location expression:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DW_OP_breg</span><span class="p">{</span><span class="n">corresponding</span> <span class="n">DWARF</span> <span class="n">register</span><span class="p">}</span> <span class="p">{</span><span class="n">Offset</span><span class="p">}</span>
+<span class="n">DW_OP_deref</span>
+<span class="n">DW_OP_plus_uconst</span> <span class="p">{</span><span class="n">OffsetInUdt</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>It’s used in C++ 17 structured bindings for example:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">Foo</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">fn</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">Foo</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">};</span>
+<span class="w">  </span><span class="c1">//  ╰─ S_REGREL32{ reg = rsp, offset = 0 }</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">f</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">//     │  ╰─ S_REGREL32_INDIR{ reg = rsp, offset = 8, offset-in-udt = 4, type = int }</span>
+<span class="w">  </span><span class="c1">//     ╰─ S_REGREL32_INDIR{ reg = rsp, offset = 8, offset-in-udt = 0, type = int }</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">S_REGREL32_INDIR</span></code> symbol for <code class="docutils literal notranslate"><span class="pre">y</span></code> from above looks like this:</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Offset</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>OffsetInUdt</p></th>
+<th class="head"><p>Register</p></th>
+<th class="head"><p>Nom</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">08000000</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">74000000</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">04000000</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">4F01</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">7900</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>int</p></td>
+<td><p>4</p></td>
+<td><p>RSP</p></td>
+<td><p>« a »</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="symbols-which-can-go-in-either-both-of-the-module-info-stream-global-stream">
+<span id="module-and-global-symbols"></span><h3>Symbols which can go in either/both of the module info stream &amp; global stream<a class="headerlink" href="#symbols-which-can-go-in-either-both-of-the-module-info-stream-global-stream" title="Link to this heading">#</a></h3>
+<section id="s-constant-0x1107">
+<h4>S_CONSTANT (0x1107)<a class="headerlink" href="#s-constant-0x1107" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-udt-0x1108">
+<h4>S_UDT (0x1108)<a class="headerlink" href="#s-udt-0x1108" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-ldata32-0x110c">
+<h4>S_LDATA32 (0x110c)<a class="headerlink" href="#s-ldata32-0x110c" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-lthread32-0x1112">
+<h4>S_LTHREAD32 (0x1112)<a class="headerlink" href="#s-lthread32-0x1112" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-lmandata-0x111c">
+<h4>S_LMANDATA (0x111c)<a class="headerlink" href="#s-lmandata-0x111c" title="Link to this heading">#</a></h4>
+</section>
+<section id="s-manconstant-0x112d">
+<h4>S_MANCONSTANT (0x112d)<a class="headerlink" href="#s-manconstant-0x112d" title="Link to this heading">#</a></h4>
+</section>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="CodeViewTypes.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">CodeView Type Records</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="HashTable.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">The PDB Serialized Hash Table Format</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">CodeView Symbol Records</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#record-categories">Record Categories</a><ul>
+<li><a class="reference internal" href="#public-symbols">Public Symbols</a><ul>
+<li><a class="reference internal" href="#s-pub32-0x110e">S_PUB32 (0x110e)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#global-symbols">Global Symbols</a><ul>
+<li><a class="reference internal" href="#s-gdata32">S_GDATA32</a></li>
+<li><a class="reference internal" href="#s-gthread32-0x1113">S_GTHREAD32 (0x1113)</a></li>
+<li><a class="reference internal" href="#s-procref-0x1125">S_PROCREF (0x1125)</a></li>
+<li><a class="reference internal" href="#s-lprocref-0x1127">S_LPROCREF (0x1127)</a></li>
+<li><a class="reference internal" href="#s-gmandata-0x111d">S_GMANDATA (0x111d)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-symbols">Module Symbols</a><ul>
+<li><a class="reference internal" href="#s-end-0x0006">S_END (0x0006)</a></li>
+<li><a class="reference internal" href="#s-frameproc-0x1012">S_FRAMEPROC (0x1012)</a></li>
+<li><a class="reference internal" href="#s-objname-0x1101">S_OBJNAME (0x1101)</a></li>
+<li><a class="reference internal" href="#s-thunk32-0x1102">S_THUNK32 (0x1102)</a></li>
+<li><a class="reference internal" href="#s-block32-0x1103">S_BLOCK32 (0x1103)</a></li>
+<li><a class="reference internal" href="#s-label32-0x1105">S_LABEL32 (0x1105)</a></li>
+<li><a class="reference internal" href="#s-register-0x1106">S_REGISTER (0x1106)</a></li>
+<li><a class="reference internal" href="#s-bprel32-0x110b">S_BPREL32 (0x110b)</a></li>
+<li><a class="reference internal" href="#s-lproc32-0x110f">S_LPROC32 (0x110f)</a></li>
+<li><a class="reference internal" href="#s-gproc32-0x1110">S_GPROC32 (0x1110)</a></li>
+<li><a class="reference internal" href="#s-regrel32-0x1111">S_REGREL32 (0x1111)</a></li>
+<li><a class="reference internal" href="#s-compile2-0x1116">S_COMPILE2 (0x1116)</a></li>
+<li><a class="reference internal" href="#s-unamespace-0x1124">S_UNAMESPACE (0x1124)</a></li>
+<li><a class="reference internal" href="#s-trampoline-0x112c">S_TRAMPOLINE (0x112c)</a></li>
+<li><a class="reference internal" href="#s-section-0x1136">S_SECTION (0x1136)</a></li>
+<li><a class="reference internal" href="#s-coffgroup-0x1137">S_COFFGROUP (0x1137)</a></li>
+<li><a class="reference internal" href="#s-export-0x1138">S_EXPORT (0x1138)</a></li>
+<li><a class="reference internal" href="#s-callsiteinfo-0x1139">S_CALLSITEINFO (0x1139)</a></li>
+<li><a class="reference internal" href="#s-framecookie-0x113a">S_FRAMECOOKIE (0x113a)</a></li>
+<li><a class="reference internal" href="#s-compile3-0x113c">S_COMPILE3 (0x113c)</a></li>
+<li><a class="reference internal" href="#s-envblock-0x113d">S_ENVBLOCK (0x113d)</a></li>
+<li><a class="reference internal" href="#s-local-0x113e">S_LOCAL (0x113e)</a></li>
+<li><a class="reference internal" href="#s-defrange-0x113f">S_DEFRANGE (0x113f)</a></li>
+<li><a class="reference internal" href="#s-defrange-subfield-0x1140">S_DEFRANGE_SUBFIELD (0x1140)</a></li>
+<li><a class="reference internal" href="#s-defrange-register-0x1141">S_DEFRANGE_REGISTER (0x1141)</a></li>
+<li><a class="reference internal" href="#s-defrange-framepointer-rel-0x1142">S_DEFRANGE_FRAMEPOINTER_REL (0x1142)</a></li>
+<li><a class="reference internal" href="#s-defrange-subfield-register-0x1143">S_DEFRANGE_SUBFIELD_REGISTER (0x1143)</a></li>
+<li><a class="reference internal" href="#s-defrange-framepointer-rel-full-scope-0x1144">S_DEFRANGE_FRAMEPOINTER_REL_FULL_SCOPE (0x1144)</a></li>
+<li><a class="reference internal" href="#s-defrange-register-rel-0x1145">S_DEFRANGE_REGISTER_REL (0x1145)</a></li>
+<li><a class="reference internal" href="#s-defrange-register-rel-indir-0x1177">S_DEFRANGE_REGISTER_REL_INDIR (0x1177)</a></li>
+<li><a class="reference internal" href="#s-lproc32-id-0x1146">S_LPROC32_ID (0x1146)</a></li>
+<li><a class="reference internal" href="#s-gproc32-id-0x1147">S_GPROC32_ID (0x1147)</a></li>
+<li><a class="reference internal" href="#s-buildinfo-0x114c">S_BUILDINFO (0x114c)</a></li>
+<li><a class="reference internal" href="#s-inlinesite-0x114d">S_INLINESITE (0x114d)</a></li>
+<li><a class="reference internal" href="#s-inlinesite-end-0x114e">S_INLINESITE_END (0x114e)</a></li>
+<li><a class="reference internal" href="#s-proc-id-end-0x114f">S_PROC_ID_END (0x114f)</a></li>
+<li><a class="reference internal" href="#s-filestatic-0x1153">S_FILESTATIC (0x1153)</a></li>
+<li><a class="reference internal" href="#s-lproc32-dpc-0x1155">S_LPROC32_DPC (0x1155)</a></li>
+<li><a class="reference internal" href="#s-lproc32-dpc-id-0x1156">S_LPROC32_DPC_ID (0x1156)</a></li>
+<li><a class="reference internal" href="#s-callees-0x115a">S_CALLEES (0x115a)</a></li>
+<li><a class="reference internal" href="#s-callers-0x115b">S_CALLERS (0x115b)</a></li>
+<li><a class="reference internal" href="#s-heapallocsite-0x115e">S_HEAPALLOCSITE (0x115e)</a></li>
+<li><a class="reference internal" href="#s-fastlink-0x1167">S_FASTLINK (0x1167)</a></li>
+<li><a class="reference internal" href="#s-inlinees-0x1168">S_INLINEES (0x1168)</a></li>
+<li><a class="reference internal" href="#s-regrel32-indir-0x1171">S_REGREL32_INDIR (0x1171)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#symbols-which-can-go-in-either-both-of-the-module-info-stream-global-stream">Symbols which can go in either/both of the module info stream &amp; global stream</a><ul>
+<li><a class="reference internal" href="#s-constant-0x1107">S_CONSTANT (0x1107)</a></li>
+<li><a class="reference internal" href="#s-udt-0x1108">S_UDT (0x1108)</a></li>
+<li><a class="reference internal" href="#s-ldata32-0x110c">S_LDATA32 (0x110c)</a></li>
+<li><a class="reference internal" href="#s-lthread32-0x1112">S_LTHREAD32 (0x1112)</a></li>
+<li><a class="reference internal" href="#s-lmandata-0x111c">S_LMANDATA (0x111c)</a></li>
+<li><a class="reference internal" href="#s-manconstant-0x112d">S_MANCONSTANT (0x112d)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=711a3ba7"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/translations.js?v=a56f2464"></script>
+    <script src="../_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

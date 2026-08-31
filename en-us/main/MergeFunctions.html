@@ -1,0 +1,1329 @@
+<!doctype html>
+<html class="no-js" lang="en-US" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="LLVM Alias Analysis Infrastructure" href="AliasAnalysis.html" /><link rel="prev" title="Stack Safety Analysis" href="StackSafetyAnalysis.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/MergeFunctions.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>MergeFunctions pass, how it works - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/MergeFunctions.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="mergefunctions-pass-how-it-works">
+<h1>MergeFunctions pass, how it works<a class="headerlink" href="#mergefunctions-pass-how-it-works" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>Sometimes code contains equal functions, or functions that do exactly the same
+thing even though they are non-equal on the IR level (e.g.,: multiplication on 2
+and <code class="docutils literal notranslate"><span class="pre">shl</span> <span class="pre">1</span></code>). This can happen for several reasons: mainly, the usage of
+templates and automatic code generators. However, sometimes the user itself could
+write the same thing twice :-)</p>
+<p>The main purpose of this pass is to recognize such functions and merge them.</p>
+<p>This document is an extension to pass comments and describes the pass logic. It
+describes the algorithm used to compare functions and
+explains how we could combine equal functions correctly to keep the module
+valid.</p>
+<p>The material is presented in a top-down form, so the reader could start to learn pass
+from high level ideas and end with low-level algorithm details, thus preparing
+him or her for reading the sources.</p>
+<p>The main goal is to describe the algorithm and logic here and the concept. If
+you <em>don’t want</em> to read the source code, but want to understand pass
+algorithms, this document is good for you. The author tries not to repeat the
+source code and covers only common cases to avoid the cases of needing to
+update this document after any minor code changes.</p>
+<section id="what-should-i-know-to-be-able-to-follow-along-with-this-document">
+<h3>What should I know to be able to follow along with this document?<a class="headerlink" href="#what-should-i-know-to-be-able-to-follow-along-with-this-document" title="Link to this heading">#</a></h3>
+<p>The reader should be familiar with common compiler-engineering principles and
+LLVM code fundamentals. In this article, we assume the reader is familiar with
+<a class="reference external" href="http://en.wikipedia.org/wiki/Static_single_assignment_form">Single Static Assignment</a>
+concept and has an understanding of
+<a class="reference external" href="https://llvm.org/docs/LangRef.html#high-level-structure">IR structure</a>.</p>
+<p>We will use terms such as
+“<a class="reference external" href="https://llvm.org/docs/LangRef.html#high-level-structure">module</a>”,
+“<a class="reference external" href="https://llvm.org/docs/ProgrammersManual.html#the-function-class">function</a>”,
+“<a class="reference external" href="http://en.wikipedia.org/wiki/Basic_block">basic block</a>”,
+“<a class="reference external" href="https://llvm.org/docs/ProgrammersManual.html#the-user-class">user</a>”,
+“<a class="reference external" href="https://llvm.org/docs/ProgrammersManual.html#the-value-class">value</a>”,
+“<a class="reference external" href="https://llvm.org/docs/ProgrammersManual.html#the-instruction-class">instruction</a>”.</p>
+<p>As a good starting point, the Kaleidoscope tutorial can be used:</p>
+<p><a class="reference internal" href="tutorial/index.html"><span class="doc">LLVM Tutorial: Table of Contents</span></a></p>
+<p>It’s especially important to understand Chapter 3 of the tutorial:</p>
+<p><a class="reference internal" href="tutorial/LangImpl03.html"><span class="doc">Kaleidoscope Tutorial</span></a></p>
+<p>The reader should also know how passes work in LLVM. They can use this
+article as a reference and start point here:</p>
+<p><a class="reference internal" href="WritingAnLLVMPass.html"><span class="doc">Writing an LLVM Pass (legacy PM version)</span></a></p>
+<p>What else? Well perhaps the reader should also have some experience in LLVM pass
+debugging and bug-fixing.</p>
+</section>
+<section id="narrative-structure">
+<h3>Narrative structure<a class="headerlink" href="#narrative-structure" title="Link to this heading">#</a></h3>
+<p>This article consists of three parts. The first part explains pass functionality
+on the top-level. The second part describes the comparison procedure itself.
+The third part describes the merging process.</p>
+<p>In every part, the author tries to put the contents in the top-down form.
+The top-level methods will first be described followed by the terminal ones at
+the end, in the tail of each part. If the reader sees the reference to the
+method that wasn’t described yet, they will find its description a bit below.</p>
+</section>
+</section>
+<section id="basics">
+<h2>Basics<a class="headerlink" href="#basics" title="Link to this heading">#</a></h2>
+<section id="how-to-do-it">
+<h3>How to do it?<a class="headerlink" href="#how-to-do-it" title="Link to this heading">#</a></h3>
+<p>Do we need to merge functions? The obvious answer is: Yes, that is quite a
+possible case. We usually <em>do</em> have duplicates and it would be good to get rid
+of them. But how do we detect duplicates? This is the idea: we split functions
+into smaller bricks or parts and compare the “bricks” amount. If equal,
+we compare the “bricks” themselves, and then do our conclusions about functions
+themselves.</p>
+<p>What could the difference be? For example, on a machine with 64-bit pointers
+(let’s assume we have only one address space), one function stores a 64-bit
+integer, while another one stores a pointer. If the target is the machine
+mentioned above, and if functions are identical, except the parameter type (we
+could consider it as a part of function type), then we can treat a <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code>
+and a <code class="docutils literal notranslate"><span class="pre">void*</span></code> as equal.</p>
+<p>This is just an example; more possible details are described a bit below.</p>
+<p>As another example, the reader may imagine two more functions. The first
+function performs a multiplication by 2, while the second one performs a
+logical left shift by 1.</p>
+<section id="possible-solutions">
+<h4>Possible solutions<a class="headerlink" href="#possible-solutions" title="Link to this heading">#</a></h4>
+<p>Let’s briefly consider possible options about how and what we have to implement
+in order to create full-featured functions merging, and also what it would
+mean for us.</p>
+<p>Equal function detection obviously supposes that a “detector” method to be
+implemented and latter should answer the question “whether functions are equal”.
+This “detector” method consists of tiny “sub-detectors”, which each answers
+exactly the same question, but for function parts.</p>
+<p>As the second step, we should merge equal functions. So it should be a “merger”
+method. “Merger” accepts two functions <em>F1</em> and <em>F2</em>, and produces <em>F1F2</em>
+function, the result of merging.</p>
+<p>Having such routines in our hands, we can process a whole module, and merge all
+equal functions.</p>
+<p>In this case, we have to compare every function with every another function. As
+the reader may notice, this way seems to be quite expensive. Of course we could
+introduce hashing and other helpers, but it is still just an optimization, and
+thus the level of O(N*N) complexity.</p>
+<p>Can we reach another level? Could we introduce logarithmical search, or random
+access lookup? The answer is: “yes”.</p>
+<section id="random-access">
+<h5>Random-access<a class="headerlink" href="#random-access" title="Link to this heading">#</a></h5>
+<p>How can this be done? Just convert each function to a number, and gather
+all of them in a special hash table. Functions with equal hashes are equal.
+Good hashing means, that every function part must be taken into account. That
+means we have to convert every function part into some number, and then add it
+into the hash. The lookup-up time would be small, but such an approach adds some
+delay due to the hashing routine.</p>
+</section>
+<section id="logarithmical-search">
+<h5>Logarithmical search<a class="headerlink" href="#logarithmical-search" title="Link to this heading">#</a></h5>
+<p>We could introduce total ordering among the functions set, once ordered we
+could then implement a logarithmical search. Lookup time still depends on N,
+but adds a little of delay (<em>log(N)</em>).</p>
+</section>
+<section id="present-state">
+<h5>Present state<a class="headerlink" href="#present-state" title="Link to this heading">#</a></h5>
+<p>Both of the approaches (random-access and logarithmical) have been implemented
+and tested and both give a very good improvement. What was most
+surprising is that logarithmical search was faster; sometimes by up to 15%. The
+hashing method needs some extra CPU time, which is the main reason why it works
+slower; in most cases, total “hashing” time is greater than total
+“logarithmical-search” time.</p>
+<p>So, preference has been granted to the “logarithmical search”.</p>
+<p>Though in the case of need, <em>logarithmical-search</em> (read “total-ordering”) could
+be used as a milestone on our way to the <em>random-access</em> implementation.</p>
+<p>Every comparison is based either on the numbers or on the flags comparison. In
+the <em>random-access</em> approach, we could use the same comparison algorithm.
+During comparison, we exit once we find the difference, but here we might have
+to scan the whole function body every time (note, it could be slower). Like in
+“total-ordering”, we will track every number and flag, but instead of
+comparison, we should get the numbers sequence and then create the hash number.
+So, once again, <em>total-ordering</em> could be considered as a milestone for even
+faster (in theory) random-access approach.</p>
+</section>
+</section>
+<section id="mergefunctions-main-fields-and-runonmodule">
+<h4>MergeFunctions, main fields and runOnModule<a class="headerlink" href="#mergefunctions-main-fields-and-runonmodule" title="Link to this heading">#</a></h4>
+<p>There are two main important fields in the class:</p>
+<p><code class="docutils literal notranslate"><span class="pre">FnTree</span></code> – the set of all unique functions. It keeps items that couldn’t be
+merged with each other. It is defined as:</p>
+<p><code class="docutils literal notranslate"><span class="pre">std::set&lt;FunctionNode&gt;</span> <span class="pre">FnTree;</span></code></p>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">FunctionNode</span></code> is a wrapper for <code class="docutils literal notranslate"><span class="pre">llvm::Function</span></code> class, with an
+implemented “&lt;” operator among the functions set (below we explain how it works
+exactly; this is a key point in fast functions comparison).</p>
+<p><code class="docutils literal notranslate"><span class="pre">Deferred</span></code> – merging process can affect bodies of functions that are in
+<code class="docutils literal notranslate"><span class="pre">FnTree</span></code> already. Obviously, such functions should be rechecked again. In this
+case, we remove them from <code class="docutils literal notranslate"><span class="pre">FnTree</span></code>, and mark them to be rescanned, namely
+put them into <code class="docutils literal notranslate"><span class="pre">Deferred</span></code> list.</p>
+<section id="runonmodule">
+<h5>runOnModule<a class="headerlink" href="#runonmodule" title="Link to this heading">#</a></h5>
+<p>The algorithm is pretty simple:</p>
+<ol class="arabic">
+<li><p>Put all module’s functions into the <em>worklist</em>.</p></li>
+<li><p>Scan <em>worklist</em>’s functions twice: first, enumerate only strong functions and
+then only weak ones:</p>
+<p>2.1. Loop body: take a function from <em>worklist</em> (call it <em>FCur</em>) and try to
+insert it into <em>FnTree</em>: check whether <em>FCur</em> is equal to one of functions
+in <em>FnTree</em>. If there <em>is</em> an equal function in <em>FnTree</em>
+(call it <em>FExists</em>): merge function <em>FCur</em> with <em>FExists</em>. Otherwise, add
+the function from the <em>worklist</em> to <em>FnTree</em>.</p>
+</li>
+<li><p>Once the <em>worklist</em> scanning and merging operations are complete, check the
+<em>Deferred</em> list. If it is not empty, refill the <em>worklist</em> contents with
+<em>Deferred</em> list and redo step 2, if the <em>Deferred</em> list is empty, then exit
+from method.</p></li>
+</ol>
+</section>
+<section id="comparison-and-logarithmical-search">
+<h5>Comparison and logarithmical search<a class="headerlink" href="#comparison-and-logarithmical-search" title="Link to this heading">#</a></h5>
+<p>Let’s recall our task: for every function <em>F</em> from module <em>M</em>, we have to find
+equal functions <em>F`</em> in the shortest time possible and merge them into a
+single function.</p>
+<p>Defining total ordering among the functions set allows us to organize
+functions into a binary tree. The lookup procedure complexity would be
+estimated as O(log(N)) in this case. But how do we define <em>total-ordering</em>?</p>
+<p>We have to introduce a single rule applicable to every pair of functions, and
+following this rule, then evaluate which of them is greater. What kind of rule
+could it be? Let’s declare it as the “compare” method that returns one of 3
+possible values:</p>
+<p>-1, left is <em>less</em> than right,</p>
+<p>0, left and right are <em>equal</em>,</p>
+<p>1, left is <em>greater</em> than right.</p>
+<p>Of course, it means that we have to maintain
+<em>strict and non-strict order relation properties</em>:</p>
+<ul class="simple">
+<li><p>reflexivity (<code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;=</span> <span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">==</span> <span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&gt;=</span> <span class="pre">a</span></code>),</p></li>
+<li><p>antisymmetry (if <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;=</span> <span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">&lt;=</span> <span class="pre">a</span></code> then <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">==</span> <span class="pre">b</span></code>),</p></li>
+<li><p>transitivity (<code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;=</span> <span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">&lt;=</span> <span class="pre">c</span></code>, then <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;=</span> <span class="pre">c</span></code>)</p></li>
+<li><p>asymmetry (if <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;</span> <span class="pre">b</span></code>, then <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&gt;</span> <span class="pre">b</span></code> or <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">==</span> <span class="pre">b</span></code>).</p></li>
+</ul>
+<p>As mentioned before, the comparison routine consists of
+“sub-comparison-routines”, with each of them also consisting of
+“sub-comparison-routines”, and so on. Finally, it ends up with a primitive
+comparison.</p>
+<p>Below, we will use the following operations:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cmpNumbers(number1,</span> <span class="pre">number2)</span></code> is a method that returns -1 if left is less
+than right; 0, if left and right are equal; and 1 otherwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cmpFlags(flag1,</span> <span class="pre">flag2)</span></code> is a hypothetical method that compares two flags.
+The logic is the same as in <code class="docutils literal notranslate"><span class="pre">cmpNumbers</span></code>, where <code class="docutils literal notranslate"><span class="pre">true</span></code> is 1, and
+<code class="docutils literal notranslate"><span class="pre">false</span></code> is 0.</p></li>
+</ol>
+<p>The rest of the article is based on <em>MergeFunctions.cpp</em> source code
+(found in <em>&lt;llvm_dir&gt;/lib/Transforms/IPO/MergeFunctions.cpp</em>). We would like
+to ask the reader to keep this file open, so we could use it as a reference
+for further explanations.</p>
+<p>Now, we’re ready to proceed to the next chapter and see how it works.</p>
+</section>
+</section>
+</section>
+</section>
+<section id="functions-comparison">
+<h2>Functions comparison<a class="headerlink" href="#functions-comparison" title="Link to this heading">#</a></h2>
+<p>First, let’s define exactly how we compare complex objects.</p>
+<p>Complex object comparison (function, basic-block, etc) is mostly based on its
+sub-object comparison results. It is similar to the next “tree” objects
+comparison:</p>
+<ol class="arabic simple">
+<li><p>For two trees <em>T1</em> and <em>T2</em> we perform <em>depth-first-traversal</em> and have
+two sequences as a product: “<em>T1Items</em>” and “<em>T2Items</em>”.</p></li>
+<li><p>We then compare chains “<em>T1Items</em>” and “<em>T2Items</em>” in
+the most-significant-item-first order. The result of items comparison
+would be the result of <em>T1</em> and <em>T2</em> comparison itself.</p></li>
+</ol>
+<section id="functioncomparator-compare-void">
+<h3>FunctionComparator::compare(void)<a class="headerlink" href="#functioncomparator-compare-void" title="Link to this heading">#</a></h3>
+<p>A brief look at the source code tells us that the comparison starts in the
+“<code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">FunctionComparator::compare(void)</span></code>” method.</p>
+<ol class="arabic simple">
+<li><p>The first parts to be compared are the function’s attributes and some
+properties that are outside the “attributes” term, but still could make the
+function different without changing its body. This part of the comparison is
+usually done within simple <em>cmpNumbers</em> or <em>cmpFlags</em> operations (e.g.
+<code class="docutils literal notranslate"><span class="pre">cmpFlags(F1-&gt;hasGC(),</span> <span class="pre">F2-&gt;hasGC())</span></code>). Below is a full list of function’s
+properties to be compared on this stage:</p>
+<ul class="simple">
+<li><p><em>Attributes</em> (those are returned by <code class="docutils literal notranslate"><span class="pre">Function::getAttributes()</span></code>
+method).</p></li>
+<li><p><em>GC</em>, for equivalence, <em>RHS</em> and <em>LHS</em> should be both either without
+<em>GC</em> or with the same one.</p></li>
+<li><p><em>Section</em>, just like a <em>GC</em>: <em>RHS</em> and <em>LHS</em> should be defined in the
+same section.</p></li>
+<li><p><em>Variable arguments</em>. <em>LHS</em> and <em>RHS</em> should be both either with or
+without <em>var-args</em>.</p></li>
+<li><p><em>Calling convention</em> should be the same.</p></li>
+</ul>
+</li>
+<li><p>Function type. Checked by <code class="docutils literal notranslate"><span class="pre">FunctionComparator::cmpType(Type*,</span> <span class="pre">Type*)</span></code>
+method. It checks return type and parameters type; the method itself will be
+described later.</p></li>
+<li><p>Associate function formal parameters with each other. Then comparing function
+bodies, if we see the usage of <em>LHS</em>’s <em>i</em>-th argument in <em>LHS</em>’s body, then,
+we want to see usage of <em>RHS</em>’s <em>i</em>-th argument at the same place in <em>RHS</em>’s
+body, otherwise functions are different. On this stage we grant the preference
+to those we met later in function body (value we met first would be <em>less</em>).
+This is done by “<code class="docutils literal notranslate"><span class="pre">FunctionComparator::cmpValues(const</span> <span class="pre">Value*,</span> <span class="pre">const</span> <span class="pre">Value*)</span></code>”
+method (will be described a bit later).</p></li>
+<li><p>Function body comparison. As written in method comments:</p></li>
+</ol>
+<p>“We do a CFG-ordered walk since the actual ordering of the blocks in the linked
+list is immaterial. Our walk starts at the entry block for both functions, then
+takes each block from each terminator in order. As an artifact, this also means
+that unreachable blocks are ignored.”</p>
+<p>So, using this walk, we get BBs from <em>left</em> and <em>right</em> in the same order, and
+compare them by “<code class="docutils literal notranslate"><span class="pre">FunctionComparator::compare(const</span> <span class="pre">BasicBlock*,</span> <span class="pre">const</span> <span class="pre">BasicBlock*)</span></code>” method.</p>
+<p>We also associate BBs with each other, like we did it with function formal
+arguments (see <code class="docutils literal notranslate"><span class="pre">cmpValues</span></code> method below).</p>
+</section>
+<section id="functioncomparator-cmptype">
+<h3>FunctionComparator::cmpType<a class="headerlink" href="#functioncomparator-cmptype" title="Link to this heading">#</a></h3>
+<p>Consider how type comparison works.</p>
+<ol class="arabic">
+<li><p>Coerce pointer to integer. If the left type is a pointer, try to coerce it to the
+integer type. It could be done if its address space is 0, or if address spaces
+are ignored at all. Do the same thing for the right type.</p></li>
+<li><p>If the left and right types are equal, return 0. Otherwise, we need to give
+preference to one of them. So proceed to the next step.</p></li>
+<li><p>If the types are of different kind (different type IDs). Return result of type
+IDs comparison, treating them as numbers (use <code class="docutils literal notranslate"><span class="pre">cmpNumbers</span></code> operation).</p></li>
+<li><p>If the types are vectors or integers, return result of their pointers comparison,
+comparing them as numbers.</p></li>
+<li><p>Check whether type ID belongs to the next group (call it equivalent-group):</p>
+<ul class="simple">
+<li><p>Void</p></li>
+<li><p>Float</p></li>
+<li><p>Double</p></li>
+<li><p>X86_FP80</p></li>
+<li><p>FP128</p></li>
+<li><p>PPC_FP128</p></li>
+<li><p>Label</p></li>
+<li><p>Metadata.</p></li>
+</ul>
+<p>If ID belongs to group above, return 0. Since it’s enough to see that
+types has the same <code class="docutils literal notranslate"><span class="pre">TypeID</span></code>. No additional information is required.</p>
+</li>
+<li><p>Left and right are pointers. Return result of address space comparison
+(numbers comparison).</p></li>
+<li><p>Complex types (structures, arrays, etc.). Follow complex objects comparison
+technique (see the very first paragraph of this chapter). Both <em>left</em> and
+<em>right</em> are to be expanded and their element types will be checked the same
+way. If we get -1 or 1 on some stage, return it. Otherwise, return 0.</p></li>
+<li><p>Steps 1-6 describe all the possible cases, if we passed steps 1-6 and didn’t
+get any conclusions, then invoke <code class="docutils literal notranslate"><span class="pre">llvm_unreachable</span></code>, since it’s quite an
+unexpectable case.</p></li>
+</ol>
+</section>
+<section id="cmpvalues-const-value-const-value">
+<h3>cmpValues(const Value*, const Value*)<a class="headerlink" href="#cmpvalues-const-value-const-value" title="Link to this heading">#</a></h3>
+<p>Method that compares local values.</p>
+<p>This method gives us an answer to a very curious question: whether we could
+treat local values as equal, and which value is greater otherwise. It’s
+better to start from example:</p>
+<p>Consider the situation when we’re looking at the same place in left
+function “<em>FL</em>” and in right function “<em>FR</em>”. Every part of <em>left</em> place is
+equal to the corresponding part of <em>right</em> place, and (!) both parts use
+<em>Value</em> instances, for example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>instr0 i32 %LV   ; left side, function FL
+instr0 i32 %RV   ; right side, function FR
+</pre></div>
+</div>
+<p>So, now our conclusion depends on <em>Value</em> instances comparison.</p>
+<p>The main purpose of this method is to determine the relation between such values.</p>
+<p>What can we expect from equal functions? At the same place, in functions
+“<em>FL</em>” and “<em>FR</em>” we expect to see <em>equal</em> values, or values <em>defined</em> at
+the same place in “<em>FL</em>” and “<em>FR</em>”.</p>
+<p>Consider a small example here:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>define void %f(i32 %pf0, i32 %pf1) {
+  instr0 i32 %pf0 instr1 i32 %pf1 instr2 i32 123
+}
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>define void %g(i32 %pg0, i32 %pg1) {
+  instr0 i32 %pg0 instr1 i32 %pg0 instr2 i32 123
+}
+</pre></div>
+</div>
+<p>In this example, <em>pf0</em> is associated with <em>pg0</em>, <em>pf1</em> is associated with
+<em>pg1</em>, and we also declare that <em>pf0</em> &lt; <em>pf1</em>, and thus <em>pg0</em> &lt; <em>pf1</em>.</p>
+<p>Instructions with opcode “<em>instr0</em>” would be <em>equal</em>, since their types and
+opcodes are equal, and values are <em>associated</em>.</p>
+<p>Instructions with opcode “<em>instr1</em>” from <em>f</em> is <em>greater</em> than instructions
+with opcode “<em>instr1</em>” from <em>g</em>; here we have equal types and opcodes, but
+“<em>pf1</em> is greater than “<em>pg0</em>”.</p>
+<p>Instructions with opcode “<em>instr2</em>” are equal, because their opcodes and
+types are equal, and the same constant is used as a value.</p>
+<section id="what-we-associate-in-cmpvalues">
+<h4>What we associate in cmpValues?<a class="headerlink" href="#what-we-associate-in-cmpvalues" title="Link to this heading">#</a></h4>
+<ul class="simple">
+<li><p>Function arguments. <em>i</em>-th argument from left function associated with
+<em>i</em>-th argument from right function.</p></li>
+<li><p>BasicBlock instances. In basic-block enumeration loop we associate <em>i</em>-th
+BasicBlock from the left function with <em>i</em>-th BasicBlock from the right
+function.</p></li>
+<li><p>Instructions.</p></li>
+<li><p>Instruction operands. Note, we can meet <em>Value</em> here we have never seen
+before. In this case it is not a function argument, nor <em>BasicBlock</em>, nor
+<em>Instruction</em>. It is a global value. It is a constant, since it’s the only
+supposed global here. The method also compares: Constants that are of the
+same type and if right constant can be losslessly bit-casted to the left
+one, then we also compare them.</p></li>
+</ul>
+</section>
+<section id="how-to-implement-cmpvalues">
+<h4>How to implement cmpValues?<a class="headerlink" href="#how-to-implement-cmpvalues" title="Link to this heading">#</a></h4>
+<p><em>Association</em> is a case of equality for us. We just treat such values as equal,
+but, in general, we need to implement antisymmetric relation. As mentioned
+above, to understand what is <em>less</em>, we can use order in which we
+meet values. If both values have the same order in a function (met at the same
+time), we then treat values as <em>associated</em>. Otherwise, it depends on who was
+first.</p>
+<p>Every time we run the top-level compare method, we initialize two identical
+maps (one for the left side, another one for the right side):</p>
+<p><code class="docutils literal notranslate"><span class="pre">map&lt;Value,</span> <span class="pre">int&gt;</span> <span class="pre">sn_mapL,</span> <span class="pre">sn_mapR;</span></code></p>
+<p>The key of the map is the <em>Value</em> itself; the <em>value</em> – is its order (call it
+<em>serial number</em>).</p>
+<p>To add value <em>V</em> we need to perform the next procedure:</p>
+<p><code class="docutils literal notranslate"><span class="pre">sn_map.insert(std::make_pair(V,</span> <span class="pre">sn_map.size()));</span></code></p>
+<p>For the first <em>Value</em>, the map will return <em>0</em>, for the second <em>Value</em>, the map will
+return <em>1</em>, and so on.</p>
+<p>We can then check whether the left and right values met at the same time with
+a simple comparison:</p>
+<p><code class="docutils literal notranslate"><span class="pre">cmpNumbers(sn_mapL[Left],</span> <span class="pre">sn_mapR[Right]);</span></code></p>
+<p>Of course, we can combine insertion and comparison:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">iterator</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="n">LeftRes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sn_mapL</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">Left</span><span class="p">,</span><span class="w"> </span><span class="n">sn_mapL</span><span class="p">.</span><span class="n">size</span><span class="p">())),</span><span class="w"> </span><span class="n">RightRes</span>
+<span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">sn_mapR</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">Right</span><span class="p">,</span><span class="w"> </span><span class="n">sn_mapR</span><span class="p">.</span><span class="n">size</span><span class="p">()));</span>
+<span class="k">return</span><span class="w"> </span><span class="n">cmpNumbers</span><span class="p">(</span><span class="n">LeftRes</span><span class="p">.</span><span class="n">first</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">,</span><span class="w"> </span><span class="n">RightRes</span><span class="p">.</span><span class="n">first</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Let’s look at how the whole method could be implemented.</p>
+<ol class="arabic">
+<li><p>We have to start with the bad news. Consider function self and
+cross-referencing cases:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// self-reference unsigned fact0(unsigned n) { return n &gt; 1 ? n</span>
+<span class="o">*</span><span class="w"> </span><span class="n">fact0</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">fact1</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span>
+<span class="n">fact1</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// cross-reference unsigned ping(unsigned n) { return n!= 0 ? pong(n-1) : 0;</span>
+<span class="p">}</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">pong</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">ping</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>This comparison has been implemented in initial <em>MergeFunctions</em> pass
+version. But, unfortunately, it is not transitive. And this is the only case
+we can’t convert to less-equal-greater comparison. It is a seldom case, 4-5
+functions of 10000 (checked in test-suite), and, we hope, the reader would
+forgive us for such a sacrifice in order to get the O(log(N)) pass time.</p>
+</div></blockquote>
+</li>
+<li><p>If left/right <em>Value</em> is a constant, we have to compare them. Return 0 if it
+is the same constant, or use <code class="docutils literal notranslate"><span class="pre">cmpConstants</span></code> method otherwise.</p></li>
+<li><p>If left/right is <em>InlineAsm</em> instance. Return result of <em>Value</em> pointers
+comparison.</p></li>
+<li><p>Explicit association of <em>L</em> (left value) and <em>R</em> (right value). We need to
+find out whether values met at the same time, and thus are <em>associated</em>. Or we
+need to put the rule: when we treat <em>L</em> &lt; <em>R</em>. Now it is easy: we just return
+the result of numbers comparison:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">iterator</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="n">LeftRes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sn_mapL</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">Left</span><span class="p">,</span><span class="w"> </span><span class="n">sn_mapL</span><span class="p">.</span><span class="n">size</span><span class="p">())),</span>
+<span class="w">  </span><span class="n">RightRes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sn_mapR</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">Right</span><span class="p">,</span><span class="w"> </span><span class="n">sn_mapR</span><span class="p">.</span><span class="n">size</span><span class="p">()));</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">LeftRes</span><span class="p">.</span><span class="n">first</span><span class="o">-&gt;</span><span class="n">second</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">RightRes</span><span class="p">.</span><span class="n">first</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">LeftRes</span><span class="p">.</span><span class="n">first</span><span class="o">-&gt;</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">RightRes</span><span class="p">.</span><span class="n">first</span><span class="o">-&gt;</span><span class="n">second</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>Now, when <em>cmpValues</em> returns 0, we can proceed with the comparison procedure.
+Otherwise, if we get (-1 or 1), we need to pass this result to the top level,
+and finish comparison procedure.</p>
+</section>
+</section>
+<section id="cmpconstants">
+<h3>cmpConstants<a class="headerlink" href="#cmpconstants" title="Link to this heading">#</a></h3>
+<p>Performs a constant comparison as follows:</p>
+<ol class="arabic">
+<li><p>Compare constant types using <code class="docutils literal notranslate"><span class="pre">cmpType</span></code> method. If the result is -1 or 1,
+goto step 2, otherwise proceed to step 3.</p></li>
+<li><p>If types are different, we still can check whether constants could be
+losslessly bitcasted to each other. The further explanation is modification of
+<code class="docutils literal notranslate"><span class="pre">canLosslesslyBitCastTo</span></code> method.</p>
+<p>2.1 Check whether constants are of the first class types
+(<code class="docutils literal notranslate"><span class="pre">isFirstClassType</span></code> check):</p>
+<p>2.1.1. If both constants are <em>not</em> of the first class type: return result
+of <code class="docutils literal notranslate"><span class="pre">cmpType</span></code>.</p>
+<p>2.1.2. Otherwise, if left type is not of the first class, return -1. If
+right type is not of the first class, return 1.</p>
+<p>2.1.3. If both types are of the first class type, proceed to the next step
+(2.1.3.1).</p>
+<p>2.1.3.1. If types are vectors, compare their bitwidth using the
+<em>cmpNumbers</em>. If result is not 0, return it.</p>
+<p>2.1.3.2. Different types, but not vectors:</p>
+<ul class="simple">
+<li><p>if both of them are pointers, good for us, we can proceed to step 3.</p></li>
+<li><p>if one of types is pointer, return result of <em>isPointer</em> flags
+comparison (<em>cmpFlags</em> operation).</p></li>
+<li><p>otherwise we have no methods to prove bitcastability, and thus return
+result of types comparison (-1 or 1).</p></li>
+</ul>
+</li>
+</ol>
+<p>Steps below are for the case when types are equal, or case when constants are
+bitcastable:</p>
+<ol class="arabic" start="3">
+<li><p>One of constants is a “<em>null</em>” value. Return the result of
+<code class="docutils literal notranslate"><span class="pre">cmpFlags(L-&gt;isNullValue,</span> <span class="pre">R-&gt;isNullValue)</span></code> comparison.</p></li>
+<li><p>Compare value IDs, and return result if it is not 0:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">Res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cmpNumbers</span><span class="p">(</span><span class="n">L</span><span class="o">-&gt;</span><span class="n">getValueID</span><span class="p">(),</span><span class="w"> </span><span class="n">R</span><span class="o">-&gt;</span><span class="n">getValueID</span><span class="p">()))</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Res</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Compare the contents of constants. The comparison depends on the kind of
+constants, but on this stage it is just a lexicographical comparison. Just see
+how it was described in the beginning of “<em>Functions comparison</em>” paragraph.
+Mathematically, it is equal to the next case: we encode left constant and right
+constant (with similar way <em>bitcode-writer</em> does). Then compare left code
+sequence and right code sequence.</p></li>
+</ol>
+</section>
+<section id="compare-const-basicblock-const-basicblock">
+<h3>compare(const BasicBlock*, const BasicBlock*)<a class="headerlink" href="#compare-const-basicblock-const-basicblock" title="Link to this heading">#</a></h3>
+<p>Compares two <em>BasicBlock</em> instances.</p>
+<p>It enumerates instructions from left <em>BB</em> and right <em>BB</em>.</p>
+<ol class="arabic">
+<li><p>It assigns serial numbers to the left and right instructions, using
+<code class="docutils literal notranslate"><span class="pre">cmpValues</span></code> method.</p></li>
+<li><p>If one of left or right is <em>GEP</em> (<code class="docutils literal notranslate"><span class="pre">GetElementPtr</span></code>), then treat <em>GEP</em> as
+greater than other instructions. If both instructions are <em>GEPs</em> use <code class="docutils literal notranslate"><span class="pre">cmpGEP</span></code>
+method for comparison. If result is -1 or 1, pass it to the top-level
+comparison (return it).</p>
+<p>3.1. Compare operations. Call <code class="docutils literal notranslate"><span class="pre">cmpOperation</span></code> method. If result is -1 or
+1, return it.</p>
+<p>3.2. Compare number of operands, if result is -1 or 1, return it.</p>
+<p>3.3. Compare operands themselves, use <code class="docutils literal notranslate"><span class="pre">cmpValues</span></code> method. Return result
+if it is -1 or 1.</p>
+<p>3.4. Compare type of operands, using <code class="docutils literal notranslate"><span class="pre">cmpType</span></code> method. Return result if
+it is -1 or 1.</p>
+<p>3.5. Proceed to the next instruction.</p>
+</li>
+<li><p>We can finish instruction enumeration in 3 cases:</p>
+<p>4.1. We reached the end of both left and right basic-blocks. We didn’t
+exit on steps 1-3, so contents are equal, return 0.</p>
+<p>4.2. We have reached the end of the left basic-block. Return -1.</p>
+<p>4.3. Return 1 (we reached the end of the right basic block).</p>
+</li>
+</ol>
+</section>
+<section id="cmpgep">
+<h3>cmpGEP<a class="headerlink" href="#cmpgep" title="Link to this heading">#</a></h3>
+<p>Compares two GEPs (<code class="docutils literal notranslate"><span class="pre">getelementptr</span></code> instructions).</p>
+<p>It differs from regular operations comparison with the only thing: possibility
+to use <code class="docutils literal notranslate"><span class="pre">accumulateConstantOffset</span></code> method.</p>
+<p>So, if we get constant offset for both left and right <em>GEPs</em>, then compare it as
+numbers, and return comparison result.</p>
+<p>Otherwise, treat it like a regular operation (see previous paragraph).</p>
+</section>
+<section id="cmpoperation">
+<h3>cmpOperation<a class="headerlink" href="#cmpoperation" title="Link to this heading">#</a></h3>
+<p>Compares instruction opcodes and some important operation properties.</p>
+<ol class="arabic simple">
+<li><p>Compare opcodes, if it differs return the result.</p></li>
+<li><p>Compare number of operands. If it differs – return the result.</p></li>
+<li><p>Compare operation types, use <em>cmpType</em>. All the same – if types are
+different, return result.</p></li>
+<li><p>Compare <em>subclassOptionalData</em>, get it with <code class="docutils literal notranslate"><span class="pre">getRawSubclassOptionalData</span></code>
+method, and compare it like a numbers.</p></li>
+<li><p>Compare operand types.</p></li>
+<li><p>For some particular instructions, check equivalence (relation in our case) of
+some significant attributes. For example, we have to compare alignment for
+<code class="docutils literal notranslate"><span class="pre">load</span></code> instructions.</p></li>
+</ol>
+</section>
+<section id="o-log-n">
+<h3>O(log(N))<a class="headerlink" href="#o-log-n" title="Link to this heading">#</a></h3>
+<p>Methods described above implement order relationship. And latter, could be used
+for nodes comparison in a binary tree. So we can organize functions set into
+the binary tree and reduce the cost of lookup procedure from
+O(N*N) to O(log(N)).</p>
+</section>
+</section>
+<section id="merging-process-mergetwofunctions">
+<h2>Merging process, mergeTwoFunctions<a class="headerlink" href="#merging-process-mergetwofunctions" title="Link to this heading">#</a></h2>
+<p>Once <em>MergeFunctions</em> detects that current function (<em>G</em>) is equal to one that
+was analyzed before (function <em>F</em>) it calls <code class="docutils literal notranslate"><span class="pre">mergeTwoFunctions(Function*,</span> <span class="pre">Function*)</span></code>.</p>
+<p>Operation affects <code class="docutils literal notranslate"><span class="pre">FnTree</span></code> contents in the following way: <em>F</em> will stay in
+<code class="docutils literal notranslate"><span class="pre">FnTree</span></code>. <em>G</em> being equal to <em>F</em> will not be added to <code class="docutils literal notranslate"><span class="pre">FnTree</span></code>. Calls of
+<em>G</em> would be replaced with something else. It changes bodies of callers. So,
+functions that calls <em>G</em> would be put into <code class="docutils literal notranslate"><span class="pre">Deferred</span></code> set and removed from
+<code class="docutils literal notranslate"><span class="pre">FnTree</span></code>, and analyzed again.</p>
+<p>The approach is as follows:</p>
+<ol class="arabic simple">
+<li><p>Most wished case: when we can use alias and both of <em>F</em> and <em>G</em> are weak. We
+make both of them with aliases to the third strong function <em>H</em>. Actually <em>H</em>
+is <em>F</em>. See below how it’s made (but it’s better to look straight into the
+source code). Well, this is a case when we can just replace <em>G</em> with <em>F</em>
+everywhere, we use <code class="docutils literal notranslate"><span class="pre">replaceAllUsesWith</span></code> operation here (<em>RAUW</em>).</p></li>
+<li><p><em>F</em> could not be overridden, while <em>G</em> could. It would be good to do the
+next: after merging the places where overridable function were used, still use
+overridable stub. So try to make <em>G</em> alias to <em>F</em>, or create overridable tail
+call wrapper around <em>F</em> and replace <em>G</em> with that call.</p></li>
+<li><p>Neither <em>F</em> nor <em>G</em> could be overridden. We can’t use <em>RAUW</em>. We can just
+change the callers: call <em>F</em> instead of <em>G</em>. That’s what
+<code class="docutils literal notranslate"><span class="pre">replaceDirectCallers</span></code> does.</p></li>
+</ol>
+<p>Below is a detailed body description.</p>
+<section id="if-f-may-be-overridden">
+<h3>If “F” may be overridden<a class="headerlink" href="#if-f-may-be-overridden" title="Link to this heading">#</a></h3>
+<p>As follows from <code class="docutils literal notranslate"><span class="pre">mayBeOverridden</span></code> comments: “whether the definition of this
+global may be replaced by something non-equivalent at link time”. If so, that’s
+ok: we can use alias to <em>F</em> instead of <em>G</em> or change call instructions itself.</p>
+<section id="hasglobalaliases-removeusers">
+<h4>HasGlobalAliases, removeUsers<a class="headerlink" href="#hasglobalaliases-removeusers" title="Link to this heading">#</a></h4>
+<p>First, consider the case when we have global aliases of one function name to
+another. Our purpose is to make both of them with aliases to the third strong
+function. However, if we keep <em>F</em> alive and without major changes, we can leave it
+in <code class="docutils literal notranslate"><span class="pre">FnTree</span></code>. Try to combine these two goals.</p>
+<p>Do a stub replacement of <em>F</em> itself with an alias to <em>F</em>.</p>
+<ol class="arabic">
+<li><p>Create stub function <em>H</em>, with the same name and attributes like function
+<em>F</em>. It takes maximum alignment of <em>F</em> and <em>G</em>.</p></li>
+<li><p>Replace all uses of function <em>F</em> with uses of function <em>H</em>. It is a
+two-step procedure instead. First of all, we must take into account that all functions
+that call <em>F</em> would be changed because we change the call argument
+(from <em>F</em> to <em>H</em>). If so, we must review these caller functions again after
+this procedure. We remove callers from <code class="docutils literal notranslate"><span class="pre">FnTree</span></code>, method with name
+<code class="docutils literal notranslate"><span class="pre">removeUsers(F)</span></code> does that (don’t confuse with <code class="docutils literal notranslate"><span class="pre">replaceAllUsesWith</span></code>):</p>
+<p>2.1. <code class="docutils literal notranslate"><span class="pre">Inside</span> <span class="pre">removeUsers(Value*</span> <span class="pre">V)</span></code> we go through the all values that use value <em>V</em> (or <em>F</em> in our context).
+If value is instruction, we go to function that holds this instruction and
+mark it as to-be-analyzed-again (put to <code class="docutils literal notranslate"><span class="pre">Deferred</span></code> set), we also remove
+caller from <code class="docutils literal notranslate"><span class="pre">FnTree</span></code>.</p>
+<p>2.2. Now we can do the replacement: call <code class="docutils literal notranslate"><span class="pre">F-&gt;replaceAllUsesWith(H)</span></code>.</p>
+</li>
+<li><p><em>H</em> (that now “officially” plays <em>F</em>’s role) is replaced with alias to <em>F</em>.
+Do the same with <em>G</em>: replace it with alias to <em>F</em>. So finally everywhere <em>F</em>
+was used, we use <em>H</em> and it is alias to <em>F</em>, and everywhere <em>G</em> was used we
+also have alias to <em>F</em>.</p></li>
+<li><p>Set <em>F</em> linkage to private. Make it strong :-)</p></li>
+</ol>
+</section>
+<section id="no-global-aliases-replacedirectcallers">
+<h4>No global aliases, replaceDirectCallers<a class="headerlink" href="#no-global-aliases-replacedirectcallers" title="Link to this heading">#</a></h4>
+<p>If global aliases are not supported, we call <code class="docutils literal notranslate"><span class="pre">replaceDirectCallers</span></code>. Just
+go through all calls of <em>G</em> and replace it with calls of <em>F</em>. If you look into
+the method you will see that it scans all uses of <em>G</em> too, and if use is callee
+(if user is call instruction and <em>G</em> is used as what to be called), we replace
+it with use of <em>F</em>.</p>
+<section id="if-f-could-not-be-overridden-fix-it">
+<h5>If “F” could not be overridden, fix it!<a class="headerlink" href="#if-f-could-not-be-overridden-fix-it" title="Link to this heading">#</a></h5>
+<p>We call <code class="docutils literal notranslate"><span class="pre">writeThunkOrAlias(Function</span> <span class="pre">*F,</span> <span class="pre">Function</span> <span class="pre">*G)</span></code>. Here we try to replace
+<em>G</em> with an alias to <em>F</em> first. The next conditions are essential:</p>
+<ul class="simple">
+<li><p>target should support global aliases,</p></li>
+<li><p>the address itself of <em>G</em> should be not significant, not named and not
+referenced anywhere,</p></li>
+<li><p>function should come with external, local or weak linkage.</p></li>
+</ul>
+<p>Otherwise, we write thunk: some wrapper that has <em>G’s</em> interface and calls <em>F</em>,
+so <em>G</em> could be replaced with this wrapper.</p>
+<p><em>writeAlias</em></p>
+<p>As follows from <em>llvm</em> reference:</p>
+<p>“Aliases act as <em>second name</em> for the aliasee value”. So we just want to create
+a second name for <em>F</em> and use it instead of <em>G</em>:</p>
+<ol class="arabic">
+<li><p>create global alias itself (<em>GA</em>),</p></li>
+<li><p>adjust alignment of <em>F</em> so it must be maximum of current and <em>G’s</em> alignment;</p></li>
+<li><p>replace uses of <em>G</em>:</p>
+<p>3.1. first mark all callers of <em>G</em> as to-be-analyzed-again, using
+<code class="docutils literal notranslate"><span class="pre">removeUsers</span></code> method (see chapter above),</p>
+<p>3.2. call <code class="docutils literal notranslate"><span class="pre">G-&gt;replaceAllUsesWith(GA)</span></code>.</p>
+</li>
+<li><p>Get rid of <em>G</em>.</p></li>
+</ol>
+<p><em>writeThunk</em></p>
+<p>As it written in method comments:</p>
+<p>“Replace G with a simple tail call to bitcast(F). Also replace direct uses of G
+with bitcast(F). Deletes G.”</p>
+<p>In general, it does the same as usual when we want to replace callee, except the
+first point:</p>
+<ol class="arabic simple">
+<li><p>We generate tail call wrapper around <em>F</em>, but with an interface that allows using
+it instead of <em>G</em>.</p></li>
+<li><p>“As-usual”: <code class="docutils literal notranslate"><span class="pre">removeUsers</span></code> and <code class="docutils literal notranslate"><span class="pre">replaceAllUsesWith</span></code> then.</p></li>
+<li><p>Get rid of <em>G</em>.</p></li>
+</ol>
+</section>
+</section>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="AliasAnalysis.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">LLVM Alias Analysis Infrastructure</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="StackSafetyAnalysis.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Stack Safety Analysis</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">MergeFunctions pass, how it works</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li><a class="reference internal" href="#what-should-i-know-to-be-able-to-follow-along-with-this-document">What should I know to be able to follow along with this document?</a></li>
+<li><a class="reference internal" href="#narrative-structure">Narrative structure</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#basics">Basics</a><ul>
+<li><a class="reference internal" href="#how-to-do-it">How to do it?</a><ul>
+<li><a class="reference internal" href="#possible-solutions">Possible solutions</a><ul>
+<li><a class="reference internal" href="#random-access">Random-access</a></li>
+<li><a class="reference internal" href="#logarithmical-search">Logarithmical search</a></li>
+<li><a class="reference internal" href="#present-state">Present state</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mergefunctions-main-fields-and-runonmodule">MergeFunctions, main fields and runOnModule</a><ul>
+<li><a class="reference internal" href="#runonmodule">runOnModule</a></li>
+<li><a class="reference internal" href="#comparison-and-logarithmical-search">Comparison and logarithmical search</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#functions-comparison">Functions comparison</a><ul>
+<li><a class="reference internal" href="#functioncomparator-compare-void">FunctionComparator::compare(void)</a></li>
+<li><a class="reference internal" href="#functioncomparator-cmptype">FunctionComparator::cmpType</a></li>
+<li><a class="reference internal" href="#cmpvalues-const-value-const-value">cmpValues(const Value*, const Value*)</a><ul>
+<li><a class="reference internal" href="#what-we-associate-in-cmpvalues">What we associate in cmpValues?</a></li>
+<li><a class="reference internal" href="#how-to-implement-cmpvalues">How to implement cmpValues?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cmpconstants">cmpConstants</a></li>
+<li><a class="reference internal" href="#compare-const-basicblock-const-basicblock">compare(const BasicBlock*, const BasicBlock*)</a></li>
+<li><a class="reference internal" href="#cmpgep">cmpGEP</a></li>
+<li><a class="reference internal" href="#cmpoperation">cmpOperation</a></li>
+<li><a class="reference internal" href="#o-log-n">O(log(N))</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#merging-process-mergetwofunctions">Merging process, mergeTwoFunctions</a><ul>
+<li><a class="reference internal" href="#if-f-may-be-overridden">If “F” may be overridden</a><ul>
+<li><a class="reference internal" href="#hasglobalaliases-removeusers">HasGlobalAliases, removeUsers</a></li>
+<li><a class="reference internal" href="#no-global-aliases-replacedirectcallers">No global aliases, replaceDirectCallers</a><ul>
+<li><a class="reference internal" href="#if-f-could-not-be-overridden-fix-it">If “F” could not be overridden, fix it!</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=ccd1e645"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

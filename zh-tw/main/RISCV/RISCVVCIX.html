@@ -1,0 +1,870 @@
+<!doctype html>
+<html class="no-js" lang="zh-TW" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="../genindex.html" /><link rel="search" title="搜尋" href="../search.html" /><link rel="next" title="Sandbox IR: A transactional layer over LLVM IR" href="../SandboxIR.html" /><link rel="prev" title="RISC-V Vector Extension" href="RISCVVectorExtension.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/RISCV/RISCVVCIX.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Scheduling Information for RISC-V VCIX Instructions - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="../ltd-provenance.js"></script>
+<script type="text/javascript" src="../ltd-current.js"></script>
+<script type="text/javascript" src="../../../ltd-config.js"></script>
+<script type="text/javascript" src="../../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="搜尋" name="q" aria-label="搜尋">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">常見問題集（FAQ）</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Reference.html">參考</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of 參考</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-diff.html">llvm-diff - LLVM structural 『diff』</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html#introduction">簡介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LangRef.html">LLVM 語言參考手冊</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../TestingGuide.html">LLVM 測試基礎設施指南</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM 測試基礎設施指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../UserGuides.html">使用者指南</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of 使用者指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CMake.html">使用 CMake 建置 LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AdvancedBuilds.html">進階建置組態</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../TableGen/index.html">TableGen 概覽</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen 概覽</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUInstructionSyntax.html">AMDGPU 指令語法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GitHub.html">LLVM GitHub 使用者指南</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../DiscourseMigrationGuide.html">Discourse 遷移指南</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DeveloperPolicy.html">LLVM 開發者方針</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/RISCV/RISCVVCIX.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="scheduling-information-for-risc-v-vcix-instructions">
+<h1>Scheduling Information for RISC-V VCIX Instructions<a class="headerlink" href="#scheduling-information-for-risc-v-vcix-instructions" title="Link to this heading">#</a></h1>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<p>The purpose of this document is to outline how the scheduling information for RISC-V’s <code class="docutils literal notranslate"><span class="pre">XSfvcp</span></code> extension – SiFive Vector Coprocessor Interface (VCIX) – in LLVM works, why it works the way it does, and how one may modify the code to support their VCIX needs.</p>
+<p>SiFive makes no guarantee that modifying the upstream code to describe their VCIX implementations will lead to performance improvements over the default implementation.</p>
+</section>
+<section id="introduction">
+<h2>簡介<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>LLVM uses scheduler models to describe the behavior of processor latencies and resources. The scheduler models are attached to a processor definition (i.e. <code class="docutils literal notranslate"><span class="pre">-mcpu=</span></code>) or tunings (i.e. <code class="docutils literal notranslate"><span class="pre">-mtune=</span></code>). The challenge with VCIX is that the same processor definition could be used with different coprocessors that have very different latencies or processor resource usage for a given instruction. As a result, a default implementation is provided, and one may use this document to customize the existing implementation to their needs.</p>
+<section id="understanding-the-vcix-scheduling-model-information">
+<h3>Understanding the VCIX Scheduling Model Information<a class="headerlink" href="#understanding-the-vcix-scheduling-model-information" title="Link to this heading">#</a></h3>
+<section id="supported-scheduling-models">
+<h4>Supported Scheduling Models<a class="headerlink" href="#supported-scheduling-models" title="Link to this heading">#</a></h4>
+<p>VCIX is supported in the SiFive 7 family scheduling models, for instance <code class="docutils literal notranslate"><span class="pre">SiFive7VLEN512Model</span></code> and <code class="docutils literal notranslate"><span class="pre">SiFive7VLEN1024X300Model</span></code>. These models share a large portion of scheduling information, including those for VCIX instructions. Therefore, when it comes to customizing VCIX scheduling info, which we will walk you through in later sections, you only need to modify a single place.</p>
+<p>The SiFive 7 scheduling models are used in the following (tuning) processors:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-mtune=sifive7-series</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-mcpu=sifive-x390</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-mcpu=sifive-x280</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-mcpu=sifive-e76</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-mcpu=sifive-s76</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-mcpu=sifive-u74</span></code></p></li>
+</ul>
+</section>
+<section id="understanding-the-default-implementation">
+<h4>Understanding the Default Implementation<a class="headerlink" href="#understanding-the-default-implementation" title="Link to this heading">#</a></h4>
+<p>To read the default implementation, please open <code class="docutils literal notranslate"><span class="pre">llvm/lib/Target/RISCV/RISCVSchedSiFive7.td</span></code> and navigate to the line that says <code class="docutils literal notranslate"><span class="pre">//</span> <span class="pre">VCIX</span></code>. The line can be found on GitHub <a class="reference external" href="https://github.com/llvm/llvm-project/blob/a00278632dfed7b856a0ac11a58423cb6b14a8c1/llvm/lib/Target/RISCV/RISCVSchedSiFive7.td#L1161">here</a>.</p>
+<p>To understand the code here, we first provide a brief overview. VCIX Pseudo-instructions are defined in <code class="docutils literal notranslate"><span class="pre">llvm/lib/Target/RISCV/RISCVInstrInfoXSf.td</span></code> which can be found on GitHub <a class="reference external" href="https://github.com/llvm/llvm-project/blob/main/llvm/lib/Target/RISCV/RISCVInstrInfoXSf.td">here</a>.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>multiclass VPseudoVC_X&lt;LMULInfo m, DAGOperand RS1Class,
+                       Operand OpClass = payload2&gt; {
+  let VLMul = m.value in {
+    let Defs = [SF_VCIX_STATE], Uses = [SF_VCIX_STATE] in {
+      def &quot;PseudoVC_&quot; # NAME # &quot;_SE_&quot; # m.MX
+        : VPseudoVC_X&lt;OpClass, RS1Class&gt;,
+          Sched&lt;[!cast&lt;SchedWrite&gt;(&quot;WriteVC_&quot; # NAME # &quot;_&quot; # m.MX)]&gt;;
+      def &quot;PseudoVC_V_&quot; # NAME # &quot;_SE_&quot; # m.MX
+        : VPseudoVC_V_X&lt;OpClass, m.vrclass, RS1Class&gt;,
+          Sched&lt;[!cast&lt;SchedWrite&gt;(&quot;WriteVC_V_&quot; # NAME # &quot;_&quot; # m.MX)]&gt;;
+    }
+    def &quot;PseudoVC_V_&quot; # NAME # &quot;_&quot; # m.MX
+      : VPseudoVC_V_X&lt;OpClass, m.vrclass, RS1Class&gt;,
+        Sched&lt;[!cast&lt;SchedWrite&gt;(&quot;WriteVC_V_&quot; # NAME # &quot;_&quot; # m.MX)]&gt;;
+  }
+}
+
+// snip
+
+let Predicates = [HasVendorXSfvcp] in {
+  foreach m = MxList in {
+    defm X : VPseudoVC_X&lt;m, GPR&gt;;
+
+// snip
+</pre></div>
+</div>
+<p>In this example, for each LMUL <code class="docutils literal notranslate"><span class="pre">m.MX</span></code>, there are three pseudos defined:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PseudoVC_X_SE_</span> <span class="pre">#</span> <span class="pre">m.MX</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PseudoVC_V_X_SE_</span> <span class="pre">#</span> <span class="pre">m.MX</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PseudoVC_V_X_</span> <span class="pre">#</span> <span class="pre">m.MX</span></code></p></li>
+</ol>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">#</span></code> concatenates the first string with the LMUL <code class="docutils literal notranslate"><span class="pre">m.MX</span></code>. When <code class="docutils literal notranslate"><span class="pre">m.MX</span></code> is <code class="docutils literal notranslate"><span class="pre">M2</span></code> for example, the three pseudos would be defined:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PseudoVC_X_SE_M2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PseudoVC_V_X_SE_M2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PseudoVC_V_X_M2</span></code></p></li>
+</ol>
+<p>Note that for each of these definitions, there is a <code class="docutils literal notranslate"><span class="pre">Sched</span></code> list attached. The <code class="docutils literal notranslate"><span class="pre">Sched</span></code> list takes <code class="docutils literal notranslate"><span class="pre">SchedWrite</span></code> and <code class="docutils literal notranslate"><span class="pre">SchedRead</span></code> objects, which define the behavior of the operands that are written and and read. In the snippet above, the singular write is attached to the pseudo-instruction. It is up to the scheduler model to describe the behavior of each <code class="docutils literal notranslate"><span class="pre">SchedWrite</span></code>.</p>
+<p>Switching back to the scheduling model linked at the start of this section, we explain how behavior is assigned to the VCIX <code class="docutils literal notranslate"><span class="pre">SchedWrite</span></code> objects. Let’s take a look at an example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>// snip
+
+defvar Cycles = SiFive7GetCyclesDefault&lt;mx&gt;.c;
+defvar IsWorstCase = SiFive7IsWorstCaseMX&lt;mx, SchedMxList&gt;.c;
+let Latency = Cycles,
+    AcquireAtCycles = [0, 1],
+    ReleaseAtCycles = [1, !add(1, Cycles)] in {
+    defm &quot;&quot; : LMULWriteResMX&lt;&quot;WriteVC_V_I&quot;,   [VCQ, VA1], mx, IsWorstCase&gt;;
+
+// snip
+</pre></div>
+</div>
+<p>Here, the <code class="docutils literal notranslate"><span class="pre">LMULWriteResMX</span></code> creates a <code class="docutils literal notranslate"><span class="pre">WriteRes</span></code> for each supported LMULs, which is represented by <code class="docutils literal notranslate"><span class="pre">mx</span></code> above. A <code class="docutils literal notranslate"><span class="pre">WriteRes</span></code> associates processor resources, processor resource usage, and latency with each <code class="docutils literal notranslate"><span class="pre">SchedWrite</span></code>. In this example, the <code class="docutils literal notranslate"><span class="pre">SchedWrite</span></code> named <code class="docutils literal notranslate"><span class="pre">WriteVC_V_I</span> <span class="pre">#</span> <span class="pre">mx</span></code> is being said to use the <code class="docutils literal notranslate"><span class="pre">VCQ</span></code> (vector command queue) and <code class="docutils literal notranslate"><span class="pre">VA1</span></code> (vector arithmetic sequencer) processor resources.
+<code class="docutils literal notranslate"><span class="pre">AcquireAtCycles[i]</span></code> defines a cycle, relative to instruction issue, that processor resource <code class="docutils literal notranslate"><span class="pre">i</span></code> in the <code class="docutils literal notranslate"><span class="pre">LMULWriteResMX</span></code> below is acquired at. Similarly, <code class="docutils literal notranslate"><span class="pre">ReleaseAtCycles[i]</span></code> defines a cycle, relative to instruction issue, that processor resource <code class="docutils literal notranslate"><span class="pre">i</span></code> in the <code class="docutils literal notranslate"><span class="pre">LMULWriteResMX</span></code> below is released at. For this <code class="docutils literal notranslate"><span class="pre">LMULWriteResMX</span></code>, we’re saying that the vector command queue is acquired at cycle 0 and released at cycle 1 and the vector arithmetic sequencer is acquired at cycle 1 and released at cycle 1+Cycles. <code class="docutils literal notranslate"><span class="pre">Cycles</span></code> gets its value from a function that describes the default behavior. Looking at the entire VCIX default implementation, you can see that all instructions are given this behavior.</p>
+<p>From here, you should have enough background on how the default implementation works.</p>
+</section>
+</section>
+</section>
+<section id="basic-scheduling-info-customization">
+<h2>Basic Scheduling Info Customization<a class="headerlink" href="#basic-scheduling-info-customization" title="Link to this heading">#</a></h2>
+<p>The default implementation sets the <code class="docutils literal notranslate"><span class="pre">Latency</span></code>, <code class="docutils literal notranslate"><span class="pre">AcquireAtCycles</span></code> and <code class="docutils literal notranslate"><span class="pre">ReleaseAtCycles</span></code> the same way for all VCIX instructions. Let’s walk through an example where we <em>customize</em> the default implementation for our needs.</p>
+<p>Let’s assume that <code class="docutils literal notranslate"><span class="pre">WriteVC_V_I</span></code> behaves differently from the default implementation, and all the other VCIX instructions behave the same as the default implementation. We might write something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>defvar CustomCycles = SiFive7GetCustomCycles&lt;mx&gt;.c;
+defvar IsWorstCase = SiFive7IsWorstCaseMX&lt;mx, SchedMxList&gt;.c;
+let Latency = CustomCycles,
+    AcquireAtCycles = [0, 1],
+    ReleaseAtCycles = [1, !add(1, CustomCycles)] in
+  defm &quot;&quot; : LMULWriteResMX&lt;&quot;WriteVC_V_I&quot;,   [VCQ, VA1], mx, IsWorstCase&gt;;
+
+  // snip rest
+</pre></div>
+</div>
+<p>In this example, we wrote a new function <code class="docutils literal notranslate"><span class="pre">SiFive7GetCustomCycles</span></code> which takes an argument <code class="docutils literal notranslate"><span class="pre">mx</span></code> which describes the LMUL we are scheduling for. It is up to you to determine the number of cycles that should be returned, based on the behavior of your implementation. You can read the implementation of <code class="docutils literal notranslate"><span class="pre">SiFive7GetCyclesDefault</span></code> to help you write a custom one.</p>
+<p>We set <code class="docutils literal notranslate"><span class="pre">Latency</span></code> using the result of our new custom function. Then we left <code class="docutils literal notranslate"><span class="pre">AcquireAtCycles[0]</span></code> and <code class="docutils literal notranslate"><span class="pre">ReleaseAtCycles[0]</span></code> the same because we assume that the <code class="docutils literal notranslate"><span class="pre">VCQ</span></code> has the same behavior: it takes one cycle to get dequeued. Then, we use the result of our new custom function to describe how long the arithmetic sequencer is used. In this case, we made the <code class="docutils literal notranslate"><span class="pre">Latency</span></code> and occupancy of the arithmetic sequencer the same, but we could have easily written two custom functions instead.</p>
+<p>Another thing that can be customized is the processor resources that are used by a VCIX instruction. Currently, these instructions all use the vector command queue and the vector arithmetic sequencer. However, you can add another <code class="docutils literal notranslate"><span class="pre">ProcResource</span></code> to the list, and describe when it is acquired and released in <code class="docutils literal notranslate"><span class="pre">AcquireAtCycles</span></code> and <code class="docutils literal notranslate"><span class="pre">ReleaseAtCycles</span></code>.</p>
+<p>To do so, first let’s look at the existing <code class="docutils literal notranslate"><span class="pre">ProcResource</span></code> we used before, namely <code class="docutils literal notranslate"><span class="pre">VCQ</span></code> and <code class="docutils literal notranslate"><span class="pre">VA1</span></code>. These two instances are actually parameters passed to the enclosing structure, <code class="docutils literal notranslate"><span class="pre">SiFive7WriteResBase</span></code>. Their actual definitions are placed <a class="reference external" href="https://github.com/llvm/llvm-project/blob/e087d428823e1d1d4c00c895bc3b637989764104/llvm/lib/Target/RISCV/RISCVSchedSiFive7.td#L273">here</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">PipeA</span>   <span class="p">:</span> <span class="n">ProcResource</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">def</span> <span class="nf">PipeB</span>   <span class="p">:</span> <span class="n">ProcResource</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">def</span> <span class="nf">IDiv</span>    <span class="p">:</span> <span class="n">ProcResource</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span> <span class="o">//</span> <span class="n">Int</span> <span class="n">Division</span>
+<span class="k">def</span> <span class="nf">FDiv</span>    <span class="p">:</span> <span class="n">ProcResource</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span> <span class="o">//</span> <span class="n">FP</span> <span class="n">Division</span><span class="o">/</span><span class="n">Sqrt</span>
+
+<span class="o">//</span> <span class="n">Arithmetic</span> <span class="n">sequencer</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="o">//</span> <span class="n">VA1</span> <span class="n">can</span> <span class="n">handle</span> <span class="nb">any</span> <span class="n">vector</span> <span class="n">airthmetic</span> <span class="n">instruction</span><span class="o">.</span>
+<span class="k">def</span> <span class="nf">VA1</span>     <span class="p">:</span> <span class="n">ProcResource</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">if</span> <span class="n">dualVALU</span> <span class="n">then</span> <span class="p">{</span>
+  <span class="o">//</span> <span class="n">VA2</span> <span class="n">generally</span> <span class="n">can</span> <span class="n">only</span> <span class="n">handle</span> <span class="n">simple</span> <span class="n">vector</span> <span class="n">arithmetic</span><span class="o">.</span>
+  <span class="k">def</span> <span class="nf">VA2</span>     <span class="p">:</span> <span class="n">ProcResource</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">VL</span>      <span class="p">:</span> <span class="n">ProcResource</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span> <span class="o">//</span> <span class="n">Load</span> <span class="n">sequencer</span>
+<span class="k">def</span> <span class="nf">VS</span>      <span class="p">:</span> <span class="n">ProcResource</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span> <span class="o">//</span> <span class="n">Store</span> <span class="n">sequencer</span>
+<span class="k">def</span> <span class="nf">VCQ</span>     <span class="p">:</span> <span class="n">ProcResource</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">;</span> <span class="o">//</span> <span class="n">Vector</span> <span class="n">Command</span> <span class="n">Queue</span>
+</pre></div>
+</div>
+<p>These <code class="docutils literal notranslate"><span class="pre">ProcResources</span></code> are instantiated in another class, <code class="docutils literal notranslate"><span class="pre">SiFive7SchedResources</span></code>, where we also create an alias for each of them (through <code class="docutils literal notranslate"><span class="pre">defvar</span></code>) so that it’s easier to use later:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>defvar SiFive7PipeA = !cast&lt;ProcResource&gt;(NAME # &quot;SiFive7PipeA&quot;);
+defvar SiFive7PipeB = !cast&lt;ProcResource&gt;(NAME # &quot;SiFive7PipeB&quot;);
+defvar SiFive7PipeAB = !cast&lt;ProcResGroup&gt;(NAME # &quot;SiFive7PipeAB&quot;);
+defvar SiFive7IDiv = !cast&lt;ProcResource&gt;(NAME # &quot;SiFive7IDiv&quot;);
+defvar SiFive7FDiv = !cast&lt;ProcResource&gt;(NAME # &quot;SiFive7FDiv&quot;);
+
+defvar SiFive7VA1 = !cast&lt;ProcResource&gt;(NAME # &quot;SiFive7VA1&quot;);
+
+defvar SiFive7VA1OrVA2 = !if (dualVALU,
+                              !cast&lt;ProcResGroup&gt;(NAME # &quot;SiFive7VA1OrVA2&quot;),
+                              !cast&lt;ProcResource&gt;(NAME # &quot;SiFive7VA1&quot;));
+</pre></div>
+</div>
+<p>Specifically, <code class="docutils literal notranslate"><span class="pre">SiFive7VA1</span></code> here is the alias for <code class="docutils literal notranslate"><span class="pre">VA1</span></code> mentioned previously, which is also the instance we’ll eventually pass as a parameter to <code class="docutils literal notranslate"><span class="pre">SiFive7WriteResBase</span></code> mentioned earlier.</p>
+<p>So if you want to add your own, that might look something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>// Step 1: create a new ProcResource
+def CustomVCIX          : ProcResource&lt;1&gt;;
+
+// Step 2: add a new parameter to SiFive7WriteResBase
+multiclass SiFive7WriteResBase&lt;int VLEN,
+    ProcResourceKind PipeA, ProcResourceKind PipeB, ProcResourceKind PipeAB,
+    ...
+    ProcResourceKind VCQ, ProcResourceKind CustomVCIX,
+    ...&gt;
+
+// Step 3: update SiFive7SchedResources
+defvar SiFive7CustomVCIX = !cast&lt;ProcResource&gt;(NAME # SiFive7CustomVCIX);
+
+defm SiFive7
+   : SiFive7WriteResBase&lt;vlen, SiFive7PipeA, SiFive7PipeB, SiFive7PipeAB,
+                         ...
+                         SiFive7VCQ, SiFive7CustomVCIX, ...&gt;;
+
+// Final Step: update scheduling info entry
+
+defvar CustomCycles = SiFive7GetCustomCycles&lt;mx&gt;.c;
+defvar VCIXCycles = SiFive7GetCustomCyclesVCIX&lt;mx&gt;.c;
+defvar IsWorstCase = SiFive7IsWorstCaseMX&lt;mx, SchedMxList&gt;.c;
+let Latency = CustomCycles,
+    AcquireAtCycles = [0, 1, CustomCycles],
+    ReleaseAtCycles = [1, !add(1, CustomCycles), !add(1, VCIXCycles) ] in
+  defm &quot;&quot; : LMULWriteResMX&lt;&quot;WriteVC_V_I&quot;,   [SiFive7VCQ, VA, CustomVCIX], mx, ...&gt;;
+</pre></div>
+</div>
+</section>
+<section id="advanced-scheduling-info-customization">
+<h2>Advanced Scheduling Info Customization<a class="headerlink" href="#advanced-scheduling-info-customization" title="Link to this heading">#</a></h2>
+<p>Another scenario you may be interested in handling is changing scheduling information based on the <em>value</em> of the immediate in the first operand of the pseudo-instruction, since it is considered part of the opcode. In order to model this there are a few steps:</p>
+<ol class="arabic simple">
+<li><p>Define <code class="docutils literal notranslate"><span class="pre">WriteRes</span></code> objects for all pseudo + opcode combinations.</p></li>
+<li><p>Define <code class="docutils literal notranslate"><span class="pre">MCSchedPredicate</span></code> objects for all opcode combinations</p></li>
+<li><p>Define <code class="docutils literal notranslate"><span class="pre">SchedVar</span></code> objects to tie <code class="docutils literal notranslate"><span class="pre">MCSchedPredicate</span></code> objects to <code class="docutils literal notranslate"><span class="pre">WriteRes</span></code> objects</p></li>
+<li><p>Define <code class="docutils literal notranslate"><span class="pre">SchedWriteVariant</span></code> to aggregate all <code class="docutils literal notranslate"><span class="pre">SchedVar</span></code> objects together</p></li>
+<li><p>Define a <code class="docutils literal notranslate"><span class="pre">SchedAlias</span></code> object to tie the behavior of the original <code class="docutils literal notranslate"><span class="pre">WriteRes</span></code> name with the <code class="docutils literal notranslate"><span class="pre">SchedWriteVariant</span></code></p></li>
+</ol>
+<p>There is an existing helper class, <code class="docutils literal notranslate"><span class="pre">LMULWriteResMXVariant</span></code>, which can be found on GitHub <a class="reference external" href="https://github.com/llvm/llvm-project/blob/36b339b84a98afe7bdf470747a776d0d5f348b64/llvm/lib/Target/RISCV/RISCVScheduleV.td#L74">here</a> that implements this process for the case when there is a single predicate.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">IsOp0ImmEq2</span> <span class="p">:</span> <span class="n">MCSchedPredicate</span><span class="o">&lt;</span><span class="n">CheckImmOperand</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">&gt;&gt;</span><span class="p">;</span> <span class="o">//</span> <span class="n">true</span> <span class="n">when</span> <span class="n">operand</span> <span class="mi">0</span> <span class="ow">is</span> <span class="mi">2</span>
+
+<span class="n">defm</span>  <span class="p">:</span> <span class="n">LMULWriteResMXVariant</span><span class="o">&lt;</span><span class="s2">&quot;WriteVC_V_I&quot;</span><span class="p">,</span> <span class="n">IsOp0ImmEq2</span><span class="p">,</span>
+                            <span class="o">//</span> <span class="n">When</span> <span class="n">IsOp0ImmEq2</span> <span class="ow">is</span> <span class="n">true</span>
+                            <span class="p">[</span><span class="n">VCQ</span><span class="p">,</span> <span class="n">VA1</span><span class="p">],</span> <span class="mi">20</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">22</span><span class="p">],</span>
+                            <span class="o">//</span> <span class="n">Other</span> <span class="n">cases</span>
+                            <span class="p">[</span><span class="n">VCQ</span><span class="p">,</span> <span class="n">VA1</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                            <span class="n">mx</span><span class="p">,</span> <span class="o">...&gt;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>In the above example, <code class="docutils literal notranslate"><span class="pre">WriteVC_V_I</span></code> will be assigned a latency of 20 cycles and hold <code class="docutils literal notranslate"><span class="pre">VA1</span></code> for 22 cycles if its first (immediate) operand has a value of 2. Otherwise, the latency would be 3 cycles with an occupancy of 4 cycles on <code class="docutils literal notranslate"><span class="pre">VA1</span></code>.</p>
+<p>To extend it to handle multiple opcodes, you would add add additional <code class="docutils literal notranslate"><span class="pre">WriteRes</span></code> definitions for each pseudo + opcode combinations, define additional <code class="docutils literal notranslate"><span class="pre">MCSchedPredicate</span></code> objects for each opcode, define additional <code class="docutils literal notranslate"><span class="pre">SchedVar</span></code> objects to tie these new objects together, and add these <code class="docutils literal notranslate"><span class="pre">SchedVar</span></code> objects to the <code class="docutils literal notranslate"><span class="pre">SchedWriteVariant</span></code>.</p>
+<p>To define a predicate that checks an opcode immediate is 0 or 1 for example, you might write something like this for the <code class="docutils literal notranslate"><span class="pre">WriteVC_V_I</span></code> pseudo for LMUL <code class="docutils literal notranslate"><span class="pre">mx</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>// Define WriteRes objects for all pseudo + opcode combinations
+let Latency = 3, AcquireAtCycles = [0, 1], ReleaseAtCycles = [1, 4] in
+def &quot;WriteVC_V_I_&quot; # mx # &quot;_Opc0&quot; : SchedWriteRes&lt;[VCQ, VA1]&gt;
+let Latency = 10, AcquireAtCycles = [0, 1], ReleaseAtCycles = [1, 11] in
+def &quot;WriteVC_V_I_&quot; # mx # &quot;_Opc1&quot; : SchedWriteRes&lt;[VCQ, VA1]&gt;
+
+// Define MCSchedPredicate objects for all opcode combinations. This toy example shows how to
+// do this with made up opcodes. Please refer to the VCIX manual for opcodes you will want to
+// support.
+def IsOp0ImmEq0 : MCSchedPredicate&lt;CheckImmOperand&lt;0, 0&gt;&gt;; // true when operand 0 is 0
+def IsOp0ImmEq1 : MCSchedPredicate&lt;CheckImmOperand&lt;0, 1&gt;&gt;; // true when operand 0 is 1
+
+// Define SchedVar objects to tie MCSchedPredicate objects to WriteRes objects
+def &quot;WriteVC_V_I_&quot; # mx # &quot;_Opc0SchedVar&quot;
+  : SchedVar&lt;IsOp0ImmEq0, [!cast&lt;SchedWriteRes&gt;(&quot;WriteVC_V_I_&quot; # mx # &quot;_Opc0&quot;)]&gt;;
+def &quot;WriteVC_V_I_&quot; # mx # &quot;_Opc1SchedVar&quot;
+  : SchedVar&lt;IsOp0ImmEq0, [!cast&lt;SchedWriteRes&gt;(&quot;WriteVC_V_I_&quot; # mx # &quot;_Opc1&quot;)]&gt;;
+
+// Define SchedWriteVariant to aggregate all SchedVar objects together
+def &quot;WriteVC_V_I_&quot; # mx # &quot;Variant&quot;
+  : SchedWriteVariant&lt;[&quot;WriteVC_V_I_&quot; # mx # &quot;_Opc0SchedVar&quot;,
+                       &quot;WriteVC_V_I_&quot; # mx # &quot;_Opc1SchedVar&quot;]&gt;;
+
+// Define a SchedAlias object to tie the behavior of the original WriteRes name with the SchedWriteVariant
+def : SchedAlias&lt;!cast&lt;SchedReadWrite&gt;(&quot;WriteVC_V_I_&quot; # mx),
+                     !cast&lt;SchedReadWrite&gt;(&quot;WriteVC_V_I_&quot; # mx # &quot;Variant&quot;)&gt;;
+</pre></div>
+</div>
+<p>From here, you should have a strong understanding of how to modify the default implementation of VCIX scheduling in LLVM.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../SandboxIR.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Sandbox IR: A transactional layer over LLVM IR</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="RISCVVectorExtension.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">RISC-V Vector Extension</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Scheduling Information for RISC-V VCIX Instructions</a><ul>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+<li><a class="reference internal" href="#introduction">簡介</a><ul>
+<li><a class="reference internal" href="#understanding-the-vcix-scheduling-model-information">Understanding the VCIX Scheduling Model Information</a><ul>
+<li><a class="reference internal" href="#supported-scheduling-models">Supported Scheduling Models</a></li>
+<li><a class="reference internal" href="#understanding-the-default-implementation">Understanding the Default Implementation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#basic-scheduling-info-customization">Basic Scheduling Info Customization</a></li>
+<li><a class="reference internal" href="#advanced-scheduling-info-customization">Advanced Scheduling Info Customization</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=0d9984b1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/translations.js?v=d9a6981e"></script>
+    <script src="../_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

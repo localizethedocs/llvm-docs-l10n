@@ -1,0 +1,1056 @@
+<!doctype html>
+<html class="no-js" lang="fr-FR" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Recherche" href="../search.html" /><link rel="next" title="AMDGPU Asynchronous Operations" href="../AMDGPUAsyncOperations.html" /><link rel="prev" title="Allow Location Descriptions on the DWARF Expression Stack" href="../AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/AMDGPU/DeveloperGuideline.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Developer Guideline for AMDGPU - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="../ltd-provenance.js"></script>
+<script type="text/javascript" src="../ltd-current.js"></script>
+<script type="text/javascript" src="../../../ltd-config.js"></script>
+<script type="text/javascript" src="../../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Recherche" name="q" aria-label="Recherche">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-diff.html">llvm-diff - LLVM structural “diff”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../UserGuides.html">User Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/AMDGPU/DeveloperGuideline.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="developer-guideline-for-amdgpu">
+<h1>Developer Guideline for AMDGPU<a class="headerlink" href="#developer-guideline-for-amdgpu" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>This document highlights coding conventions, test policies, and other
+development guidelines that apply to all AMDGPU-related code across the LLVM
+project (the backend in <code class="docutils literal notranslate"><span class="pre">llvm/lib/Target/AMDGPU</span></code>, Clang AMDGPU support, LLD,
+associated tests, etc.).  It is <strong>not</strong> a replacement for or summary of the
+<a class="reference external" href="https://llvm.org/docs/CodingStandards.html">LLVM Coding Standards</a> or the
+<a class="reference external" href="https://llvm.org/docs/TestingGuide.html">LLVM Testing Guide</a>; contributors
+are expected to be familiar with those documents as well.</p>
+<p>The topics covered here are those that come up frequently during AMDGPU code
+reviews.  Some overlap with existing upstream rules and are restated here for
+easy reference.</p>
+</section>
+<section id="coding-standards">
+<h2>Coding Standards<a class="headerlink" href="#coding-standards" title="Link to this heading">#</a></h2>
+<p>AMDGPU-related code follows the
+<a class="reference external" href="https://llvm.org/docs/CodingStandards.html">LLVM Coding Standards</a> with the
+refinements listed below.</p>
+<section id="use-of-auto">
+<h3>Use of <code class="docutils literal notranslate"><span class="pre">auto</span></code><a class="headerlink" href="#use-of-auto" title="Link to this heading">#</a></h3>
+<p>The LLVM Coding Standards describe the policy for <code class="docutils literal notranslate"><span class="pre">auto</span></code> in
+<a class="reference external" href="https://llvm.org/docs/CodingStandards.html#use-auto-type-deduction-to-make-code-more-readable">Use auto Type Deduction to Make Code More Readable</a>.
+Below are more concrete examples of how that policy applies in AMDGPU code.</p>
+<p>Do <strong>not</strong> use <code class="docutils literal notranslate"><span class="pre">auto</span></code> except in the following cases:</p>
+<ul>
+<li><p>Lambda expressions:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">Pred</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">Val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">Val</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+</pre></div>
+</div>
+</li>
+<li><p>Casts where the target type is already spelled out on the right-hand side
+(<code class="docutils literal notranslate"><span class="pre">cast</span></code>, <code class="docutils literal notranslate"><span class="pre">dyn_cast</span></code>, <code class="docutils literal notranslate"><span class="pre">static_cast</span></code>, etc.):</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">Inst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cast</span><span class="o">&lt;</span><span class="n">CallInst</span><span class="o">&gt;</span><span class="p">(</span><span class="n">V</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">MD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dyn_cast</span><span class="o">&lt;</span><span class="n">MDNode</span><span class="o">&gt;</span><span class="p">(</span><span class="n">Op</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">Width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="o">&gt;</span><span class="p">(</span><span class="n">Val</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p>Iterators:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">It</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Container</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span>
+</pre></div>
+</div>
+</li>
+<li><p>Structured bindings:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">Key</span><span class="p">,</span><span class="w"> </span><span class="n">Value</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Pair</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>In all other cases, write the type explicitly.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Avoid - the type is not obvious from the right-hand side.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">Reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MI</span><span class="p">.</span><span class="n">getOperand</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">getReg</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">Size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DL</span><span class="p">.</span><span class="n">getTypeAllocSize</span><span class="p">(</span><span class="n">Ty</span><span class="p">);</span>
+
+<span class="c1">// Preferred - spell out the type.</span>
+<span class="n">Register</span><span class="w"> </span><span class="n">Reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MI</span><span class="p">.</span><span class="n">getOperand</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">getReg</span><span class="p">();</span>
+<span class="n">TypeSize</span><span class="w"> </span><span class="n">Size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DL</span><span class="p">.</span><span class="n">getTypeAllocSize</span><span class="p">(</span><span class="n">Ty</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="use-of-braces">
+<h3>Use of Braces<a class="headerlink" href="#use-of-braces" title="Link to this heading">#</a></h3>
+<p>The LLVM Coding Standards discuss brace usage in
+<a class="reference external" href="https://llvm.org/docs/CodingStandards.html#don-t-use-braces-on-simple-single-statement-bodies-of-if-else-loop-statements">Don’t Use Braces on Simple Single-Statement Bodies of if/else/loop Statements</a>.
+In AMDGPU code, braces may be omitted <strong>only when the single statement
+fits on one line</strong>.  If the statement spans more than one line (e.g. because of
+a long argument list that wraps), keep the braces.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">if</span></code>/<code class="docutils literal notranslate"><span class="pre">else</span></code> chains, if <strong>either</strong> branch requires braces, add braces to
+<strong>all</strong> branches to keep them symmetric.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// OK - single statement on one line, braces omitted.</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">I</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">I</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">I</span><span class="p">)</span>
+<span class="w">  </span><span class="n">doSomething</span><span class="p">(</span><span class="n">I</span><span class="p">);</span>
+
+<span class="c1">// Required - single statement, but spans multiple lines.</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Cond</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">doSomethingElse</span><span class="p">(</span><span class="n">LongArgument1</span><span class="p">,</span>
+<span class="w">                  </span><span class="n">LongArgument2</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Required - the else branch needs braces, so the if branch gets them too.</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Cond</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">doSomething</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">doSomethingElse</span><span class="p">(</span><span class="n">LongArgument1</span><span class="p">,</span>
+<span class="w">                  </span><span class="n">LongArgument2</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Avoid - asymmetric braces.</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Cond</span><span class="p">)</span>
+<span class="w">  </span><span class="n">doSomething</span><span class="p">();</span>
+<span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">doSomethingElse</span><span class="p">(</span><span class="n">LongArgument1</span><span class="p">,</span>
+<span class="w">                  </span><span class="n">LongArgument2</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="instruction-naming">
+<h3>Instruction Naming<a class="headerlink" href="#instruction-naming" title="Link to this heading">#</a></h3>
+<p>Instruction names in TableGen definitions (e.g. in <code class="docutils literal notranslate"><span class="pre">VOP3PInstructions.td</span></code>,
+<code class="docutils literal notranslate"><span class="pre">VOP2Instructions.td</span></code>, etc.) should follow the terminology of the ISA
+documentation.  Use <strong>all-caps</strong> names that match the documentation’s name for
+at least one target.  When the compiler needs a variant of a documented
+instruction (e.g. a version with additional property flags or extra register
+uses), append a <strong>lowercase</strong> suffix to distinguish it from the canonical name.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>// Good - matches the ISA documentation exactly.
+defm V_ADD_F32 : VOP2Inst_VOPD &lt;&quot;v_add_f32&quot;, ...&gt;;
+
+// Good - lowercase suffix for a compiler-invented variant.
+defm V_ADD_F32_e64 : ...;
+
+// Avoid - deviates from the documented name without reason.
+defm V_Add_F32 : ...;
+
+// Avoid - all-caps suffix for a compiler-invented variant;
+// use a lowercase suffix instead.
+defm V_ADD_F32_E64 : ...;
+</pre></div>
+</div>
+</section>
+<section id="error-and-diagnostic-messages">
+<h3>Error and Diagnostic Messages<a class="headerlink" href="#error-and-diagnostic-messages" title="Link to this heading">#</a></h3>
+<p>Messages passed to <code class="docutils literal notranslate"><span class="pre">assert</span></code>, <code class="docutils literal notranslate"><span class="pre">llvm_unreachable</span></code>, <code class="docutils literal notranslate"><span class="pre">report_fatal_error</span></code>,
+diagnostic handlers, and similar should <strong>not</strong> start with an uppercase letter.
+Use lowercase as if the message were a continuation of a sentence, not the
+beginning of one.  Do not end the message with a period.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Good</span>
+<span class="n">report_fatal_error</span><span class="p">(</span><span class="s">&quot;malformed block&quot;</span><span class="p">);</span>
+
+<span class="c1">// Avoid</span>
+<span class="n">report_fatal_error</span><span class="p">(</span><span class="s">&quot;Malformed block&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="design-practices">
+<h2>Design Practices<a class="headerlink" href="#design-practices" title="Link to this heading">#</a></h2>
+<section id="prefer-feature-checks-over-generation-checks">
+<h3>Prefer Feature Checks over Generation Checks<a class="headerlink" href="#prefer-feature-checks-over-generation-checks" title="Link to this heading">#</a></h3>
+<p>Avoid conditioning logic on a specific GPU generation (e.g. <code class="docutils literal notranslate"><span class="pre">isGFX11()</span></code>).
+Generation checks are fragile: when a new generation ships, every such check
+must be audited to decide whether it should include the new generation too.</p>
+<p>Instead, query the specific capability that the code actually depends on via a
+feature predicate (e.g. <code class="docutils literal notranslate"><span class="pre">hasFeatureX()</span></code>).  Feature predicates are
+self-documenting, compose better across generations, and do not require updates
+when a new generation is added.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Avoid - ties the logic to a specific generation.</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ST</span><span class="p">.</span><span class="n">isGFX11</span><span class="p">())</span>
+<span class="w">  </span><span class="n">handleNewBehaviour</span><span class="p">();</span>
+
+<span class="c1">// Preferred - checks the actual capability.</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ST</span><span class="p">.</span><span class="n">hasPackedFP32Ops</span><span class="p">())</span>
+<span class="w">  </span><span class="n">handleNewBehaviour</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="prefer-separate-opcodes-over-subtarget-checks">
+<h3>Prefer Separate Opcodes over Subtarget Checks<a class="headerlink" href="#prefer-separate-opcodes-over-subtarget-checks" title="Link to this heading">#</a></h3>
+<p>When an instruction has different properties on different subtargets (e.g.
+different implicit register uses, different scheduling info, or different
+encoding constraints), define <strong>separate opcodes</strong> for each variant rather than
+using a single opcode and scattering <code class="docutils literal notranslate"><span class="pre">if</span></code> checks on the subtarget throughout
+the code.  Distinct opcodes keep TableGen definitions self-contained, make
+scheduling and register allocation more accurate, and avoid a class of bugs
+where a subtarget check is accidentally omitted.</p>
+</section>
+<section id="document-new-builtins">
+<h3>Document New Builtins<a class="headerlink" href="#document-new-builtins" title="Link to this heading">#</a></h3>
+<p>All new AMDGPU builtins must have documentation added in
+<code class="docutils literal notranslate"><span class="pre">clang/include/clang/Basic/BuiltinsAMDGPUDocs.td</span></code>.  The documentation entry
+should be included in the same patch that introduces the builtin.</p>
+</section>
+</section>
+<section id="pull-requests">
+<h2>Pull Requests<a class="headerlink" href="#pull-requests" title="Link to this heading">#</a></h2>
+<section id="keep-changes-focused">
+<h3>Keep Changes Focused<a class="headerlink" href="#keep-changes-focused" title="Link to this heading">#</a></h3>
+<p>Each pull request should contain <strong>one logical change</strong>.  Unrelated
+modifications - formatting fixes, variable renames, whitespace cleanup, etc. -
+should be submitted as separate PRs, even if they touch the same files.  Mixing
+unrelated changes into a functional PR makes review harder, obscures the intent
+of the change in <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">log</span></code>, and complicates reverts if something goes wrong.</p>
+</section>
+</section>
+<section id="test-policy">
+<h2>Test Policy<a class="headerlink" href="#test-policy" title="Link to this heading">#</a></h2>
+<p>Well-written tests are essential for a healthy codebase.  The guidelines below
+apply to all AMDGPU regression tests (<code class="docutils literal notranslate"><span class="pre">llvm/test/CodeGen/AMDGPU</span></code>,
+<code class="docutils literal notranslate"><span class="pre">llvm/test/MC/AMDGPU</span></code>, etc.).  See also the general
+<a class="reference external" href="https://llvm.org/docs/TestingGuide.html#best-practices-for-regression-tests">Best practices for regression tests</a>
+and the
+<a class="reference external" href="https://llvm.org/docs/TestingGuide.html#precommit-workflow-for-tests">Precommit workflow for tests</a>
+in the LLVM Testing Guide.</p>
+<section id="use-minimal-reduced-tests">
+<h3>Use Minimal, Reduced Tests<a class="headerlink" href="#use-minimal-reduced-tests" title="Link to this heading">#</a></h3>
+<p>Every test should be the <strong>smallest input that exercises the behaviour under
+test</strong>.  Avoid copying a full function from a real workload and pasting it into
+a test file.  Instead, reduce the input so that it contains only the
+instructions and control flow needed to trigger the relevant code path.  A
+minimal test is easier to understand, faster to run, and less likely to break
+for unrelated reasons.</p>
+</section>
+<section id="avoid-undefined-behavior">
+<h3>Avoid Undefined Behavior<a class="headerlink" href="#avoid-undefined-behavior" title="Link to this heading">#</a></h3>
+<p>Tests should not rely on undefined behavior (UB).  As the
+<a class="reference external" href="https://llvm.org/docs/TestingGuide.html#best-practices-for-regression-tests">best practices section of the Testing Guide</a>
+notes, avoid <code class="docutils literal notranslate"><span class="pre">undef</span></code> and <code class="docutils literal notranslate"><span class="pre">poison</span></code> values unless they are the point of the
+test - patterns like <code class="docutils literal notranslate"><span class="pre">br</span> <span class="pre">i1</span> <span class="pre">undef</span></code> are likely to break as future
+optimizations evolve.</p>
+<p>In addition, avoid loads from or stores to <code class="docutils literal notranslate"><span class="pre">null</span></code> unless the test targets an
+address space where address zero is a valid memory location rather than a null
+pointer.  For example, on AMDGPU, address space 0 (generic/flat) treats zero as
+a null pointer, but address space 3 (LDS) does not, so a load from
+<code class="docutils literal notranslate"><span class="pre">ptr</span> <span class="pre">addrspace(3)</span> <span class="pre">null</span></code> can be valid.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="c">; Avoid - null is a null pointer in addrspace(0).</span>
+<span class="k">define</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@example_bad</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%val</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">load</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">null</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="k">void</span>
+<span class="p">}</span>
+
+<span class="c">; OK - addrspace(3) has no null pointer, address zero is valid.</span>
+<span class="k">define</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@example_ok</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%val</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">load</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">3</span><span class="p">)</span><span class="w"> </span><span class="k">null</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="k">void</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="use-named-values">
+<h3>Use Named Values<a class="headerlink" href="#use-named-values" title="Link to this heading">#</a></h3>
+<p>Prefer descriptive, named IR values over anonymous numbered values.  Names
+serve as lightweight documentation and make it much easier to understand a
+test’s intent at a glance.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="c">; Preferred - names describe what each value represents.</span>
+<span class="k">define</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="vg">@fma_example</span><span class="p">(</span><span class="kt">float</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="nv">%y</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="nv">%z</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%fma</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="vg">@llvm.fma.f32</span><span class="p">(</span><span class="kt">float</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="nv">%y</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="nv">%z</span><span class="p">)</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="nv">%fma</span>
+<span class="p">}</span>
+
+<span class="c">; Avoid - anonymous numbers reveal nothing about intent.</span>
+<span class="k">define</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="vg">@fma_example</span><span class="p">(</span><span class="kt">float</span><span class="w"> </span><span class="nv nv-Anonymous">%0</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="nv nv-Anonymous">%1</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="nv nv-Anonymous">%2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv nv-Anonymous">%4</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="vg">@llvm.fma.f32</span><span class="p">(</span><span class="kt">float</span><span class="w"> </span><span class="nv nv-Anonymous">%0</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="nv nv-Anonymous">%1</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="nv nv-Anonymous">%2</span><span class="p">)</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="nv nv-Anonymous">%4</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="use-compact-virtual-register-numbers-in-mir-tests">
+<h3>Use Compact Virtual Register Numbers in MIR Tests<a class="headerlink" href="#use-compact-virtual-register-numbers-in-mir-tests" title="Link to this heading">#</a></h3>
+<p>In MIR tests, virtual register numbers should be compact and start from
+<code class="docutils literal notranslate"><span class="pre">%0</span></code>.  Avoid leaving gaps or starting at arbitrary high numbers (e.g.
+<code class="docutils literal notranslate"><span class="pre">%128</span></code>, <code class="docutils literal notranslate"><span class="pre">%256</span></code>).  Sparse numbering makes tests harder to follow and
+suggests the test was extracted from a larger function without proper
+reduction.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Preferred - compact, sequential numbering.
+%0:vgpr_32 = COPY $vgpr0
+%1:vgpr_32 = COPY $vgpr1
+%2:vgpr_32 = V_ADD_U32_e32 %0, %1, implicit $exec
+
+# Avoid - sparse numbering with gaps.
+%128:vgpr_32 = COPY $vgpr0
+%130:vgpr_32 = COPY $vgpr1
+%255:vgpr_32 = V_ADD_U32_e32 %128, %130, implicit $exec
+</pre></div>
+</div>
+</section>
+<section id="trim-unnecessary-attributes-and-metadata">
+<h3>Trim Unnecessary Attributes and Metadata<a class="headerlink" href="#trim-unnecessary-attributes-and-metadata" title="Link to this heading">#</a></h3>
+<p>Strip attributes, metadata, and other annotations that are <strong>not relevant to
+the behaviour being tested</strong>.  Extra noise makes it harder to see what a test
+actually depends on and can cause spurious failures when defaults change.</p>
+<p>For example, unless a test specifically exercises a particular function
+attribute or metadata node, remove them:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="c">; Preferred - only the essential attributes remain.</span>
+<span class="k">define</span><span class="w"> </span><span class="k">amdgpu_kernel</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@store_i32</span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%ptr</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv">%val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">store</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv">%val</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%ptr</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="k">void</span>
+<span class="p">}</span>
+
+<span class="c">; Avoid - unrelated attributes and metadata obscure the test&#39;s purpose.</span>
+<span class="k">define</span><span class="w"> </span><span class="k">amdgpu_kernel</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@store_i32</span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%ptr</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv">%val</span><span class="p">)</span><span class="w"> </span><span class="vg">#0</span><span class="w"> </span><span class="nv">!dbg</span><span class="w"> </span><span class="nv nv-Anonymous">!5</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">store</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv">%val</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%ptr</span><span class="p">,</span><span class="w"> </span><span class="k">align</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="nv">!tbaa</span><span class="w"> </span><span class="nv nv-Anonymous">!11</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="k">void</span>
+<span class="p">}</span>
+
+<span class="k">attributes</span><span class="w"> </span><span class="vg">#0</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">nounwind</span><span class="w"> </span><span class="s">&quot;frame-pointer&quot;</span><span class="p">=</span><span class="s">&quot;all&quot;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="include-negative-tests">
+<h3>Include Negative Tests<a class="headerlink" href="#include-negative-tests" title="Link to this heading">#</a></h3>
+<p>Changes that introduce new restrictions, validations, or user-facing constructs
+should include <strong>negative tests</strong> that verify the correct diagnostic or
+rejection.  Cases that require negative tests include, but are not limited to:</p>
+<ul class="simple">
+<li><p><strong>New builtins</strong> — verify that wrong argument types, wrong argument counts,
+and unsupported target features produce the expected Sema errors
+(e.g. <code class="docutils literal notranslate"><span class="pre">clang/test/SemaOpenCL/builtins-amdgcn-error.cl</span></code>).</p></li>
+<li><p><strong>New backend instructions</strong> — verify that the assembler rejects invalid
+operands, illegal modifiers, and unsupported subtargets
+(e.g. <code class="docutils literal notranslate"><span class="pre">llvm/test/MC/AMDGPU/gfx950_err.s</span></code>).</p></li>
+<li><p><strong>New target types or features</strong> — verify that incompatible target IDs,
+missing features, and invalid subtarget combinations are diagnosed
+(e.g. <code class="docutils literal notranslate"><span class="pre">clang/test/Driver/invalid-target-id.cl</span></code>).</p></li>
+</ul>
+</section>
+<section id="cover-all-code-paths">
+<h3>Cover All Code Paths<a class="headerlink" href="#cover-all-code-paths" title="Link to this heading">#</a></h3>
+<p>Tests for a PR should ideally cover all of the code changes introduced by that
+PR.  When adding a new instruction, for example, this means testing all
+supported combinations of operand kinds (VGPR, SGPR, immediate, inline
+constant, literal constant) as well as applicable modifiers (<code class="docutils literal notranslate"><span class="pre">opsel</span></code>,
+<code class="docutils literal notranslate"><span class="pre">neg_lo</span></code>, <code class="docutils literal notranslate"><span class="pre">neg_hi</span></code>, <code class="docutils literal notranslate"><span class="pre">clamp</span></code>, etc.).  The goal is to ensure that every
+encoding and selection path exercised by the new code is verified, so that
+regressions in any variant are caught immediately.</p>
+</section>
+<section id="pipe-input-via-stdin">
+<h3>Pipe Input via <code class="docutils literal notranslate"><span class="pre">stdin</span></code><a class="headerlink" href="#pipe-input-via-stdin" title="Link to this heading">#</a></h3>
+<p>Where feasible, feed the test file through <code class="docutils literal notranslate"><span class="pre">stdin</span></code> using <code class="docutils literal notranslate"><span class="pre">&lt;</span> <span class="pre">%s</span></code> rather than
+passing it as a positional argument.  This is the conventional style in AMDGPU
+tests and avoids the need for an explicit <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">-</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="p">;</span><span class="w"> </span>llc<span class="w"> </span>—<span class="w"> </span>preferred.
+<span class="p">;</span><span class="w"> </span>RUN:<span class="w"> </span>llc<span class="w"> </span>-mtriple<span class="o">=</span>amdgcn<span class="w"> </span>-mcpu<span class="o">=</span>gfx900<span class="w"> </span>&lt;<span class="w"> </span>%s<span class="w"> </span><span class="p">|</span><span class="w"> </span>FileCheck<span class="w"> </span>%s
+
+<span class="p">;</span><span class="w"> </span>opt<span class="w"> </span>—<span class="w"> </span>preferred.
+<span class="p">;</span><span class="w"> </span>RUN:<span class="w"> </span>opt<span class="w"> </span>-S<span class="w"> </span>-mtriple<span class="o">=</span>amdgcn<span class="w"> </span>-passes<span class="o">=</span>instcombine<span class="w"> </span>&lt;<span class="w"> </span>%s<span class="w"> </span><span class="p">|</span><span class="w"> </span>FileCheck<span class="w"> </span>%s
+
+<span class="p">;</span><span class="w"> </span>llvm-mc<span class="w"> </span>—<span class="w"> </span>preferred.
+<span class="p">;</span><span class="w"> </span>RUN:<span class="w"> </span>llvm-mc<span class="w"> </span>-triple<span class="o">=</span>amdgcn<span class="w"> </span>-mcpu<span class="o">=</span>gfx900<span class="w"> </span>-show-encoding<span class="w"> </span>&lt;<span class="w"> </span>%s<span class="w"> </span><span class="p">|</span><span class="w"> </span>FileCheck<span class="w"> </span>%s
+</pre></div>
+</div>
+<p>This is not always possible.  For example, <code class="docutils literal notranslate"><span class="pre">llc</span></code> infers the input format from
+the file extension; when reading from <code class="docutils literal notranslate"><span class="pre">stdin</span></code> it defaults to IR, so MIR tests
+need to pass the file as a positional argument:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="p">;</span><span class="w"> </span>MIR<span class="w"> </span>—<span class="w"> </span>pass<span class="w"> </span>the<span class="w"> </span>file<span class="w"> </span>directly<span class="w"> </span>so<span class="w"> </span>llc<span class="w"> </span>sees<span class="w"> </span>the<span class="w"> </span>.mir<span class="w"> </span>extension.
+<span class="p">;</span><span class="w"> </span>RUN:<span class="w"> </span>llc<span class="w"> </span>-mtriple<span class="o">=</span>amdgcn<span class="w"> </span>-mcpu<span class="o">=</span>gfx900<span class="w"> </span>-run-pass<span class="o">=</span>...<span class="w"> </span>%s<span class="w"> </span>-o<span class="w"> </span>-<span class="w"> </span><span class="p">|</span><span class="w"> </span>FileCheck<span class="w"> </span>%s
+</pre></div>
+</div>
+</section>
+<section id="use-filetype-null-when-output-is-irrelevant">
+<h3>Use <code class="docutils literal notranslate"><span class="pre">-filetype=null</span></code> When Output Is Irrelevant<a class="headerlink" href="#use-filetype-null-when-output-is-irrelevant" title="Link to this heading">#</a></h3>
+<p>When a test only needs to verify diagnostics, error messages, or the absence of
+a crash - and does not care about the actual code-generation output - pass
+<code class="docutils literal notranslate"><span class="pre">-filetype=null</span></code> to <code class="docutils literal notranslate"><span class="pre">llc</span></code>.  This skips object or assembly emission entirely,
+making the test faster and avoiding fragile <code class="docutils literal notranslate"><span class="pre">CHECK</span></code> lines tied to unrelated
+output.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="p">;</span><span class="w"> </span>RUN:<span class="w"> </span>llc<span class="w"> </span>-mtriple<span class="o">=</span>amdgcn<span class="w"> </span>-mcpu<span class="o">=</span>gfx900<span class="w"> </span>-filetype<span class="o">=</span>null<span class="w"> </span>%s<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>FileCheck<span class="w"> </span>%s
+</pre></div>
+</div>
+</section>
+<section id="auto-generate-check-lines">
+<h3>Auto-Generate Check Lines<a class="headerlink" href="#auto-generate-check-lines" title="Link to this heading">#</a></h3>
+<p>When possible, use the UTC (Update Test Checks) scripts to generate <code class="docutils literal notranslate"><span class="pre">CHECK</span></code>
+lines rather than writing them by hand.  Auto-generated checks are
+comprehensive, consistent, and easy to update when output changes.</p>
+<p>The most commonly used scripts for AMDGPU are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">llvm/utils/update_llc_test_checks.py</span></code> - for <code class="docutils literal notranslate"><span class="pre">llc</span></code> CodeGen tests.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">llvm/utils/update_mir_test_checks.py</span></code> - for MIR tests.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">llvm/utils/update_mc_test_checks.py</span></code> - for MC (assembly/disassembly) tests.</p></li>
+</ul>
+<p>A typical workflow looks like:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Write the test with a RUN line but no CHECK lines, then auto-generate:</span>
+$<span class="w"> </span>llvm/utils/update_llc_test_checks.py<span class="w"> </span>llvm/test/CodeGen/AMDGPU/my-test.ll
+
+<span class="c1"># After a code change that intentionally alters output, re-generate:</span>
+$<span class="w"> </span>llvm/utils/update_llc_test_checks.py<span class="w"> </span>--update-only<span class="w"> </span>llvm/test/CodeGen/AMDGPU/my-test.ll
+</pre></div>
+</div>
+<p>Each script embeds a <code class="docutils literal notranslate"><span class="pre">UTC_ARGS:</span></code> comment in the test file so that subsequent
+runs of the script use the same options.  Consult the <code class="docutils literal notranslate"><span class="pre">--help</span></code> output of each
+script for the full set of available flags.</p>
+<p>When writing check lines by hand, prefer <code class="docutils literal notranslate"><span class="pre">CHECK-NEXT</span></code> over <code class="docutils literal notranslate"><span class="pre">CHECK-NOT</span></code>.
+Negative pattern matches fail silently when the output changes - the
+<code class="docutils literal notranslate"><span class="pre">CHECK-NOT</span></code> pattern may no longer appear for entirely unrelated reasons, and
+the test will still pass without actually verifying the intended behaviour.
+<code class="docutils literal notranslate"><span class="pre">CHECK-NEXT</span></code> ties the assertion to a specific position in the output, so any
+unexpected change causes a visible failure.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Hand-written <code class="docutils literal notranslate"><span class="pre">CHECK</span></code> lines are still appropriate when a test needs to
+verify only a narrow slice of the output (e.g. a single instruction) or
+when the auto-generated output would be excessively verbose and obscure the
+intent.  In such cases, keep the hand-written checks focused and document
+why auto-generation was not used.</p>
+</div>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../AMDGPUAsyncOperations.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">AMDGPU Asynchronous Operations</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Developer Guideline for AMDGPU</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#coding-standards">Coding Standards</a><ul>
+<li><a class="reference internal" href="#use-of-auto">Use of <code class="docutils literal notranslate"><span class="pre">auto</span></code></a></li>
+<li><a class="reference internal" href="#use-of-braces">Use of Braces</a></li>
+<li><a class="reference internal" href="#instruction-naming">Instruction Naming</a></li>
+<li><a class="reference internal" href="#error-and-diagnostic-messages">Error and Diagnostic Messages</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#design-practices">Design Practices</a><ul>
+<li><a class="reference internal" href="#prefer-feature-checks-over-generation-checks">Prefer Feature Checks over Generation Checks</a></li>
+<li><a class="reference internal" href="#prefer-separate-opcodes-over-subtarget-checks">Prefer Separate Opcodes over Subtarget Checks</a></li>
+<li><a class="reference internal" href="#document-new-builtins">Document New Builtins</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pull-requests">Pull Requests</a><ul>
+<li><a class="reference internal" href="#keep-changes-focused">Keep Changes Focused</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#test-policy">Test Policy</a><ul>
+<li><a class="reference internal" href="#use-minimal-reduced-tests">Use Minimal, Reduced Tests</a></li>
+<li><a class="reference internal" href="#avoid-undefined-behavior">Avoid Undefined Behavior</a></li>
+<li><a class="reference internal" href="#use-named-values">Use Named Values</a></li>
+<li><a class="reference internal" href="#use-compact-virtual-register-numbers-in-mir-tests">Use Compact Virtual Register Numbers in MIR Tests</a></li>
+<li><a class="reference internal" href="#trim-unnecessary-attributes-and-metadata">Trim Unnecessary Attributes and Metadata</a></li>
+<li><a class="reference internal" href="#include-negative-tests">Include Negative Tests</a></li>
+<li><a class="reference internal" href="#cover-all-code-paths">Cover All Code Paths</a></li>
+<li><a class="reference internal" href="#pipe-input-via-stdin">Pipe Input via <code class="docutils literal notranslate"><span class="pre">stdin</span></code></a></li>
+<li><a class="reference internal" href="#use-filetype-null-when-output-is-irrelevant">Use <code class="docutils literal notranslate"><span class="pre">-filetype=null</span></code> When Output Is Irrelevant</a></li>
+<li><a class="reference internal" href="#auto-generate-check-lines">Auto-Generate Check Lines</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=711a3ba7"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/translations.js?v=a56f2464"></script>
+    <script src="../_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

@@ -1,0 +1,1233 @@
+<!doctype html>
+<html class="no-js" lang="zh-TW" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="../genindex.html" /><link rel="search" title="搜尋" href="../search.html" /><link rel="next" title="llvm-tblgen - Target Description to C++ Code for LLVM" href="llvm-tblgen.html" /><link rel="prev" title="llvm-strip - object stripping tool" href="llvm-strip.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/CommandGuide/llvm-symbolizer.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>llvm-symbolizer - convert addresses into source code locations - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="../ltd-provenance.js"></script>
+<script type="text/javascript" src="../ltd-current.js"></script>
+<script type="text/javascript" src="../../../ltd-config.js"></script>
+<script type="text/javascript" src="../../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="搜尋" name="q" aria-label="搜尋">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">常見問題集（FAQ）</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../Reference.html">參考</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of 參考</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="index.html">LLVM Command Guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-diff.html">llvm-diff - LLVM structural 『diff』</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html#introduction">簡介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LangRef.html">LLVM 語言參考手冊</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../TestingGuide.html">LLVM 測試基礎設施指南</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM 測試基礎設施指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../UserGuides.html">使用者指南</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of 使用者指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CMake.html">使用 CMake 建置 LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AdvancedBuilds.html">進階建置組態</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../TableGen/index.html">TableGen 概覽</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen 概覽</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUInstructionSyntax.html">AMDGPU 指令語法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../GitHub.html">LLVM GitHub 使用者指南</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../DiscourseMigrationGuide.html">Discourse 遷移指南</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DeveloperPolicy.html">LLVM 開發者方針</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/CommandGuide/llvm-symbolizer.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="llvm-symbolizer-convert-addresses-into-source-code-locations">
+<h1>llvm-symbolizer - convert addresses into source code locations<a class="headerlink" href="#llvm-symbolizer-convert-addresses-into-source-code-locations" title="Link to this heading">#</a></h1>
+<section id="synopsis">
+<h2>概要<a class="headerlink" href="#synopsis" title="Link to this heading">#</a></h2>
+<p><strong class="program">llvm-symbolizer</strong> [<em>options</em>] [<em>addresses…</em>]</p>
+</section>
+<section id="description">
+<h2>描述<a class="headerlink" href="#description" title="Link to this heading">#</a></h2>
+<p><strong class="program">llvm-symbolizer</strong> reads input names and addresses from the command-line
+and prints corresponding source code locations to standard output. It can also
+symbolize logs containing <a class="reference internal" href="../SymbolizerMarkupFormat.html"><span class="doc">Symbolizer Markup</span></a> via
+<a class="reference internal" href="#cmdoption-llvm-symbolizer-filter-markup"><code class="xref std std-option docutils literal notranslate"><span class="pre">--filter-markup</span></code></a>. Addresses may be specified as numbers or symbol names.</p>
+<p>If no address is specified on the command-line, it reads the addresses from
+standard input. If no input name is specified on the command-line, but addresses
+are, the first address value is treated as an input name. If an input value is not
+recognized, it reports that source information is not found.</p>
+<p>Input names can be specified together with the addresses either on standard
+input or as positional arguments on the command-line. By default, input names
+are interpreted as object file paths. However, prefixing a name with
+<code class="docutils literal notranslate"><span class="pre">BUILDID:</span></code> states that it is a hex build ID rather than a path. This will look
+up the corresponding debug binary. For consistency, prefixing a name with
+<code class="docutils literal notranslate"><span class="pre">FILE:</span></code> explicitly states that it is an object file path (the default).</p>
+<p>A positional argument or standard input value can be preceded by 「DATA」 or
+「CODE」 to indicate that the address should be symbolized as data or executable
+code respectively. If neither is specified, 「CODE」 is assumed. DATA is
+symbolized as address and symbol size rather than line number.</p>
+<p><strong class="program">llvm-symbolizer</strong> parses options from the environment variable
+<code class="docutils literal notranslate"><span class="pre">LLVM_SYMBOLIZER_OPTS</span></code> after parsing options from the command line.
+<code class="docutils literal notranslate"><span class="pre">LLVM_SYMBOLIZER_OPTS</span></code> is primarily useful for supplementing the command-line
+options when <strong class="program">llvm-symbolizer</strong> is invoked by another program or
+runtime.</p>
+</section>
+<section id="examples">
+<h2>EXAMPLES<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<p>All of the following examples use the following two source files as input. They
+use a mixture of C-style and C++-style linkage to illustrate how these names are
+printed differently (see <a class="reference internal" href="#cmdoption-llvm-symbolizer-demangle"><code class="xref std std-option docutils literal notranslate"><span class="pre">--demangle</span></code></a>).</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// test.h</span>
+<span class="k">extern</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">foz</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">1234</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// test.cpp</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;test.h&quot;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">bar</span><span class="o">=</span><span class="mi">42</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">bar</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">baz</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">volatile</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">foz</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">k</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">baz</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>These files are built as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>clang<span class="w"> </span>-g<span class="w"> </span>test.cpp<span class="w"> </span>-o<span class="w"> </span>test.elf
+<span class="gp">$ </span>clang<span class="w"> </span>-g<span class="w"> </span>-O2<span class="w"> </span>test.cpp<span class="w"> </span>-o<span class="w"> </span>inlined.elf
+</pre></div>
+</div>
+<p>Example 1 - addresses and object on command-line:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>test.elf<span class="w"> </span>0x4004d0<span class="w"> </span>0x400490
+<span class="go">foz</span>
+<span class="go">/tmp/test.h:1:0</span>
+
+<span class="go">baz()</span>
+<span class="go">/tmp/test.cpp:11:0</span>
+</pre></div>
+</div>
+<p>Example 2 - addresses on standard input:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cat<span class="w"> </span>addr.txt
+<span class="go">0x4004a0</span>
+<span class="go">0x400490</span>
+<span class="go">0x4004d0</span>
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>test.elf<span class="w"> </span>&lt;<span class="w"> </span>addr.txt
+<span class="go">main</span>
+<span class="go">/tmp/test.cpp:15:0</span>
+
+<span class="go">baz()</span>
+<span class="go">/tmp/test.cpp:11:0</span>
+
+<span class="go">foz</span>
+<span class="go">/tmp/./test.h:1:0</span>
+</pre></div>
+</div>
+<p>Example 3 - object specified with address:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span><span class="s2">&quot;test.elf 0x400490&quot;</span><span class="w"> </span><span class="s2">&quot;FILE:inlined.elf 0x400480&quot;</span>
+<span class="go">baz()</span>
+<span class="go">/tmp/test.cpp:11:0</span>
+
+<span class="go">foo()</span>
+<span class="go">/tmp/test.cpp:8:10</span>
+
+<span class="gp">$ </span>cat<span class="w"> </span>addr2.txt
+<span class="go">FILE:test.elf 0x4004a0</span>
+<span class="go">inlined.elf 0x400480</span>
+
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>&lt;<span class="w"> </span>addr2.txt
+<span class="go">main</span>
+<span class="go">/tmp/test.cpp:15:0</span>
+
+<span class="go">foo()</span>
+<span class="go">/tmp/test.cpp:8:10</span>
+</pre></div>
+</div>
+<p>Example 4 - BUILDID and FILE prefixes:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span><span class="s2">&quot;FILE:test.elf 0x400490&quot;</span><span class="w"> </span><span class="s2">&quot;DATA BUILDID:123456789abcdef 0x601028&quot;</span>
+<span class="go">baz()</span>
+<span class="go">/tmp/test.cpp:11:0</span>
+
+<span class="go">bar</span>
+<span class="go">6295592 4</span>
+
+<span class="gp">$ </span>cat<span class="w"> </span>addr3.txt
+<span class="go">FILE:test.elf 0x400490</span>
+<span class="go">DATA BUILDID:123456789abcdef 0x601028</span>
+
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>&lt;<span class="w"> </span>addr3.txt
+<span class="go">baz()</span>
+<span class="go">/tmp/test.cpp:11:0</span>
+
+<span class="go">bar</span>
+<span class="go">6295592 4</span>
+</pre></div>
+</div>
+<p>Example 5 - CODE and DATA prefixes:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>test.elf<span class="w"> </span><span class="s2">&quot;CODE 0x400490&quot;</span><span class="w"> </span><span class="s2">&quot;DATA 0x601028&quot;</span>
+<span class="go">baz()</span>
+<span class="go">/tmp/test.cpp:11:0</span>
+
+<span class="go">bar</span>
+<span class="go">6295592 4</span>
+
+<span class="gp">$ </span>cat<span class="w"> </span>addr4.txt
+<span class="go">CODE test.elf 0x4004a0</span>
+<span class="go">DATA inlined.elf 0x601028</span>
+
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>&lt;<span class="w"> </span>addr4.txt
+<span class="go">main</span>
+<span class="go">/tmp/test.cpp:15:0</span>
+
+<span class="go">bar</span>
+<span class="go">6295592 4</span>
+</pre></div>
+</div>
+<p>Example 6 - path-style options:</p>
+<p>This example uses the same source file as above, but the source file’s
+full path is /tmp/foo/test.cpp and is compiled as follows. The first case
+shows the default absolute path, the second –basenames, and the third
+shows –relativenames.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">pwd</span>
+<span class="go">/tmp</span>
+<span class="gp">$ </span>clang<span class="w"> </span>-g<span class="w"> </span>foo/test.cpp<span class="w"> </span>-o<span class="w"> </span>test.elf
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>test.elf<span class="w"> </span>0x4004a0
+<span class="go">main</span>
+<span class="go">/tmp/foo/test.cpp:15:0</span>
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>test.elf<span class="w"> </span>0x4004a0<span class="w"> </span>--basenames
+<span class="go">main</span>
+<span class="go">test.cpp:15:0</span>
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>test.elf<span class="w"> </span>0x4004a0<span class="w"> </span>--relativenames
+<span class="go">main</span>
+<span class="go">foo/test.cpp:15:0</span>
+</pre></div>
+</div>
+<p>Example 7 - Addresses as symbol names:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>test.elf<span class="w"> </span>main
+<span class="go">main</span>
+<span class="go">/tmp/test.cpp:14:0</span>
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>test.elf<span class="w"> </span><span class="s2">&quot;CODE foz&quot;</span>
+<span class="go">foz</span>
+<span class="go">/tmp/test.h:1:0</span>
+</pre></div>
+</div>
+<p>Example 8 - <a class="reference internal" href="#cmdoption-llvm-symbolizer-skip-line-zero"><code class="xref std std-option docutils literal notranslate"><span class="pre">--skip-line-zero</span></code></a> output for an address with no line correspondence (an address associated with line zero):</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// test.c</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1234</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">foo</span><span class="p">;</span>
+<span class="w">  </span><span class="k">else</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>These files are built as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>clang<span class="w"> </span>-g<span class="w"> </span>-O2<span class="w"> </span>-S<span class="w"> </span>test.c<span class="w"> </span>-o<span class="w"> </span>test.s
+<span class="gp">$ </span>llvm-mc<span class="w"> </span>-filetype<span class="o">=</span>obj<span class="w"> </span>-triple<span class="o">=</span>x86_64-unknown-linux<span class="w">  </span>test.s<span class="w"> </span>-o<span class="w"> </span>test.o
+</pre></div>
+</div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>test.o<span class="w"> </span>--skip-line-zero<span class="w"> </span>0xa
+<span class="go">main</span>
+<span class="go">/tmp/test.c:5:7 (approximate)</span>
+</pre></div>
+</div>
+</section>
+<section id="options">
+<h2>選項<a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-adjust-vma">
+<span class="sig-name descname"><span class="pre">--adjust-vma</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;offset&gt;</span></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-adjust-vma" title="Link to this definition">#</a></dt>
+<dd><p>Add the specified offset to object file addresses when performing lookups.
+This can be used to perform lookups as if the object were relocated by the
+offset.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-skip-line-zero">
+<span class="sig-name descname"><span class="pre">--skip-line-zero</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-skip-line-zero" title="Link to this definition">#</a></dt>
+<dd><p>If an address does not have an associated line number, use the last line
+number from the current sequence in the line-table. Such lines are labeled
+as 「approximate」 in the output as they may be misleading.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-basenames">
+<span id="cmdoption-llvm-symbolizer-s"></span><span class="sig-name descname"><span class="pre">--basenames</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-s</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-basenames" title="Link to this definition">#</a></dt>
+<dd><p>Print just the file’s name without any directories, instead of the
+absolute path.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-build-id">
+<span class="sig-name descname"><span class="pre">--build-id</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-build-id" title="Link to this definition">#</a></dt>
+<dd><p>Look up the object using the given build ID, specified as a hexadecimal
+string. Mutually exclusive with <a class="reference internal" href="#cmdoption-llvm-symbolizer-obj"><code class="xref std std-option docutils literal notranslate"><span class="pre">--obj</span></code></a>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-color">
+<span class="sig-name descname"><span class="pre">--color</span></span><span class="sig-prename descclassname"> <span class="pre">[=&lt;always|auto|never&gt;]</span></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-color" title="Link to this definition">#</a></dt>
+<dd><p>Specify whether to use color in <a class="reference internal" href="#cmdoption-llvm-symbolizer-filter-markup"><code class="xref std std-option docutils literal notranslate"><span class="pre">--filter-markup</span></code></a> mode. Defaults to
+<code class="docutils literal notranslate"><span class="pre">auto</span></code>, which detects whether standard output supports color. Specifying
+<code class="docutils literal notranslate"><span class="pre">--color</span></code> alone is equivalent to <code class="docutils literal notranslate"><span class="pre">--color=always</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-debug-file-directory">
+<span class="sig-name descname"><span class="pre">--debug-file-directory</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-debug-file-directory" title="Link to this definition">#</a></dt>
+<dd><p>Provide a path to a directory with a <cite>.build-id</cite> subdirectory to search for
+debug information for stripped binaries. Multiple instances of this argument
+are searched in the order given.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-debuginfod">
+<span id="cmdoption-llvm-symbolizer-no-debuginfod"></span><span class="sig-name descname"><span class="pre">--debuginfod</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--no-debuginfod</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-debuginfod" title="Link to this definition">#</a></dt>
+<dd><p>Whether or not to try debuginfod lookups for debug binaries. Unless specified,
+debuginfod is only enabled if libcurl was compiled in (<code class="docutils literal notranslate"><span class="pre">LLVM_ENABLE_CURL</span></code>)
+and at least one server URL was provided by the environment variable
+<code class="docutils literal notranslate"><span class="pre">DEBUGINFOD_URLS</span></code>.</p>
+</dd></dl>
+
+<dl class="std option" id="llvm-symbolizer-opt-c">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-demangle">
+<span id="cmdoption-llvm-symbolizer-C"></span><span class="sig-name descname"><span class="pre">--demangle</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-C</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-demangle" title="Link to this definition">#</a></dt>
+<dd><p>Print demangled function names, if the names are mangled (e.g. the mangled
+name <cite>_Z3bazv</cite> becomes <cite>baz()</cite>, whilst the non-mangled name <cite>foz</cite> is printed
+as is). Defaults to true.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-dwp">
+<span class="sig-name descname"><span class="pre">--dwp</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-dwp" title="Link to this definition">#</a></dt>
+<dd><p>Use the specified DWP file at <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> for any CUs that have split DWARF
+debug data.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-fallback-debug-path">
+<span class="sig-name descname"><span class="pre">--fallback-debug-path</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-fallback-debug-path" title="Link to this definition">#</a></dt>
+<dd><p>When a separate file contains debug data, and is referenced by a GNU debug
+link section, use the specified path as a basis for locating the debug data if
+it cannot be found relative to the object.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-filter-markup">
+<span class="sig-name descname"><span class="pre">--filter-markup</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-filter-markup" title="Link to this definition">#</a></dt>
+<dd><p>Reads from standard input, converts contained
+<a class="reference internal" href="../SymbolizerMarkupFormat.html"><span class="doc">Symbolizer Markup</span></a> into human-readable form,
+and prints the results to standard output. The following markup elements are
+not yet supported:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">{{{hexdict}}}</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{{{dumpfile}}}</span></code></p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">{{{bt}}}</span></code> backtrace element reports frames using the following syntax:</p>
+<p><code class="docutils literal notranslate"><span class="pre">#&lt;number&gt;[.&lt;inline&gt;]</span> <span class="pre">&lt;address&gt;</span> <span class="pre">&lt;function&gt;</span> <span class="pre">&lt;file&gt;:&lt;line&gt;:&lt;col&gt;</span> <span class="pre">(&lt;module&gt;+&lt;relative</span> <span class="pre">address&gt;)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;inline&gt;</span></code> provides frame numbers for calls inlined into the caller
+corresponding to <code class="docutils literal notranslate"><span class="pre">&lt;number&gt;</span></code>. The inlined call numbers start at 1 and increase
+from callee to caller.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;address&gt;</span></code> is an address inside the call instruction to the function.  The
+address may not be the start of the instruction.  <code class="docutils literal notranslate"><span class="pre">&lt;relative</span> <span class="pre">address&gt;</span></code> is
+the corresponding virtual offset in the <code class="docutils literal notranslate"><span class="pre">&lt;module&gt;</span></code> loaded at that address.</p>
+</dd></dl>
+
+<dl class="std option" id="llvm-symbolizer-opt-f">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-functions">
+<span id="cmdoption-llvm-symbolizer-f"></span><span class="sig-name descname"><span class="pre">--functions</span></span><span class="sig-prename descclassname"> <span class="pre">[=&lt;none|short|linkage&gt;]</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-f</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-functions" title="Link to this definition">#</a></dt>
+<dd><p>Specify the way function names are printed (omit function name, print short
+function name, or print full linkage name, respectively). Defaults to
+<code class="docutils literal notranslate"><span class="pre">linkage</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-help">
+<span id="cmdoption-llvm-symbolizer-h"></span><span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-h</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-help" title="Link to this definition">#</a></dt>
+<dd><p>Show help and usage for this command.</p>
+</dd></dl>
+
+<dl class="std option" id="llvm-symbolizer-opt-i">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-inlining">
+<span id="cmdoption-llvm-symbolizer-inlines"></span><span id="cmdoption-llvm-symbolizer-i"></span><span class="sig-name descname"><span class="pre">--inlining</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--inlines</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-inlining" title="Link to this definition">#</a></dt>
+<dd><p>If a source code location is in an inlined function, prints all the inlined
+frames. This is the default.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-no-inlines">
+<span class="sig-name descname"><span class="pre">--no-inlines</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-no-inlines" title="Link to this definition">#</a></dt>
+<dd><p>Don’t print inlined frames.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-no-demangle">
+<span class="sig-name descname"><span class="pre">--no-demangle</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-no-demangle" title="Link to this definition">#</a></dt>
+<dd><p>Don’t print demangled function names.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-obj">
+<span id="cmdoption-llvm-symbolizer-exe"></span><span id="cmdoption-llvm-symbolizer-e"></span><span class="sig-name descname"><span class="pre">--obj</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--exe</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-e</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-obj" title="Link to this definition">#</a></dt>
+<dd><p>Path to object file to be symbolized. If <code class="docutils literal notranslate"><span class="pre">-</span></code> is specified, read the object
+directly from the standard input stream. Mutually exclusive with
+<a class="reference internal" href="#cmdoption-llvm-symbolizer-build-id"><code class="xref std std-option docutils literal notranslate"><span class="pre">--build-id</span></code></a>.</p>
+</dd></dl>
+
+<dl class="std option" id="llvm-symbolizer-opt-output-style">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-output-style">
+<span class="sig-name descname"><span class="pre">--output-style</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;LLVM|GNU|JSON&gt;</span></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-output-style" title="Link to this definition">#</a></dt>
+<dd><p>Specify the preferred output style. Defaults to <code class="docutils literal notranslate"><span class="pre">LLVM</span></code>. When the output
+style is set to <code class="docutils literal notranslate"><span class="pre">GNU</span></code>, the tool follows the style of GNU’s <strong>addr2line</strong>.
+The differences from the <code class="docutils literal notranslate"><span class="pre">LLVM</span></code> style are:</p>
+<ul class="simple">
+<li><p>Does not print the column of a source code location.</p></li>
+<li><p>Does not add an empty line after the report for an address.</p></li>
+<li><p>Does not replace the name of an inlined function with the name of the
+topmost caller when inlined frames are not shown.</p></li>
+<li><p>Prints an address’s debug-data discriminator when it is non-zero. One way to
+produce discriminators is to compile with clang’s -fdebug-info-for-profiling.</p></li>
+</ul>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">JSON</span></code> style provides a machine-readable output in JSON. If addresses are</dt><dd><p>supplied via stdin, the output JSON will be a series of individual objects.
+Otherwise, all results will be contained in a single array.</p>
+</dd>
+</dl>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>inlined.elf<span class="w"> </span>0x4004be<span class="w"> </span>0x400486<span class="w"> </span>-p
+<span class="go">baz() at /tmp/test.cpp:11:18</span>
+<span class="go"> (inlined by) main at /tmp/test.cpp:15:0</span>
+
+<span class="go">foo() at /tmp/test.cpp:6:3</span>
+
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--output-style<span class="o">=</span>LLVM<span class="w"> </span>--obj<span class="o">=</span>inlined.elf<span class="w"> </span>0x4004be<span class="w"> </span>0x400486<span class="w"> </span>-p<span class="w"> </span>--no-inlines
+<span class="go">main at /tmp/test.cpp:11:18</span>
+
+<span class="go">foo() at /tmp/test.cpp:6:3</span>
+
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--output-style<span class="o">=</span>GNU<span class="w"> </span>--obj<span class="o">=</span>inlined.elf<span class="w"> </span>0x4004be<span class="w"> </span>0x400486<span class="w"> </span>-p<span class="w"> </span>--no-inlines
+<span class="go">baz() at /tmp/test.cpp:11</span>
+<span class="go">foo() at /tmp/test.cpp:6</span>
+
+<span class="gp">$ </span>clang<span class="w"> </span>-g<span class="w"> </span>-fdebug-info-for-profiling<span class="w"> </span>test.cpp<span class="w"> </span>-o<span class="w"> </span>profiling.elf
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--output-style<span class="o">=</span>GNU<span class="w"> </span>--obj<span class="o">=</span>profiling.elf<span class="w"> </span>0x401167<span class="w"> </span>-p<span class="w"> </span>--no-inlines
+<span class="go">main at /tmp/test.cpp:15 (discriminator 2)</span>
+
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--output-style<span class="o">=</span>JSON<span class="w"> </span>--obj<span class="o">=</span>inlined.elf<span class="w"> </span>0x4004be<span class="w"> </span>0x400486<span class="w"> </span>-p
+<span class="go">[</span>
+<span class="go">  {</span>
+<span class="go">    &quot;Address&quot;: &quot;0x4004be&quot;,</span>
+<span class="go">    &quot;ModuleName&quot;: &quot;inlined.elf&quot;,</span>
+<span class="go">    &quot;Symbol&quot;: [</span>
+<span class="go">      {</span>
+<span class="go">        &quot;Column&quot;: 18,</span>
+<span class="go">        &quot;Discriminator&quot;: 0,</span>
+<span class="go">        &quot;FileName&quot;: &quot;/tmp/test.cpp&quot;,</span>
+<span class="go">        &quot;FunctionName&quot;: &quot;baz()&quot;,</span>
+<span class="go">        &quot;Line&quot;: 11,</span>
+<span class="go">        &quot;StartAddress&quot;: &quot;0x4004be&quot;,</span>
+<span class="go">        &quot;StartFileName&quot;: &quot;/tmp/test.cpp&quot;,</span>
+<span class="go">        &quot;StartLine&quot;: 9</span>
+<span class="go">      },</span>
+<span class="go">      {</span>
+<span class="go">        &quot;Column&quot;: 0,</span>
+<span class="go">        &quot;Discriminator&quot;: 0,</span>
+<span class="go">        &quot;FileName&quot;: &quot;/tmp/test.cpp&quot;,</span>
+<span class="go">        &quot;FunctionName&quot;: &quot;main&quot;,</span>
+<span class="go">        &quot;Line&quot;: 15,</span>
+<span class="go">        &quot;StartAddress&quot;: &quot;0x4004be&quot;,</span>
+<span class="go">        &quot;StartFileName&quot;: &quot;/tmp/test.cpp&quot;,</span>
+<span class="go">        &quot;StartLine&quot;: 14</span>
+<span class="go">      }</span>
+<span class="go">    ]</span>
+<span class="go">  },</span>
+<span class="go">  {</span>
+<span class="go">    &quot;Address&quot;: &quot;0x400486&quot;,</span>
+<span class="go">    &quot;ModuleName&quot;: &quot;inlined.elf&quot;,</span>
+<span class="go">    &quot;Symbol&quot;: [</span>
+<span class="go">      {</span>
+<span class="go">        &quot;Column&quot;: 3,</span>
+<span class="go">        &quot;Discriminator&quot;: 0,</span>
+<span class="go">        &quot;FileName&quot;: &quot;/tmp/test.cpp&quot;,</span>
+<span class="go">        &quot;FunctionName&quot;: &quot;foo()&quot;,</span>
+<span class="go">        &quot;Line&quot;: 6,</span>
+<span class="go">        &quot;StartAddress&quot;: &quot;0x400486&quot;,</span>
+<span class="go">        &quot;StartFileName&quot;: &quot;/tmp/test.cpp&quot;,</span>
+<span class="go">        &quot;StartLine&quot;: 5</span>
+<span class="go">      }</span>
+<span class="go">    ]</span>
+<span class="go">  }</span>
+<span class="go">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-pdb">
+<span class="sig-name descname"><span class="pre">--pdb</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-pdb" title="Link to this definition">#</a></dt>
+<dd><p>Use the specified PDB file at <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code>, overriding the PDB info
+contained in the COFF object.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-pretty-print">
+<span id="cmdoption-llvm-symbolizer-p"></span><span class="sig-name descname"><span class="pre">--pretty-print</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-pretty-print" title="Link to this definition">#</a></dt>
+<dd><p>Print human-readable output. If <a class="reference internal" href="#cmdoption-llvm-symbolizer-inlining"><code class="xref std std-option docutils literal notranslate"><span class="pre">--inlining</span></code></a> is specified, the
+enclosing scope is prefixed by (inlined by).
+For JSON output, the option will cause JSON to be indented and split over
+new lines. Otherwise, the JSON output will be printed in a compact form.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>inlined.elf<span class="w"> </span>0x4004be<span class="w"> </span>--inlining<span class="w"> </span>--pretty-print
+<span class="go">baz() at /tmp/test.cpp:11:18</span>
+<span class="go"> (inlined by) main at /tmp/test.cpp:15:0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-print-address">
+<span id="cmdoption-llvm-symbolizer-addresses"></span><span id="cmdoption-llvm-symbolizer-a"></span><span class="sig-name descname"><span class="pre">--print-address</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--addresses</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-print-address" title="Link to this definition">#</a></dt>
+<dd><p>Print address before the source code location. Defaults to false.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>inlined.elf<span class="w"> </span>--print-address<span class="w"> </span>0x4004be
+<span class="go">0x4004be</span>
+<span class="go">baz()</span>
+<span class="go">/tmp/test.cpp:11:18</span>
+<span class="go">main</span>
+<span class="go">/tmp/test.cpp:15:0</span>
+
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>inlined.elf<span class="w"> </span>0x4004be<span class="w"> </span>--pretty-print<span class="w"> </span>--print-address
+<span class="go">0x4004be: baz() at /tmp/test.cpp:11:18</span>
+<span class="go"> (inlined by) main at /tmp/test.cpp:15:0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-print-source-context-lines">
+<span class="sig-name descname"><span class="pre">--print-source-context-lines</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;N&gt;</span></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-print-source-context-lines" title="Link to this definition">#</a></dt>
+<dd><p>Print <code class="docutils literal notranslate"><span class="pre">N</span></code> lines of source context for each symbolized address.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>test.elf<span class="w"> </span>0x400490<span class="w"> </span>--print-source-context-lines<span class="o">=</span><span class="m">3</span>
+<span class="go">baz()</span>
+<span class="go">/tmp/test.cpp:11:0</span>
+<span class="go">10  :   volatile int k = 42;</span>
+<span class="go">11 &gt;:   return foz() + k;</span>
+<span class="go">12  : }</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-relativenames">
+<span class="sig-name descname"><span class="pre">--relativenames</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-relativenames" title="Link to this definition">#</a></dt>
+<dd><p>Print the file’s path relative to the compilation directory, instead
+of the absolute path. If the command-line to the compiler included
+the full path, this will be the same as the default.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-verbose">
+<span class="sig-name descname"><span class="pre">--verbose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-verbose" title="Link to this definition">#</a></dt>
+<dd><p>Print verbose address, line and column information.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>--obj<span class="o">=</span>inlined.elf<span class="w"> </span>--verbose<span class="w"> </span>0x4004be
+<span class="go">baz()</span>
+<span class="go">  Filename: /tmp/test.cpp</span>
+<span class="go">  Function start filename: /tmp/test.cpp</span>
+<span class="go">  Function start line: 9</span>
+<span class="go">  Function start address: 0x4004b6</span>
+<span class="go">  Line: 11</span>
+<span class="go">  Column: 18</span>
+<span class="go">main</span>
+<span class="go">  Filename: /tmp/test.cpp</span>
+<span class="go">  Function start filename: /tmp/test.cpp</span>
+<span class="go">  Function start line: 14</span>
+<span class="go">  Function start address: 0x4004b0</span>
+<span class="go">  Line: 15</span>
+<span class="go">  Column: 18</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-version">
+<span id="cmdoption-llvm-symbolizer-v"></span><span class="sig-name descname"><span class="pre">--version</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-version" title="Link to this definition">#</a></dt>
+<dd><p>Print version information for the tool.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-arg-FILE">
+<span class="sig-name descname"><span class="pre">&#64;&lt;FILE&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-arg-FILE" title="Link to this definition">#</a></dt>
+<dd><p>Read command-line options from response file <cite>&lt;FILE&gt;</cite>.</p>
+</dd></dl>
+
+</section>
+<section id="windows-pdb-specific-options">
+<h2>WINDOWS/PDB SPECIFIC OPTIONS<a class="headerlink" href="#windows-pdb-specific-options" title="Link to this heading">#</a></h2>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-dia">
+<span class="sig-name descname"><span class="pre">--dia</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-dia" title="Link to this definition">#</a></dt>
+<dd><p>Use the Windows DIA SDK for symbolization. If the DIA SDK is not found,
+llvm-symbolizer will fall back to the native implementation.</p>
+</dd></dl>
+
+</section>
+<section id="mach-o-specific-options">
+<h2>MACH-O SPECIFIC OPTIONS<a class="headerlink" href="#mach-o-specific-options" title="Link to this heading">#</a></h2>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-default-arch">
+<span class="sig-name descname"><span class="pre">--default-arch</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;arch&gt;</span></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-default-arch" title="Link to this definition">#</a></dt>
+<dd><p>If a binary contains object files for multiple architectures (e.g. it is a
+Mach-O universal binary or an archive with architecture variants),
+symbolize the object file for a given architecture. You can also specify
+the architecture by writing <code class="docutils literal notranslate"><span class="pre">binary_name:arch_name</span></code> in the input (see
+example below). For archives, the format <code class="docutils literal notranslate"><span class="pre">archive.a(member.o):arch</span></code>
+is also supported. If the architecture is not specified,
+the address will not be symbolized. Defaults to empty string.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cat<span class="w"> </span>addr.txt
+<span class="go">/tmp/mach_universal_binary:i386 0x1f84</span>
+<span class="go">/tmp/mach_universal_binary:x86_64 0x100000f24</span>
+<span class="go">/tmp/archive.a(member.o):ppc 0x1000</span>
+<span class="go">/tmp/archive.a(member.o):ppc64 0x2000</span>
+
+<span class="gp">$ </span>llvm-symbolizer<span class="w"> </span>&lt;<span class="w"> </span>addr.txt
+<span class="go">_main</span>
+<span class="go">/tmp/source_i386.cc:8</span>
+
+<span class="go">_main</span>
+<span class="go">/tmp/source_x86_64.cc:8</span>
+
+<span class="go">_foo</span>
+<span class="go">/tmp/source_ppc.cc:12</span>
+
+<span class="go">_foo</span>
+<span class="go">/tmp/source_ppc64.cc:12</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-llvm-symbolizer-dsym-hint">
+<span class="sig-name descname"><span class="pre">--dsym-hint</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path/to/file.dSYM&gt;</span></span><a class="headerlink" href="#cmdoption-llvm-symbolizer-dsym-hint" title="Link to this definition">#</a></dt>
+<dd><p>If the debug info for a binary isn’t present in the default location, look for
+the debug info at the .dSYM path provided via this option. This flag can be
+used multiple times.</p>
+</dd></dl>
+
+</section>
+<section id="exit-status">
+<h2>退出狀態<a class="headerlink" href="#exit-status" title="Link to this heading">#</a></h2>
+<p><strong class="program">llvm-symbolizer</strong> returns 0. Other exit codes imply an internal program
+error.</p>
+</section>
+<section id="see-also">
+<h2>另請參見<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<p><em class="manpage"><a class="manpage reference external" href="llvm-addr2line.html">llvm-addr2line(1)</a></em></p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="llvm-tblgen.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">llvm-tblgen - Target Description to C++ Code for LLVM</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="llvm-strip.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">llvm-strip - object stripping tool</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">llvm-symbolizer - convert addresses into source code locations</a><ul>
+<li><a class="reference internal" href="#synopsis">概要</a></li>
+<li><a class="reference internal" href="#description">描述</a></li>
+<li><a class="reference internal" href="#examples">EXAMPLES</a></li>
+<li><a class="reference internal" href="#options">選項</a></li>
+<li><a class="reference internal" href="#windows-pdb-specific-options">WINDOWS/PDB SPECIFIC OPTIONS</a></li>
+<li><a class="reference internal" href="#mach-o-specific-options">MACH-O SPECIFIC OPTIONS</a></li>
+<li><a class="reference internal" href="#exit-status">退出狀態</a></li>
+<li><a class="reference internal" href="#see-also">另請參見</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=0d9984b1"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/translations.js?v=d9a6981e"></script>
+    <script src="../_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

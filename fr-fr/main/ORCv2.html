@@ -1,0 +1,1564 @@
+<!doctype html>
+<html class="no-js" lang="fr-FR" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Recherche" href="search.html" /><link rel="next" title="JITLink and ORC’s ObjectLinkingLayer" href="JITLink.html" /><link rel="prev" title="MCJIT Design and Implementation" href="MCJITDesignAndImplementation.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/ORCv2.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>ORC Design and Implementation - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Recherche" name="q" aria-label="Recherche">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural “diff”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/ORCv2.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="orc-design-and-implementation">
+<h1>ORC Design and Implementation<a class="headerlink" href="#orc-design-and-implementation" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>This document aims to provide a high-level overview of the design and
+implementation of the ORC JIT APIs. Except where otherwise stated all discussion
+refers to the modern ORCv2 APIs (available since LLVM 7). Clients wishing to
+transition from OrcV1 should see Section <a class="reference internal" href="#transitioning-orcv1-to-orcv2"><span class="std std-ref">Transitioning from ORCv1 to ORCv2</span></a>.</p>
+</section>
+<section id="use-cases">
+<h2>Use-cases<a class="headerlink" href="#use-cases" title="Link to this heading">#</a></h2>
+<p>ORC provides a modular API for building JIT compilers. There are a number
+of use cases for such an API. For example:</p>
+<ol class="arabic simple">
+<li><p>The LLVM tutorials use a simple ORC-based JIT class to execute expressions
+compiled from a toy language: Kaleidoscope.</p></li>
+<li><p>The LLVM debugger, LLDB, uses a cross-compiling JIT for expression
+evaluation. In this use case, cross compilation allows expressions compiled
+in the debugger process to be executed on the debug target process, which may
+be on a different device/architecture.</p></li>
+<li><p>In high-performance JITs (e.g. JVMs, Julia) that want to make use of LLVM’s
+optimizations within an existing JIT infrastructure.</p></li>
+<li><p>In interpreters and REPLs, e.g. Cling (C++) and the Swift interpreter.</p></li>
+</ol>
+<p>By adopting a modular, library-based design we aim to make ORC useful in as many
+of these contexts as possible.</p>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
+<p>ORC provides the following features:</p>
+<dl class="simple myst">
+<dt><strong>JIT-linking</strong></dt><dd><p>ORC provides APIs to link relocatable object files (COFF, ELF, MachO) <a class="footnote-reference brackets" href="#id5" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>
+into a target process at runtime. The target process may be the same process
+that contains the JIT session object and jit-linker, or may be another process
+(even one running on a different machine or architecture) that communicates
+with the JIT via RPC.</p>
+</dd>
+<dt><strong>LLVM IR compilation</strong></dt><dd><p>ORC provides off the shelf components (IRCompileLayer, SimpleCompiler,
+ConcurrentIRCompiler) that make it easy to add LLVM IR to a JIT’d process.</p>
+</dd>
+<dt><strong>Eager and lazy compilation</strong></dt><dd><p>By default, ORC will compile symbols as soon as they are looked up in the JIT
+session object (<code class="docutils literal notranslate"><span class="pre">ExecutionSession</span></code>). Compiling eagerly by default makes it
+easy to use ORC as an in-memory compiler for an existing JIT (similar to how
+MCJIT is commonly used). However ORC also provides built-in support for lazy
+compilation via lazy-reexports (see <a class="reference internal" href="#laziness"><span class="std std-ref">Laziness</span></a>).</p>
+</dd>
+<dt><strong>Support for Custom Compilers and Program Representations</strong></dt><dd><p>Clients can supply custom compilers for each symbol that they define in their
+JIT session. ORC will run the user-supplied compiler when the a definition of
+a symbol is needed. ORC is actually fully language agnostic: LLVM IR is not
+treated specially, and is supported via the same wrapper mechanism (the
+<code class="docutils literal notranslate"><span class="pre">MaterializationUnit</span></code> class) that is used for custom compilers.</p>
+</dd>
+<dt><strong>Concurrent JIT’d code</strong> and <strong>Concurrent Compilation</strong></dt><dd><p>JIT’d code may be executed in multiple threads, may spawn new threads, and may
+re-enter the ORC (e.g. to request lazy compilation) concurrently from multiple
+threads. Compilers launched my ORC can run concurrently (provided the client
+sets up an appropriate dispatcher). Built-in dependency tracking ensures that
+ORC does not release pointers to JIT’d code or data until all dependencies
+have also been JIT’d and they are safe to call or use.</p>
+</dd>
+<dt><strong>Removable Code</strong></dt><dd><p>Resources for JIT’d program representations</p>
+</dd>
+<dt><strong>Orthogonality</strong> and <strong>Composability</strong></dt><dd><p>Each of the features above can be used independently. It is possible to put
+ORC components together to make a non-lazy, in-process, single threaded JIT
+or a lazy, out-of-process, concurrent JIT, or anything in between.</p>
+</dd>
+</dl>
+</section>
+<section id="lljit-and-lllazyjit">
+<h2>LLJIT and LLLazyJIT<a class="headerlink" href="#lljit-and-lllazyjit" title="Link to this heading">#</a></h2>
+<p>ORC provides two basic JIT classes off-the-shelf. These are useful both as
+examples of how to assemble ORC components to make a JIT, and as replacements
+for earlier LLVM JIT APIs (e.g. MCJIT).</p>
+<p>The LLJIT class uses an IRCompileLayer and RTDyldObjectLinkingLayer to support
+compilation of LLVM IR and linking of relocatable object files. All operations
+are performed eagerly on symbol lookup (i.e. a symbol’s definition is compiled
+as soon as you attempt to look up its address). LLJIT is a suitable replacement
+for MCJIT in most cases (note: some more advanced features, e.g.
+JITEventListeners are not supported yet).</p>
+<p>The LLLazyJIT extends LLJIT and adds a CompileOnDemandLayer to enable lazy
+compilation of LLVM IR. When an LLVM IR module is added via the addLazyIRModule
+method, function bodies in that module will not be compiled until they are first
+called. LLLazyJIT aims to provide a replacement of LLVM’s original (pre-MCJIT)
+JIT API.</p>
+<p>LLJIT and LLLazyJIT instances can be created using their respective builder
+classes: LLJITBuilder and LLazyJITBuilder. For example, assuming you have a
+module <code class="docutils literal notranslate"><span class="pre">M</span></code> loaded on a ThreadSafeContext <code class="docutils literal notranslate"><span class="pre">Ctx</span></code>:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Try to detect the host arch and construct an LLJIT instance.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">JIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LLJITBuilder</span><span class="p">().</span><span class="n">create</span><span class="p">();</span>
+
+<span class="c1">// If we could not construct an instance, return an error.</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">JIT</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">JIT</span><span class="p">.</span><span class="n">takeError</span><span class="p">();</span>
+
+<span class="c1">// Add the module.</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">Err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JIT</span><span class="o">-&gt;</span><span class="n">addIRModule</span><span class="p">(</span><span class="n">TheadSafeModule</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">M</span><span class="p">),</span><span class="w"> </span><span class="n">Ctx</span><span class="p">)))</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Err</span><span class="p">;</span>
+
+<span class="c1">// Look up the JIT&#39;d code entry point.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">EntrySym</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JIT</span><span class="o">-&gt;</span><span class="n">lookup</span><span class="p">(</span><span class="s">&quot;entry&quot;</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">EntrySym</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">EntrySym</span><span class="p">.</span><span class="n">takeError</span><span class="p">();</span>
+
+<span class="c1">// Cast the entry point address to a function pointer.</span>
+<span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">Entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EntrySym</span><span class="p">.</span><span class="n">getAddress</span><span class="p">().</span><span class="n">toPtr</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="o">*</span><span class="p">)()</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="c1">// Call into JIT&#39;d code.</span>
+<span class="n">Entry</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The builder classes provide a number of configuration options that can be
+specified before the JIT instance is constructed. For example:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Build an LLLazyJIT instance that uses four worker threads for compilation,</span>
+<span class="c1">// and jumps to a specific error handler (rather than null) on lazy compile</span>
+<span class="c1">// failures.</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">handleLazyCompileFailure</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// JIT&#39;d code will jump here if lazy compilation fails, giving us an</span>
+<span class="w">  </span><span class="c1">// opportunity to exit or throw an exception into JIT&#39;d code.</span>
+<span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="n">JITFailed</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">JIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LLLazyJITBuilder</span><span class="p">()</span>
+<span class="w">             </span><span class="p">.</span><span class="n">setNumCompileThreads</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="w">             </span><span class="p">.</span><span class="n">setLazyCompileFailureAddr</span><span class="p">(</span>
+<span class="w">                 </span><span class="n">ExecutorAddr</span><span class="o">::</span><span class="n">fromPtr</span><span class="p">(</span><span class="o">&amp;</span><span class="n">handleLazyCompileFailure</span><span class="p">))</span>
+<span class="w">             </span><span class="p">.</span><span class="n">create</span><span class="p">();</span>
+
+<span class="c1">// ...</span>
+</pre></div>
+</div>
+<p>For users wanting to get started with LLJIT a minimal example program can be
+found at <code class="docutils literal notranslate"><span class="pre">llvm/examples/HowToUseLLJIT</span></code>.</p>
+</section>
+<section id="design-overview">
+<h2>Design Overview<a class="headerlink" href="#design-overview" title="Link to this heading">#</a></h2>
+<p>ORC’s JIT program model aims to emulate the linking and symbol resolution
+rules used by the static and dynamic linkers. This allows ORC to JIT
+arbitrary LLVM IR, including IR produced by an ordinary static compiler (e.g.
+clang) that uses constructs like symbol linkage and visibility, and weak <a class="footnote-reference brackets" href="#id6" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>
+and common symbol definitions.</p>
+<p>To see how this works, imagine a program <code class="docutils literal notranslate"><span class="pre">foo</span></code> which links against a pair
+of dynamic libraries: <code class="docutils literal notranslate"><span class="pre">libA</span></code> and <code class="docutils literal notranslate"><span class="pre">libB</span></code>. On the command line, building this
+program might look like:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>clang++<span class="w"> </span>-shared<span class="w"> </span>-o<span class="w"> </span>libA.dylib<span class="w"> </span>a1.cpp<span class="w"> </span>a2.cpp
+$<span class="w"> </span>clang++<span class="w"> </span>-shared<span class="w"> </span>-o<span class="w"> </span>libB.dylib<span class="w"> </span>b1.cpp<span class="w"> </span>b2.cpp
+$<span class="w"> </span>clang++<span class="w"> </span>-o<span class="w"> </span>myapp<span class="w"> </span>myapp.cpp<span class="w"> </span>-L.<span class="w"> </span>-lA<span class="w"> </span>-lB
+$<span class="w"> </span>./myapp
+</pre></div>
+</div>
+<p>In ORC, this would translate into API calls on a hypothetical CXXCompilingLayer
+(with error checking omitted for brevity) as:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">ExecutionSession</span><span class="w"> </span><span class="n">ES</span><span class="p">;</span>
+<span class="n">RTDyldObjectLinkingLayer</span><span class="w"> </span><span class="nf">ObjLinkingLayer</span><span class="p">(</span>
+<span class="w">    </span><span class="n">ES</span><span class="p">,</span><span class="w"> </span><span class="p">[]()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">SectionMemoryManager</span><span class="o">&gt;</span><span class="p">();</span><span class="w"> </span><span class="p">});</span>
+<span class="n">CXXCompileLayer</span><span class="w"> </span><span class="nf">CXXLayer</span><span class="p">(</span><span class="n">ES</span><span class="p">,</span><span class="w"> </span><span class="n">ObjLinkingLayer</span><span class="p">);</span>
+
+<span class="c1">// Create JITDylib &quot;A&quot; and add code to it using the CXX layer.</span>
+<span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">LibA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">createJITDylib</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">);</span>
+<span class="n">CXXLayer</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">LibA</span><span class="p">,</span><span class="w"> </span><span class="n">MemoryBuffer</span><span class="o">::</span><span class="n">getFile</span><span class="p">(</span><span class="s">&quot;a1.cpp&quot;</span><span class="p">));</span>
+<span class="n">CXXLayer</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">LibA</span><span class="p">,</span><span class="w"> </span><span class="n">MemoryBuffer</span><span class="o">::</span><span class="n">getFile</span><span class="p">(</span><span class="s">&quot;a2.cpp&quot;</span><span class="p">));</span>
+
+<span class="c1">// Create JITDylib &quot;B&quot; and add code to it using the CXX layer.</span>
+<span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">LibB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">createJITDylib</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">);</span>
+<span class="n">CXXLayer</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">LibB</span><span class="p">,</span><span class="w"> </span><span class="n">MemoryBuffer</span><span class="o">::</span><span class="n">getFile</span><span class="p">(</span><span class="s">&quot;b1.cpp&quot;</span><span class="p">));</span>
+<span class="n">CXXLayer</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">LibB</span><span class="p">,</span><span class="w"> </span><span class="n">MemoryBuffer</span><span class="o">::</span><span class="n">getFile</span><span class="p">(</span><span class="s">&quot;b2.cpp&quot;</span><span class="p">));</span>
+
+<span class="c1">// Create and specify the search order for the main JITDylib. This is</span>
+<span class="c1">// equivalent to a &quot;links against&quot; relationship in a command-line link.</span>
+<span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MainJD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">createJITDylib</span><span class="p">(</span><span class="s">&quot;main&quot;</span><span class="p">);</span>
+<span class="n">MainJD</span><span class="p">.</span><span class="n">addToLinkOrder</span><span class="p">(</span><span class="o">&amp;</span><span class="n">LibA</span><span class="p">);</span>
+<span class="n">MainJD</span><span class="p">.</span><span class="n">addToLinkOrder</span><span class="p">(</span><span class="o">&amp;</span><span class="n">LibB</span><span class="p">);</span>
+<span class="n">CXXLayer</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">MainJD</span><span class="p">,</span><span class="w"> </span><span class="n">MemoryBuffer</span><span class="o">::</span><span class="n">getFile</span><span class="p">(</span><span class="s">&quot;main.cpp&quot;</span><span class="p">));</span>
+
+<span class="c1">// Look up the JIT&#39;d main, cast it to a function pointer, then call it.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">MainSym</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ExitOnErr</span><span class="p">(</span><span class="n">ES</span><span class="p">.</span><span class="n">lookup</span><span class="p">({</span><span class="o">&amp;</span><span class="n">MainJD</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;main&quot;</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">Main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MainSym</span><span class="p">.</span><span class="n">getAddress</span><span class="p">().</span><span class="n">toPtr</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="p">[])</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="n">Result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Main</span><span class="p">(...);</span>
+</pre></div>
+</div>
+<p>This example tells us nothing about <em>how</em> or <em>when</em> compilation will happen.
+That will depend on the implementation of the hypothetical CXXCompilingLayer.
+The same linker-based symbol resolution rules will apply regardless of that
+implementation, however. For example, if a1.cpp and a2.cpp both define a
+function « foo » then ORCv2 will generate a duplicate definition error. On the
+other hand, if a1.cpp and b1.cpp both define « foo » there is no error (different
+dynamic libraries may define the same symbol). If main.cpp refers to « foo », it
+should bind to the definition in LibA rather than the one in LibB, since
+main.cpp is part of the « main » dylib, and the main dylib links against LibA
+before LibB.</p>
+<p>Many JIT clients will have no need for this strict adherence to the usual
+ahead-of-time linking rules, and should be able to get by just fine by putting
+all of their code in a single JITDylib. However, clients who want to JIT code
+for languages/projects that traditionally rely on ahead-of-time linking (e.g.
+C++) will find that this feature makes life much easier.</p>
+<p>Symbol lookup in ORC serves two other important functions, beyond providing
+addresses for symbols: (1) It triggers compilation of the symbol(s) searched for
+(if they have not been compiled already), and (2) it provides the
+synchronization mechanism for concurrent compilation. The pseudo-code for the
+lookup process is:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>construct a query object from a query set and query handler
+lock the session
+lodge query against requested symbols, collect required materializers (if any)
+unlock the session
+dispatch materializers (if any)
+</pre></div>
+</div>
+<p>In this context a materializer is something that provides a working definition
+of a symbol upon request. Usually materializers are just wrappers for compilers,
+but they may also wrap a jit-linker directly (if the program representation
+backing the definitions is an object file), or may even be a class that writes
+bits directly into memory (for example, if the definitions are
+stubs). Materialization is the blanket term for any actions (compiling, linking,
+splatting bits, registering with runtimes, etc.) that are required to generate a
+symbol definition that is safe to call or access.</p>
+<p>As each materializer completes its work it notifies the JITDylib, which in turn
+notifies any query objects that are waiting on the newly materialized
+definitions. Each query object maintains a count of the number of symbols that
+it is still waiting on, and once this count reaches zero the query object calls
+the query handler with a <em>SymbolMap</em> (a map of symbol names to addresses)
+describing the result. If any symbol fails to materialize the query immediately
+calls the query handler with an error.</p>
+<p>The collected materialization units are sent to the ExecutionSession to be
+dispatched, and the dispatch behavior can be set by the client. By default each
+materializer is run on the calling thread. Clients are free to create new
+threads to run materializers, or to send the work to a work queue for a thread
+pool (this is what LLJIT/LLLazyJIT do).</p>
+</section>
+<section id="top-level-apis">
+<h2>Top Level APIs<a class="headerlink" href="#top-level-apis" title="Link to this heading">#</a></h2>
+<p>Many of ORC’s top-level APIs are visible in the example above:</p>
+<ul class="simple">
+<li><p><em>ExecutionSession</em> represents the JIT’d program and provides context for the
+JIT: It contains the JITDylibs, error reporting mechanisms, and dispatches the
+materializers.</p></li>
+<li><p><em>JITDylibs</em> provide the symbol tables.</p></li>
+<li><p><em>Layers</em> (ObjLinkingLayer and CXXLayer) are wrappers around compilers and
+allow clients to add uncompiled program representations supported by those
+compilers to JITDylibs.</p></li>
+<li><p><em>ResourceTrackers</em> allow you to remove code.</p></li>
+</ul>
+<p>Several other important APIs are used explicitly. JIT clients need not be aware
+of them, but Layer authors will use them:</p>
+<ul class="simple">
+<li><p><em>MaterializationUnit</em> - When XXXLayer::add is invoked it wraps the given
+program representation (in this example, C++ source) in a MaterializationUnit,
+which is then stored in the JITDylib. MaterializationUnits are responsible for
+describing the definitions they provide, and for unwrapping the program
+representation and passing it back to the layer when compilation is required
+(this ownership shuffle makes writing thread-safe layers easier, since the
+ownership of the program representation will be passed back on the stack,
+rather than having to be fished out of a Layer member, which would require
+synchronization).</p></li>
+<li><p><em>MaterializationResponsibility</em> - When a MaterializationUnit hands a program
+representation back to the layer it comes with an associated
+MaterializationResponsibility object. This object tracks the definitions
+that must be materialized and provides a way to notify the JITDylib once they
+are either successfully materialized or a failure occurs.</p></li>
+</ul>
+</section>
+<section id="absolute-symbols-aliases-and-reexports">
+<h2>Absolute Symbols, Aliases, and Reexports<a class="headerlink" href="#absolute-symbols-aliases-and-reexports" title="Link to this heading">#</a></h2>
+<p>ORC makes it easy to define symbols with absolute addresses, or symbols that
+are simply aliases of other symbols:</p>
+<section id="absolute-symbols">
+<h3>Absolute Symbols<a class="headerlink" href="#absolute-symbols" title="Link to this heading">#</a></h3>
+<p>Absolute symbols are symbols that map directly to addresses without requiring
+further materialization, for example: « foo » = 0x1234. One use case for
+absolute symbols is allowing resolution of process symbols. E.g.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">JD</span><span class="p">.</span><span class="n">define</span><span class="p">(</span><span class="n">absoluteSymbols</span><span class="p">(</span><span class="n">SymbolMap</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;printf&quot;</span><span class="p">),</span>
+<span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="n">ExecutorAddr</span><span class="o">::</span><span class="n">fromPtr</span><span class="p">(</span><span class="o">&amp;</span><span class="n">printf</span><span class="p">),</span>
+<span class="w">        </span><span class="n">JITSymbolFlags</span><span class="o">::</span><span class="n">Callable</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">});</span>
+</pre></div>
+</div>
+<p>With this mapping established code added to the JIT can refer to printf
+symbolically rather than requiring the address of printf to be « baked in ».
+This in turn allows cached versions of the JIT’d code (e.g. compiled objects)
+to be re-used across JIT sessions as the JIT’d code no longer changes, only the
+absolute symbol definition does.</p>
+<p>For process and library symbols the DynamicLibrarySearchGenerator utility (See
+<a class="reference internal" href="#processandlibrarysymbols"><span class="std std-ref">How to Add Process and Library Symbols to JITDylibs</span></a>) can be used to automatically build absolute
+symbol mappings for you. However the absoluteSymbols function is still useful
+for making non-global objects in your JIT visible to JIT’d code. For example,
+imagine that your JIT standard library needs access to your JIT object to make
+some calls. We could bake the address of your object into the library, but then
+it would need to be recompiled for each session:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// From standard library for JIT&#39;d code:</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyJIT</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">log</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">Msg</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">Msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">((</span><span class="n">MyJIT</span><span class="o">*</span><span class="p">)</span><span class="mh">0x1234</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">log</span><span class="p">(</span><span class="n">Msg</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>We can turn this into a symbolic reference in the JIT standard library:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">extern</span><span class="w"> </span><span class="n">MyJIT</span><span class="w"> </span><span class="o">*</span><span class="n">__MyJITInstance</span><span class="p">;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">Msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">__MyJITInstance</span><span class="o">-&gt;</span><span class="n">log</span><span class="p">(</span><span class="n">Msg</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>And then make our JIT object visible to the JIT standard library with an
+absolute symbol definition when the JIT is started:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">MyJIT</span><span class="w"> </span><span class="n">J</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JITStdLibJD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">;</span>
+
+<span class="n">JITStdLibJD</span><span class="p">.</span><span class="n">define</span><span class="p">(</span><span class="n">absoluteSymbols</span><span class="p">(</span><span class="n">SymbolMap</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;__MyJITInstance&quot;</span><span class="p">),</span>
+<span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="n">ExecutorAddr</span><span class="o">::</span><span class="n">fromPtr</span><span class="p">(</span><span class="o">&amp;</span><span class="n">J</span><span class="p">),</span><span class="w"> </span><span class="n">JITSymbolFlags</span><span class="p">()</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">});</span>
+</pre></div>
+</div>
+</section>
+<section id="aliases-and-reexports">
+<h3>Aliases and Reexports<a class="headerlink" href="#aliases-and-reexports" title="Link to this heading">#</a></h3>
+<p>Aliases and reexports allow you to define new symbols that map to existing
+symbols. This can be useful for changing linkage relationships between symbols
+across sessions without having to recompile code. For example, imagine that
+JIT’d code has access to a log function, <code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">log(const</span> <span class="pre">char*)</span></code> for which
+there are two implementations in the JIT standard library: <code class="docutils literal notranslate"><span class="pre">log_fast</span></code> and
+<code class="docutils literal notranslate"><span class="pre">log_detailed</span></code>. Your JIT can choose which one of these definitions will be
+used when the <code class="docutils literal notranslate"><span class="pre">log</span></code> symbol is referenced by setting up an alias at JIT startup
+time:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JITStdLibJD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">LogImplementationSymbol</span><span class="w"> </span><span class="o">=</span>
+<span class="w"> </span><span class="n">Verbose</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;log_detailed&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;log_fast&quot;</span><span class="p">);</span>
+
+<span class="n">JITStdLibJD</span><span class="p">.</span><span class="n">define</span><span class="p">(</span>
+<span class="w">  </span><span class="n">symbolAliases</span><span class="p">(</span><span class="n">SymbolAliasMap</span><span class="p">({</span>
+<span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;log&quot;</span><span class="p">),</span>
+<span class="w">        </span><span class="p">{</span><span class="w"> </span><span class="n">LogImplementationSymbol</span>
+<span class="w">          </span><span class="n">JITSymbolFlags</span><span class="o">::</span><span class="n">Exported</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">JITSymbolFlags</span><span class="o">::</span><span class="n">Callable</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">});</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">symbolAliases</span></code> function allows you to define aliases within a single
+JITDylib. The <code class="docutils literal notranslate"><span class="pre">reexports</span></code> function provides the same functionality, but
+operates across JITDylib boundaries. E.g.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">;</span>
+
+<span class="c1">// Make &#39;bar&#39; in JD2 an alias for &#39;foo&#39; from JD1.</span>
+<span class="n">JD2</span><span class="p">.</span><span class="n">define</span><span class="p">(</span>
+<span class="w">  </span><span class="n">reexports</span><span class="p">(</span><span class="n">JD1</span><span class="p">,</span><span class="w"> </span><span class="n">SymbolAliasMap</span><span class="p">({</span>
+<span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;bar&quot;</span><span class="p">),</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">JITSymbolFlags</span><span class="o">::</span><span class="n">Exported</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">});</span>
+</pre></div>
+</div>
+<p>The reexports utility can be handy for composing a single JITDylib interface by
+re-exporting symbols from several other JITDylibs.</p>
+</section>
+</section>
+<section id="laziness">
+<span id="id3"></span><h2>Laziness<a class="headerlink" href="#laziness" title="Link to this heading">#</a></h2>
+<p>Laziness in ORC is provided by a utility called « lazy reexports ». A lazy
+reexport is similar to a regular reexport or alias: It provides a new name for
+an existing symbol. Unlike regular reexports however, lookups of lazy reexports
+do not trigger immediate materialization of the reexported symbol. Instead, they
+only trigger materialization of a function stub. This function stub is
+initialized to point at a <em>lazy call-through</em>, which provides reentry into the
+JIT. If the stub is called at runtime then the lazy call-through will look up
+the reexported symbol (triggering materialization for it if necessary), update
+the stub (to call directly to the reexported symbol on subsequent calls), and
+then return via the reexported symbol. By re-using the existing symbol lookup
+mechanism, lazy reexports inherit the same concurrency guarantees: calls to lazy
+reexports can be made from multiple threads concurrently, and the reexported
+symbol can be any state of compilation (uncompiled, already in the process of
+being compiled, or already compiled) and the call will succeed. This allows
+laziness to be safely mixed with features like remote compilation, concurrent
+compilation, concurrent JIT’d code, and speculative compilation.</p>
+<p>There is one other key difference between regular reexports and lazy reexports
+that some clients must be aware of: The address of a lazy reexport will be
+<em>different</em> from the address of the reexported symbol (whereas a regular
+reexport is guaranteed to have the same address as the reexported symbol).
+Clients who care about pointer equality will generally want to use the address
+of the reexport as the canonical address of the reexported symbol. This will
+allow the address to be taken without forcing materialization of the reexport.</p>
+<p>Usage example:</p>
+<p>If JITDylib <code class="docutils literal notranslate"><span class="pre">JD</span></code> contains definitions for symbols <code class="docutils literal notranslate"><span class="pre">foo_body</span></code> and
+<code class="docutils literal notranslate"><span class="pre">bar_body</span></code>, we can create lazy entry points <code class="docutils literal notranslate"><span class="pre">Foo</span></code> and <code class="docutils literal notranslate"><span class="pre">Bar</span></code> in JITDylib
+<code class="docutils literal notranslate"><span class="pre">JD2</span></code> by calling:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ReexportFlags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JITSymbolFlags</span><span class="o">::</span><span class="n">Exported</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">JITSymbolFlags</span><span class="o">::</span><span class="n">Callable</span><span class="p">;</span>
+<span class="n">JD2</span><span class="p">.</span><span class="n">define</span><span class="p">(</span>
+<span class="w">  </span><span class="n">lazyReexports</span><span class="p">(</span><span class="n">CallThroughMgr</span><span class="p">,</span><span class="w"> </span><span class="n">StubsMgr</span><span class="p">,</span><span class="w"> </span><span class="n">JD</span><span class="p">,</span>
+<span class="w">                </span><span class="n">SymbolAliasMap</span><span class="p">({</span>
+<span class="w">                  </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">),</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;foo_body&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">ReexportedFlags</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">                  </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;bar&quot;</span><span class="p">),</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;bar_body&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">ReexportedFlags</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="w">                </span><span class="p">}));</span>
+</pre></div>
+</div>
+<p>A full example of how to use lazyReexports with the LLJIT class can be found at
+<code class="docutils literal notranslate"><span class="pre">llvm/examples/OrcV2Examples/LLJITWithLazyReexports</span></code>.</p>
+</section>
+<section id="supporting-custom-compilers">
+<h2>Supporting Custom Compilers<a class="headerlink" href="#supporting-custom-compilers" title="Link to this heading">#</a></h2>
+<p>TBD.</p>
+</section>
+<section id="transitioning-from-orcv1-to-orcv2">
+<span id="transitioning-orcv1-to-orcv2"></span><h2>Transitioning from ORCv1 to ORCv2<a class="headerlink" href="#transitioning-from-orcv1-to-orcv2" title="Link to this heading">#</a></h2>
+<p>Since LLVM 7.0, new ORC development work has focused on adding support for
+concurrent JIT compilation. The new APIs (including new layer interfaces and
+implementations, and new utilities) that support concurrency are collectively
+referred to as ORCv2, and the original, non-concurrent layers and utilities
+are now referred to as ORCv1.</p>
+<p>The majority of the ORCv1 layers and utilities were renamed with a “Legacy”
+prefix in LLVM 8.0, and have deprecation warnings attached in LLVM 9.0. In LLVM
+12.0 ORCv1 will be removed entirely.</p>
+<p>Transitioning from ORCv1 to ORCv2 should be easy for most clients. Most of the
+ORCv1 layers and utilities have ORCv2 counterparts <a class="footnote-reference brackets" href="#id7" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a> that can be directly
+substituted. However there are some design differences between ORCv1 and ORCv2
+to be aware of:</p>
+<ol class="arabic">
+<li><p>ORCv2 fully adopts the JIT-as-linker model that began with MCJIT. Modules
+(and other program representations, e.g. Object Files) are no longer added
+directly to JIT classes or layers. Instead, they are added to <code class="docutils literal notranslate"><span class="pre">JITDylib</span></code>
+instances <em>by</em> layers. The <code class="docutils literal notranslate"><span class="pre">JITDylib</span></code> determines <em>where</em> the definitions
+reside, the layers determine <em>how</em> the definitions will be compiled.
+Linkage relationships between <code class="docutils literal notranslate"><span class="pre">JITDylibs</span></code> determine how inter-module
+references are resolved, and symbol resolvers are no longer used. See the
+section <a class="reference internal" href="#design-overview">Design Overview</a> for more details.</p>
+<p>Unless multiple JITDylibs are needed to model linkage relationships, ORCv1
+clients should place all code in a single JITDylib.
+MCJIT clients should use LLJIT (see <a class="reference internal" href="#lljit-and-lllazyjit">LLJIT and LLLazyJIT</a>), and can place
+code in LLJIT’s default created main JITDylib (See
+<code class="docutils literal notranslate"><span class="pre">LLJIT::getMainJITDylib()</span></code>).</p>
+</li>
+<li><p>All JIT stacks now need an <code class="docutils literal notranslate"><span class="pre">ExecutionSession</span></code> instance. ExecutionSession
+manages the string pool, error reporting, synchronization, and symbol
+lookup.</p></li>
+<li><p>ORCv2 uses uniqued strings (<code class="docutils literal notranslate"><span class="pre">SymbolStringPtr</span></code> instances) rather than
+string values in order to reduce memory overhead and improve lookup
+performance. See the subsection <a class="reference internal" href="#how-to-manage-symbol-strings">How to manage symbol strings</a>.</p></li>
+<li><p>IR layers require ThreadSafeModule instances, rather than
+<code class="docutils literal notranslate"><span class="pre">std::unique_ptr&lt;Module&gt;</span></code>s. ThreadSafeModule is a wrapper that ensures that
+Modules that use the same LLVMContext are not accessed concurrently.
+See <a class="reference internal" href="#how-to-use-threadsafemodule-and-threadsafecontext">How to use ThreadSafeModule and ThreadSafeContext</a>.</p></li>
+<li><p>Symbol lookup is no longer handled by layers. Instead, there is a
+<code class="docutils literal notranslate"><span class="pre">lookup</span></code> method on JITDylib that takes a list of JITDylibs to scan.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">ExecutionSession</span><span class="w"> </span><span class="n">ES</span><span class="p">;</span>
+<span class="n">JITDylib</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+<span class="n">JITDylib</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">Sym</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">lookup</span><span class="p">({</span><span class="o">&amp;</span><span class="n">JD1</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD2</span><span class="p">},</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">intern</span><span class="p">(</span><span class="s">&quot;_main&quot;</span><span class="p">));</span>
+</pre></div>
+</div>
+</li>
+<li><p>The removeModule/removeObject methods are replaced by
+<code class="docutils literal notranslate"><span class="pre">ResourceTracker::remove</span></code>.
+See the subsection <a class="reference internal" href="#how-to-remove-code">How to remove code</a>.</p></li>
+</ol>
+<p>For code examples and suggestions of how to use the ORCv2 APIs, please see
+the section <a class="reference internal" href="#how-tos">How-tos</a>.</p>
+</section>
+<section id="how-tos">
+<h2>How-tos<a class="headerlink" href="#how-tos" title="Link to this heading">#</a></h2>
+<section id="how-to-manage-symbol-strings">
+<h3>How to manage symbol strings<a class="headerlink" href="#how-to-manage-symbol-strings" title="Link to this heading">#</a></h3>
+<p>Symbol strings in ORC are uniqued to improve lookup performance, reduce memory
+overhead, and allow symbol names to function as efficient keys. To get the
+unique <code class="docutils literal notranslate"><span class="pre">SymbolStringPtr</span></code> for a string value, call the
+<code class="docutils literal notranslate"><span class="pre">ExecutionSession::intern</span></code> method:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">ExecutionSession</span><span class="w"> </span><span class="n">ES</span><span class="p">;</span>
+<span class="c1">/// ...</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">MainSymbolName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">intern</span><span class="p">(</span><span class="s">&quot;main&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If you wish to perform lookup using the C/IR name of a symbol you will also
+need to apply the platform linker-mangling before interning the string. On
+Linux this mangling is a no-op, but on other platforms it usually involves
+adding a prefix to the string (e.g. <code class="docutils literal notranslate"><span class="pre">_</span></code> on Darwin). The mangling scheme is
+based on the DataLayout for the target. Given a DataLayout and an
+ExecutionSession, you can create a MangleAndInterner function object that
+will perform both jobs for you:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">ExecutionSession</span><span class="w"> </span><span class="n">ES</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="n">DataLayout</span><span class="w"> </span><span class="o">&amp;</span><span class="n">DL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+<span class="n">MangleAndInterner</span><span class="w"> </span><span class="nf">Mangle</span><span class="p">(</span><span class="n">ES</span><span class="p">,</span><span class="w"> </span><span class="n">DL</span><span class="p">);</span>
+
+<span class="c1">// ...</span>
+
+<span class="c1">// Portable IR-symbol-name lookup:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">Sym</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">lookup</span><span class="p">({</span><span class="o">&amp;</span><span class="n">MainJD</span><span class="p">},</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;main&quot;</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-create-jitdylibs-and-set-up-linkage-relationships">
+<h3>How to create JITDylibs and set up linkage relationships<a class="headerlink" href="#how-to-create-jitdylibs-and-set-up-linkage-relationships" title="Link to this heading">#</a></h3>
+<p>In ORC, all symbol definitions reside in JITDylibs. JITDylibs are created by
+calling the <code class="docutils literal notranslate"><span class="pre">ExecutionSession::createJITDylib</span></code> method with a unique name:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">ExecutionSession</span><span class="w"> </span><span class="n">ES</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">createJITDylib</span><span class="p">(</span><span class="s">&quot;libFoo.dylib&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The JITDylib is owned by the <code class="docutils literal notranslate"><span class="pre">ExecutionEngine</span></code> instance and will be freed
+when it is destroyed.</p>
+</section>
+<section id="how-to-remove-code">
+<h3>How to remove code<a class="headerlink" href="#how-to-remove-code" title="Link to this heading">#</a></h3>
+<p>To remove an individual module from a JITDylib it must first be added using an
+explicit <code class="docutils literal notranslate"><span class="pre">ResourceTracker</span></code>. The module can then be removed by calling
+<code class="docutils literal notranslate"><span class="pre">ResourceTracker::remove</span></code>:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">M</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">RT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JD</span><span class="p">.</span><span class="n">createResourceTracker</span><span class="p">();</span>
+<span class="n">Layer</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">RT</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">M</span><span class="p">));</span><span class="w"> </span><span class="c1">// Add M to JD, tracking resources with RT</span>
+
+<span class="n">RT</span><span class="p">.</span><span class="n">remove</span><span class="p">();</span><span class="w"> </span><span class="c1">// Remove M from JD.</span>
+</pre></div>
+</div>
+<p>Modules added directly to a JITDylib will be tracked by that JITDylib’s default
+resource tracker.</p>
+<p>All code can be removed from a JITDylib by calling <code class="docutils literal notranslate"><span class="pre">JITDylib::clear</span></code>. This
+leaves the cleared JITDylib in an empty but usable state.</p>
+<p>JITDylibs can be removed by calling <code class="docutils literal notranslate"><span class="pre">ExecutionSession::removeJITDylib</span></code>. This
+clears the JITDylib and then puts it into a defunct state. No further operations
+can be performed on the JITDylib, and it will be destroyed as soon as the last
+handle to it is released.</p>
+<p>An example of how to use the resource management APIs can be found at
+<code class="docutils literal notranslate"><span class="pre">llvm/examples/OrcV2Examples/LLJITRemovableCode</span></code>.</p>
+</section>
+<section id="how-to-add-the-support-for-custom-program-representation">
+<h3>How to add the support for custom program representation<a class="headerlink" href="#how-to-add-the-support-for-custom-program-representation" title="Link to this heading">#</a></h3>
+<p>In order to add the support for a custom program representation, a custom <code class="docutils literal notranslate"><span class="pre">MaterializationUnit</span></code>
+for the program representation, and a custom <code class="docutils literal notranslate"><span class="pre">Layer</span></code> are needed. The Layer will have two
+operations: <code class="docutils literal notranslate"><span class="pre">add</span></code> and <code class="docutils literal notranslate"><span class="pre">emit</span></code>. The <code class="docutils literal notranslate"><span class="pre">add</span></code> operation takes an instance of your program
+representation, builds one of your custom <code class="docutils literal notranslate"><span class="pre">MaterializationUnits</span></code> to hold it, then adds it
+to a <code class="docutils literal notranslate"><span class="pre">JITDylib</span></code>. The emit operation takes a <code class="docutils literal notranslate"><span class="pre">MaterializationResponsibility</span></code> object and an
+instance of your program representation and materializes it, usually by compiling it and handing
+the resulting object off to an <code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer</span></code>.</p>
+<p>Your custom <code class="docutils literal notranslate"><span class="pre">MaterializationUnit</span></code> will have two operations: <code class="docutils literal notranslate"><span class="pre">materialize</span></code> and <code class="docutils literal notranslate"><span class="pre">discard</span></code>. The
+<code class="docutils literal notranslate"><span class="pre">materialize</span></code> function will be called for you when any symbol provided by the unit is looked up,
+and it should just call the <code class="docutils literal notranslate"><span class="pre">emit</span></code> function on your layer, passing in the given
+<code class="docutils literal notranslate"><span class="pre">MaterializationResponsibility</span></code> and the wrapped program representation. The <code class="docutils literal notranslate"><span class="pre">discard</span></code> function
+will be called if some weak symbol provided by your unit is not needed (because the JIT found an
+overriding definition). You can use this to drop your definition early, or just ignore it and let
+the linker drops the definition later.</p>
+<p>Here is an example of an ASTLayer:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// ... In you JIT class</span>
+<span class="n">AstLayer</span><span class="w"> </span><span class="n">astLayer</span><span class="p">;</span>
+<span class="c1">// ...</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AstMaterializationUnit</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">orc</span><span class="o">::</span><span class="n">MaterializationUnit</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="n">AstMaterializationUnit</span><span class="p">(</span><span class="n">AstLayer</span><span class="w"> </span><span class="o">&amp;</span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">Ast</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ast</span><span class="p">)</span>
+<span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="n">llvm</span><span class="o">::</span><span class="n">orc</span><span class="o">::</span><span class="n">MaterializationUnit</span><span class="p">(</span><span class="n">l</span><span class="p">.</span><span class="n">getInterface</span><span class="p">(</span><span class="n">ast</span><span class="p">)),</span><span class="w"> </span><span class="n">astLayer</span><span class="p">(</span><span class="n">l</span><span class="p">),</span>
+<span class="w">  </span><span class="n">ast</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span><span class="w"> </span><span class="p">{};</span>
+
+<span class="w">  </span><span class="n">llvm</span><span class="o">::</span><span class="n">StringRef</span><span class="w"> </span><span class="nf">getName</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;AstMaterializationUnit&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">materialize</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">orc</span><span class="o">::</span><span class="n">MaterializationResponsibility</span><span class="o">&gt;</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">astLayer</span><span class="p">.</span><span class="n">emit</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">r</span><span class="p">),</span><span class="w"> </span><span class="n">ast</span><span class="p">);</span>
+<span class="w">  </span><span class="p">};</span>
+
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">discard</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">llvm</span><span class="o">::</span><span class="n">orc</span><span class="o">::</span><span class="n">JITDylib</span><span class="w"> </span><span class="o">&amp;</span><span class="n">jd</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">llvm</span><span class="o">::</span><span class="n">orc</span><span class="o">::</span><span class="n">SymbolStringPtr</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sym</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">llvm_unreachable</span><span class="p">(</span><span class="s">&quot;functions are not overridable&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+
+<span class="w">  </span><span class="n">AstLayer</span><span class="w"> </span><span class="o">&amp;</span><span class="n">astLayer</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Ast</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ast</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AstLayer</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">llvhm</span><span class="o">::</span><span class="n">orc</span><span class="o">::</span><span class="n">IRLayer</span><span class="w"> </span><span class="o">&amp;</span><span class="n">baseLayer</span><span class="p">;</span>
+<span class="w">  </span><span class="n">llvhm</span><span class="o">::</span><span class="n">orc</span><span class="o">::</span><span class="n">MangleAndInterner</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mangler</span><span class="p">;</span>
+
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="n">AstLayer</span><span class="p">(</span><span class="n">llvm</span><span class="o">::</span><span class="n">orc</span><span class="o">::</span><span class="n">IRLayer</span><span class="w"> </span><span class="o">&amp;</span><span class="n">baseLayer</span><span class="p">,</span><span class="w"> </span><span class="n">llvm</span><span class="o">::</span><span class="n">orc</span><span class="o">::</span><span class="n">MangleAndInterner</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mangler</span><span class="p">)</span>
+<span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="n">baseLayer</span><span class="p">(</span><span class="n">baseLayer</span><span class="p">),</span><span class="w"> </span><span class="n">mangler</span><span class="p">(</span><span class="n">mangler</span><span class="p">){};</span>
+
+<span class="w">  </span><span class="n">llvm</span><span class="o">::</span><span class="n">Error</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">llvm</span><span class="o">::</span><span class="n">orc</span><span class="o">::</span><span class="n">ResourceTrackerSP</span><span class="w"> </span><span class="o">&amp;</span><span class="n">rt</span><span class="p">,</span><span class="w"> </span><span class="n">Ast</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ast</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">rt</span><span class="o">-&gt;</span><span class="n">getJITDylib</span><span class="p">().</span><span class="n">define</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">AstMaterializationUnit</span><span class="o">&gt;</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">ast</span><span class="p">),</span><span class="w"> </span><span class="n">rt</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">orc</span><span class="o">::</span><span class="n">MaterializationResponsibility</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mr</span><span class="p">,</span><span class="w"> </span><span class="n">Ast</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ast</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// compileAst is just function that compiles the given AST and returns</span>
+<span class="w">    </span><span class="c1">// a `llvm::orc::ThreadSafeModule`</span>
+<span class="w">    </span><span class="n">baseLayer</span><span class="p">.</span><span class="n">emit</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">mr</span><span class="p">),</span><span class="w"> </span><span class="n">compileAst</span><span class="p">(</span><span class="n">ast</span><span class="p">));</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">llvm</span><span class="o">::</span><span class="n">orc</span><span class="o">::</span><span class="n">MaterializationUnit</span><span class="o">::</span><span class="n">Interface</span><span class="w"> </span><span class="nf">getInterface</span><span class="p">(</span><span class="n">Ast</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ast</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">SymbolFlagsMap</span><span class="w"> </span><span class="n">Symbols</span><span class="p">;</span>
+<span class="w">      </span><span class="c1">// Find all the symbols in the AST and for each of them</span>
+<span class="w">      </span><span class="c1">// add it to the Symbols map.</span>
+<span class="w">      </span><span class="n">Symbols</span><span class="p">[</span><span class="n">mangler</span><span class="p">(</span><span class="n">someNameFromAST</span><span class="p">)]</span><span class="w"> </span><span class="o">=</span>
+<span class="w">        </span><span class="n">JITSymbolFlags</span><span class="p">(</span><span class="n">JITSymbolFlags</span><span class="o">::</span><span class="n">Exported</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">JITSymbolFlags</span><span class="o">::</span><span class="n">Callable</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">MaterializationUnit</span><span class="o">::</span><span class="n">Interface</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">Symbols</span><span class="p">),</span><span class="w"> </span><span class="k">nullptr</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Take look at the source code of <a class="reference internal" href="tutorial/BuildingAJIT4.html"><span class="doc">Building A JIT’s Chapter 4</span></a> for a complete example.</p>
+</section>
+<section id="how-to-use-threadsafemodule-and-threadsafecontext">
+<h3>How to use ThreadSafeModule and ThreadSafeContext<a class="headerlink" href="#how-to-use-threadsafemodule-and-threadsafecontext" title="Link to this heading">#</a></h3>
+<p>ThreadSafeModule and ThreadSafeContext are wrappers around Modules and
+LLVMContexts respectively. A ThreadSafeModule is a pair of a
+<code class="docutils literal notranslate"><span class="pre">std::unique_ptr&lt;Module&gt;</span></code> and a (possibly shared) ThreadSafeContext value. A
+ThreadSafeContext is a pair of a <code class="docutils literal notranslate"><span class="pre">std::unique_ptr&lt;LLVMContext&gt;</span></code> and a lock.
+This design serves two purposes: providing a locking scheme and lifetime
+management for LLVMContexts. The ThreadSafeContext may be locked to prevent
+accidental concurrent access by two Modules that use the same LLVMContext.
+The underlying LLVMContext is freed once all ThreadSafeContext values pointing
+to it are destroyed, allowing the context memory to be reclaimed as soon as
+the Modules referring to it are destroyed.</p>
+<p>ThreadSafeContexts can be explicitly constructed from a
+<code class="docutils literal notranslate"><span class="pre">std::unique_ptr&lt;LLVMContext&gt;</span></code>:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadSafeContext</span><span class="w"> </span><span class="nf">TSCtx</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">LLVMContext</span><span class="o">&gt;</span><span class="p">());</span>
+</pre></div>
+</div>
+<p>ThreadSafeModules can be constructed from a pair of a <code class="docutils literal notranslate"><span class="pre">std::unique_ptr&lt;Module&gt;</span></code>
+and a ThreadSafeContext value. ThreadSafeContext values may be shared between
+multiple ThreadSafeModules:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadSafeModule</span><span class="w"> </span><span class="n">TSM1</span><span class="p">(</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;M1&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">TSCtx</span><span class="p">.</span><span class="n">getContext</span><span class="p">()),</span><span class="w"> </span><span class="n">TSCtx</span><span class="p">);</span>
+
+<span class="n">ThreadSafeModule</span><span class="w"> </span><span class="n">TSM2</span><span class="p">(</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;M2&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">TSCtx</span><span class="p">.</span><span class="n">getContext</span><span class="p">()),</span><span class="w"> </span><span class="n">TSCtx</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Before using a ThreadSafeContext, clients should ensure that either the context
+is only accessible on the current thread, or that the context is locked. In the
+example above (where the context is never locked) we rely on the fact that both
+<code class="docutils literal notranslate"><span class="pre">TSM1</span></code> and <code class="docutils literal notranslate"><span class="pre">TSM2</span></code>, and TSCtx are all created on one thread. If a context is
+going to be shared between threads then it must be locked before any accessing
+or creating any Modules attached to it. E.g.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadSafeContext</span><span class="w"> </span><span class="nf">TSCtx</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">LLVMContext</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="n">DefaultThreadPool</span><span class="w"> </span><span class="nf">TP</span><span class="p">(</span><span class="n">NumThreads</span><span class="p">);</span>
+<span class="n">JITStack</span><span class="w"> </span><span class="n">J</span><span class="p">;</span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ModulePath</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">ModulePaths</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">TP</span><span class="p">.</span><span class="n">async</span><span class="p">(</span>
+<span class="w">    </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">auto</span><span class="w"> </span><span class="n">Lock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TSCtx</span><span class="p">.</span><span class="n">getLock</span><span class="p">();</span>
+<span class="w">      </span><span class="k">auto</span><span class="w"> </span><span class="n">M</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loadModuleOnContext</span><span class="p">(</span><span class="n">ModulePath</span><span class="p">,</span><span class="w"> </span><span class="n">TSCtx</span><span class="p">.</span><span class="n">getContext</span><span class="p">());</span>
+<span class="w">      </span><span class="n">J</span><span class="p">.</span><span class="n">addModule</span><span class="p">(</span><span class="n">ThreadSafeModule</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">M</span><span class="p">),</span><span class="w"> </span><span class="n">TSCtx</span><span class="p">));</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="p">}</span>
+
+<span class="n">TP</span><span class="p">.</span><span class="n">wait</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>To make exclusive access to Modules easier to manage the ThreadSafeModule class
+provides a convenience function, <code class="docutils literal notranslate"><span class="pre">withModuleDo</span></code>, that implicitly (1) locks the
+associated context, (2) runs a given function object, (3) unlocks the context,
+and (3) returns the result generated by the function object. E.g.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadSafeModule</span><span class="w"> </span><span class="n">TSM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getModule</span><span class="p">(...);</span>
+
+<span class="c1">// Dump the module:</span>
+<span class="kt">size_t</span><span class="w"> </span><span class="n">NumFunctionsInModule</span><span class="w"> </span><span class="o">=</span>
+<span class="w">  </span><span class="n">TSM</span><span class="p">.</span><span class="n">withModuleDo</span><span class="p">(</span>
+<span class="w">    </span><span class="p">[](</span><span class="n">Module</span><span class="w"> </span><span class="o">&amp;</span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// &lt;- Context locked before entering lambda.</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">M</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="c1">// &lt;- Context unlocked after leaving.</span>
+<span class="w">  </span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Clients wishing to maximize possibilities for concurrent compilation will want
+to create every new ThreadSafeModule on a new ThreadSafeContext. For this
+reason a convenience constructor for ThreadSafeModule is provided that implicitly
+constructs a new ThreadSafeContext value from a <code class="docutils literal notranslate"><span class="pre">std::unique_ptr&lt;LLVMContext&gt;</span></code>:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Maximize concurrency opportunities by loading every module on a</span>
+<span class="c1">// separate context.</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">IRPath</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">IRPaths</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">Ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">LLVMContext</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">M</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Module</span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;M&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">Ctx</span><span class="p">);</span>
+<span class="w">  </span><span class="n">CompileLayer</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">MainJD</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadSafeModule</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">M</span><span class="p">),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">Ctx</span><span class="p">)));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Clients who plan to run single-threaded may choose to save memory by loading
+all modules on the same context:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Save memory by using one context for all Modules:</span>
+<span class="n">ThreadSafeContext</span><span class="w"> </span><span class="nf">TSCtx</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">LLVMContext</span><span class="o">&gt;</span><span class="p">());</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">IRPath</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">IRPaths</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">ThreadSafeModule</span><span class="w"> </span><span class="nf">TSM</span><span class="p">(</span><span class="n">parsePath</span><span class="p">(</span><span class="n">IRPath</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">TSCtx</span><span class="p">.</span><span class="n">getContext</span><span class="p">()),</span><span class="w"> </span><span class="n">TSCtx</span><span class="p">);</span>
+<span class="w">  </span><span class="n">CompileLayer</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">MainJD</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadSafeModule</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">TSM</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="how-to-add-process-and-library-symbols-to-jitdylibs">
+<span id="processandlibrarysymbols"></span><h2>How to Add Process and Library Symbols to JITDylibs<a class="headerlink" href="#how-to-add-process-and-library-symbols-to-jitdylibs" title="Link to this heading">#</a></h2>
+<p>JIT’d code may need to access symbols in the host program or in supporting
+libraries. The best way to enable this is to reflect these symbols into your
+JITDylibs so that they appear the same as any other symbol defined within the
+execution session (i.e. they are findable via <code class="docutils literal notranslate"><span class="pre">ExecutionSession::lookup</span></code>, and
+so visible to the JIT linker during linking).</p>
+<p>One way to reflect external symbols is to add them manually using the
+absoluteSymbols function:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">DataLayout</span><span class="w"> </span><span class="o">&amp;</span><span class="n">DL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDataLayout</span><span class="p">();</span>
+<span class="n">MangleAndInterner</span><span class="w"> </span><span class="nf">Mangle</span><span class="p">(</span><span class="n">ES</span><span class="p">,</span><span class="w"> </span><span class="n">DL</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">createJITDylib</span><span class="p">(</span><span class="s">&quot;main&quot;</span><span class="p">);</span>
+
+<span class="n">JD</span><span class="p">.</span><span class="n">define</span><span class="p">(</span>
+<span class="w">  </span><span class="n">absoluteSymbols</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;puts&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">ExecutorAddr</span><span class="o">::</span><span class="n">fromPtr</span><span class="p">(</span><span class="o">&amp;</span><span class="n">puts</span><span class="p">)},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;gets&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">ExecutorAddr</span><span class="o">::</span><span class="n">fromPtr</span><span class="p">(</span><span class="o">&amp;</span><span class="n">getS</span><span class="p">)}</span>
+<span class="w">  </span><span class="p">}));</span>
+</pre></div>
+</div>
+<p>Using absoluteSymbols is reasonable if the set of symbols to be reflected is
+small and fixed. On the other hand, if the set of symbols is large or variable
+it may make more sense to have the definitions added for you on demand by a
+<em>definition generator</em>.A definition generator is an object that can be attached
+to a JITDylib, receiving a callback whenever a lookup within that JITDylib fails
+to find one or more symbols. The definition generator is given a chance to
+produce a definition of the missing symbol(s) before the lookup proceeds.</p>
+<p>ORC provides the <code class="docutils literal notranslate"><span class="pre">DynamicLibrarySearchGenerator</span></code> utility for reflecting symbols
+from the process (or a specific dynamic library) for you. For example, to reflect
+the whole interface of a runtime library:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">DataLayout</span><span class="w"> </span><span class="o">&amp;</span><span class="n">DL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDataLayout</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">createJITDylib</span><span class="p">(</span><span class="s">&quot;main&quot;</span><span class="p">);</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">DLSGOrErr</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">DynamicLibrarySearchGenerator</span><span class="o">::</span><span class="n">Load</span><span class="p">(</span><span class="s">&quot;/path/to/lib&quot;</span>
+<span class="w">                                        </span><span class="n">DL</span><span class="p">.</span><span class="n">getGlobalPrefix</span><span class="p">()))</span>
+<span class="w">  </span><span class="n">JD</span><span class="p">.</span><span class="n">addGenerator</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="o">*</span><span class="n">DLSGOrErr</span><span class="p">);</span>
+<span class="k">else</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">DLSGOrErr</span><span class="p">.</span><span class="n">takeError</span><span class="p">();</span>
+
+<span class="c1">// IR added to JD can now link against all symbols exported by the library</span>
+<span class="c1">// at &#39;/path/to/lib&#39;.</span>
+<span class="n">CompileLayer</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">JD</span><span class="p">,</span><span class="w"> </span><span class="n">loadModule</span><span class="p">(...));</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">DynamicLibrarySearchGenerator</span></code> utility can also be constructed with a
+filter function to restrict the set of symbols that may be reflected. For
+example, to expose an allowed set of symbols from the main process:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">DataLayout</span><span class="w"> </span><span class="o">&amp;</span><span class="n">DL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getDataLayout</span><span class="p">();</span>
+<span class="n">MangleAndInterner</span><span class="w"> </span><span class="nf">Mangle</span><span class="p">(</span><span class="n">ES</span><span class="p">,</span><span class="w"> </span><span class="n">DL</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ES</span><span class="p">.</span><span class="n">createJITDylib</span><span class="p">(</span><span class="s">&quot;main&quot;</span><span class="p">);</span>
+
+<span class="n">DenseSet</span><span class="o">&lt;</span><span class="n">SymbolStringPtr</span><span class="o">&gt;</span><span class="w"> </span><span class="n">AllowList</span><span class="p">({</span>
+<span class="w">    </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;puts&quot;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Mangle</span><span class="p">(</span><span class="s">&quot;gets&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="c1">// Use GetForCurrentProcess with a predicate function that checks the</span>
+<span class="c1">// allowed list.</span>
+<span class="n">JD</span><span class="p">.</span><span class="n">addGenerator</span><span class="p">(</span><span class="n">cantFail</span><span class="p">(</span><span class="n">DynamicLibrarySearchGenerator</span><span class="o">::</span><span class="n">GetForCurrentProcess</span><span class="p">(</span>
+<span class="w">      </span><span class="n">DL</span><span class="p">.</span><span class="n">getGlobalPrefix</span><span class="p">(),</span>
+<span class="w">      </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span><span class="w"> </span><span class="n">SymbolStringPtr</span><span class="w"> </span><span class="o">&amp;</span><span class="n">S</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">AllowList</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="n">S</span><span class="p">);</span><span class="w"> </span><span class="p">})));</span>
+
+<span class="c1">// IR added to JD can now link against any symbols exported by the process</span>
+<span class="c1">// and contained in the list.</span>
+<span class="n">CompileLayer</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">JD</span><span class="p">,</span><span class="w"> </span><span class="n">loadModule</span><span class="p">(...));</span>
+</pre></div>
+</div>
+<p>On Windows/COFF targets, calls to dllimport functions are emitted as indirect
+calls through an <code class="docutils literal notranslate"><span class="pre">__imp_</span></code> <em>import address table</em> (IAT) slot, and even direct
+calls to library functions are expected to bind to a thunk supplied by an import
+library. ORC provides the <code class="docutils literal notranslate"><span class="pre">COFFAutoImportGenerator</span></code> utility to synthesize these on
+demand from a dynamic library, so that COFF objects can be JIT-linked without
+building import libraries. The generator is bound to a single DLL: that DLL’s
+export table is the authority on what may be synthesized, so a reference to a
+symbol the DLL does not export remains unresolved and the link fails, exactly as
+a static link against the corresponding import library would.</p>
+<p>.. code-block:: c++</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>auto &amp;JD = ES.createJITDylib(&quot;main&quot;);
+
+if (auto AIGOrErr =
+        COFFAutoImportGenerator::Load(ES, ObjLinkingLayer, DylibMgr,
+                                      &quot;/path/to/lib.dll&quot;))
+  JD.addGenerator(std::move(*AIGOrErr));
+else
+  return AIGOrErr.takeError();
+
+// COFF objects added to JD can now call functions exported by lib.dll, both
+// directly and via the dllimport (__imp_) convention.
+ObjLinkingLayer.add(JD, loadObject(...));
+</pre></div>
+</div>
+<p>For each exported function <code class="docutils literal notranslate"><span class="pre">X</span></code> that is referenced, the generator synthesizes an
+<code class="docutils literal notranslate"><span class="pre">__imp_X</span></code> IAT slot holding <code class="docutils literal notranslate"><span class="pre">X</span></code>’s address in the library plus an <code class="docutils literal notranslate"><span class="pre">X</span></code> thunk
+that jumps through that slot. It is « easy mode »: it assumes every import is a
+function and makes no attempt to distinguish code from data, so data imports are
+unsupported and clients that need them must supply an import library or use
+<code class="docutils literal notranslate"><span class="pre">__declspec(dllimport)</span></code>. Note also that, because <code class="docutils literal notranslate"><span class="pre">X</span></code> resolves to a synthesized
+thunk, <code class="docutils literal notranslate"><span class="pre">&amp;X</span></code> yields the thunk’s address rather than the implementation in the
+library. <code class="docutils literal notranslate"><span class="pre">COFFAutoImportGenerator</span></code> supports whichever architectures JITLink has
+a pointer / pointer-jump-stub creator registered for; <code class="docutils literal notranslate"><span class="pre">Load</span></code> fails for any
+other architecture. It resolves imports through the executor’s <code class="docutils literal notranslate"><span class="pre">DylibManager</span></code>,
+so it works for both in-process and out-of-process execution. For the more
+general case where the underlying symbol is resolved through the JITDylib’s
+link order rather than a specific library, see <code class="docutils literal notranslate"><span class="pre">DLLImportDefinitionGenerator</span></code>.</p>
+<p>References to process or library symbols could also be hardcoded into your IR
+or object files using the symbols” raw addresses, however symbolic resolution
+using the JIT symbol tables should be preferred: it keeps the IR and objects
+readable and reusable in subsequent JIT sessions. Hardcoded addresses are
+difficult to read, and usually only good for one session.</p>
+</section>
+<section id="roadmap">
+<h2>Roadmap<a class="headerlink" href="#roadmap" title="Link to this heading">#</a></h2>
+<p>ORC is still undergoing active development. Some current and future works are
+listed below.</p>
+<section id="current-work">
+<h3>Current Work<a class="headerlink" href="#current-work" title="Link to this heading">#</a></h3>
+<ol class="arabic">
+<li><p><strong>TargetProcessControl: Improvements to in-tree support for out-of-process
+execution</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">TargetProcessControl</span></code> API provides various operations on the JIT
+target process (the one which will execute the JIT’d code), including
+memory allocation, memory writes, function execution, and process queries
+(e.g. for the target triple). By targeting this API new components can be
+developed which will work equally well for in-process and out-of-process
+JITing.</p>
+</li>
+<li><p><strong>ORC RPC based TargetProcessControl implementation</strong></p>
+<p>An ORC RPC based implementation of the <code class="docutils literal notranslate"><span class="pre">TargetProcessControl</span></code> API is
+currently under development to enable easy out-of-process JITing via
+file descriptors / sockets.</p>
+</li>
+<li><p><strong>Core State Machine Cleanup</strong></p>
+<p>The core ORC state machine is currently implemented between JITDylib and
+ExecutionSession. Methods are slowly being moved to <code class="docutils literal notranslate"><span class="pre">ExecutionSession</span></code>. This
+will tidy up the code base, and also allow us to support asynchronous removal
+of JITDylibs (in practice deleting an associated state object in
+ExecutionSession and leaving the JITDylib instance in a defunct state until
+all references to it have been released).</p>
+</li>
+</ol>
+</section>
+<section id="near-future-work">
+<h3>Near Future Work<a class="headerlink" href="#near-future-work" title="Link to this heading">#</a></h3>
+<ol class="arabic">
+<li><p><strong>ORC JIT Runtime Libraries</strong></p>
+<p>We need a runtime library for JIT’d code. This would include things like
+TLS registration, reentry functions, registration code for language runtimes
+(e.g. Objective C and Swift) and other JIT specific runtime code. This should
+be built in a similar manner to compiler-rt (possibly even as part of it).</p>
+</li>
+<li><p><strong>Remote jit_dlopen / jit_dlclose</strong></p>
+<p>To more fully mimic the environment that static programs operate in we would
+like JIT’d code to be able to « dlopen » and « dlclose » JITDylibs, running all of
+their initializers/deinitializers on the current thread. This would require
+support from the runtime library described above.</p>
+</li>
+<li><p><strong>Debugging support</strong></p>
+<p>ORC currently supports the GDBRegistrationListener API when using RuntimeDyld
+as the underlying JIT linker. We will need a new solution for JITLink based
+platforms.</p>
+</li>
+</ol>
+</section>
+<section id="further-future-work">
+<h3>Further Future Work<a class="headerlink" href="#further-future-work" title="Link to this heading">#</a></h3>
+<ol class="arabic">
+<li><p><strong>Speculative Compilation</strong></p>
+<p>ORC’s support for concurrent compilation allows us to easily enable
+<em>speculative</em> JIT compilation: compilation of code that is not needed yet,
+but which we have reason to believe will be needed in the future. This can be
+used to hide compile latency and improve JIT throughput. A proof-of-concept
+example of speculative compilation with ORC has already been developed (see
+<code class="docutils literal notranslate"><span class="pre">llvm/examples/SpeculativeJIT</span></code>). Future work on this is likely to focus on
+re-using and improving existing profiling support (currently used by PGO) to
+feed speculation decisions, as well as built-in tools to simplify use of
+speculative compilation.</p>
+</li>
+</ol>
+<hr class="footnotes docutils" />
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id5" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Formats/architectures vary in terms of supported features. MachO and
+ELF tend to have better support than COFF. Patches very welcome!</p>
+</aside>
+<aside class="footnote brackets" id="id6" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">3</a><span class="fn-bracket">]</span></span>
+<p>Weak definitions are currently handled correctly within dylibs, but if
+multiple dylibs provide a weak definition of a symbol then each will end up
+with its own definition (similar to how weak definitions are handled in
+Windows DLLs). This will be fixed in the future.</p>
+</aside>
+<aside class="footnote brackets" id="id7" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">2</a><span class="fn-bracket">]</span></span>
+<p>The <code class="docutils literal notranslate"><span class="pre">LazyEmittingLayer</span></code>, <code class="docutils literal notranslate"><span class="pre">RemoteObjectClientLayer</span></code> and
+<code class="docutils literal notranslate"><span class="pre">RemoteObjectServerLayer</span></code> do not have counterparts in the new system. In the
+case of <code class="docutils literal notranslate"><span class="pre">LazyEmittingLayer</span></code> it was simply no longer needed: in ORCv2,
+deferring compilation until symbols are looked up is the default. The
+removal of <code class="docutils literal notranslate"><span class="pre">RemoteObjectClientLayer</span></code> and <code class="docutils literal notranslate"><span class="pre">RemoteObjectServerLayer</span></code> means
+that JIT stacks can no longer be split across processes, however this
+functionality appears not to have been used.</p>
+</aside>
+</aside>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="JITLink.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">JITLink and ORC’s ObjectLinkingLayer</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="MCJITDesignAndImplementation.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">MCJIT Design and Implementation</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">ORC Design and Implementation</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#use-cases">Use-cases</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#lljit-and-lllazyjit">LLJIT and LLLazyJIT</a></li>
+<li><a class="reference internal" href="#design-overview">Design Overview</a></li>
+<li><a class="reference internal" href="#top-level-apis">Top Level APIs</a></li>
+<li><a class="reference internal" href="#absolute-symbols-aliases-and-reexports">Absolute Symbols, Aliases, and Reexports</a><ul>
+<li><a class="reference internal" href="#absolute-symbols">Absolute Symbols</a></li>
+<li><a class="reference internal" href="#aliases-and-reexports">Aliases and Reexports</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#laziness">Laziness</a></li>
+<li><a class="reference internal" href="#supporting-custom-compilers">Supporting Custom Compilers</a></li>
+<li><a class="reference internal" href="#transitioning-from-orcv1-to-orcv2">Transitioning from ORCv1 to ORCv2</a></li>
+<li><a class="reference internal" href="#how-tos">How-tos</a><ul>
+<li><a class="reference internal" href="#how-to-manage-symbol-strings">How to manage symbol strings</a></li>
+<li><a class="reference internal" href="#how-to-create-jitdylibs-and-set-up-linkage-relationships">How to create JITDylibs and set up linkage relationships</a></li>
+<li><a class="reference internal" href="#how-to-remove-code">How to remove code</a></li>
+<li><a class="reference internal" href="#how-to-add-the-support-for-custom-program-representation">How to add the support for custom program representation</a></li>
+<li><a class="reference internal" href="#how-to-use-threadsafemodule-and-threadsafecontext">How to use ThreadSafeModule and ThreadSafeContext</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-to-add-process-and-library-symbols-to-jitdylibs">How to Add Process and Library Symbols to JITDylibs</a></li>
+<li><a class="reference internal" href="#roadmap">Roadmap</a><ul>
+<li><a class="reference internal" href="#current-work">Current Work</a></li>
+<li><a class="reference internal" href="#near-future-work">Near Future Work</a></li>
+<li><a class="reference internal" href="#further-future-work">Further Future Work</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=711a3ba7"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=a56f2464"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

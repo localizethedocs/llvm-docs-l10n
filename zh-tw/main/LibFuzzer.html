@@ -1,0 +1,1440 @@
+<!doctype html>
+<html class="no-js" lang="zh-TW" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜尋" href="search.html" /><link rel="next" title="Fuzzing LLVM libraries and tools" href="FuzzingLLVM.html" /><link rel="prev" title="Garbage Collection Safepoints in LLVM" href="Statepoints.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/LibFuzzer.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>libFuzzer – a library for coverage-guided fuzz testing. - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜尋" name="q" aria-label="搜尋">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">常見問題集（FAQ）</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="Reference.html">參考</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of 參考</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural 『diff』</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">簡介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM 語言參考手冊</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM 測試基礎設施指南</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM 測試基礎設施指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="UserGuides.html">使用者指南</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of 使用者指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">使用 CMake 建置 LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">進階建置組態</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen 概覽</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen 概覽</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU 指令語法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub 使用者指南</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse 遷移指南</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM 開發者方針</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/LibFuzzer.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="libfuzzer-a-library-for-coverage-guided-fuzz-testing">
+<h1>libFuzzer – a library for coverage-guided fuzz testing.<a class="headerlink" href="#libfuzzer-a-library-for-coverage-guided-fuzz-testing" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>簡介<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>LibFuzzer is an in-process, coverage-guided, evolutionary fuzzing engine.</p>
+<p>LibFuzzer is linked with the library under test, and feeds fuzzed inputs to the
+library via a specific fuzzing entrypoint (aka 「target function」); the fuzzer
+then tracks which areas of the code are reached, and generates mutations on the
+corpus of input data in order to maximize the code coverage.
+The code coverage
+information for libFuzzer is provided by LLVM’s <a class="reference external" href="https://clang.llvm.org/docs/SanitizerCoverage.html">SanitizerCoverage</a>
+instrumentation.</p>
+<p>Contact: libfuzzer(#)googlegroups.com</p>
+</section>
+<section id="status">
+<h2>Status<a class="headerlink" href="#status" title="Link to this heading">#</a></h2>
+<p>The original authors of libFuzzer have stopped active work on it and switched
+to working on another fuzzing engine, <a class="reference external" href="https://github.com/google/centipede">Centipede</a>. LibFuzzer is still fully
+supported in that important bugs will get fixed. However, please do not expect
+major new features or code reviews, other than for bug fixes.</p>
+</section>
+<section id="versions">
+<h2>Versions<a class="headerlink" href="#versions" title="Link to this heading">#</a></h2>
+<p>LibFuzzer requires a matching version of Clang.</p>
+</section>
+<section id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h2>
+<section id="fuzz-target">
+<h3>Fuzz Target<a class="headerlink" href="#fuzz-target" title="Link to this heading">#</a></h3>
+<p>The first step in using libFuzzer on a library is to implement a
+<em>fuzz target</em> – a function that accepts an array of bytes and
+does something interesting with these bytes using the API under test.
+Like this:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// fuzz_target.cc</span>
+<span class="k">extern</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">Size</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">DoSomethingInterestingWithMyAPI</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="n">Size</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">// Values other than 0 and -1 are reserved for future use.</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that this fuzz target does not depend on libFuzzer in any way
+and so it is possible and even desirable to use it with other fuzzing engines
+e.g. <a class="reference external" href="http://lcamtuf.coredump.cx/afl/">AFL</a> and/or <a class="reference external" href="https://github.com/aoh/radamsa">Radamsa</a>.</p>
+<p>Some important things to remember about fuzz targets:</p>
+<ul class="simple">
+<li><p>The fuzzing engine will execute the fuzz target many times with different inputs in the same process.</p></li>
+<li><p>It must tolerate any kind of input (empty, huge, malformed, etc).</p></li>
+<li><p>It must not <code class="docutils literal notranslate"><span class="pre">exit()</span></code> on any input.</p></li>
+<li><p>It may use threads but ideally all threads should be joined at the end of the function.</p></li>
+<li><p>It must be as deterministic as possible. Non-determinism (e.g. random decisions not based on the input bytes) will make fuzzing inefficient.</p></li>
+<li><p>It must be fast. Try avoiding cubic or greater complexity, logging, or excessive memory consumption.</p></li>
+<li><p>Ideally, it should not modify any global state (although that’s not strict).</p></li>
+<li><p>Usually, the narrower the target the better. E.g. if your target can parse several data formats, split it into several targets, one per format.</p></li>
+</ul>
+</section>
+<section id="fuzzer-usage">
+<h3>Fuzzer Usage<a class="headerlink" href="#fuzzer-usage" title="Link to this heading">#</a></h3>
+<p>Recent versions of Clang (starting from 6.0) include libFuzzer, and no extra installation is necessary.</p>
+<p>In order to build your fuzzer binary, use the <code class="docutils literal notranslate"><span class="pre">-fsanitize=fuzzer</span></code> flag during the
+compilation and linking. In most cases you may want to combine libFuzzer with
+<a class="reference external" href="https://clang.llvm.org/docs/AddressSanitizer.html">AddressSanitizer</a> (ASAN), <a class="reference external" href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">UndefinedBehaviorSanitizer</a> (UBSAN), or both.  You can
+also build with <a class="reference external" href="https://clang.llvm.org/docs/MemorySanitizer.html">MemorySanitizer</a> (MSAN), but support is experimental:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">clang</span> <span class="o">-</span><span class="n">g</span> <span class="o">-</span><span class="n">O1</span> <span class="o">-</span><span class="n">fsanitize</span><span class="o">=</span><span class="n">fuzzer</span>                         <span class="n">mytarget</span><span class="o">.</span><span class="n">c</span> <span class="c1"># Builds the fuzz target w/o sanitizers</span>
+ <span class="n">clang</span> <span class="o">-</span><span class="n">g</span> <span class="o">-</span><span class="n">O1</span> <span class="o">-</span><span class="n">fsanitize</span><span class="o">=</span><span class="n">fuzzer</span><span class="p">,</span><span class="n">address</span>                 <span class="n">mytarget</span><span class="o">.</span><span class="n">c</span> <span class="c1"># Builds the fuzz target with ASAN</span>
+ <span class="n">clang</span> <span class="o">-</span><span class="n">g</span> <span class="o">-</span><span class="n">O1</span> <span class="o">-</span><span class="n">fsanitize</span><span class="o">=</span><span class="n">fuzzer</span><span class="p">,</span><span class="n">signed</span><span class="o">-</span><span class="n">integer</span><span class="o">-</span><span class="n">overflow</span> <span class="n">mytarget</span><span class="o">.</span><span class="n">c</span> <span class="c1"># Builds the fuzz target with a part of UBSAN</span>
+ <span class="n">clang</span> <span class="o">-</span><span class="n">g</span> <span class="o">-</span><span class="n">O1</span> <span class="o">-</span><span class="n">fsanitize</span><span class="o">=</span><span class="n">fuzzer</span><span class="p">,</span><span class="n">memory</span>                  <span class="n">mytarget</span><span class="o">.</span><span class="n">c</span> <span class="c1"># Builds the fuzz target with MSAN</span>
+</pre></div>
+</div>
+<p>This will perform the necessary instrumentation, as well as linking with the libFuzzer library.
+Note that <code class="docutils literal notranslate"><span class="pre">-fsanitize=fuzzer</span></code> links in the libFuzzer’s <code class="docutils literal notranslate"><span class="pre">main()</span></code> symbol.</p>
+<p>If modifying <code class="docutils literal notranslate"><span class="pre">CFLAGS</span></code> of a large project, which also compiles executables
+requiring their own <code class="docutils literal notranslate"><span class="pre">main</span></code> symbol, it may be desirable to request just the
+instrumentation without linking:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">clang</span> <span class="o">-</span><span class="n">fsanitize</span><span class="o">=</span><span class="n">fuzzer</span><span class="o">-</span><span class="n">no</span><span class="o">-</span><span class="n">link</span> <span class="n">mytarget</span><span class="o">.</span><span class="n">c</span>
+</pre></div>
+</div>
+<p>Then libFuzzer can be linked to the desired driver by passing in
+<code class="docutils literal notranslate"><span class="pre">-fsanitize=fuzzer</span></code> during the linking stage.</p>
+</section>
+<section id="corpus">
+<span id="libfuzzer-corpus"></span><h3>Corpus<a class="headerlink" href="#corpus" title="Link to this heading">#</a></h3>
+<p>Coverage-guided fuzzers like libFuzzer rely on a corpus of sample inputs for the
+code under test.  This corpus should ideally be seeded with a varied collection
+of valid and invalid inputs for the code under test; for example, for a graphics
+library the initial corpus might hold a variety of different small PNG/JPG/GIF
+files.  The fuzzer generates random mutations based around the sample inputs in
+the current corpus.  If a mutation triggers execution of a previously-uncovered
+path in the code under test, then that mutation is saved to the corpus for
+future variations.</p>
+<p>LibFuzzer will work without any initial seeds, but will be less
+efficient if the library under test accepts complex,
+structured inputs.</p>
+<p>The corpus can also act as a sanity/regression check, to confirm that the
+fuzzing entrypoint still works and that all of the sample inputs run through
+the code under test without problems.</p>
+<p>If you have a large corpus (either generated by fuzzing or acquired by other means)
+you may want to minimize it while still preserving the full coverage. One way to do that
+is to use the <code class="docutils literal notranslate"><span class="pre">-merge=1</span></code> flag:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">mkdir NEW_CORPUS_DIR  # Store minimized corpus here.</span>
+<span class="go">./my_fuzzer -merge=1 NEW_CORPUS_DIR FULL_CORPUS_DIR</span>
+</pre></div>
+</div>
+<p>You may use the same flag to add more interesting items to an existing corpus.
+Only the inputs that trigger new coverage will be added to the first corpus.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">./my_fuzzer -merge=1 CURRENT_CORPUS_DIR NEW_POTENTIALLY_INTERESTING_INPUTS_DIR</span>
+</pre></div>
+</div>
+</section>
+<section id="running">
+<h3>Running<a class="headerlink" href="#running" title="Link to this heading">#</a></h3>
+<p>To run the fuzzer, first create a <a class="reference internal" href="#libfuzzer-corpus">Corpus</a> directory that holds the
+initial 「seed」 sample inputs:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">mkdir CORPUS_DIR</span>
+<span class="go">cp /some/input/samples/* CORPUS_DIR</span>
+</pre></div>
+</div>
+<p>Then run the fuzzer on the corpus directory:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">./my_fuzzer CORPUS_DIR  # -max_len=1000 -jobs=20 ...</span>
+</pre></div>
+</div>
+<p>As the fuzzer discovers new interesting test cases (i.e. test cases that
+trigger coverage of new paths through the code under test), those test cases
+will be added to the corpus directory.</p>
+<p>By default, the fuzzing process will continue indefinitely – at least until
+a bug is found.  Any crashes or sanitizer failures will be reported as usual,
+stopping the fuzzing process, and the particular input that triggered the bug
+will be written to disk (typically as <code class="docutils literal notranslate"><span class="pre">crash-&lt;sha1&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">leak-&lt;sha1&gt;</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">timeout-&lt;sha1&gt;</span></code>).</p>
+</section>
+<section id="parallel-fuzzing">
+<h3>Parallel Fuzzing<a class="headerlink" href="#parallel-fuzzing" title="Link to this heading">#</a></h3>
+<p>Each libFuzzer process is single-threaded, unless the library under test starts
+its own threads.  However, it is possible to run multiple libFuzzer processes in
+parallel with a shared corpus directory; this has the advantage that any new
+inputs found by one fuzzer process will be available to the other fuzzer
+processes (unless you disable this with the <code class="docutils literal notranslate"><span class="pre">-reload=0</span></code> option).</p>
+<p>This is primarily controlled by the <code class="docutils literal notranslate"><span class="pre">-jobs=N</span></code> option, which indicates that
+that <code class="docutils literal notranslate"><span class="pre">N</span></code> fuzzing jobs should be run to completion (i.e. until a bug is found or
+time/iteration limits are reached).  These jobs will be run across a set of
+worker processes, by default using half of the available CPU cores; the count of
+worker processes can be overridden by the <code class="docutils literal notranslate"><span class="pre">-workers=N</span></code> option.  For example,
+running with <code class="docutils literal notranslate"><span class="pre">-jobs=30</span></code> on a 12-core machine would run 6 workers by default,
+with each worker averaging 5 bugs by completion of the entire process.</p>
+</section>
+<section id="fork-mode">
+<h3>Fork mode<a class="headerlink" href="#fork-mode" title="Link to this heading">#</a></h3>
+<p><strong>Experimental</strong> mode <code class="docutils literal notranslate"><span class="pre">-fork=N</span></code> (where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the number of parallel jobs)
+enables oom-, timeout-, and crash-resistant
+fuzzing with separate processes (using <code class="docutils literal notranslate"><span class="pre">fork-exec</span></code>, not just <code class="docutils literal notranslate"><span class="pre">fork</span></code>).</p>
+<p>The top libFuzzer process will not do any fuzzing itself, but will
+spawn up to <code class="docutils literal notranslate"><span class="pre">N</span></code> concurrent child processes providing them
+small random subsets of the corpus. After a child exits, the top process
+merges the corpus generated by the child back to the main corpus.</p>
+<p>Related flags:</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">-ignore_ooms</span></code></dt><dd><p>True by default. If an OOM happens during fuzzing in one of the child processes,
+the reproducer is saved on disk, and fuzzing continues.
+<code class="docutils literal notranslate"><span class="pre">-ignore_timeouts</span></code></p>
+</dd>
+<dd><p>True by default, same as <code class="docutils literal notranslate"><span class="pre">-ignore_ooms</span></code>, but for timeouts.
+<code class="docutils literal notranslate"><span class="pre">-ignore_crashes</span></code></p>
+</dd>
+<dd><p>False by default, same as <code class="docutils literal notranslate"><span class="pre">-ignore_ooms</span></code>, but for all other crashes.</p>
+</dd>
+</dl>
+<p>The plan is to eventually replace <code class="docutils literal notranslate"><span class="pre">-jobs=N</span></code> and <code class="docutils literal notranslate"><span class="pre">-workers=N</span></code> with <code class="docutils literal notranslate"><span class="pre">-fork=N</span></code>.</p>
+</section>
+<section id="resuming-merge">
+<h3>Resuming merge<a class="headerlink" href="#resuming-merge" title="Link to this heading">#</a></h3>
+<p>Merging large corpora may be time consuming, and it is often desirable to do it
+on preemptable VMs, where the process may be killed at any time.
+In order to seamlessly resume the merge, use the <code class="docutils literal notranslate"><span class="pre">-merge_control_file</span></code> flag
+and use <code class="docutils literal notranslate"><span class="pre">killall</span> <span class="pre">-SIGUSR1</span> <span class="pre">/path/to/fuzzer/binary</span></code> to stop the merge gracefully. Example:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">% </span>rm<span class="w"> </span>-f<span class="w"> </span>SomeLocalPath
+<span class="gp">% </span>./my_fuzzer<span class="w"> </span>CORPUS1<span class="w"> </span>CORPUS2<span class="w"> </span>-merge<span class="o">=</span><span class="m">1</span><span class="w"> </span>-merge_control_file<span class="o">=</span>SomeLocalPath
+<span class="go">...</span>
+<span class="go">MERGE-INNER: using the control file &#39;SomeLocalPath&#39;</span>
+<span class="go">...</span>
+<span class="gp"># </span>While<span class="w"> </span>this<span class="w"> </span>is<span class="w"> </span>running,<span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="sb">`</span>killall<span class="w"> </span>-SIGUSR1<span class="w"> </span>my_fuzzer<span class="sb">`</span><span class="w"> </span><span class="k">in</span><span class="w"> </span>another<span class="w"> </span>console
+<span class="go">==9015== INFO: libFuzzer: exiting as requested</span>
+
+<span class="gp"># </span>This<span class="w"> </span>will<span class="w"> </span>leave<span class="w"> </span>the<span class="w"> </span>file<span class="w"> </span>SomeLocalPath<span class="w"> </span>with<span class="w"> </span>the<span class="w"> </span>partial<span class="w"> </span>state<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>merge.
+<span class="gp"># </span>Now,<span class="w"> </span>you<span class="w"> </span>can<span class="w"> </span><span class="k">continue</span><span class="w"> </span>the<span class="w"> </span>merge<span class="w"> </span>by<span class="w"> </span>executing<span class="w"> </span>the<span class="w"> </span>same<span class="w"> </span>command.<span class="w"> </span>The<span class="w"> </span>merge
+<span class="gp"># </span>will<span class="w"> </span><span class="k">continue</span><span class="w"> </span>from<span class="w"> </span>where<span class="w"> </span>it<span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>interrupted.
+<span class="gp">% </span>./my_fuzzer<span class="w"> </span>CORPUS1<span class="w"> </span>CORPUS2<span class="w"> </span>-merge<span class="o">=</span><span class="m">1</span><span class="w"> </span>-merge_control_file<span class="o">=</span>SomeLocalPath
+<span class="go">...</span>
+<span class="go">MERGE-OUTER: non-empty control file provided: &#39;SomeLocalPath&#39;</span>
+<span class="go">MERGE-OUTER: control file ok, 32 files total, first not processed file 20</span>
+<span class="go">...</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<p>To run the fuzzer, pass zero or more corpus directories as command line
+arguments.  The fuzzer will read test inputs from each of these corpus
+directories, and any new test inputs that are generated will be written
+back to the first corpus directory:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">./fuzzer [-flag1=val1 [-flag2=val2 ...] ] [dir1 [dir2 ...] ]</span>
+</pre></div>
+</div>
+<p>If a list of files (rather than directories) are passed to the fuzzer program,
+then it will re-run those files as test inputs but will not perform any fuzzing.
+In this mode the fuzzer binary can be used as a regression test (e.g. on a
+continuous integration system) to check the target function and saved inputs
+still work.</p>
+<p>The most important command line options are:</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">-help</span></code></dt><dd><p>Print help message (<code class="docutils literal notranslate"><span class="pre">-help=1</span></code>).
+<code class="docutils literal notranslate"><span class="pre">-seed</span></code></p>
+</dd>
+<dd><p>Random seed. If 0 (the default), the seed is generated.
+<code class="docutils literal notranslate"><span class="pre">-runs</span></code></p>
+</dd>
+<dd><p>Number of individual test runs, -1 (the default) to run indefinitely.
+<code class="docutils literal notranslate"><span class="pre">-max_len</span></code></p>
+</dd>
+<dd><p>Maximum length of a test input. If 0 (the default), libFuzzer tries to guess
+a good value based on the corpus (and reports it).
+<code class="docutils literal notranslate"><span class="pre">-len_control</span></code></p>
+</dd>
+<dd><p>Try generating small inputs first, then try larger inputs over time.
+Specifies the rate at which the length limit is increased (smaller == faster).
+Default is 100. If 0, immediately try inputs with size up to max_len.
+<code class="docutils literal notranslate"><span class="pre">-timeout</span></code></p>
+</dd>
+<dd><p>Timeout in seconds, default 1200. If an input takes longer than this timeout,
+the process is treated as a failure case.
+<code class="docutils literal notranslate"><span class="pre">-rss_limit_mb</span></code></p>
+</dd>
+<dd><p>Memory usage limit in Mb, default 2048. Use 0 to disable the limit.
+If an input requires more than this amount of RSS memory to execute,
+the process is treated as a failure case.
+The limit is checked in a separate thread every second.
+If running w/o ASAN/MSAN, you may use 『ulimit -v』 instead.
+<code class="docutils literal notranslate"><span class="pre">-malloc_limit_mb</span></code></p>
+</dd>
+<dd><p>If non-zero, the fuzzer will exit if the target tries to allocate this
+number of Mb with one malloc call.
+If zero (default) same limit as rss_limit_mb is applied.
+<code class="docutils literal notranslate"><span class="pre">-timeout_exitcode</span></code></p>
+</dd>
+<dd><p>Exit code (default 77) used if libFuzzer reports a timeout.
+<code class="docutils literal notranslate"><span class="pre">-error_exitcode</span></code></p>
+</dd>
+<dd><p>Exit code (default 77) used if libFuzzer itself (not a sanitizer) reports a bug (leak, OOM, etc).
+<code class="docutils literal notranslate"><span class="pre">-max_total_time</span></code></p>
+</dd>
+<dd><p>If positive, indicates the maximum total time in seconds to run the fuzzer.
+If 0 (the default), run indefinitely.
+<code class="docutils literal notranslate"><span class="pre">-merge</span></code></p>
+</dd>
+<dd><p>If set to 1, any corpus inputs from the 2nd, 3rd etc. corpus directories
+that trigger new code coverage will be merged into the first corpus
+directory.  Defaults to 0. This flag can be used to minimize a corpus.
+<code class="docutils literal notranslate"><span class="pre">-merge_control_file</span></code></p>
+</dd>
+<dd><p>Specify a control file used for the merge process.
+If a merge process gets killed it tries to leave this file in a state
+suitable for resuming the merge. By default a temporary file will be used.
+<code class="docutils literal notranslate"><span class="pre">-minimize_crash</span></code></p>
+</dd>
+<dd><p>If 1, minimizes the provided crash input.
+Use with -runs=N or -max_total_time=N to limit the number of attempts.
+<code class="docutils literal notranslate"><span class="pre">-reload</span></code></p>
+</dd>
+<dd><p>If set to 1 (the default), the corpus directory is re-read periodically to
+check for new inputs; this allows detection of new inputs that were discovered
+by other fuzzing processes.
+<code class="docutils literal notranslate"><span class="pre">-jobs</span></code></p>
+</dd>
+<dd><p>Number of fuzzing jobs to run to completion. Default value is 0, which runs a
+single fuzzing process until completion.  If the value is &gt;= 1, then this
+number of jobs performing fuzzing are run, in a collection of parallel
+separate worker processes; each such worker process has its
+<code class="docutils literal notranslate"><span class="pre">stdout</span></code>/<code class="docutils literal notranslate"><span class="pre">stderr</span></code> redirected to <code class="docutils literal notranslate"><span class="pre">fuzz-&lt;JOB&gt;.log</span></code>.
+<code class="docutils literal notranslate"><span class="pre">-workers</span></code></p>
+</dd>
+<dd><p>Number of simultaneous worker processes to run the fuzzing jobs to completion
+in. If 0 (the default), <code class="docutils literal notranslate"><span class="pre">min(jobs,</span> <span class="pre">NumberOfCpuCores()/2)</span></code> is used.
+<code class="docutils literal notranslate"><span class="pre">-dict</span></code></p>
+</dd>
+<dd><p>Provide a dictionary of input keywords; see <a class="reference internal" href="#dictionaries">Dictionaries</a>.
+<code class="docutils literal notranslate"><span class="pre">-use_counters</span></code></p>
+</dd>
+<dd><p>Use <a class="reference external" href="https://clang.llvm.org/docs/SanitizerCoverage.html#coverage-counters">coverage counters</a> to generate approximate counts of how often code
+blocks are hit; defaults to 1.
+<code class="docutils literal notranslate"><span class="pre">-reduce_inputs</span></code></p>
+</dd>
+<dd><p>Try to reduce the size of inputs while preserving their full feature sets;
+defaults to 1.
+<code class="docutils literal notranslate"><span class="pre">-use_value_profile</span></code></p>
+</dd>
+<dd><p>Use <a class="reference internal" href="#value-profile">value profile</a> to guide corpus expansion; defaults to 0.
+<code class="docutils literal notranslate"><span class="pre">-only_ascii</span></code></p>
+</dd>
+<dd><p>If 1, generate only ASCII (<code class="docutils literal notranslate"><span class="pre">isprint</span></code>+<code class="docutils literal notranslate"><span class="pre">isspace</span></code>) inputs. Defaults to 0.
+<code class="docutils literal notranslate"><span class="pre">-artifact_prefix</span></code></p>
+</dd>
+<dd><p>Provide a prefix to use when saving fuzzing artifacts (crash, timeout, or
+slow inputs) as <code class="docutils literal notranslate"><span class="pre">$(artifact_prefix)file</span></code>.  Defaults to empty.
+<code class="docutils literal notranslate"><span class="pre">-exact_artifact_path</span></code></p>
+</dd>
+<dd><p>Ignored if empty (the default).  If non-empty, write the single artifact on
+failure (crash, timeout) as <code class="docutils literal notranslate"><span class="pre">$(exact_artifact_path)</span></code>. This overrides
+<code class="docutils literal notranslate"><span class="pre">-artifact_prefix</span></code> and will not use checksum in the file name. Do not use
+the same path for several parallel processes.
+<code class="docutils literal notranslate"><span class="pre">-print_pcs</span></code></p>
+</dd>
+<dd><p>If 1, print out newly covered PCs. Defaults to 0.
+<code class="docutils literal notranslate"><span class="pre">-print_final_stats</span></code></p>
+</dd>
+<dd><p>If 1, print statistics at exit.  Defaults to 0.
+<code class="docutils literal notranslate"><span class="pre">-detect_leaks</span></code></p>
+</dd>
+<dd><p>If 1 (default) and if LeakSanitizer is enabled
+try to detect memory leaks during fuzzing (i.e. not only at shut down).
+<code class="docutils literal notranslate"><span class="pre">-close_fd_mask</span></code></p>
+</dd>
+<dd><p>Indicate output streams to close at startup. Be careful, this will
+remove diagnostic output from target code (e.g. messages on assert failure).</p>
+<ul class="simple">
+<li><p>0 (default): close neither <code class="docutils literal notranslate"><span class="pre">stdout</span></code> nor <code class="docutils literal notranslate"><span class="pre">stderr</span></code></p></li>
+<li><p>1 : close <code class="docutils literal notranslate"><span class="pre">stdout</span></code></p></li>
+<li><p>2 : close <code class="docutils literal notranslate"><span class="pre">stderr</span></code></p></li>
+<li><p>3 : close both <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<p>For the full list of flags run the fuzzer binary with <code class="docutils literal notranslate"><span class="pre">-help=1</span></code>.</p>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h2>
+<p>During operation the fuzzer prints information to <code class="docutils literal notranslate"><span class="pre">stderr</span></code>, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INFO</span><span class="p">:</span> <span class="n">Running</span> <span class="k">with</span> <span class="n">entropic</span> <span class="n">power</span> <span class="n">schedule</span> <span class="p">(</span><span class="mh">0xFF</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">Seed</span><span class="p">:</span> <span class="mi">1434179311</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">Loaded</span> <span class="mi">1</span> <span class="n">modules</span>   <span class="p">(</span><span class="mi">8</span> <span class="n">inline</span> <span class="mi">8</span><span class="o">-</span><span class="n">bit</span> <span class="n">counters</span><span class="p">):</span> <span class="mi">8</span> <span class="p">[</span><span class="mh">0x5f03d189be90</span><span class="p">,</span> <span class="mh">0x5f03d189be98</span><span class="p">),</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">Loaded</span> <span class="mi">1</span> <span class="n">PC</span> <span class="n">tables</span> <span class="p">(</span><span class="mi">8</span> <span class="n">PCs</span><span class="p">):</span> <span class="mi">8</span> <span class="p">[</span><span class="mh">0x5f03d189be98</span><span class="p">,</span><span class="mh">0x5f03d189bf18</span><span class="p">),</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="o">-</span><span class="n">max_len</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">provided</span><span class="p">;</span> <span class="n">libFuzzer</span> <span class="n">will</span> <span class="ow">not</span> <span class="n">generate</span> <span class="n">inputs</span> <span class="n">larger</span> <span class="n">than</span> <span class="mi">4096</span> <span class="nb">bytes</span>
+<span class="n">INFO</span><span class="p">:</span> <span class="n">A</span> <span class="n">corpus</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">provided</span><span class="p">,</span> <span class="n">starting</span> <span class="kn">from</span> <span class="nn">an</span> <span class="n">empty</span> <span class="n">corpus</span>
+<span class="c1">#2      INITED cov: 2 ft: 2 corp: 1/1b exec/s: 0 rss: 31Mb</span>
+<span class="c1">#144    NEW    cov: 3 ft: 3 corp: 2/2b lim: 4 exec/s: 0 rss: 31Mb L: 1/1 MS: 2 ChangeByte-ChangeByte-</span>
+<span class="c1">#157    NEW    cov: 4 ft: 4 corp: 3/4b lim: 4 exec/s: 0 rss: 31Mb L: 2/2 MS: 3 CrossOver-ChangeBit-CrossOver-</span>
+<span class="c1">#1345   NEW    cov: 5 ft: 5 corp: 4/8b lim: 14 exec/s: 0 rss: 32Mb L: 4/4 MS: 3 InsertByte-ChangeBit-CrossOver-</span>
+<span class="c1">#1696   NEW    cov: 6 ft: 6 corp: 5/10b lim: 17 exec/s: 0 rss: 32Mb L: 2/4 MS: 1 EraseBytes-</span>
+<span class="c1">#1832   REDUCE cov: 6 ft: 6 corp: 5/9b lim: 17 exec/s: 0 rss: 32Mb L: 3/3 MS: 1 EraseBytes-</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>The early parts of the output include information about the fuzzer options and
+configuration, including the current random seed (in the <code class="docutils literal notranslate"><span class="pre">Seed:</span></code> line; this
+can be overridden with the <code class="docutils literal notranslate"><span class="pre">-seed=N</span></code> flag).</p>
+<p>Further output lines have the form of an event code and statistics.  The
+possible event codes are:</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">READ</span></code></dt><dd><p>The fuzzer has read in all of the provided input samples from the corpus
+directories.
+<code class="docutils literal notranslate"><span class="pre">INITED</span></code></p>
+</dd>
+<dd><p>The fuzzer has completed initialization, which includes running each of
+the initial input samples through the code under test.
+<code class="docutils literal notranslate"><span class="pre">NEW</span></code></p>
+</dd>
+<dd><p>The fuzzer has created a test input that covers new areas of the code
+under test.  This input will be saved to the primary corpus directory.
+<code class="docutils literal notranslate"><span class="pre">REDUCE</span></code></p>
+</dd>
+<dd><p>The fuzzer has found a better (smaller) input that triggers previously
+discovered features (set <code class="docutils literal notranslate"><span class="pre">-reduce_inputs=0</span></code> to disable).
+<code class="docutils literal notranslate"><span class="pre">pulse</span></code></p>
+</dd>
+<dd><p>The fuzzer has generated 2<sup>n</sup> inputs (generated periodically to reassure
+the user that the fuzzer is still working).
+<code class="docutils literal notranslate"><span class="pre">DONE</span></code></p>
+</dd>
+<dd><p>The fuzzer has completed operation because it has reached the specified
+iteration limit (<code class="docutils literal notranslate"><span class="pre">-runs</span></code>) or time limit (<code class="docutils literal notranslate"><span class="pre">-max_total_time</span></code>).
+<code class="docutils literal notranslate"><span class="pre">RELOAD</span></code></p>
+</dd>
+<dd><p>The fuzzer is performing a periodic reload of inputs from the corpus
+directory; this allows it to discover any inputs discovered by other
+fuzzer processes (see <a class="reference internal" href="#parallel-fuzzing">Parallel Fuzzing</a>).</p>
+</dd>
+</dl>
+<p>Each output line also reports the following statistics (when non-zero):</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">cov:</span></code></dt><dd><p>Total number of code blocks or edges covered by executing the current corpus.
+<code class="docutils literal notranslate"><span class="pre">ft:</span></code></p>
+</dd>
+<dd><p>libFuzzer uses different signals to evaluate the code coverage:
+edge coverage, edge counters, value profiles, indirect caller/callee pairs, etc.
+These signals combined are called <em>features</em> (<code class="docutils literal notranslate"><span class="pre">ft:</span></code>).
+<code class="docutils literal notranslate"><span class="pre">corp:</span></code></p>
+</dd>
+<dd><p>Number of entries in the current in-memory test corpus and its size in bytes.
+<code class="docutils literal notranslate"><span class="pre">lim:</span></code></p>
+</dd>
+<dd><p>Current limit on the length of new entries in the corpus. Increases over time
+until the max length (<code class="docutils literal notranslate"><span class="pre">-max_len</span></code>) is reached.
+<code class="docutils literal notranslate"><span class="pre">exec/s:</span></code></p>
+</dd>
+<dd><p>Number of fuzzer iterations per second.
+<code class="docutils literal notranslate"><span class="pre">rss:</span></code></p>
+</dd>
+<dd><p>Current memory consumption.</p>
+</dd>
+</dl>
+<p>For <code class="docutils literal notranslate"><span class="pre">NEW</span></code> and <code class="docutils literal notranslate"><span class="pre">REDUCE</span></code> events, the output line also includes information
+about the mutation operation that produced the new input:</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">L:</span></code></dt><dd><p>Size of the new/reduced input in bytes and the size of the largest input
+in current in-memory test corpus.
+<code class="docutils literal notranslate"><span class="pre">MS:</span> <span class="pre">&lt;n&gt;</span> <span class="pre">&lt;operations&gt;</span></code></p>
+</dd>
+<dd><p>Count and list of the mutation operations used to generate the input.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>範例<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<section id="toy-example">
+<h3>Toy example<a class="headerlink" href="#toy-example" title="Link to this heading">#</a></h3>
+<p>A simple function that does something interesting if it receives the input
+「HI!」:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cat</span> <span class="o">&lt;&lt;</span> <span class="n">EOF</span> <span class="o">&gt;</span> <span class="n">test_fuzzer</span><span class="o">.</span><span class="n">cc</span>
+<span class="c1">#include &lt;stdint.h&gt;</span>
+<span class="c1">#include &lt;stddef.h&gt;</span>
+<span class="n">extern</span> <span class="s2">&quot;C&quot;</span> <span class="nb">int</span> <span class="n">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="n">const</span> <span class="n">uint8_t</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;H&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;I&#39;</span><span class="p">)</span>
+       <span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">&amp;&amp;</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;!&#39;</span><span class="p">)</span>
+       <span class="n">__builtin_trap</span><span class="p">();</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">EOF</span>
+<span class="c1"># Build test_fuzzer.cc with asan and link against libFuzzer.</span>
+<span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">fsanitize</span><span class="o">=</span><span class="n">address</span><span class="p">,</span><span class="n">fuzzer</span> <span class="n">test_fuzzer</span><span class="o">.</span><span class="n">cc</span>
+<span class="c1"># Run the fuzzer with no corpus.</span>
+<span class="o">./</span><span class="n">a</span><span class="o">.</span><span class="n">out</span>
+</pre></div>
+</div>
+<p>You should get an error pretty quickly:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 1434179311
+INFO: Loaded 1 modules   (8 inline 8-bit counters): 8 [0x5f03d189be90, 0x5f03d189be98),
+INFO: Loaded 1 PC tables (8 PCs): 8 [0x5f03d189be98,0x5f03d189bf18),
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+INFO: A corpus is not provided, starting from an empty corpus
+#2      INITED cov: 2 ft: 2 corp: 1/1b exec/s: 0 rss: 31Mb
+#144    NEW    cov: 3 ft: 3 corp: 2/2b lim: 4 exec/s: 0 rss: 31Mb L: 1/1 MS: 2 ChangeByte-ChangeByte-
+#157    NEW    cov: 4 ft: 4 corp: 3/4b lim: 4 exec/s: 0 rss: 31Mb L: 2/2 MS: 3 CrossOver-ChangeBit-CrossOver-
+#1345   NEW    cov: 5 ft: 5 corp: 4/8b lim: 14 exec/s: 0 rss: 32Mb L: 4/4 MS: 3 InsertByte-ChangeBit-CrossOver-
+#1696   NEW    cov: 6 ft: 6 corp: 5/10b lim: 17 exec/s: 0 rss: 32Mb L: 2/4 MS: 1 EraseBytes-
+#1832   REDUCE cov: 6 ft: 6 corp: 5/9b lim: 17 exec/s: 0 rss: 32Mb L: 3/3 MS: 1 EraseBytes-
+==840148== ERROR: libFuzzer: deadly signal
+...
+SUMMARY: libFuzzer: deadly signal
+MS: 2 CopyPart-ChangeByte-; base unit: dbee5f8c7a5da845446e75b4a5708e74428b520a
+0x48,0x49,0x21,
+HI!
+artifact_prefix=&#39;./&#39;; Test unit written to ./crash-7a8dc3985d2a90fb6e62e94910fc11d31949c348
+Base64: SEkh
+</pre></div>
+</div>
+</section>
+<section id="more-examples">
+<h3>More examples<a class="headerlink" href="#more-examples" title="Link to this heading">#</a></h3>
+<p>Examples of real-life fuzz targets and the bugs they find can be found
+at http://tutorial.libfuzzer.info. Among other things you can learn how
+to detect <a class="reference external" href="http://en.wikipedia.org/wiki/Heartbleed">Heartbleed</a> in one second.</p>
+</section>
+</section>
+<section id="advanced-features">
+<h2>Advanced features<a class="headerlink" href="#advanced-features" title="Link to this heading">#</a></h2>
+<section id="dictionaries">
+<h3>Dictionaries<a class="headerlink" href="#dictionaries" title="Link to this heading">#</a></h3>
+<p>LibFuzzer supports user-supplied dictionaries with input language keywords
+or other interesting byte sequences (e.g. multi-byte magic values).
+Use <code class="docutils literal notranslate"><span class="pre">-dict=DICTIONARY_FILE</span></code>. For some input languages using a dictionary
+may significantly improve the search speed.
+The dictionary syntax is similar to that used by <a class="reference external" href="http://lcamtuf.coredump.cx/afl/">AFL</a> for its <code class="docutils literal notranslate"><span class="pre">-x</span></code> option:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Lines starting with &#39;#&#39; and empty lines are ignored.</span>
+
+<span class="c1"># Adds &quot;blah&quot; (w/o quotes) to the dictionary.</span>
+<span class="n">kw1</span><span class="o">=</span><span class="s2">&quot;blah&quot;</span>
+<span class="c1"># Use \\ for backslash and \&quot; for quotes.</span>
+<span class="n">kw2</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">ac</span><span class="se">\\</span><span class="s2">dc</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+<span class="c1"># Use \xAB for hex values</span>
+<span class="n">kw3</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\xF7\xF8</span><span class="s2">&quot;</span>
+<span class="c1"># the name of the keyword followed by &#39;=&#39; may be omitted:</span>
+<span class="s2">&quot;foo</span><span class="se">\x0A</span><span class="s2">bar&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="tracing-cmp-instructions">
+<h3>Tracing CMP instructions<a class="headerlink" href="#tracing-cmp-instructions" title="Link to this heading">#</a></h3>
+<p>With an additional compiler flag <code class="docutils literal notranslate"><span class="pre">-fsanitize-coverage=trace-cmp</span></code>
+(on by default as part of <code class="docutils literal notranslate"><span class="pre">-fsanitize=fuzzer</span></code>, see <a class="reference external" href="https://clang.llvm.org/docs/SanitizerCoverage.html#tracing-data-flow">SanitizerCoverageTraceDataFlow</a>)
+libFuzzer will intercept CMP instructions and guide mutations based
+on the arguments of intercepted CMP instructions. This may slow down
+the fuzzing but is very likely to improve the results.</p>
+</section>
+<section id="value-profile">
+<h3>Value Profile<a class="headerlink" href="#value-profile" title="Link to this heading">#</a></h3>
+<p>With  <code class="docutils literal notranslate"><span class="pre">-fsanitize-coverage=trace-cmp</span></code> (default with <code class="docutils literal notranslate"><span class="pre">-fsanitize=fuzzer</span></code>)
+and extra run-time flag <code class="docutils literal notranslate"><span class="pre">-use_value_profile=1</span></code> the fuzzer will
+collect value profiles for the parameters of compare instructions
+and treat some new values as new coverage.</p>
+<p>The current implementation does roughly the following:</p>
+<ul class="simple">
+<li><p>The compiler instruments all CMP instructions with a callback that receives both CMP arguments.</p></li>
+<li><p>The callback computes <code class="docutils literal notranslate"><span class="pre">(caller_pc&amp;4095)</span> <span class="pre">|</span> <span class="pre">(popcnt(Arg1</span> <span class="pre">^</span> <span class="pre">Arg2)</span> <span class="pre">&lt;&lt;</span> <span class="pre">12)</span></code> and uses this value to set a bit in a bitset.</p></li>
+<li><p>Every new observed bit in the bitset is treated as new coverage.</p></li>
+</ul>
+<p>This feature has a potential to discover many interesting inputs,
+but there are two downsides.
+First, the extra instrumentation may bring up to 2x additional slowdown.
+Second, the corpus may grow by several times.</p>
+</section>
+<section id="fuzzer-friendly-build-mode">
+<h3>Fuzzer-friendly build mode<a class="headerlink" href="#fuzzer-friendly-build-mode" title="Link to this heading">#</a></h3>
+<p>Sometimes the code under test is not fuzzing-friendly. Examples:</p>
+<ul class="simple">
+<li><p>The target code uses a PRNG seeded e.g. by system time and
+thus two consequent invocations may potentially execute different code paths
+even if the end result will be the same. This will cause a fuzzer to treat
+two similar inputs as significantly different and it will blow up the test corpus.
+E.g. libxml uses <code class="docutils literal notranslate"><span class="pre">rand()</span></code> inside its hash table.</p></li>
+<li><p>The target code uses checksums to protect from invalid inputs.
+E.g. png checks CRC for every chunk.</p></li>
+</ul>
+<p>In many cases it makes sense to build a special fuzzing-friendly build
+with certain fuzzing-unfriendly features disabled. We propose to use a common build macro
+for all such cases for consistency: <code class="docutils literal notranslate"><span class="pre">FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">MyInitPRNG</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="cp">#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION</span>
+<span class="w">  </span><span class="c1">// In fuzzing mode the behavior of the code should be deterministic.</span>
+<span class="w">  </span><span class="n">srand</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="cp">#else</span>
+<span class="w">  </span><span class="n">srand</span><span class="p">(</span><span class="n">time</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+<span class="cp">#endif</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="afl-compatibility">
+<h3>AFL compatibility<a class="headerlink" href="#afl-compatibility" title="Link to this heading">#</a></h3>
+<p>LibFuzzer can be used together with <a class="reference external" href="http://lcamtuf.coredump.cx/afl/">AFL</a> on the same test corpus.
+Both fuzzers expect the test corpus to reside in a directory, one file per input.
+You can run both fuzzers on the same corpus, one after another:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">./afl-fuzz -i testcase_dir -o findings_dir /path/to/program @@</span>
+<span class="go">./llvm-fuzz testcase_dir findings_dir  # Will write new tests to testcase_dir</span>
+</pre></div>
+</div>
+<p>Periodically restart both fuzzers so that they can use each other’s findings.
+Currently, there is no simple way to run both fuzzing engines in parallel while sharing the same corpus dir.</p>
+<p>You may also use AFL on your target function <code class="docutils literal notranslate"><span class="pre">LLVMFuzzerTestOneInput</span></code>:
+see an example <a class="reference external" href="https://github.com/llvm/llvm-project/tree/main/compiler-rt/lib/fuzzer/afl">here</a>.</p>
+</section>
+<section id="how-good-is-my-fuzzer">
+<h3>How good is my fuzzer?<a class="headerlink" href="#how-good-is-my-fuzzer" title="Link to this heading">#</a></h3>
+<p>Once you implement your target function <code class="docutils literal notranslate"><span class="pre">LLVMFuzzerTestOneInput</span></code> and fuzz it to death,
+you will want to know whether the function or the corpus can be improved further.
+One easy to use metric is, of course, code coverage.</p>
+<p>We recommend to use
+<a class="reference external" href="https://clang.llvm.org/docs/SourceBasedCodeCoverage.html">Clang Coverage</a>,
+to visualize and study your code coverage
+(<a class="reference external" href="https://github.com/google/fuzzer-test-suite/blob/master/tutorial/libFuzzerTutorial.md#visualizing-coverage">example</a>).</p>
+</section>
+<section id="user-supplied-mutators">
+<h3>User-supplied mutators<a class="headerlink" href="#user-supplied-mutators" title="Link to this heading">#</a></h3>
+<p>LibFuzzer allows to use custom (user-supplied) mutators, see
+<a class="reference external" href="https://github.com/google/fuzzing/blob/master/docs/structure-aware-fuzzing.md">Structure-Aware Fuzzing</a>
+for more details.</p>
+</section>
+<section id="startup-initialization">
+<h3>Startup initialization<a class="headerlink" href="#startup-initialization" title="Link to this heading">#</a></h3>
+<p>If the library being tested needs to be initialized, there are several options.</p>
+<p>The simplest way is to have a statically initialized global object inside
+<code class="docutils literal notranslate"><span class="pre">LLVMFuzzerTestOneInput</span></code> (or in global scope if that works for you):</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">extern</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">Size</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">Initialized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DoInitialization</span><span class="p">();</span>
+<span class="w">  </span><span class="p">...</span>
+</pre></div>
+</div>
+<p>Alternatively, you may define an optional init function and it will receive
+the program arguments that you can read and modify. Do this <strong>only</strong> if you
+really need to access <code class="docutils literal notranslate"><span class="pre">argv</span></code>/<code class="docutils literal notranslate"><span class="pre">argc</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="k">extern</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">LLVMFuzzerInitialize</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">***</span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">ReadAndMaybeModify</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="using-libfuzzer-as-a-library">
+<h3>Using libFuzzer as a library<a class="headerlink" href="#using-libfuzzer-as-a-library" title="Link to this heading">#</a></h3>
+<p>If the code being fuzzed must provide its own <code class="docutils literal notranslate"><span class="pre">main</span></code>, it’s possible to
+invoke libFuzzer as a library. Be sure to pass <code class="docutils literal notranslate"><span class="pre">-fsanitize=fuzzer-no-link</span></code>
+during compilation, and link your binary against the no-main version of
+libFuzzer. On Linux installations, this is typically located at:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/usr/lib/&lt;llvm-version&gt;/lib/clang/&lt;clang-version&gt;/lib/linux/libclang_rt.fuzzer_no_main-&lt;architecture&gt;.a
+</pre></div>
+</div>
+<p>If building libFuzzer from source, this is located at the following path
+in the build output directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>lib/linux/libclang_rt.fuzzer_no_main-&lt;architecture&gt;.a
+</pre></div>
+</div>
+<p>From here, the code can do whatever setup it requires, and when it’s ready
+to start fuzzing, it can call <code class="docutils literal notranslate"><span class="pre">LLVMFuzzerRunDriver</span></code>, passing in the program
+arguments and a callback. This callback is invoked just like
+<code class="docutils literal notranslate"><span class="pre">LLVMFuzzerTestOneInput</span></code>, and has the same signature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">extern</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">LLVMFuzzerRunDriver</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">***</span><span class="n">argv</span><span class="p">,</span>
+<span class="w">                  </span><span class="kt">int</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">UserCb</span><span class="p">)(</span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">Size</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
+<section id="rejecting-unwanted-inputs">
+<h3>Rejecting unwanted inputs<a class="headerlink" href="#rejecting-unwanted-inputs" title="Link to this heading">#</a></h3>
+<p>It may be desirable to reject some inputs, i.e. to not add them to the corpus.</p>
+<p>For example, when fuzzing an API consisting of parsing and other logic,
+one may want to allow only those inputs into the corpus that parse successfully.</p>
+<p>If the fuzz target returns -1 on a given input,
+libFuzzer will not add that input top the corpus, regardless of what coverage
+it triggers.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">extern</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">LLVMFuzzerTestOneInput</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">*</span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">Size</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">Obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ParseMe</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="n">Size</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Obj</span><span class="o">-&gt;</span><span class="n">DoSomethingInteresting</span><span class="p">();</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">// Accept. The input may be added to the corpus.</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span><span class="w">  </span><span class="c1">// Reject; The input will not be added to the corpus.</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="leaks">
+<h3>Leaks<a class="headerlink" href="#leaks" title="Link to this heading">#</a></h3>
+<p>Binaries built with <a class="reference external" href="https://clang.llvm.org/docs/AddressSanitizer.html">AddressSanitizer</a> or <a class="reference external" href="https://clang.llvm.org/docs/LeakSanitizer.html">LeakSanitizer</a> will try to detect
+memory leaks at the process shutdown.
+For in-process fuzzing this is inconvenient
+since the fuzzer needs to report a leak with a reproducer as soon as the leaky
+mutation is found. However, running full leak detection after every mutation
+is expensive.</p>
+<p>By default (<code class="docutils literal notranslate"><span class="pre">-detect_leaks=1</span></code>) libFuzzer will count the number of
+<code class="docutils literal notranslate"><span class="pre">malloc</span></code> and <code class="docutils literal notranslate"><span class="pre">free</span></code> calls when executing every mutation.
+If the numbers don’t match (which by itself doesn’t mean there is a leak)
+libFuzzer will invoke the more expensive <a class="reference external" href="https://clang.llvm.org/docs/LeakSanitizer.html">LeakSanitizer</a>
+pass and if the actual leak is found, it will be reported with the reproducer
+and the process will exit.</p>
+<p>If your target has massive leaks and the leak detection is disabled
+you will eventually run out of RAM (see the <code class="docutils literal notranslate"><span class="pre">-rss_limit_mb</span></code> flag).</p>
+</section>
+</section>
+<section id="developing-libfuzzer">
+<h2>Developing libFuzzer<a class="headerlink" href="#developing-libfuzzer" title="Link to this heading">#</a></h2>
+<p>LibFuzzer is built as a part of LLVM project by default on macos and Linux.
+Users of other operating systems can explicitly request compilation using
+<code class="docutils literal notranslate"><span class="pre">-DCOMPILER_RT_BUILD_LIBFUZZER=ON</span></code> flag.
+Tests are run using <code class="docutils literal notranslate"><span class="pre">check-fuzzer</span></code> target from the build directory
+which was configured with <code class="docutils literal notranslate"><span class="pre">-DCOMPILER_RT_INCLUDE_TESTS=ON</span></code> flag.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">  ninja check-fuzzer</span>
+</pre></div>
+</div>
+</section>
+<section id="faq">
+<h2>FAQ<a class="headerlink" href="#faq" title="Link to this heading">#</a></h2>
+<section id="q-why-doesn-t-libfuzzer-use-any-of-the-llvm-support">
+<h3>Q. Why doesn’t libFuzzer use any of the LLVM support?<a class="headerlink" href="#q-why-doesn-t-libfuzzer-use-any-of-the-llvm-support" title="Link to this heading">#</a></h3>
+<p>There are two reasons.</p>
+<p>First, we want this library to be used outside of the LLVM without users having to
+build the rest of LLVM. This may sound unconvincing for many LLVM folks,
+but in practice the need for building the whole LLVM frightens many potential
+users – and we want more users to use this code.</p>
+<p>Second, there is a subtle technical reason not to rely on the rest of LLVM, or
+any other large body of code (maybe not even STL). When coverage instrumentation
+is enabled, it will also instrument the LLVM support code which will blow up the
+coverage set of the process (since the fuzzer is in-process). In other words, by
+using more external dependencies we will slow down the fuzzer while the main
+reason for it to exist is extreme speed.</p>
+</section>
+<section id="q-does-libfuzzer-support-windows">
+<h3>Q. Does libFuzzer Support Windows?<a class="headerlink" href="#q-does-libfuzzer-support-windows" title="Link to this heading">#</a></h3>
+<p>Yes, libFuzzer now supports Windows. Initial support was added in r341082.
+Any build of Clang 9 supports it. You can download a build of Clang for Windows
+that has libFuzzer from
+<a class="reference external" href="https://llvm.org/builds/">LLVM Snapshot Builds</a>.</p>
+<p>Using libFuzzer on Windows without ASAN is unsupported. Building fuzzers with the
+<code class="docutils literal notranslate"><span class="pre">/MD</span></code> (dynamic runtime library) compile option is unsupported. Support for these
+may be added in the future. Linking fuzzers with the <code class="docutils literal notranslate"><span class="pre">/INCREMENTAL</span></code> link option
+(or the <code class="docutils literal notranslate"><span class="pre">/DEBUG</span></code> option which implies it) is also unsupported.</p>
+<p>Send any questions or comments to the mailing list: libfuzzer(#)googlegroups.com</p>
+</section>
+<section id="q-when-libfuzzer-is-not-a-good-solution-for-a-problem">
+<h3>Q. When libFuzzer is not a good solution for a problem?<a class="headerlink" href="#q-when-libfuzzer-is-not-a-good-solution-for-a-problem" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>If the test inputs are validated by the target library and the validator
+asserts/crashes on invalid inputs, in-process fuzzing is not applicable.</p></li>
+<li><p>Bugs in the target library may accumulate without being detected. E.g. a memory
+corruption that goes undetected at first and then leads to a crash while
+testing another input. This is why it is highly recommended to run this
+in-process fuzzer with all sanitizers to detect most bugs on the spot.</p></li>
+<li><p>It is harder to protect the in-process fuzzer from excessive memory
+consumption and infinite loops in the target library (still possible).</p></li>
+<li><p>The target library should not have significant global state that is not
+reset between the runs.</p></li>
+<li><p>Many interesting target libraries are not designed in a way that supports
+the in-process fuzzer interface (e.g. require a file path instead of a
+byte array).</p></li>
+<li><p>If a single test run takes a considerable fraction of a second (or
+more) the speed benefit from the in-process fuzzer is negligible.</p></li>
+<li><p>If the target library runs persistent threads (that outlive
+execution of one test) the fuzzing results will be unreliable.</p></li>
+</ul>
+</section>
+<section id="q-so-what-exactly-this-fuzzer-is-good-for">
+<h3>Q. So, what exactly this Fuzzer is good for?<a class="headerlink" href="#q-so-what-exactly-this-fuzzer-is-good-for" title="Link to this heading">#</a></h3>
+<p>This Fuzzer might be a good choice for testing libraries that have relatively
+small inputs, each input takes &lt; 10ms to run, and the library code is not expected
+to crash on invalid inputs.
+Examples: regular expression matchers, text or binary format parsers, compression,
+network, crypto.</p>
+</section>
+<section id="q-libfuzzer-crashes-on-my-complicated-fuzz-target-but-works-fine-for-me-on-smaller-targets">
+<h3>Q. LibFuzzer crashes on my complicated fuzz target (but works fine for me on smaller targets).<a class="headerlink" href="#q-libfuzzer-crashes-on-my-complicated-fuzz-target-but-works-fine-for-me-on-smaller-targets" title="Link to this heading">#</a></h3>
+<p>Check if your fuzz target uses <code class="docutils literal notranslate"><span class="pre">dlclose</span></code>.
+Currently, libFuzzer doesn’t support targets that call <code class="docutils literal notranslate"><span class="pre">dlclose</span></code>,
+this may be fixed in future.</p>
+</section>
+</section>
+<section id="trophies">
+<h2>Trophies<a class="headerlink" href="#trophies" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Thousands of bugs found on OSS-Fuzz:  https://opensource.googleblog.com/2017/05/oss-fuzz-five-months-later-and.html</p></li>
+<li><p>GLIBC: https://sourceware.org/glibc/wiki/FuzzingLibc</p></li>
+<li><p>MUSL LIBC: <a class="reference external" href="http://git.musl-libc.org/cgit/musl/commit/?id=39dfd58417ef642307d90306e1c7e50aaec5a35c">[1]</a> <a class="reference external" href="http://www.openwall.com/lists/oss-security/2015/03/30/3">[2]</a></p></li>
+<li><p><a class="reference external" href="https://github.com/zeux/pugixml/issues/39">pugixml</a></p></li>
+<li><p>PCRE: Search for 「LLVM fuzzer」 in http://vcs.pcre.org/pcre2/code/trunk/ChangeLog?view=markup;
+also in <a class="reference external" href="https://bugs.exim.org/buglist.cgi?bug_status=__all__&amp;amp;content=libfuzzer&amp;amp;no_redirect=1&amp;amp;order=Importance&amp;amp;product=PCRE&amp;amp;query_format=specific">bugzilla</a></p></li>
+<li><p><a class="reference external" href="http://bugs.icu-project.org/trac/ticket/11838">ICU</a></p></li>
+<li><p><a class="reference external" href="https://savannah.nongnu.org/search/?words=LibFuzzer&amp;amp;type_of_search=bugs&amp;amp;Search=Search&amp;amp;exact=1#options">Freetype</a></p></li>
+<li><p><a class="reference external" href="https://github.com/behdad/harfbuzz/issues/139">Harfbuzz</a></p></li>
+<li><p><a class="reference external" href="http://www3.sqlite.org/cgi/src/info/088009efdd56160b">SQLite</a></p></li>
+<li><p><a class="reference external" href="http://bugs.python.org/issue25388">Python</a></p></li>
+<li><p>OpenSSL/BoringSSL: <a class="reference external" href="https://boringssl.googlesource.com/boringssl/+/cb852981cd61733a7a1ae4fd8755b7ff950e857d">[1]</a> <a class="reference external" href="https://openssl.org/news/secadv/20160301.txt">[2]</a> <a class="reference external" href="https://boringssl.googlesource.com/boringssl/+/2b07fa4b22198ac02e0cee8f37f3337c3dba91bc">[3]</a> <a class="reference external" href="https://boringssl.googlesource.com/boringssl/+/6b6e0b20893e2be0e68af605a60ffa2cbb0ffa64">[4]</a>  <a class="reference external" href="https://github.com/openssl/openssl/pull/931/commits/dd5ac557f052cc2b7f718ac44a8cb7ac6f77dca8">[5]</a> <a class="reference external" href="https://github.com/openssl/openssl/pull/931/commits/19b5b9194071d1d84e38ac9a952e715afbc85a81">[6]</a></p></li>
+<li><p><a class="reference external" href="https://bugzilla.gnome.org/buglist.cgi?bug_status=__all__&amp;amp;content=libFuzzer&amp;amp;list_id=68957&amp;amp;order=Importance&amp;amp;product=libxml2&amp;amp;query_format=specific">Libxml2</a> and <a class="reference external" href="https://support.apple.com/en-gb/HT206167">[HT206167]</a> (CVE-2015-5312, CVE-2015-7500, CVE-2015-7942)</p></li>
+<li><p><a class="reference external" href="https://github.com/iovisor/bpf-fuzzer">Linux Kernel’s BPF verifier</a></p></li>
+<li><p><a class="reference external" href="https://www.spinics.net/lists/stable/msg199712.html">Linux Kernel’s Crypto code</a></p></li>
+<li><p>Capstone: <a class="reference external" href="https://github.com/aquynh/capstone/issues/600">[1]</a> <a class="reference external" href="https://github.com/aquynh/capstone/commit/6b88d1d51eadf7175a8f8a11b690684443b11359">[2]</a></p></li>
+<li><p>file:<a class="reference external" href="http://bugs.gw.com/view.php?id=550">[1]</a>  <a class="reference external" href="http://bugs.gw.com/view.php?id=551">[2]</a>  <a class="reference external" href="http://bugs.gw.com/view.php?id=553">[3]</a>  <a class="reference external" href="http://bugs.gw.com/view.php?id=554">[4]</a></p></li>
+<li><p>Radare2: <a class="reference external" href="https://github.com/revskills?tab=contributions&amp;amp;from=2016-04-09">[1]</a></p></li>
+<li><p>gRPC: <a class="reference external" href="https://github.com/grpc/grpc/pull/6071/commits/df04c1f7f6aec6e95722ec0b023a6b29b6ea871c">[1]</a> <a class="reference external" href="https://github.com/grpc/grpc/pull/6071/commits/22a3dfd95468daa0db7245a4e8e6679a52847579">[2]</a> <a class="reference external" href="https://github.com/grpc/grpc/pull/6071/commits/9cac2a12d9e181d130841092e9d40fa3309d7aa7">[3]</a> <a class="reference external" href="https://github.com/grpc/grpc/pull/6012/commits/82a91c91d01ce9b999c8821ed13515883468e203">[4]</a> <a class="reference external" href="https://github.com/grpc/grpc/pull/6202/commits/2e3e0039b30edaf89fb93bfb2c1d0909098519fa">[5]</a> <a class="reference external" href="https://github.com/grpc/grpc/pull/6106/files">[6]</a></p></li>
+<li><p>WOFF2: <a class="reference external" href="https://github.com/google/woff2/commit/a15a8ab">[1]</a></p></li>
+<li><p>LLVM: <a class="reference external" href="https://bugs.llvm.org/show_bug.cgi?id=23057">Clang</a>, <a class="reference external" href="https://bugs.llvm.org/show_bug.cgi?id=23052">Clang-format</a>, <a class="reference external" href="https://bugs.llvm.org/show_bug.cgi?id=24411">libc++</a>, <a class="reference external" href="https://bugs.llvm.org/show_bug.cgi?id=24639">llvm-as</a>, <a class="reference external" href="https://bugs.chromium.org/p/chromium/issues/detail?id=606626">Demangler</a>, Disassembler: http://reviews.llvm.org/rL247405, http://reviews.llvm.org/rL247414, http://reviews.llvm.org/rL247416, http://reviews.llvm.org/rL247417, http://reviews.llvm.org/rL247420, http://reviews.llvm.org/rL247422.</p></li>
+<li><p>Tensorflow: <a class="reference external" href="https://da-data.blogspot.com/2017/01/finding-bugs-in-tensorflow-with.html">[1]</a></p></li>
+<li><p>Ffmpeg: <a class="reference external" href="https://github.com/FFmpeg/FFmpeg/commit/c92f55847a3d9cd12db60bfcd0831ff7f089c37c">[1]</a>  <a class="reference external" href="https://github.com/FFmpeg/FFmpeg/commit/25ab1a65f3acb5ec67b53fb7a2463a7368f1ad16">[2]</a>  <a class="reference external" href="https://github.com/FFmpeg/FFmpeg/commit/85d23e5cbc9ad6835eef870a5b4247de78febe56">[3]</a> <a class="reference external" href="https://github.com/FFmpeg/FFmpeg/commit/04bd1b38ee6b8df410d0ab8d4949546b6c4af26a">[4]</a></p></li>
+<li><p><a class="reference external" href="https://bugs.wireshark.org/bugzilla/buglist.cgi?bug_status=UNCONFIRMED&amp;amp;bug_status=CONFIRMED&amp;amp;bug_status=IN_PROGRESS&amp;amp;bug_status=INCOMPLETE&amp;amp;bug_status=RESOLVED&amp;amp;bug_status=VERIFIED&amp;amp;f0=OP&amp;amp;f1=OP&amp;amp;f2=product&amp;amp;f3=component&amp;amp;f4=alias&amp;amp;f5=short_desc&amp;amp;f7=content&amp;amp;f8=CP&amp;amp;f9=CP&amp;amp;j1=OR&amp;amp;o2=substring&amp;amp;o3=substring&amp;amp;o4=substring&amp;amp;o5=substring&amp;amp;o6=substring&amp;amp;o7=matches&amp;amp;order=bug_id%20DESC&amp;amp;query_format=advanced&amp;amp;v2=libfuzzer&amp;amp;v3=libfuzzer&amp;amp;v4=libfuzzer&amp;amp;v5=libfuzzer&amp;amp;v6=libfuzzer&amp;amp;v7=%22libfuzzer%22">Wireshark</a></p></li>
+<li><p><a class="reference external" href="https://researchcenter.paloaltonetworks.com/2017/09/unit42-palo-alto-networks-discovers-new-qemu-vulnerability/">QEMU</a></p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="FuzzingLLVM.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Fuzzing LLVM libraries and tools</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Statepoints.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Garbage Collection Safepoints in LLVM</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">libFuzzer – a library for coverage-guided fuzz testing.</a><ul>
+<li><a class="reference internal" href="#introduction">簡介</a></li>
+<li><a class="reference internal" href="#status">Status</a></li>
+<li><a class="reference internal" href="#versions">Versions</a></li>
+<li><a class="reference internal" href="#getting-started">Getting Started</a><ul>
+<li><a class="reference internal" href="#fuzz-target">Fuzz Target</a></li>
+<li><a class="reference internal" href="#fuzzer-usage">Fuzzer Usage</a></li>
+<li><a class="reference internal" href="#corpus">Corpus</a></li>
+<li><a class="reference internal" href="#running">Running</a></li>
+<li><a class="reference internal" href="#parallel-fuzzing">Parallel Fuzzing</a></li>
+<li><a class="reference internal" href="#fork-mode">Fork mode</a></li>
+<li><a class="reference internal" href="#resuming-merge">Resuming merge</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#options">Options</a></li>
+<li><a class="reference internal" href="#output">Output</a></li>
+<li><a class="reference internal" href="#examples">範例</a><ul>
+<li><a class="reference internal" href="#toy-example">Toy example</a></li>
+<li><a class="reference internal" href="#more-examples">More examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-features">Advanced features</a><ul>
+<li><a class="reference internal" href="#dictionaries">Dictionaries</a></li>
+<li><a class="reference internal" href="#tracing-cmp-instructions">Tracing CMP instructions</a></li>
+<li><a class="reference internal" href="#value-profile">Value Profile</a></li>
+<li><a class="reference internal" href="#fuzzer-friendly-build-mode">Fuzzer-friendly build mode</a></li>
+<li><a class="reference internal" href="#afl-compatibility">AFL compatibility</a></li>
+<li><a class="reference internal" href="#how-good-is-my-fuzzer">How good is my fuzzer?</a></li>
+<li><a class="reference internal" href="#user-supplied-mutators">User-supplied mutators</a></li>
+<li><a class="reference internal" href="#startup-initialization">Startup initialization</a></li>
+<li><a class="reference internal" href="#using-libfuzzer-as-a-library">Using libFuzzer as a library</a></li>
+<li><a class="reference internal" href="#rejecting-unwanted-inputs">Rejecting unwanted inputs</a></li>
+<li><a class="reference internal" href="#leaks">Leaks</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#developing-libfuzzer">Developing libFuzzer</a></li>
+<li><a class="reference internal" href="#faq">FAQ</a><ul>
+<li><a class="reference internal" href="#q-why-doesn-t-libfuzzer-use-any-of-the-llvm-support">Q. Why doesn’t libFuzzer use any of the LLVM support?</a></li>
+<li><a class="reference internal" href="#q-does-libfuzzer-support-windows">Q. Does libFuzzer Support Windows?</a></li>
+<li><a class="reference internal" href="#q-when-libfuzzer-is-not-a-good-solution-for-a-problem">Q. When libFuzzer is not a good solution for a problem?</a></li>
+<li><a class="reference internal" href="#q-so-what-exactly-this-fuzzer-is-good-for">Q. So, what exactly this Fuzzer is good for?</a></li>
+<li><a class="reference internal" href="#q-libfuzzer-crashes-on-my-complicated-fuzz-target-but-works-fine-for-me-on-smaller-targets">Q. LibFuzzer crashes on my complicated fuzz target (but works fine for me on smaller targets).</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#trophies">Trophies</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=0d9984b1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=d9a6981e"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

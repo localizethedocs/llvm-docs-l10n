@@ -1,0 +1,1408 @@
+<!doctype html>
+<html class="no-js" lang="en-US" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="LLVM Extensions" href="Extensions.html" /><link rel="prev" title="LLVM Atomic Instructions and Concurrency Guide" href="Atomics.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/ExceptionHandling.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Exception Handling in LLVM - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="Reference.html">Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/ExceptionHandling.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="exception-handling-in-llvm">
+<h1>Exception Handling in LLVM<a class="headerlink" href="#exception-handling-in-llvm" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>This document is the central repository for all information pertaining to
+exception handling in LLVM.  It describes the format that LLVM exception
+handling information takes, which is useful for those interested in creating
+front-ends or dealing directly with the information.  Further, this document
+provides specific examples of what exception handling information is used for in
+C and C++.</p>
+<section id="itanium-abi-zero-cost-exception-handling">
+<h3>Itanium ABI Zero-cost Exception Handling<a class="headerlink" href="#itanium-abi-zero-cost-exception-handling" title="Link to this heading">#</a></h3>
+<p>Exception handling for most programming languages is designed to recover from
+conditions that rarely occur during general use of an application.  To that end,
+exception handling should not interfere with the main flow of an application’s
+algorithm by performing checkpointing tasks, such as saving the current pc or
+register state.</p>
+<p>The Itanium ABI Exception Handling Specification defines a methodology for
+providing outlying data in the form of exception tables without inlining
+speculative exception handling code in the flow of an application’s main
+algorithm.  Thus, the specification is said to add “zero-cost” to the normal
+execution of an application.</p>
+<p>A more complete description of the Itanium ABI exception handling runtime
+support can be found at <a class="reference external" href="http://itanium-cxx-abi.github.io/cxx-abi/abi-eh.html">Itanium C++ ABI: Exception Handling</a>. A description of the
+exception frame format can be found at <a class="reference external" href="http://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/ehframechpt.html">Exception Frames</a>,
+with details of the DWARF 4 specification at <a class="reference external" href="http://dwarfstd.org/Dwarf4Std.php">DWARF 4 Standard</a>.  A description for the C++ exception
+table formats can be found at <a class="reference external" href="http://itanium-cxx-abi.github.io/cxx-abi/exceptions.pdf">Exception Handling Tables</a>.</p>
+</section>
+<section id="setjmp-longjmp-exception-handling">
+<h3>Setjmp/Longjmp Exception Handling<a class="headerlink" href="#setjmp-longjmp-exception-handling" title="Link to this heading">#</a></h3>
+<p>Setjmp/Longjmp (SJLJ) based exception handling uses LLVM intrinsics
+<a class="reference internal" href="#llvm-eh-sjlj-setjmp"><span class="std std-ref">llvm.eh.sjlj.setjmp</span></a> and <a class="reference internal" href="#llvm-eh-sjlj-longjmp"><span class="std std-ref">llvm.eh.sjlj.longjmp</span></a> to handle control flow for
+exception handling.</p>
+<p>For each function which does exception processing — be it <code class="docutils literal notranslate"><span class="pre">try</span></code>/<code class="docutils literal notranslate"><span class="pre">catch</span></code>
+blocks or cleanups — that function registers itself on a global frame
+list. When exceptions are unwinding, the runtime uses this list to identify
+which functions need processing.</p>
+<p>Landing pad selection is encoded in the call site entry of the function
+context. The runtime returns to the function via <a class="reference internal" href="#llvm-eh-sjlj-longjmp"><span class="std std-ref">llvm.eh.sjlj.longjmp</span></a>, where
+a switch table transfers control to the appropriate landing pad based on the
+index stored in the function context.</p>
+<p>In contrast to DWARF exception handling, which encodes exception regions and
+frame information in out-of-line tables, SJLJ exception handling builds and
+removes the unwind frame context at runtime. This results in faster exception
+handling at the expense of slower execution when no exceptions are thrown. As
+exceptions are, by their nature, intended for uncommon code paths, DWARF
+exception handling is generally preferred to SJLJ.</p>
+</section>
+<section id="windows-runtime-exception-handling">
+<h3>Windows Runtime Exception Handling<a class="headerlink" href="#windows-runtime-exception-handling" title="Link to this heading">#</a></h3>
+<p>LLVM supports handling exceptions produced by the Windows runtime, but it
+requires a very different intermediate representation. It is not based on the
+“<a class="reference internal" href="LangRef.html#i-landingpad"><span class="std std-ref">landingpad</span></a>” instruction like the other two models, and is
+described later in this document under <a class="reference internal" href="#wineh"><span class="std std-ref">Exception Handling using the Windows Runtime</span></a>.</p>
+</section>
+<section id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h3>
+<p>When an exception is thrown in LLVM code, the runtime does its best to find a
+handler suited to processing the circumstance.</p>
+<p>The runtime first attempts to find an <em>exception frame</em> corresponding to the
+function where the exception was thrown.  If the programming language supports
+exception handling (e.g. C++), the exception frame contains a reference to an
+exception table describing how to process the exception.  If the language does
+not support exception handling (e.g. C), or if the exception needs to be
+forwarded to a prior activation, the exception frame contains information about
+how to unwind the current activation and restore the state of the prior
+activation.  This process is repeated until the exception is handled. If the
+exception is not handled and no activations remain, then the application is
+terminated with an appropriate error message.</p>
+<p>Because different programming languages have different behaviors when handling
+exceptions, the exception handling ABI provides a mechanism for
+supplying <em>personalities</em>. An exception handling personality is defined by
+way of a <em>personality function</em> (e.g. <code class="docutils literal notranslate"><span class="pre">__gxx_personality_v0</span></code> in C++),
+which receives the context of the exception, an <em>exception structure</em>
+containing the exception object type and value, and a reference to the exception
+table for the current function.  The personality function for the current
+compile unit is specified in a <em>common exception frame</em>.</p>
+<p>The organization of an exception table is language dependent. For C++, an
+exception table is organized as a series of code ranges defining what to do if
+an exception occurs in that range. Typically, the information associated with a
+range defines which types of exception objects (using C++ <em>type info</em>) that are
+handled in that range, and an associated action that should take place. Actions
+typically pass control to a <em>landing pad</em>.</p>
+<p>A landing pad corresponds roughly to the code found in the <code class="docutils literal notranslate"><span class="pre">catch</span></code> portion of
+a <code class="docutils literal notranslate"><span class="pre">try</span></code>/<code class="docutils literal notranslate"><span class="pre">catch</span></code> sequence. When execution resumes at a landing pad, it
+receives an <em>exception structure</em> and a <em>selector value</em> corresponding to the
+<em>type</em> of exception thrown. The selector is then used to determine which <em>catch</em>
+should actually process the exception.</p>
+</section>
+</section>
+<section id="llvm-code-generation">
+<h2>LLVM Code Generation<a class="headerlink" href="#llvm-code-generation" title="Link to this heading">#</a></h2>
+<p>From a C++ developer’s perspective, exceptions are defined in terms of the
+<code class="docutils literal notranslate"><span class="pre">throw</span></code> and <code class="docutils literal notranslate"><span class="pre">try</span></code>/<code class="docutils literal notranslate"><span class="pre">catch</span></code> statements. In this section we will describe the
+implementation of LLVM exception handling in terms of C++ examples.</p>
+<section id="throw">
+<h3>Throw<a class="headerlink" href="#throw" title="Link to this heading">#</a></h3>
+<p>Languages that support exception handling typically provide a <code class="docutils literal notranslate"><span class="pre">throw</span></code>
+operation to initiate the exception process. Internally, a <code class="docutils literal notranslate"><span class="pre">throw</span></code> operation
+breaks down into two steps.</p>
+<ol class="arabic simple">
+<li><p>A request is made to allocate exception space for an exception structure.
+This structure needs to survive beyond the current activation. This structure
+will contain the type and value of the object being thrown.</p></li>
+<li><p>A call is made to the runtime to raise the exception, passing the exception
+structure as an argument.</p></li>
+</ol>
+<p>In C++, the allocation of the exception structure is done by the
+<code class="docutils literal notranslate"><span class="pre">__cxa_allocate_exception</span></code> runtime function. The exception raising is handled
+by <code class="docutils literal notranslate"><span class="pre">__cxa_throw</span></code>. The type of the exception is represented using a C++ RTTI
+structure.</p>
+</section>
+<section id="try-catch">
+<h3>Try/Catch<a class="headerlink" href="#try-catch" title="Link to this heading">#</a></h3>
+<p>A call within the scope of a <em>try</em> statement can potentially raise an
+exception. In those circumstances, the LLVM C++ front-end replaces the call with
+an <code class="docutils literal notranslate"><span class="pre">invoke</span></code> instruction. Unlike a call, the <code class="docutils literal notranslate"><span class="pre">invoke</span></code> has two potential
+continuation points:</p>
+<ol class="arabic simple">
+<li><p>where to continue when the call succeeds normally, and</p></li>
+<li><p>where to continue if the call raises an exception, either by a throw or the
+unwinding of a throw</p></li>
+</ol>
+<p>The term used to define the place where an <code class="docutils literal notranslate"><span class="pre">invoke</span></code> continues after an
+exception is called a <em>landing pad</em>. LLVM landing pads are conceptually
+alternative function entry points where an exception structure reference and a
+type info index are passed in as arguments. The landing pad saves the exception
+structure reference and then proceeds to select the catch block that corresponds
+to the type info of the exception object.</p>
+<p>The LLVM <a class="reference internal" href="LangRef.html#i-landingpad"><span class="std std-ref">‘landingpad’ Instruction</span></a> is used to convey information about the landing
+pad to the back end. For C++, the <code class="docutils literal notranslate"><span class="pre">landingpad</span></code> instruction returns a pointer
+and integer pair corresponding to the pointer to the <em>exception structure</em> and
+the <em>selector value</em> respectively.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">landingpad</span></code> instruction looks for a reference to the personality
+function to be used for this <code class="docutils literal notranslate"><span class="pre">try</span></code>/<code class="docutils literal notranslate"><span class="pre">catch</span></code> sequence in the parent
+function’s attribute list. The instruction contains a list of <em>cleanup</em>,
+<em>catch</em>, and <em>filter</em> clauses. The exception is tested against the clauses
+sequentially from first to last. The clauses have the following meanings:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">catch</span> <span class="pre">&lt;type&gt;</span> <span class="pre">&#64;ExcType</span></code></p>
+<ul class="simple">
+<li><p>This clause means that the landingpad block should be entered if the
+exception being thrown is of type <code class="docutils literal notranslate"><span class="pre">&#64;ExcType</span></code> or a subtype of
+<code class="docutils literal notranslate"><span class="pre">&#64;ExcType</span></code>. For C++, <code class="docutils literal notranslate"><span class="pre">&#64;ExcType</span></code> is a pointer to the <code class="docutils literal notranslate"><span class="pre">std::type_info</span></code>
+object (an RTTI object) representing the C++ exception type.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">&#64;ExcType</span></code> is <code class="docutils literal notranslate"><span class="pre">null</span></code>, any exception matches, so the landingpad
+should always be entered. This is used for C++ catch-all blocks (”<code class="docutils literal notranslate"><span class="pre">catch</span> <span class="pre">(...)</span></code>”).</p></li>
+<li><p>When this clause is matched, the selector value will be equal to the value
+returned by “<code class="docutils literal notranslate"><span class="pre">&#64;llvm.eh.typeid.for(i8*</span> <span class="pre">&#64;ExcType)</span></code>”. This will always be a
+positive value.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">filter</span> <span class="pre">&lt;type&gt;</span> <span class="pre">[&lt;type&gt;</span> <span class="pre">&#64;ExcType1,</span> <span class="pre">...,</span> <span class="pre">&lt;type&gt;</span> <span class="pre">&#64;ExcTypeN]</span></code></p>
+<ul class="simple">
+<li><p>This clause means that the landingpad should be entered if the exception
+being thrown does <em>not</em> match any of the types in the list (which, for C++,
+are again specified as <code class="docutils literal notranslate"><span class="pre">std::type_info</span></code> pointers).</p></li>
+<li><p>C++ front-ends use this to implement the C++ exception specifications, such as
+“<code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">foo()</span> <span class="pre">throw</span> <span class="pre">(ExcType1,</span> <span class="pre">...,</span> <span class="pre">ExcTypeN)</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code>”. (Note: this
+functionality was deprecated in C++11 and removed in C++17.)</p></li>
+<li><p>When this clause is matched, the selector value will be negative.</p></li>
+<li><p>The array argument to <code class="docutils literal notranslate"><span class="pre">filter</span></code> may be empty; for example, “<code class="docutils literal notranslate"><span class="pre">[0</span> <span class="pre">x</span> <span class="pre">i8**]</span> <span class="pre">undef</span></code>”. This means that the landingpad should always be entered. (Note
+that such a <code class="docutils literal notranslate"><span class="pre">filter</span></code> would not be equivalent to “<code class="docutils literal notranslate"><span class="pre">catch</span> <span class="pre">i8*</span> <span class="pre">null</span></code>”,
+because <code class="docutils literal notranslate"><span class="pre">filter</span></code> and <code class="docutils literal notranslate"><span class="pre">catch</span></code> produce negative and positive selector
+values respectively.)</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cleanup</span></code></p>
+<ul>
+<li><p>This clause means that the landingpad should always be entered.</p></li>
+<li><p>C++ front-ends use this for calling objects’ destructors.</p></li>
+<li><p>When this clause is matched, the selector value will be zero.</p></li>
+<li><p>The runtime may treat “<code class="docutils literal notranslate"><span class="pre">cleanup</span></code>” differently from “<code class="docutils literal notranslate"><span class="pre">catch</span> <span class="pre">&lt;type&gt;</span> <span class="pre">null</span></code>”.</p>
+<p>In C++, if an unhandled exception occurs, the language runtime will call
+<code class="docutils literal notranslate"><span class="pre">std::terminate()</span></code>, but it is implementation-defined whether the runtime
+unwinds the stack and calls object destructors first. For example, the GNU
+C++ unwinder does not call object destructors when an unhandled exception
+occurs. The reason for this is to improve debuggability: it ensures that
+<code class="docutils literal notranslate"><span class="pre">std::terminate()</span></code> is called from the context of the <code class="docutils literal notranslate"><span class="pre">throw</span></code>, so that
+this context is not lost by unwinding the stack. A runtime will typically
+implement this by searching for a matching non-<code class="docutils literal notranslate"><span class="pre">cleanup</span></code> clause, and
+aborting if it does not find one, before entering any landingpad blocks.</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>Once the landing pad has the type info selector, the code branches to the code
+for the first catch. The catch then checks the value of the type info selector
+against the index of type info for that catch.  Since the type info index is not
+known until all the type infos have been gathered in the backend, the catch code
+must call the <a class="reference internal" href="#llvm-eh-typeid-for"><span class="std std-ref">llvm.eh.typeid.for</span></a> intrinsic to determine the index for a given
+type info. If the catch fails to match the selector then control is passed on to
+the next catch.</p>
+<p>Finally, the entry and exit of catch code is bracketed with calls to
+<code class="docutils literal notranslate"><span class="pre">__cxa_begin_catch</span></code> and <code class="docutils literal notranslate"><span class="pre">__cxa_end_catch</span></code>.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">__cxa_begin_catch</span></code> takes an exception structure reference as an argument
+and returns the value of the exception object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__cxa_end_catch</span></code> takes no arguments. This function:</p>
+<ol class="arabic simple">
+<li><p>Locates the most recently caught exception and decrements its handler
+count,</p></li>
+<li><p>Removes the exception from the <em>caught</em> stack if the handler count goes to
+zero, and</p></li>
+<li><p>Destroys the exception if the handler count goes to zero and the exception
+was not re-thrown by throw.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>a rethrow from within the catch may replace this call with a
+<code class="docutils literal notranslate"><span class="pre">__cxa_rethrow</span></code>.</p>
+</div>
+</li>
+</ul>
+</section>
+<section id="cleanups">
+<h3>Cleanups<a class="headerlink" href="#cleanups" title="Link to this heading">#</a></h3>
+<p>A cleanup is extra code which needs to be run as part of unwinding a scope.  C++
+destructors are a typical example, but other languages and language extensions
+provide a variety of different kinds of cleanups. In general, a landing pad may
+need to run arbitrary amounts of cleanup code before actually entering a catch
+block. To indicate the presence of cleanups, a <a class="reference internal" href="LangRef.html#i-landingpad"><span class="std std-ref">‘landingpad’ Instruction</span></a> should have
+a <em>cleanup</em> clause.  Otherwise, the unwinder will not stop at the landing pad if
+there are no catches or filters that require it to.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not allow a new exception to propagate out of the execution of a
+cleanup. This can corrupt the internal state of the unwinder.  Different
+languages describe different high-level semantics for these situations: for
+example, C++ requires that the process be terminated, whereas Ada cancels both
+exceptions and throws a third.</p>
+</div>
+<p>When all cleanups are finished, if the exception is not handled by the current
+function, resume unwinding by calling the <a class="reference internal" href="LangRef.html#i-resume"><span class="std std-ref">resume instruction</span></a>,
+passing in the result of the <code class="docutils literal notranslate"><span class="pre">landingpad</span></code> instruction for the original
+landing pad.</p>
+</section>
+<section id="throw-filters">
+<h3>Throw Filters<a class="headerlink" href="#throw-filters" title="Link to this heading">#</a></h3>
+<p>Prior to C++17, C++ allowed the specification of which exception types may be
+thrown from a function. To represent this, a top-level landing pad may exist to
+filter out invalid types. To express this in LLVM code the <a class="reference internal" href="LangRef.html#i-landingpad"><span class="std std-ref">‘landingpad’ Instruction</span></a>
+will have a filter clause. The clause consists of an array of type infos.
+<code class="docutils literal notranslate"><span class="pre">landingpad</span></code> will return a negative value
+if the exception does not match any of the type infos. If no match is found then
+a call to <code class="docutils literal notranslate"><span class="pre">__cxa_call_unexpected</span></code> should be made, otherwise
+<code class="docutils literal notranslate"><span class="pre">_Unwind_Resume</span></code>.  Each of these functions requires a reference to the
+exception structure.  Note that the most general form of a <code class="docutils literal notranslate"><span class="pre">landingpad</span></code>
+instruction can have any number of catch, cleanup, and filter clauses (though
+having more than one cleanup is pointless). The LLVM C++ front-end can generate
+such <code class="docutils literal notranslate"><span class="pre">landingpad</span></code> instructions due to inlining creating nested exception
+handling scopes.</p>
+</section>
+<section id="restrictions">
+<h3>Restrictions<a class="headerlink" href="#restrictions" title="Link to this heading">#</a></h3>
+<p>The unwinder delegates the decision of whether to stop in a call frame to that
+call frame’s language-specific personality function. Not all unwinders guarantee
+that they will stop to perform cleanups. For example, the GNU C++ unwinder
+doesn’t do so unless the exception is actually caught somewhere further up the
+stack.</p>
+<p>In order for inlining to behave correctly, landing pads must be prepared to
+handle selector results that they did not originally advertise. Suppose that a
+function catches exceptions of type <code class="docutils literal notranslate"><span class="pre">A</span></code>, and it’s inlined into a function that
+catches exceptions of type <code class="docutils literal notranslate"><span class="pre">B</span></code>. The inliner will update the <code class="docutils literal notranslate"><span class="pre">landingpad</span></code>
+instruction for the inlined landing pad to include the fact that <code class="docutils literal notranslate"><span class="pre">B</span></code> is also
+caught. If that landing pad assumes that it will only be entered to catch an
+<code class="docutils literal notranslate"><span class="pre">A</span></code>, it’s in for a rude awakening.  Consequently, landing pads must test for
+the selector results they understand and then resume exception propagation with
+the <a class="reference internal" href="LangRef.html#i-resume"><span class="std std-ref">resume instruction</span></a> if none of the conditions
+match.</p>
+</section>
+</section>
+<section id="exception-handling-intrinsics">
+<h2>Exception Handling Intrinsics<a class="headerlink" href="#exception-handling-intrinsics" title="Link to this heading">#</a></h2>
+<p>In addition to the <code class="docutils literal notranslate"><span class="pre">landingpad</span></code> and <code class="docutils literal notranslate"><span class="pre">resume</span></code> instructions, LLVM uses several
+intrinsic functions (name prefixed with <code class="docutils literal notranslate"><span class="pre">llvm.eh</span></code>) to provide exception
+handling information at various points in generated code.</p>
+<section id="llvm-eh-typeid-for">
+<span id="id1"></span><h3><code class="docutils literal notranslate"><span class="pre">llvm.eh.typeid.for</span></code><a class="headerlink" href="#llvm-eh-typeid-for" title="Link to this heading">#</a></h3>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="kt">i32</span><span class="w"> </span><span class="vg">@llvm.eh.typeid.for</span><span class="p">(</span><span class="kt">i8</span><span class="p">*</span><span class="w"> </span><span class="nv">%type_info</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This intrinsic returns the type info index in the exception table of the current
+function.  This value can be used to compare against the result of
+<code class="docutils literal notranslate"><span class="pre">landingpad</span></code> instruction.  The single argument is a reference to a type info.</p>
+<p>Uses of this intrinsic are generated by the C++ front-end.</p>
+</section>
+<section id="llvm-eh-exceptionpointer">
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">llvm.eh.exceptionpointer</span></code><a class="headerlink" href="#llvm-eh-exceptionpointer" title="Link to this heading">#</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>i8 addrspace(N)* @llvm.eh.padparam.pNi8(token %catchpad)
+</pre></div>
+</div>
+<p>This intrinsic retrieves a pointer to the exception caught by the given
+<code class="docutils literal notranslate"><span class="pre">catchpad</span></code>.</p>
+</section>
+<section id="sjlj-intrinsics">
+<h3>SJLJ Intrinsics<a class="headerlink" href="#sjlj-intrinsics" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj</span></code> intrinsics are used internally within LLVM’s
+backend.  Uses of them are generated by the backend’s
+<code class="docutils literal notranslate"><span class="pre">SjLjEHPrepare</span></code> pass.</p>
+<section id="llvm-eh-sjlj-setjmp">
+<span id="id3"></span><h4><code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.setjmp</span></code><a class="headerlink" href="#llvm-eh-sjlj-setjmp" title="Link to this heading">#</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>i32 @llvm.eh.sjlj.setjmp(i8* %setjmp_buf)
+</pre></div>
+</div>
+<p>For SJLJ based exception handling, this intrinsic forces register saving for the
+current function and stores the address of the following instruction for use as
+a destination address by <a class="reference internal" href="#llvm-eh-sjlj-longjmp"><span class="std std-ref">llvm.eh.sjlj.longjmp</span></a>. The buffer format and the
+overall functioning of this intrinsic is compatible with the GCC
+<code class="docutils literal notranslate"><span class="pre">__builtin_setjmp</span></code> implementation allowing code built with the clang and GCC
+to interoperate.</p>
+<p>The single parameter is a pointer to a five word buffer in which the calling
+context is saved. The format and contents of the buffer are target-specific.
+On certain targets (ARM, PowerPC, VE, X86), the front end places the
+frame pointer in the first word and the stack pointer in the third word,
+while the target implementation of this intrinsic fills in the remaining
+words.  On other targets (SystemZ), saving the calling context to the buffer
+is left completely to the target implementation.</p>
+</section>
+<section id="llvm-eh-sjlj-longjmp">
+<span id="id4"></span><h4><code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.longjmp</span></code><a class="headerlink" href="#llvm-eh-sjlj-longjmp" title="Link to this heading">#</a></h4>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">void</span><span class="w"> </span><span class="vg">@llvm.eh.sjlj.longjmp</span><span class="p">(</span><span class="kt">i8</span><span class="p">*</span><span class="w"> </span><span class="nv">%setjmp_buf</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For SJLJ based exception handling, the <code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.longjmp</span></code> intrinsic is
+used to implement <code class="docutils literal notranslate"><span class="pre">__builtin_longjmp()</span></code>. The single parameter is a pointer to
+a buffer populated by <a class="reference internal" href="#llvm-eh-sjlj-setjmp"><span class="std std-ref">llvm.eh.sjlj.setjmp</span></a>. The frame pointer and stack
+pointer are restored from the buffer, then control is transferred to the
+destination address.</p>
+</section>
+<section id="llvm-eh-sjlj-lsda">
+<h4><code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.lsda</span></code><a class="headerlink" href="#llvm-eh-sjlj-lsda" title="Link to this heading">#</a></h4>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="kt">i8</span><span class="p">*</span><span class="w"> </span><span class="vg">@llvm.eh.sjlj.lsda</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>For SJLJ based exception handling, the <code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.lsda</span></code> intrinsic returns
+the address of the Language Specific Data Area (LSDA) for the current
+function. The SJLJ front-end code stores this address in the exception handling
+function context for use by the runtime.</p>
+</section>
+<section id="llvm-eh-sjlj-callsite">
+<h4><code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.callsite</span></code><a class="headerlink" href="#llvm-eh-sjlj-callsite" title="Link to this heading">#</a></h4>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">void</span><span class="w"> </span><span class="vg">@llvm.eh.sjlj.callsite</span><span class="p">(</span><span class="kt">i32</span><span class="w"> </span><span class="nv">%call_site_num</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For SJLJ based exception handling, the <code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.callsite</span></code> intrinsic
+identifies the callsite value associated with the following <code class="docutils literal notranslate"><span class="pre">invoke</span></code>
+instruction. This is used to ensure that landing pad entries in the LSDA are
+generated in matching order.</p>
+</section>
+</section>
+</section>
+<section id="asm-table-formats">
+<h2>Asm Table Formats<a class="headerlink" href="#asm-table-formats" title="Link to this heading">#</a></h2>
+<p>There are two tables that are used by the exception handling runtime to
+determine which actions should be taken when an exception is thrown.</p>
+<section id="exception-handling-frame">
+<h3>Exception Handling Frame<a class="headerlink" href="#exception-handling-frame" title="Link to this heading">#</a></h3>
+<p>An exception handling frame <code class="docutils literal notranslate"><span class="pre">eh_frame</span></code> is very similar to the unwind frame
+used by DWARF debug info. The frame contains all the information necessary to
+tear down the current frame and restore the state of the prior frame. There is
+an exception handling frame for each function in a compile unit, plus a common
+exception handling frame that defines information common to all functions in the
+unit.</p>
+<p>The format of this call frame information (CFI) is often platform-dependent,
+however. ARM, for example, defines its own format. Apple has its own compact
+unwind info format.  On Windows, another format is used for all architectures
+since 32-bit x86.  LLVM will emit whatever information is required by the
+target.</p>
+</section>
+<section id="exception-tables">
+<h3>Exception Tables<a class="headerlink" href="#exception-tables" title="Link to this heading">#</a></h3>
+<p>An exception table contains information about what actions to take when an
+exception is thrown in a particular part of a function’s code. This is typically
+referred to as the language-specific data area (LSDA). The format of the LSDA
+table is specific to the personality function, but the majority of personalities
+out there use a variation of the tables consumed by <code class="docutils literal notranslate"><span class="pre">__gxx_personality_v0</span></code>.
+There is one exception table per function, except leaf functions and functions
+that have calls only to non-throwing functions. They do not need an exception
+table.</p>
+</section>
+</section>
+<section id="exception-handling-using-the-windows-runtime">
+<span id="wineh"></span><h2>Exception Handling using the Windows Runtime<a class="headerlink" href="#exception-handling-using-the-windows-runtime" title="Link to this heading">#</a></h2>
+<section id="background-on-windows-exceptions">
+<h3>Background on Windows exceptions<a class="headerlink" href="#background-on-windows-exceptions" title="Link to this heading">#</a></h3>
+<p>Interacting with exceptions on Windows is significantly more complicated than
+on Itanium C++ ABI platforms. The fundamental difference between the two models
+is that Itanium EH is designed around the idea of “successive unwinding,” while
+Windows EH is not.</p>
+<p>Under Itanium, throwing an exception typically involves allocating thread-local
+memory to hold the exception, and calling into the EH runtime. The runtime
+identifies frames with appropriate exception handling actions, and successively
+resets the register context of the current thread to the most recently active
+frame with actions to run. In LLVM, execution resumes at a <code class="docutils literal notranslate"><span class="pre">landingpad</span></code>
+instruction, which produces register values provided by the runtime. If a
+function is only cleaning up allocated resources, the function is responsible
+for calling <code class="docutils literal notranslate"><span class="pre">_Unwind_Resume</span></code> to transition to the next most recently active
+frame after it is finished cleaning up. Eventually, the frame responsible for
+handling the exception calls <code class="docutils literal notranslate"><span class="pre">__cxa_end_catch</span></code> to destroy the exception,
+release its memory, and resume normal control flow.</p>
+<p>The Windows EH model does not use these successive register context resets.
+Instead, the active exception is typically described by a frame on the stack.
+In the case of C++ exceptions, the exception object is allocated in stack memory
+and its address is passed to <code class="docutils literal notranslate"><span class="pre">__CxxThrowException</span></code>. General-purpose structured
+exceptions (SEH) are more analogous to Linux signals, and they are dispatched by
+userspace DLLs provided with Windows. Each frame on the stack has an assigned EH
+personality routine, which decides what actions to take to handle the exception.
+There are a few major personalities for C and C++ code: the C++ personality
+(<code class="docutils literal notranslate"><span class="pre">__CxxFrameHandler3</span></code>) and the SEH personalities (<code class="docutils literal notranslate"><span class="pre">_except_handler3</span></code>,
+<code class="docutils literal notranslate"><span class="pre">_except_handler4</span></code>, and <code class="docutils literal notranslate"><span class="pre">__C_specific_handler</span></code>). All of them implement
+cleanups by calling back into a “funclet” contained in the parent function.</p>
+<p>Funclets, in this context, are regions of the parent function that can be called
+as though they were a function pointer with a very special calling convention.
+The frame pointer of the parent frame is passed into the funclet either using
+the standard EBP register or as the first parameter register, depending on the
+architecture. The funclet implements the EH action by accessing local variables
+in memory through the frame pointer, and returning some appropriate value,
+continuing the EH process.  No variables live in to or out of the funclet can be
+allocated in registers.</p>
+<p>The C++ personality also uses funclets to contain the code for catch blocks
+(i.e. all user code between the braces in <code class="docutils literal notranslate"><span class="pre">catch</span> <span class="pre">(Type</span> <span class="pre">obj)</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code>). The
+runtime must use funclets for catch bodies because the C++ exception object is
+allocated in a child stack frame of the function handling the exception. If the
+runtime rewound the stack back to the frame of the catch, the memory holding the
+exception would be overwritten quickly by subsequent function calls.  The use of
+funclets also allows <code class="docutils literal notranslate"><span class="pre">__CxxFrameHandler3</span></code> to implement rethrow without
+resorting to TLS. Instead, the runtime throws a special exception, and then uses
+SEH (<code class="docutils literal notranslate"><span class="pre">__try</span> <span class="pre">/</span> <span class="pre">__except</span></code>) to resume execution with new information in the child
+frame.</p>
+<p>In other words, the successive unwinding approach is incompatible with Visual
+C++ exceptions and general-purpose Windows exception handling. Because the C++
+exception object lives in stack memory, LLVM cannot provide a custom personality
+function that uses landingpads.  Similarly, SEH does not provide any mechanism
+to rethrow an exception or continue unwinding.  Therefore, LLVM must use the IR
+constructs described later in this document to implement compatible exception
+handling.</p>
+</section>
+<section id="seh-filter-expressions">
+<h3>SEH filter expressions<a class="headerlink" href="#seh-filter-expressions" title="Link to this heading">#</a></h3>
+<p>The SEH personality functions also use funclets to implement filter expressions,
+which allow executing arbitrary user code to decide which exceptions to catch.
+Filter expressions should not be confused with the <code class="docutils literal notranslate"><span class="pre">filter</span></code> clause of the LLVM
+<code class="docutils literal notranslate"><span class="pre">landingpad</span></code> instruction.  Typically filter expressions are used to determine
+if the exception came from a particular DLL or code region, or if code faulted
+while accessing a particular memory address range. LLVM does not currently have
+IR to represent filter expressions because it is difficult to represent their
+control dependencies.  Filter expressions run during the first phase of EH,
+before cleanups run, making it very difficult to build a faithful control flow
+graph.  For now, the new EH instructions cannot represent SEH filter
+expressions, and frontends must outline them ahead of time. Local variables of
+the parent function can be escaped and accessed using the <code class="docutils literal notranslate"><span class="pre">llvm.localescape</span></code>
+and <code class="docutils literal notranslate"><span class="pre">llvm.localrecover</span></code> intrinsics.</p>
+</section>
+<section id="new-exception-handling-instructions">
+<h3>New exception handling instructions<a class="headerlink" href="#new-exception-handling-instructions" title="Link to this heading">#</a></h3>
+<p>The primary design goal of the new EH instructions is to support funclet
+generation while preserving information about the CFG so that SSA formation
+still works.  As a secondary goal, they are designed to be generic across MSVC
+and Itanium C++ exceptions. They make very few assumptions about the data
+required by the personality, so long as it uses the familiar core EH actions:
+catch, cleanup, and terminate.  However, the new instructions are hard to modify
+without knowing details of the EH personality. While they can be used to
+represent Itanium EH, the landingpad model is strictly better for optimization
+purposes.</p>
+<p>The following new instructions are considered “exception handling pads”, in that
+they must be the first non-phi instruction of a basic block that may be the
+unwind destination of an EH flow edge:
+<code class="docutils literal notranslate"><span class="pre">catchswitch</span></code>, <code class="docutils literal notranslate"><span class="pre">catchpad</span></code>, and <code class="docutils literal notranslate"><span class="pre">cleanuppad</span></code>.
+As with landingpads, when entering a try scope, if the
+frontend encounters a call site that may throw an exception, it should emit an
+invoke that unwinds to a <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> block. Similarly, inside the scope of a
+C++ object with a destructor, invokes should unwind to a <code class="docutils literal notranslate"><span class="pre">cleanuppad</span></code>.</p>
+<p>New instructions are also used to mark the points where control is transferred
+out of a catch/cleanup handler (which will correspond to exits from the
+generated funclet).  A catch handler which reaches its end by normal execution
+executes a <code class="docutils literal notranslate"><span class="pre">catchret</span></code> instruction, which is a terminator indicating where in
+the function control is returned to.  A cleanup handler which reaches its end
+by normal execution executes a <code class="docutils literal notranslate"><span class="pre">cleanupret</span></code> instruction, which is a terminator
+indicating where the active exception will unwind to next.</p>
+<p>Each of these new EH pad instructions has a way to identify which action should
+be considered after this action. The <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> instruction is a terminator
+and has an unwind destination operand analogous to the unwind destination of an
+invoke.  The <code class="docutils literal notranslate"><span class="pre">cleanuppad</span></code> instruction is not
+a terminator, so the unwind destination is stored on the <code class="docutils literal notranslate"><span class="pre">cleanupret</span></code>
+instruction instead. Successfully executing a catch handler should resume
+normal control flow, so neither <code class="docutils literal notranslate"><span class="pre">catchpad</span></code> nor <code class="docutils literal notranslate"><span class="pre">catchret</span></code> instructions can
+unwind. All of these “unwind edges” may refer to a basic block that contains an
+EH pad instruction, or they may unwind to the caller.  Unwinding to the caller
+has roughly the same semantics as the <code class="docutils literal notranslate"><span class="pre">resume</span></code> instruction in the landingpad
+model. When inlining through an invoke, instructions that unwind to the caller
+are hooked up to unwind to the unwind destination of the call site.</p>
+<p>Putting things together, here is a hypothetical lowering of some C++ that uses
+all of the new IR instructions:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">Cleanup</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">Cleanup</span><span class="p">();</span>
+<span class="w">  </span><span class="o">~</span><span class="n">Cleanup</span><span class="p">();</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">may_throw</span><span class="p">();</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">f</span><span class="p">()</span><span class="w"> </span><span class="n">noexcept</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Cleanup</span><span class="w"> </span><span class="n">obj</span><span class="p">;</span>
+<span class="w">    </span><span class="n">may_throw</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="n">catch</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">may_throw</span><span class="p">();</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>define i32 @f() nounwind personality ptr @__CxxFrameHandler3 {
+entry:
+  %obj = alloca %struct.Cleanup, align 4
+  %e = alloca i32, align 4
+  %call = invoke ptr @&quot;??0Cleanup@@QEAA@XZ&quot;(ptr nonnull %obj)
+          to label %invoke.cont unwind label %lpad.catch
+
+invoke.cont:                                      ; preds = %entry
+  invoke void @&quot;?may_throw@@YAXXZ&quot;()
+          to label %invoke.cont.2 unwind label %lpad.cleanup
+
+invoke.cont.2:                                    ; preds = %invoke.cont
+  call void @&quot;??_DCleanup@@QEAA@XZ&quot;(ptr nonnull %obj) nounwind
+  br label %return
+
+return:                                           ; preds = %invoke.cont.3, %invoke.cont.2
+  %retval.0 = phi i32 [ 0, %invoke.cont.2 ], [ %3, %invoke.cont.3 ]
+  ret i32 %retval.0
+
+lpad.cleanup:                                     ; preds = %invoke.cont.2
+  %0 = cleanuppad within none []
+  call void @&quot;??1Cleanup@@QEAA@XZ&quot;(ptr nonnull %obj) nounwind
+  cleanupret from %0 unwind label %lpad.catch
+
+lpad.catch:                                       ; preds = %lpad.cleanup, %entry
+  %1 = catchswitch within none [label %catch.body] unwind label %lpad.terminate
+
+catch.body:                                       ; preds = %lpad.catch
+  %catch = catchpad within %1 [ptr @&quot;??_R0H@8&quot;, i32 0, ptr %e]
+  invoke void @&quot;?may_throw@@YAXXZ&quot;()
+          to label %invoke.cont.3 unwind label %lpad.terminate
+
+invoke.cont.3:                                    ; preds = %catch.body
+  %3 = load i32, ptr %e, align 4
+  catchret from %catch to label %return
+
+lpad.terminate:                                   ; preds = %catch.body, %lpad.catch
+  cleanuppad within none []
+  call void @&quot;?terminate@@YAXXZ&quot;()
+  unreachable
+}
+</pre></div>
+</div>
+</section>
+<section id="funclet-parent-tokens">
+<h3>Funclet parent tokens<a class="headerlink" href="#funclet-parent-tokens" title="Link to this heading">#</a></h3>
+<p>In order to produce tables for EH personalities that use funclets, it is
+necessary to recover the nesting that was present in the source. This funclet
+parent relationship is encoded in the IR using tokens produced by the new “pad”
+instructions. The token operand of a “pad” or “ret” instruction indicates which
+funclet it is in, or “none” if it is not nested within another funclet.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">catchpad</span></code> and <code class="docutils literal notranslate"><span class="pre">cleanuppad</span></code> instructions establish new funclets, and
+their tokens are consumed by other “pad” instructions to establish membership.
+The <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> instruction does not create a funclet, but it produces a
+token that is always consumed by its immediate successor <code class="docutils literal notranslate"><span class="pre">catchpad</span></code>
+instructions. This ensures that every catch handler modelled by a <code class="docutils literal notranslate"><span class="pre">catchpad</span></code>
+belongs to exactly one <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code>, which models the dispatch point after a
+C++ try.</p>
+<p>Here is an example of what this nesting looks like using some hypothetical
+C++ code:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">f</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">throw</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="n">catch</span><span class="w"> </span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">throw</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="n">catch</span><span class="w"> </span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>define void @f() #0 personality i8* bitcast (i32 (...)* @__CxxFrameHandler3 to i8*) {
+entry:
+  invoke void @_CxxThrowException(i8* null, %eh.ThrowInfo* null) #1
+          to label %unreachable unwind label %catch.dispatch
+
+catch.dispatch:                                   ; preds = %entry
+  %0 = catchswitch within none [label %catch] unwind to caller
+
+catch:                                            ; preds = %catch.dispatch
+  %1 = catchpad within %0 [i8* null, i32 64, i8* null]
+  invoke void @_CxxThrowException(i8* null, %eh.ThrowInfo* null) #1
+          to label %unreachable unwind label %catch.dispatch2
+
+catch.dispatch2:                                  ; preds = %catch
+  %2 = catchswitch within %1 [label %catch3] unwind to caller
+
+catch3:                                           ; preds = %catch.dispatch2
+  %3 = catchpad within %2 [i8* null, i32 64, i8* null]
+  catchret from %3 to label %try.cont
+
+try.cont:                                         ; preds = %catch3
+  catchret from %1 to label %try.cont6
+
+try.cont6:                                        ; preds = %try.cont
+  ret void
+
+unreachable:                                      ; preds = %catch, %entry
+  unreachable
+}
+</pre></div>
+</div>
+<p>The “inner” <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> consumes <code class="docutils literal notranslate"><span class="pre">%1</span></code> which is produced by the outer
+catchswitch.</p>
+</section>
+<section id="funclet-transitions">
+<span id="wineh-constraints"></span><h3>Funclet transitions<a class="headerlink" href="#funclet-transitions" title="Link to this heading">#</a></h3>
+<p>The EH tables for personalities that use funclets make implicit use of the
+funclet nesting relationship to encode unwind destinations, and so are
+constrained in the set of funclet transitions they can represent.  The related
+LLVM IR instructions accordingly have constraints that ensure encodability of
+the EH edges in the flow graph.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code>, <code class="docutils literal notranslate"><span class="pre">catchpad</span></code>, or <code class="docutils literal notranslate"><span class="pre">cleanuppad</span></code> is said to be “entered”
+when it executes.  It may subsequently be “exited” by any of the following
+means:</p>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> is immediately exited when none of its constituent
+<code class="docutils literal notranslate"><span class="pre">catchpad</span></code>s are appropriate for the in-flight exception and it unwinds
+to its unwind destination or the caller.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">catchpad</span></code> and its parent <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> are both exited when a
+<code class="docutils literal notranslate"><span class="pre">catchret</span></code> from the <code class="docutils literal notranslate"><span class="pre">catchpad</span></code> is executed.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">cleanuppad</span></code> is exited when a <code class="docutils literal notranslate"><span class="pre">cleanupret</span></code> from it is executed.</p></li>
+<li><p>Any of these pads is exited when control unwinds to the function’s caller,
+either by a <code class="docutils literal notranslate"><span class="pre">call</span></code> which unwinds all the way to the function’s caller,
+a nested <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> marked “<code class="docutils literal notranslate"><span class="pre">unwinds</span> <span class="pre">to</span> <span class="pre">caller</span></code>”, or a nested
+<code class="docutils literal notranslate"><span class="pre">cleanuppad</span></code>’s <code class="docutils literal notranslate"><span class="pre">cleanupret</span></code> marked “<code class="docutils literal notranslate"><span class="pre">unwinds</span> <span class="pre">to</span> <span class="pre">caller&quot;</span></code>.</p></li>
+<li><p>Any of these pads is exited when an unwind edge (from an <code class="docutils literal notranslate"><span class="pre">invoke</span></code>,
+nested <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code>, or nested <code class="docutils literal notranslate"><span class="pre">cleanuppad</span></code>’s <code class="docutils literal notranslate"><span class="pre">cleanupret</span></code>)
+unwinds to a destination pad that is not a descendant of the given pad.</p></li>
+</ul>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">ret</span></code> instruction is <em>not</em> a valid way to exit a funclet pad;
+it is undefined behavior to execute a <code class="docutils literal notranslate"><span class="pre">ret</span></code> when a pad has been entered but
+not exited.</p>
+<p>A single unwind edge may exit any number of pads (with the restrictions that
+the edge from a <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> must exit at least itself, and the edge from
+a <code class="docutils literal notranslate"><span class="pre">cleanupret</span></code> must exit at least its <code class="docutils literal notranslate"><span class="pre">cleanuppad</span></code>), and then must enter
+exactly one pad, which must be distinct from all the exited pads.  The parent
+of the pad that an unwind edge enters must be the most-recently-entered
+not-yet-exited pad (after exiting from any pads that the unwind edge exits),
+or “none” if there is no such pad.  This ensures that the stack of executing
+funclets at run-time always corresponds to some path in the funclet pad tree
+that the parent tokens encode.</p>
+<p>All unwind edges which exit any given funclet pad (including <code class="docutils literal notranslate"><span class="pre">cleanupret</span></code>
+edges exiting their <code class="docutils literal notranslate"><span class="pre">cleanuppad</span></code> and <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> edges exiting their
+<code class="docutils literal notranslate"><span class="pre">catchswitch</span></code>) must share the same unwind destination.  Similarly, any
+funclet pad which may be exited by unwind to caller must not be exited by
+any exception edges which unwind anywhere other than the caller.  This
+ensures that each funclet as a whole has only one unwind destination, which
+EH tables for funclet personalities may require.  Note that any unwind edge
+which exits a <code class="docutils literal notranslate"><span class="pre">catchpad</span></code> also exits its parent <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code>, so this
+implies that for any given <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code>, its unwind destination must also
+be the unwind destination of any unwind edge that exits any of its constituent
+<code class="docutils literal notranslate"><span class="pre">catchpad</span></code>s.  Because <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> has no <code class="docutils literal notranslate"><span class="pre">nounwind</span></code> variant, and
+because IR producers are not <em>required</em> to annotate calls which will not
+unwind as <code class="docutils literal notranslate"><span class="pre">nounwind</span></code>, it is legal to nest a <code class="docutils literal notranslate"><span class="pre">call</span></code> or an “<code class="docutils literal notranslate"><span class="pre">unwind</span> <span class="pre">to</span> <span class="pre">caller</span></code>” <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> within a funclet pad that has an unwind
+destination other than caller; it is undefined behavior for such a <code class="docutils literal notranslate"><span class="pre">call</span></code>
+or <code class="docutils literal notranslate"><span class="pre">catchswitch</span></code> to unwind.</p>
+<p>Finally, the funclet pads’ unwind destinations cannot form a cycle.  This
+ensures that EH lowering can construct “try regions” with a tree-like
+structure, which funclet-based personalities may require.</p>
+</section>
+</section>
+<section id="exception-handling-support-on-the-target">
+<h2>Exception Handling support on the target<a class="headerlink" href="#exception-handling-support-on-the-target" title="Link to this heading">#</a></h2>
+<p>In order to support exception handling on a particular target, there are a few
+items that need to be implemented.</p>
+<ul>
+<li><p>CFI directives</p>
+<p>First, you have to assign each target register with a unique DWARF number.
+Then in <code class="docutils literal notranslate"><span class="pre">TargetFrameLowering</span></code>’s <code class="docutils literal notranslate"><span class="pre">emitPrologue</span></code>, you have to emit <a class="reference external" href="https://sourceware.org/binutils/docs/as/CFI-directives.html">CFI
+directives</a>
+to specify how to calculate the CFA (Canonical Frame Address) and how register
+is restored from the address pointed by the CFA with an offset. The assembler
+is instructed by CFI directives to build <code class="docutils literal notranslate"><span class="pre">.eh_frame</span></code> section, which is used
+by the unwinder to unwind the stack during exception handling.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">getExceptionPointerRegister</span></code> and <code class="docutils literal notranslate"><span class="pre">getExceptionSelectorRegister</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">TargetLowering</span></code> must implement both functions. The <em>personality function</em>
+passes the <em>exception structure</em> (a pointer) and <em>selector value</em> (an integer)
+to the landing pad through the registers specified by <code class="docutils literal notranslate"><span class="pre">getExceptionPointerRegister</span></code>
+and <code class="docutils literal notranslate"><span class="pre">getExceptionSelectorRegister</span></code> respectively. On most platforms, they
+will be GPRs and will be the same as the ones specified in the calling convention.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EH_RETURN</span></code></p>
+<p>The ISD node represents the undocumented GCC extension <code class="docutils literal notranslate"><span class="pre">__builtin_eh_return</span> <span class="pre">(offset,</span> <span class="pre">handler)</span></code>,
+which adjusts the stack by offset and then jumps to the handler. <code class="docutils literal notranslate"><span class="pre">__builtin_eh_return</span></code>
+is used in GCC unwinder (<a class="reference external" href="https://gcc.gnu.org/onlinedocs/gccint/Libgcc.html">libgcc</a>),
+but not in LLVM unwinder (<a class="reference external" href="https://clang.llvm.org/docs/Toolchain.html#unwind-library">libunwind</a>).
+If you are on the top of <code class="docutils literal notranslate"><span class="pre">libgcc</span></code> and have a particular requirement on your target,
+you have to handle <code class="docutils literal notranslate"><span class="pre">EH_RETURN</span></code> in <code class="docutils literal notranslate"><span class="pre">TargetLowering</span></code>.</p>
+</li>
+</ul>
+<p>If you don’t leverage the existing runtime (<code class="docutils literal notranslate"><span class="pre">libstdc++</span></code> and <code class="docutils literal notranslate"><span class="pre">libgcc</span></code>),
+you have to take a look at <a class="reference external" href="https://libcxx.llvm.org/">libc++</a> and
+<a class="reference external" href="https://clang.llvm.org/docs/Toolchain.html#unwind-library">libunwind</a>
+to see what has to be done there. For <code class="docutils literal notranslate"><span class="pre">libunwind</span></code>, you have to do the following:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">__libunwind_config.h</span></code></p>
+<p>Define macros for your target.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include/libunwind.h</span></code></p>
+<p>Define an enum for the target registers.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">src/Registers.hpp</span></code></p>
+<p>Define a <code class="docutils literal notranslate"><span class="pre">Registers</span></code> class for your target, implement setter and getter functions.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">src/UnwindCursor.hpp</span></code></p>
+<p>Define <code class="docutils literal notranslate"><span class="pre">dwarfEncoding</span></code> and <code class="docutils literal notranslate"><span class="pre">stepWithCompactEncoding</span></code> for your <code class="docutils literal notranslate"><span class="pre">Registers</span></code>
+class.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">src/UnwindRegistersRestore.S</span></code></p>
+<p>Write an assembly function to restore all your target registers from memory.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">src/UnwindRegistersSave.S</span></code></p>
+<p>Write an assembly function to save all your target registers to memory.</p>
+</li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="Extensions.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">LLVM Extensions</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Atomics.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">LLVM Atomic Instructions and Concurrency Guide</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Exception Handling in LLVM</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li><a class="reference internal" href="#itanium-abi-zero-cost-exception-handling">Itanium ABI Zero-cost Exception Handling</a></li>
+<li><a class="reference internal" href="#setjmp-longjmp-exception-handling">Setjmp/Longjmp Exception Handling</a></li>
+<li><a class="reference internal" href="#windows-runtime-exception-handling">Windows Runtime Exception Handling</a></li>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#llvm-code-generation">LLVM Code Generation</a><ul>
+<li><a class="reference internal" href="#throw">Throw</a></li>
+<li><a class="reference internal" href="#try-catch">Try/Catch</a></li>
+<li><a class="reference internal" href="#cleanups">Cleanups</a></li>
+<li><a class="reference internal" href="#throw-filters">Throw Filters</a></li>
+<li><a class="reference internal" href="#restrictions">Restrictions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#exception-handling-intrinsics">Exception Handling Intrinsics</a><ul>
+<li><a class="reference internal" href="#llvm-eh-typeid-for"><code class="docutils literal notranslate"><span class="pre">llvm.eh.typeid.for</span></code></a></li>
+<li><a class="reference internal" href="#llvm-eh-exceptionpointer"><code class="docutils literal notranslate"><span class="pre">llvm.eh.exceptionpointer</span></code></a></li>
+<li><a class="reference internal" href="#sjlj-intrinsics">SJLJ Intrinsics</a><ul>
+<li><a class="reference internal" href="#llvm-eh-sjlj-setjmp"><code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.setjmp</span></code></a></li>
+<li><a class="reference internal" href="#llvm-eh-sjlj-longjmp"><code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.longjmp</span></code></a></li>
+<li><a class="reference internal" href="#llvm-eh-sjlj-lsda"><code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.lsda</span></code></a></li>
+<li><a class="reference internal" href="#llvm-eh-sjlj-callsite"><code class="docutils literal notranslate"><span class="pre">llvm.eh.sjlj.callsite</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#asm-table-formats">Asm Table Formats</a><ul>
+<li><a class="reference internal" href="#exception-handling-frame">Exception Handling Frame</a></li>
+<li><a class="reference internal" href="#exception-tables">Exception Tables</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#exception-handling-using-the-windows-runtime">Exception Handling using the Windows Runtime</a><ul>
+<li><a class="reference internal" href="#background-on-windows-exceptions">Background on Windows exceptions</a></li>
+<li><a class="reference internal" href="#seh-filter-expressions">SEH filter expressions</a></li>
+<li><a class="reference internal" href="#new-exception-handling-instructions">New exception handling instructions</a></li>
+<li><a class="reference internal" href="#funclet-parent-tokens">Funclet parent tokens</a></li>
+<li><a class="reference internal" href="#funclet-transitions">Funclet transitions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#exception-handling-support-on-the-target">Exception Handling support on the target</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=ccd1e645"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

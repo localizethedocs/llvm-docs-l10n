@@ -1,0 +1,1085 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜索" href="search.html" /><link rel="next" title="MemTagSanitizer" href="MemTagSanitizer.html" /><link rel="prev" title="Scudo Hardened Allocator" href="ScudoHardenedAllocator.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/MemoryModelRelaxationAnnotations.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Memory Model Relaxation Annotations - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜索" name="q" aria-label="搜索">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="Reference.html">Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/MemoryModelRelaxationAnnotations.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="memory-model-relaxation-annotations">
+<h1>Memory Model Relaxation Annotations<a class="headerlink" href="#memory-model-relaxation-annotations" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>Memory Model Relaxation Annotations (MMRAs) are target-defined properties
+on instructions that can be used to selectively relax constraints placed
+by the memory model. For example:</p>
+<ul class="simple">
+<li><p>The use of <code class="docutils literal notranslate"><span class="pre">VulkanMemoryModel</span></code> in a SPIRV program allows certain
+memory operations to be reordered across <code class="docutils literal notranslate"><span class="pre">acquire</span></code> or <code class="docutils literal notranslate"><span class="pre">release</span></code>
+operations.</p></li>
+<li><p>OpenCL APIs expose primitives to only fence a specific set of address
+spaces. Carrying that information to the backend can enable the
+use of faster synchronization instructions, rather than fencing all
+address spaces everytime.</p></li>
+</ul>
+<p>MMRAs offer an opt-in system for targets to relax the default LLVM
+memory model.
+As such, they are attached to an operation using LLVM metadata which
+can always be dropped without affecting correctness.</p>
+</section>
+<section id="definitions">
+<h2>Definitions<a class="headerlink" href="#definitions" title="Link to this heading">#</a></h2>
+<dl>
+<dt>memory operation</dt><dd><p>A load, a store, an atomic, or a function call that is marked as
+accessing memory.</p>
+</dd>
+<dt>synchronizing operation</dt><dd><p>An instruction that synchronizes memory with other threads (e.g.
+an atomic or a fence).</p>
+</dd>
+<dt>tag</dt><dd><p>Metadata attached to a memory or synchronizing operation
+that represents some target-defined property regarding memory
+synchronization.</p>
+<p>An operation may have multiple tags that each represent a different
+property.</p>
+<p>A tag is composed of a pair of metadata string: a <em>prefix</em> and a <em>suffix</em>.</p>
+<p>In LLVM IR, the pair is represented using a metadata tuple.
+In other cases (comments, documentation, etc.), we may use the
+<code class="docutils literal notranslate"><span class="pre">prefix:suffix</span></code> notation.
+For example:</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Example: Tags in Metadata</span><a class="headerlink" href="#id1" title="Link to this code">#</a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!0 = !{!&quot;scope&quot;, !&quot;workgroup&quot;}  # scope:workgroup
+!1 = !{!&quot;scope&quot;, !&quot;device&quot;}     # scope:device
+!2 = !{!&quot;scope&quot;, !&quot;system&quot;}     # scope:system
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>The only semantics relevant to the optimizer is the
+“compatibility” relation defined below. All other
+semantics are target defined.</p>
+</div>
+<p>Tags can also be organised in lists to allow operations
+to specify all of the tags they belong to. Such a list
+is referred to as a “set of tags”.</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Example: Set of Tags in Metadata</span><a class="headerlink" href="#id2" title="Link to this code">#</a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!0 = !{!&quot;scope&quot;, !&quot;workgroup&quot;}
+!1 = !{!&quot;sync-as&quot;, !&quot;private&quot;}
+!2 = !{!0, !2}
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>If an operation does not have MMRA metadata, it’s treated as if
+it has an empty list (<code class="docutils literal notranslate"><span class="pre">!{}</span></code>) of tags.</p>
+</div>
+<p>Note that it is not an error if a tag is not recognized by the
+instruction it is applied to, or by the current target.
+Such tags are simply ignored.</p>
+<p>Both synchronizing operations and memory operations can have
+zero or more tags attached to them using the <code class="docutils literal notranslate"><span class="pre">!mmra</span></code> syntax.</p>
+<p>For the sake of readability in examples below,
+we use a (non-functional) short syntax to represent MMMRA metadata:</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">Short Syntax Example</span><a class="headerlink" href="#id3" title="Link to this code">#</a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>store %ptr1 # foo:bar
+store %ptr1 !mmra !{!&quot;foo&quot;, !&quot;bar&quot;}
+</pre></div>
+</div>
+</div>
+<p>These two notations can be used in this document and are strictly
+equivalent. However, only the second version is functional.</p>
+</dd>
+<dt>compatibility</dt><dd><p>Two sets of tags are said to be <em>compatible</em> iff, for every unique
+tag prefix P present in at least one set:</p>
+<ul class="simple">
+<li><p>the other set contains no tag with prefix P, or</p></li>
+<li><p>at least one tag with prefix P is common to both sets.</p></li>
+</ul>
+<p>The above definition implies that an empty set is always compatible
+with any other set. This is an important property as it ensures that
+if a transform drops the metadata on an operation, it can never affect
+correctness. In other words, the memory model cannot be relaxed further
+by deleting metadata from instructions.</p>
+</dd>
+</dl>
+</section>
+<section id="the-happens-before-relation">
+<span id="happensbefore"></span><h2>The <em>happens-before</em> Relation<a class="headerlink" href="#the-happens-before-relation" title="Link to this heading">#</a></h2>
+<p>Compatibility checks can be used to opt out of the <em>happens-before</em> relation
+established between two instructions.</p>
+<dl>
+<dt>Ordering</dt><dd><p>When two instructions’ metadata are not compatible, any program order
+between them are not in <em>happens-before</em>.</p>
+<p>For example, consider two tags <code class="docutils literal notranslate"><span class="pre">foo:bar</span></code> and
+<code class="docutils literal notranslate"><span class="pre">foo:baz</span></code> exposed by a target:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="o">%</span><span class="n">ptr1</span>                 <span class="c1"># foo:bar</span>
+<span class="n">B</span><span class="p">:</span> <span class="n">store</span> <span class="o">%</span><span class="n">ptr2</span>                 <span class="c1"># foo:baz</span>
+<span class="n">X</span><span class="p">:</span> <span class="n">store</span> <span class="n">atomic</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr3</span>  <span class="c1"># foo:bar</span>
+</pre></div>
+</div>
+<p>In the above figure, <code class="docutils literal notranslate"><span class="pre">A</span></code> is compatible with <code class="docutils literal notranslate"><span class="pre">X</span></code>, and hence <code class="docutils literal notranslate"><span class="pre">A</span></code>
+happens-before <code class="docutils literal notranslate"><span class="pre">X</span></code>. But <code class="docutils literal notranslate"><span class="pre">B</span></code> is not compatible with
+<code class="docutils literal notranslate"><span class="pre">X</span></code>, and hence it is not happens-before <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p>
+</dd>
+<dt>Synchronization</dt><dd><p>If an synchronizing operation has one or more tags, then whether it
+synchronizes-with and participates in the  <code class="docutils literal notranslate"><span class="pre">seq_cst</span></code> order with
+other operations is target dependent.</p>
+<p>Whether the following example synchronizes with another sequence depends
+on the target-defined semantics of <code class="docutils literal notranslate"><span class="pre">foo:bar</span></code> and <code class="docutils literal notranslate"><span class="pre">foo:bux</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fence</span> <span class="n">release</span>               <span class="c1"># foo:bar</span>
+<span class="n">store</span> <span class="n">atomic</span> <span class="o">%</span><span class="n">ptr1</span>          <span class="c1"># foo:bux</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h3>
+<dl>
+<dt>Example 1:</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="n">ptr</span> <span class="n">addrspace</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span><span class="n">ptr2</span>                  <span class="c1"># sync-as:1 vulkan:nonprivate</span>
+<span class="n">B</span><span class="p">:</span> <span class="n">store</span> <span class="n">atomic</span> <span class="n">release</span> <span class="n">ptr</span> <span class="n">addrspace</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span><span class="n">ptr3</span>   <span class="c1"># sync-as:0 vulkan:nonprivate</span>
+</pre></div>
+</div>
+<p>A and B are not ordered relative to each other
+(no <em>happens-before</em>) because their sets of tags are not compatible.</p>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">sync-as</span></code> value does not have to match the <code class="docutils literal notranslate"><span class="pre">addrspace</span></code> value.
+e.g. In Example 1, a store-release to a location in <code class="docutils literal notranslate"><span class="pre">addrspace(1)</span></code> wants to
+only synchronize with operations happening in <code class="docutils literal notranslate"><span class="pre">addrspace(0)</span></code>.</p>
+</dd>
+<dt>Example 2:</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="n">ptr</span> <span class="n">addrspace</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span><span class="n">ptr2</span>                 <span class="c1"># sync-as:1 vulkan:nonprivate</span>
+<span class="n">B</span><span class="p">:</span> <span class="n">store</span> <span class="n">atomic</span> <span class="n">release</span> <span class="n">ptr</span> <span class="n">addrspace</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span><span class="n">ptr3</span>  <span class="c1"># sync-as:1 vulkan:nonprivate</span>
+</pre></div>
+</div>
+<p>The ordering of A and B is unaffected because their set of tags are
+compatible.</p>
+<p>Note that A and B may or may not be in <em>happens-before</em> due to other reasons.</p>
+</dd>
+<dt>Example 3:</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="n">ptr</span> <span class="n">addrspace</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span><span class="n">ptr2</span>                 <span class="c1"># sync-as:1 vulkan:nonprivate</span>
+<span class="n">B</span><span class="p">:</span> <span class="n">store</span> <span class="n">atomic</span> <span class="n">release</span> <span class="n">ptr</span> <span class="n">addrspace</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span><span class="n">ptr3</span>  <span class="c1"># vulkan:nonprivate</span>
+</pre></div>
+</div>
+<p>The ordering of A and B is unaffected because their set of tags are
+compatible.</p>
+</dd>
+<dt>Example 4:</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="n">ptr</span> <span class="n">addrspace</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span><span class="n">ptr2</span>                 <span class="c1"># sync-as:1</span>
+<span class="n">B</span><span class="p">:</span> <span class="n">store</span> <span class="n">atomic</span> <span class="n">release</span> <span class="n">ptr</span> <span class="n">addrspace</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span><span class="n">ptr3</span>  <span class="c1"># sync-as:2</span>
+</pre></div>
+</div>
+<p>A and B do not have to be ordered relative to each other
+(no <em>happens-before</em>) because their sets of tags are not compatible.</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="use-cases">
+<h2>Use-cases<a class="headerlink" href="#use-cases" title="Link to this heading">#</a></h2>
+<section id="spirv-nonprivatepointer">
+<h3>SPIRV <code class="docutils literal notranslate"><span class="pre">NonPrivatePointer</span></code><a class="headerlink" href="#spirv-nonprivatepointer" title="Link to this heading">#</a></h3>
+<p>MMRAs can support the SPIRV capability
+<code class="docutils literal notranslate"><span class="pre">VulkanMemoryModel</span></code>, where synchronizing operations only affect
+memory operations that specify <code class="docutils literal notranslate"><span class="pre">NonPrivatePointer</span></code> semantics.</p>
+<p>The example below is generated from a SPIRV program using the
+following recipe:</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">vulkan:nonprivate</span></code> to every synchronizing operation.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">vulkan:nonprivate</span></code> to every non-atomic memory operation
+that is marked <code class="docutils literal notranslate"><span class="pre">NonPrivatePointer</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">vulkan:private</span></code> to tags of every non-atomic memory operation
+that is not marked <code class="docutils literal notranslate"><span class="pre">NonPrivatePointer</span></code>.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span> <span class="n">T1</span><span class="p">:</span>
+ <span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="o">%</span><span class="n">ptr1</span>                 <span class="c1"># vulkan:nonprivate</span>
+ <span class="n">B</span><span class="p">:</span> <span class="n">store</span> <span class="o">%</span><span class="n">ptr2</span>                 <span class="c1"># vulkan:private</span>
+ <span class="n">X</span><span class="p">:</span> <span class="n">store</span> <span class="n">atomic</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr3</span>  <span class="c1"># vulkan:nonprivate</span>
+
+<span class="n">Thread</span> <span class="n">T2</span><span class="p">:</span>
+ <span class="n">Y</span><span class="p">:</span> <span class="n">load</span> <span class="n">atomic</span> <span class="n">acquire</span> <span class="o">%</span><span class="n">ptr3</span>   <span class="c1"># vulkan:nonprivate</span>
+ <span class="n">C</span><span class="p">:</span> <span class="n">load</span> <span class="o">%</span><span class="n">ptr2</span>                  <span class="c1"># vulkan:private</span>
+ <span class="n">D</span><span class="p">:</span> <span class="n">load</span> <span class="o">%</span><span class="n">ptr1</span>                  <span class="c1"># vulkan:nonprivate</span>
+</pre></div>
+</div>
+<p>Compatibility ensures that operation <code class="docutils literal notranslate"><span class="pre">A</span></code> is ordered
+relative to <code class="docutils literal notranslate"><span class="pre">X</span></code> while operation <code class="docutils literal notranslate"><span class="pre">D</span></code> is ordered relative to <code class="docutils literal notranslate"><span class="pre">Y</span></code>.
+If <code class="docutils literal notranslate"><span class="pre">X</span></code> synchronizes with <code class="docutils literal notranslate"><span class="pre">Y</span></code>, then <code class="docutils literal notranslate"><span class="pre">A</span></code> happens-before <code class="docutils literal notranslate"><span class="pre">D</span></code>.
+No such relation can be inferred about operations <code class="docutils literal notranslate"><span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">C</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>The <a class="reference external" href="https://registry.khronos.org/vulkan/specs/1.3-extensions/html/vkspec.html#memory-model-non-private">Vulkan Memory Model</a>
+considers all atomic operation non-private.</p>
+<p>Whether <code class="docutils literal notranslate"><span class="pre">vulkan:nonprivate</span></code> would be specified on atomic operations is
+an implementation detail, as an atomic operation is always <code class="docutils literal notranslate"><span class="pre">nonprivate</span></code>.
+The implementation may choose to be explicit and emit IR with
+<code class="docutils literal notranslate"><span class="pre">vulkan:nonprivate</span></code> on every atomic operation, or it could choose to
+only emit <code class="docutils literal notranslate"><span class="pre">vulkan::private</span></code> and assume <code class="docutils literal notranslate"><span class="pre">vulkan:nonprivate</span></code>
+by default.</p>
+</div>
+<p>Operations marked with <code class="docutils literal notranslate"><span class="pre">vulkan:private</span></code> effectively opt out of the
+happens-before order in a SPIRV program since they are incompatible
+with every synchronizing operation. Note that SPIRV operations that
+are not marked <code class="docutils literal notranslate"><span class="pre">NonPrivatePointer</span></code> are not entirely private to the
+thread — they are implicitly synchronized at the start or end of a
+thread by the Vulkan <em>system-synchronizes-with</em> relationship. This
+example assumes that the target-defined semantics of
+<code class="docutils literal notranslate"><span class="pre">vulkan:private</span></code> correctly implements this property.</p>
+<p>This scheme is general enough to express the interoperability of SPIRV
+programs with other environments.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span> <span class="n">T1</span><span class="p">:</span>
+<span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="o">%</span><span class="n">ptr1</span>                 <span class="c1"># vulkan:nonprivate</span>
+<span class="n">X</span><span class="p">:</span> <span class="n">store</span> <span class="n">atomic</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr2</span>  <span class="c1"># vulkan:nonprivate</span>
+
+<span class="n">Thread</span> <span class="n">T2</span><span class="p">:</span>
+<span class="n">Y</span><span class="p">:</span> <span class="n">load</span> <span class="n">atomic</span> <span class="n">acquire</span> <span class="o">%</span><span class="n">ptr2</span>   <span class="c1"># foo:bar</span>
+<span class="n">B</span><span class="p">:</span> <span class="n">load</span> <span class="o">%</span><span class="n">ptr1</span>
+</pre></div>
+</div>
+<p>In the above example, thread <code class="docutils literal notranslate"><span class="pre">T1</span></code> originates from a SPIRV program
+while thread <code class="docutils literal notranslate"><span class="pre">T2</span></code> originates from a non-SPIRV program. Whether <code class="docutils literal notranslate"><span class="pre">X</span></code>
+can synchronize with <code class="docutils literal notranslate"><span class="pre">Y</span></code> is target defined.  If <code class="docutils literal notranslate"><span class="pre">X</span></code> synchronizes
+with <code class="docutils literal notranslate"><span class="pre">Y</span></code>, then <code class="docutils literal notranslate"><span class="pre">A</span></code> happens before <code class="docutils literal notranslate"><span class="pre">B</span></code> (because A/X and
+Y/B are compatible).</p>
+<section id="implementation-example">
+<h4>Implementation Example<a class="headerlink" href="#implementation-example" title="Link to this heading">#</a></h4>
+<p>Consider the implementation of SPIRV <code class="docutils literal notranslate"><span class="pre">NonPrivatePointer</span></code> on a target
+where all memory operations are cached, and the entire cache is
+flushed or invalidated at a <code class="docutils literal notranslate"><span class="pre">release</span></code> or <code class="docutils literal notranslate"><span class="pre">acquire</span></code> respectively. A
+possible scheme is that when translating a SPIRV program, memory
+operations marked <code class="docutils literal notranslate"><span class="pre">NonPrivatePointer</span></code> should not be cached, and the
+cache contents should not be touched during an <code class="docutils literal notranslate"><span class="pre">acquire</span></code> and
+<code class="docutils literal notranslate"><span class="pre">release</span></code> operation.</p>
+<p>This could be implemented using the tags that share the <code class="docutils literal notranslate"><span class="pre">vulkan:</span></code> prefix,
+as follows:</p>
+<ul class="simple">
+<li><p>For memory operations:</p>
+<ul>
+<li><p>Operations with <code class="docutils literal notranslate"><span class="pre">vulkan:nonprivate</span></code> should bypass the cache.</p></li>
+<li><p>Operations with <code class="docutils literal notranslate"><span class="pre">vulkan:private</span></code> should be cached.</p></li>
+<li><p>Operations that specify neither or both should conservatively
+bypass the cache to ensure correctness.</p></li>
+</ul>
+</li>
+<li><p>For synchronizing operations:</p>
+<ul>
+<li><p>Operations with <code class="docutils literal notranslate"><span class="pre">vulkan:nonprivate</span></code> should not flush or
+invalidate the cache.</p></li>
+<li><p>Operations with <code class="docutils literal notranslate"><span class="pre">vulkan:private</span></code> should flush or invalidate the cache.</p></li>
+<li><p>Operations that specify neither or both should conservatively
+flush or invalidate the cache to ensure correctness.</p></li>
+</ul>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>In such an implementation, dropping the metadata on an operation, while
+not affecting correctness, may have big performance implications.
+e.g. an operation bypasses the cache when it shouldn’t.</p>
+</div>
+</section>
+</section>
+<section id="memory-types">
+<h3>Memory Types<a class="headerlink" href="#memory-types" title="Link to this heading">#</a></h3>
+<p>MMRAs may express the selective synchronization of
+different memory types.</p>
+<p>As an example, a target may expose an <code class="docutils literal notranslate"><span class="pre">sync-as:&lt;N&gt;</span></code> tag to
+pass information about which address spaces are synchronized by the
+execution of a synchronizing operation.</p>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>Address spaces are used here as a common example, but this concept
+can apply for other “memory types”. What “memory types” means here is
+up to the target.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># let 1 = global address space</span>
+<span class="c1"># let 3 = local address space</span>
+
+<span class="n">Thread</span> <span class="n">T1</span><span class="p">:</span>
+<span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="o">%</span><span class="n">ptr1</span>                                  <span class="c1"># sync-as:1</span>
+<span class="n">B</span><span class="p">:</span> <span class="n">store</span> <span class="o">%</span><span class="n">ptr2</span>                                  <span class="c1"># sync-as:3</span>
+<span class="n">X</span><span class="p">:</span> <span class="n">store</span> <span class="n">atomic</span> <span class="n">release</span> <span class="n">ptr</span> <span class="n">addrspace</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">%</span><span class="n">ptr3</span>  <span class="c1"># sync-as:3</span>
+
+<span class="n">Thread</span> <span class="n">T2</span><span class="p">:</span>
+<span class="n">Y</span><span class="p">:</span> <span class="n">load</span> <span class="n">atomic</span> <span class="n">acquire</span> <span class="n">ptr</span> <span class="n">addrspace</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">%</span><span class="n">ptr3</span>   <span class="c1"># sync-as:3</span>
+<span class="n">C</span><span class="p">:</span> <span class="n">load</span> <span class="o">%</span><span class="n">ptr2</span>                                   <span class="c1"># sync-as:3</span>
+<span class="n">D</span><span class="p">:</span> <span class="n">load</span> <span class="o">%</span><span class="n">ptr1</span>                                   <span class="c1"># sync-as:1</span>
+</pre></div>
+</div>
+<p>In the above figure, <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> are atomic operations on a
+location in the <code class="docutils literal notranslate"><span class="pre">global</span></code>  address space. If <code class="docutils literal notranslate"><span class="pre">X</span></code> synchronizes with
+<code class="docutils literal notranslate"><span class="pre">Y</span></code>, then <code class="docutils literal notranslate"><span class="pre">B</span></code> happens-before <code class="docutils literal notranslate"><span class="pre">C</span></code> in the <code class="docutils literal notranslate"><span class="pre">local</span></code> address
+space. But no such statement can be made about operations <code class="docutils literal notranslate"><span class="pre">A</span></code> and
+<code class="docutils literal notranslate"><span class="pre">D</span></code>, although they are performed on a location in the <code class="docutils literal notranslate"><span class="pre">global</span></code>
+address space.</p>
+<section id="implementation-example-adding-address-space-information-to-fences">
+<h4>Implementation Example: Adding Address Space Information to Fences<a class="headerlink" href="#implementation-example-adding-address-space-information-to-fences" title="Link to this heading">#</a></h4>
+<p>Languages such as OpenCL C provide fence operations such as
+<code class="docutils literal notranslate"><span class="pre">atomic_work_item_fence</span></code> that can take an explicit address
+space to fence.</p>
+<p>By default, LLVM has no means to carry that information in the IR, so
+the information is lost during lowering to LLVM IR. This means that
+targets such as AMDGPU have to conservatively emit instructions to
+fence all address spaces in all cases, which can have a noticeable
+performance impact in high-performance applications.</p>
+<p>MMRAs may be used to preserve that information at the IR level, all the
+way through code generation. For example, a fence that only affects the
+global address space <code class="docutils literal notranslate"><span class="pre">addrspace(1)</span></code> may be lowered as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fence</span> <span class="n">release</span> <span class="c1"># sync-as:1</span>
+</pre></div>
+</div>
+<p>and the target may use the presence of <code class="docutils literal notranslate"><span class="pre">sync-as:1</span></code> to infer that it
+must only emit instruction to fence the global address space.</p>
+<p>Note that as MMRAs are opt in, a fence that does not have MMRA metadata
+could still be lowered conservatively, so this optimization would only
+apply if the front-end emits the MMRA metadata on the fence instructions.</p>
+</section>
+</section>
+</section>
+<section id="additional-topics">
+<h2>Additional Topics<a class="headerlink" href="#additional-topics" title="Link to this heading">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>The following sections are informational.</p>
+</div>
+<section id="performance-impact">
+<h3>Performance Impact<a class="headerlink" href="#performance-impact" title="Link to this heading">#</a></h3>
+<p>MMRAs are a way to capture optimization opportunities in the program.
+But when an operation mentions no tags or conflicting tags,
+the target may need to produce conservative code to ensure correctness
+at the cost of performance. This can happen in the following situations:</p>
+<ol class="arabic simple">
+<li><p>When a target first introduces MMRAs, the
+frontend might not have been updated to emit them.</p></li>
+<li><p>An optimization may drop MMRA metadata.</p></li>
+<li><p>An optimization may add arbitrary tags to an operation.</p></li>
+</ol>
+<p>Note that targets can always choose to ignore (or even drop) MMRAs
+and revert to the default behavior/codegen heuristics without
+affecting correctness.</p>
+</section>
+<section id="consequences-of-the-absence-of-happens-before">
+<h3>Consequences of the Absence of <em>happens-before</em><a class="headerlink" href="#consequences-of-the-absence-of-happens-before" title="Link to this heading">#</a></h3>
+<p>In the <a class="reference internal" href="#happensbefore"><span class="std std-ref">happens-before</span></a> section, we defined how an
+<em>happens-before</em> relation between two instruction can be broken
+by leveraging compatibility between MMRAs. When the instructions
+are incompatible and there is no <em>happens-before</em> relation, we say
+that the instructions “do not have to be ordered relative to each
+other”.</p>
+<p>“Ordering” in this context is a very broad term which covers both
+static and runtime aspects.</p>
+<p>When there is no ordering constraint, we <em>could</em> statically reorder
+the instructions in an optimizer transform if the reordering does
+not break other constraints as single location coherence.
+Static reordering is one consequence of breaking <em>happens-before</em>,
+but is not the most interesting one.</p>
+<p>Run-time consequences are more interesting. When there is a
+<em>happens-before</em> relation between instructions, the target has to emit
+synchronization code to ensure other threads will observe the effects of
+the instructions in the right order.</p>
+<p>For instance, the target may have to wait for previous loads &amp; stores to
+finish before starting a fence-release, or there may be a need to flush a
+memory cache before executing the next instruction.
+In the absence of <em>happens-before</em>, there is no such requirement and
+no waiting or flushing is required. This may noticeably speed up
+execution in some cases.</p>
+</section>
+<section id="combining-operations">
+<h3>Combining Operations<a class="headerlink" href="#combining-operations" title="Link to this heading">#</a></h3>
+<p>If a pass can combine multiple memory or synchronizing operations
+into one, it needs to be able to combine MMRAs. One possible way to
+achieve this is by doing a prefix-wise union of the tag sets.</p>
+<p>Let A and B be two tags set, and U be the prefix-wise union of A and B.
+For every unique tag prefix P present in A or B:</p>
+<ul class="simple">
+<li><p>If either A or B has no tags with prefix P, no tags with prefix
+P are added to U.</p></li>
+<li><p>If both A and B have at least one tag with prefix P, all tags with prefix
+P from both sets are added to U.</p></li>
+</ul>
+<p>Passes should avoid aggressively combining MMRAs, as this can result
+in significant loss of information. While this cannot affect
+correctness, it may affect performance.</p>
+<p>As a general rule of thumb, common passes such as SimplifyCFG that
+aggressively combine/reorder operations should only combine
+instructions that have identical sets of tags.
+Passes that combine less frequently, or that are well aware of the cost
+of combining the MMRAs can use the prefix-wise union described above.</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr1</span>  <span class="c1"># foo:x, foo:y, bar:x</span>
+<span class="n">B</span><span class="p">:</span> <span class="n">store</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr2</span>  <span class="c1"># foo:x, bar:y</span>
+
+<span class="c1"># Unique prefixes P = [foo, bar]</span>
+<span class="c1"># &quot;foo:x&quot; is common to A and B so it&#39;s added to U.</span>
+<span class="c1"># &quot;bar:x&quot; != &quot;bar:y&quot; so it&#39;s not added to U.</span>
+<span class="n">U</span><span class="p">:</span> <span class="n">store</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr3</span>  <span class="c1"># foo:x</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr1</span>  <span class="c1"># foo:x, foo:y</span>
+<span class="n">B</span><span class="p">:</span> <span class="n">store</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr2</span>  <span class="c1"># foo:x, bux:y</span>
+
+<span class="c1"># Unique prefixes P = [foo, bux]</span>
+<span class="c1"># &quot;foo:x&quot; is common to A and B so it&#39;s added to U.</span>
+<span class="c1"># No tags have the prefix &quot;bux&quot; in A.</span>
+<span class="n">U</span><span class="p">:</span> <span class="n">store</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr3</span>  <span class="c1"># foo:x</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">:</span> <span class="n">store</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr1</span>
+<span class="n">B</span><span class="p">:</span> <span class="n">store</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr2</span>  <span class="c1"># foo:x, bar:y</span>
+
+<span class="c1"># Unique prefixes P = [foo, bar]</span>
+<span class="c1"># No tags with &quot;foo&quot; or &quot;bar&quot; in A, so no tags added.</span>
+<span class="n">U</span><span class="p">:</span> <span class="n">store</span> <span class="n">release</span> <span class="o">%</span><span class="n">ptr3</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="MemTagSanitizer.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">MemTagSanitizer</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="ScudoHardenedAllocator.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Scudo Hardened Allocator</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Memory Model Relaxation Annotations</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#definitions">Definitions</a></li>
+<li><a class="reference internal" href="#the-happens-before-relation">The <em>happens-before</em> Relation</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#use-cases">Use-cases</a><ul>
+<li><a class="reference internal" href="#spirv-nonprivatepointer">SPIRV <code class="docutils literal notranslate"><span class="pre">NonPrivatePointer</span></code></a><ul>
+<li><a class="reference internal" href="#implementation-example">Implementation Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#memory-types">Memory Types</a><ul>
+<li><a class="reference internal" href="#implementation-example-adding-address-space-information-to-fences">Implementation Example: Adding Address Space Information to Fences</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#additional-topics">Additional Topics</a><ul>
+<li><a class="reference internal" href="#performance-impact">Performance Impact</a></li>
+<li><a class="reference internal" href="#consequences-of-the-absence-of-happens-before">Consequences of the Absence of <em>happens-before</em></a></li>
+<li><a class="reference internal" href="#combining-operations">Combining Operations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=7d86a446"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

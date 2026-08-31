@@ -1,0 +1,1729 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜索" href="search.html" /><link rel="next" title="Debugging JIT-ed Code" href="DebuggingJITedCode.html" /><link rel="prev" title="ORC Design and Implementation" href="ORCv2.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/JITLink.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>JITLink and ORC’s ObjectLinkingLayer - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜索" name="q" aria-label="搜索">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/JITLink.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="jitlink-and-orc-s-objectlinkinglayer">
+<h1>JITLink and ORC’s ObjectLinkingLayer<a class="headerlink" href="#jitlink-and-orc-s-objectlinkinglayer" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>This document aims to provide a high-level overview of the design and API
+of the JITLink library. It assumes some familiarity with linking and
+relocatable object files, but should not require deep expertise. If you know
+what a section, symbol, and relocation are then you should find this document
+accessible. If it is not, please submit a patch (<a class="reference internal" href="Contributing.html"><span class="doc">Contributing to LLVM</span></a>) or file a
+bug (<a class="reference internal" href="HowToSubmitABug.html"><span class="doc">How to submit an LLVM bug report</span></a>).</p>
+<p>JITLink is a library for <a class="reference internal" href="#jit-linking"><span class="std std-ref">JIT Linking</span></a>. It was built to support the
+<a class="reference internal" href="ORCv2.html"><span class="doc">ORC JIT APIs</span></a> and is most commonly accessed via ORC’s
+ObjectLinkingLayer API. JITLink was developed with the aim of supporting the
+full set of features provided by each object format; including static
+initializers, exception handling, thread local variables, and language runtime
+registration. Supporting these features enables
+ORC to execute code generated from source languages which rely on these features
+(e.g. C++ requires object format support for static initializers to support
+static constructors, eh-frame registration for exceptions, and TLV support for
+thread locals; Swift and Objective-C require language runtime registration for
+many features). For some object format features support is provided entirely
+within JITLink, and for others it is provided in cooperation with the
+(prototype) ORC runtime.</p>
+<p>JITLink aims to support the following features, some of which are still under
+development:</p>
+<ol class="arabic simple">
+<li><p>Cross-process and cross-architecture linking of single relocatable objects
+into a target <em>executor</em> process.</p></li>
+<li><p>Support for all object format features.</p></li>
+<li><p>Open linker data structures (<code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code>) and pass system.</p></li>
+</ol>
+</section>
+<section id="jitlink-and-objectlinkinglayer">
+<h2>JITLink and ObjectLinkingLayer<a class="headerlink" href="#jitlink-and-objectlinkinglayer" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer</span></code> is ORCs wrapper for JITLink. It is an ORC layer that
+allows objects to be added to a <code class="docutils literal notranslate"><span class="pre">JITDylib</span></code>, or emitted from some higher level
+program representation. When an object is emitted, <code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer</span></code> uses
+JITLink to construct a <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> (see <a class="reference internal" href="#constructing-linkgraphs"><span class="std std-ref">Constructing LinkGraphs</span></a>) and
+calls JITLink’s <code class="docutils literal notranslate"><span class="pre">link</span></code> function to link the graph into the executor process.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer</span></code> class provides a plugin API,
+<code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer::Plugin</span></code>, which users can subclass in order to inspect and
+modify <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> instances at link time, and react to important JIT events
+(such as an object being emitted into target memory). This enables many features
+and optimizations that were not possible under MCJIT or RuntimeDyld.</p>
+<section id="objectlinkinglayer-plugins">
+<h3>ObjectLinkingLayer Plugins<a class="headerlink" href="#objectlinkinglayer-plugins" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer::Plugin</span></code> class provides the following methods:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">modifyPassConfig</span></code> is called each time a LinkGraph is about to be linked. It
+can be overridden to install JITLink <em>Passes</em> to run during the link process.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">modifyPassConfig</span><span class="p">(</span><span class="n">MaterializationResponsibility</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MR</span><span class="p">,</span>
+<span class="w">                      </span><span class="n">jitlink</span><span class="o">::</span><span class="n">LinkGraph</span><span class="w"> </span><span class="o">&amp;</span><span class="n">G</span><span class="p">,</span>
+<span class="w">                      </span><span class="n">jitlink</span><span class="o">::</span><span class="n">PassConfiguration</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Config</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">notifyLoaded</span></code> is called before the link begins, and can be overridden to
+set up any initial state for the given <code class="docutils literal notranslate"><span class="pre">MaterializationResponsibility</span></code> if
+needed.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">notifyLoaded</span><span class="p">(</span><span class="n">MaterializationResponsibility</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MR</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">notifyEmitted</span></code> is called after the link is complete and code has been
+emitted to the executor process. It can be overridden to finalize state
+for the <code class="docutils literal notranslate"><span class="pre">MaterializationResponsibility</span></code> if needed.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">Error</span><span class="w"> </span><span class="n">notifyEmitted</span><span class="p">(</span><span class="n">MaterializationResponsibility</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MR</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">notifyFailed</span></code> is called if the link fails at any point. It can be
+overridden to react to the failure (e.g. to deallocate any already allocated
+resources).</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">Error</span><span class="w"> </span><span class="n">notifyFailed</span><span class="p">(</span><span class="n">MaterializationResponsibility</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MR</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">notifyRemovingResources</span></code> is called when a request is made to remove any
+resources associated with the <code class="docutils literal notranslate"><span class="pre">ResourceKey</span></code> <em>K</em> for the
+<code class="docutils literal notranslate"><span class="pre">MaterializationResponsibility</span></code>.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">Error</span><span class="w"> </span><span class="n">notifyRemovingResources</span><span class="p">(</span><span class="n">JITDylib</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD</span><span class="p">,</span><span class="w"> </span><span class="n">ResourceKey</span><span class="w"> </span><span class="n">K</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">notifyTransferringResources</span></code> is called if/when a request is made to
+transfer tracking of any resources associated with <code class="docutils literal notranslate"><span class="pre">ResourceKey</span></code>
+<em>SrcKey</em> to <em>DstKey</em>.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">notifyTransferringResources</span><span class="p">(</span><span class="n">JITDylib</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD</span><span class="p">,</span><span class="w"> </span><span class="n">ResourceKey</span><span class="w"> </span><span class="n">DstKey</span><span class="p">,</span>
+<span class="w">                                 </span><span class="n">ResourceKey</span><span class="w"> </span><span class="n">SrcKey</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Plugin authors are required to implement the <code class="docutils literal notranslate"><span class="pre">notifyFailed</span></code>,
+<code class="docutils literal notranslate"><span class="pre">notifyRemovingResources</span></code>, and <code class="docutils literal notranslate"><span class="pre">notifyTransferringResources</span></code> methods in
+order to safely manage resources in the case of resource removal or transfer,
+or link failure. If no resources are managed by the plugin then these methods
+can be implemented as no-ops returning <code class="docutils literal notranslate"><span class="pre">Error::success()</span></code>.</p>
+<p>Plugin instances are added to an <code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer</span></code> by
+calling the <code class="docutils literal notranslate"><span class="pre">addPlugin</span></code> method <a class="footnote-reference brackets" href="#id7" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>. E.g.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Plugin class to print the set of defined symbols in an object when that</span>
+<span class="c1">// object is linked.</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyPlugin</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">ObjectLinkingLayer</span><span class="o">::</span><span class="n">Plugin</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+
+<span class="w">  </span><span class="c1">// Add passes to print the set of defined symbols after dead-stripping.</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">modifyPassConfig</span><span class="p">(</span><span class="n">MaterializationResponsibility</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MR</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">jitlink</span><span class="o">::</span><span class="n">LinkGraph</span><span class="w"> </span><span class="o">&amp;</span><span class="n">G</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">jitlink</span><span class="o">::</span><span class="n">PassConfiguration</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Config</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Config</span><span class="p">.</span><span class="n">PostPrunePasses</span><span class="p">.</span><span class="n">push_back</span><span class="p">([</span><span class="k">this</span><span class="p">](</span><span class="n">jitlink</span><span class="o">::</span><span class="n">LinkGraph</span><span class="w"> </span><span class="o">&amp;</span><span class="n">G</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">printAllSymbols</span><span class="p">(</span><span class="n">G</span><span class="p">);</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Implement mandatory overrides:</span>
+<span class="w">  </span><span class="n">Error</span><span class="w"> </span><span class="n">notifyFailed</span><span class="p">(</span><span class="n">MaterializationResponsibility</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MR</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">Error</span><span class="o">::</span><span class="n">success</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">Error</span><span class="w"> </span><span class="n">notifyRemovingResources</span><span class="p">(</span><span class="n">JITDylib</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD</span><span class="p">,</span><span class="w"> </span><span class="n">ResourceKey</span><span class="w"> </span><span class="n">K</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">Error</span><span class="o">::</span><span class="n">success</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">notifyTransferringResources</span><span class="p">(</span><span class="n">JITDylib</span><span class="w"> </span><span class="o">&amp;</span><span class="n">JD</span><span class="p">,</span><span class="w"> </span><span class="n">ResourceKey</span><span class="w"> </span><span class="n">DstKey</span><span class="p">,</span>
+<span class="w">                                   </span><span class="n">ResourceKey</span><span class="w"> </span><span class="n">SrcKey</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{}</span>
+
+<span class="w">  </span><span class="c1">// JITLink pass to print all defined symbols in G.</span>
+<span class="w">  </span><span class="n">Error</span><span class="w"> </span><span class="n">printAllSymbols</span><span class="p">(</span><span class="n">LinkGraph</span><span class="w"> </span><span class="o">&amp;</span><span class="n">G</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">Sym</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">G</span><span class="p">.</span><span class="n">defined_symbols</span><span class="p">())</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Sym</span><span class="o">-&gt;</span><span class="n">hasName</span><span class="p">())</span>
+<span class="w">        </span><span class="n">dbgs</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">Sym</span><span class="o">-&gt;</span><span class="n">getName</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">Error</span><span class="o">::</span><span class="n">success</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">// Create our LLJIT instance using a custom object linking layer setup.</span>
+<span class="c1">// This gives us a chance to install our plugin.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">J</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ExitOnErr</span><span class="p">(</span><span class="n">LLJITBuilder</span><span class="p">()</span>
+<span class="w">           </span><span class="p">.</span><span class="n">setObjectLinkingLayerCreator</span><span class="p">(</span>
+<span class="w">             </span><span class="p">[](</span><span class="n">ExecutionSession</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ES</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Triple</span><span class="w"> </span><span class="o">&amp;</span><span class="n">T</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">               </span><span class="c1">// Manually set up the ObjectLinkingLayer for our LLJIT</span>
+<span class="w">               </span><span class="c1">// instance.</span>
+<span class="w">               </span><span class="k">auto</span><span class="w"> </span><span class="n">OLL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">ObjectLinkingLayer</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">                   </span><span class="n">ES</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">jitlink</span><span class="o">::</span><span class="n">InProcessMemoryManager</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="w">               </span><span class="c1">// Install our plugin:</span>
+<span class="w">               </span><span class="n">OLL</span><span class="o">-&gt;</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">MyPlugin</span><span class="o">&gt;</span><span class="p">());</span>
+
+<span class="w">               </span><span class="k">return</span><span class="w"> </span><span class="n">OLL</span><span class="p">;</span>
+<span class="w">             </span><span class="p">})</span>
+<span class="w">           </span><span class="p">.</span><span class="n">create</span><span class="p">());</span>
+
+<span class="c1">// Add an object to the JIT. Nothing happens here: linking isn&#39;t triggered</span>
+<span class="c1">// until we look up some symbol in our object.</span>
+<span class="n">ExitOnErr</span><span class="p">(</span><span class="n">J</span><span class="o">-&gt;</span><span class="n">addObject</span><span class="p">(</span><span class="n">loadFromDisk</span><span class="p">(</span><span class="s">&quot;main.o&quot;</span><span class="p">)));</span>
+
+<span class="c1">// Plugin triggers here when our lookup of main triggers linking of main.o</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">MainSym</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">J</span><span class="o">-&gt;</span><span class="n">lookup</span><span class="p">(</span><span class="s">&quot;main&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="linkgraph">
+<h2>LinkGraph<a class="headerlink" href="#linkgraph" title="Link to this heading">#</a></h2>
+<p>JITLink maps all relocatable object formats to a generic <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> type
+that is designed to make linking fast and easy (<code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> instances can
+also be created manually. See <a class="reference internal" href="#constructing-linkgraphs"><span class="std std-ref">Constructing LinkGraphs</span></a>).</p>
+<p>Relocatable object formats (e.g. COFF, ELF, MachO) differ in their details,
+but share a common goal: to represent machine level code and data with
+annotations that allow them to be relocated in a virtual address space. To
+this end they usually contain names (symbols) for content defined inside the
+file or externally, chunks of content that must be moved as a unit (sections
+or subsections, depending on the format), and annotations describing how to
+patch content based on the final address of some target symbol/section
+(relocations).</p>
+<p>At a high level, the <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> type represents these concepts as a decorated
+graph. Nodes in the graph represent symbols and content, and edges represent
+relocations. Each of the elements of the graph is listed here:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Addressable</span></code> – A node in the link graph that can be assigned an address
+in the executor process’s virtual address space.</p>
+<p>Absolute and external symbols are represented using plain <code class="docutils literal notranslate"><span class="pre">Addressable</span></code>
+instances. Content defined inside the object file is represented using the
+<code class="docutils literal notranslate"><span class="pre">Block</span></code> subclass.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Block</span></code> – An <code class="docutils literal notranslate"><span class="pre">Addressable</span></code> node that has <code class="docutils literal notranslate"><span class="pre">Content</span></code> (or is marked as
+zero-filled), a parent <code class="docutils literal notranslate"><span class="pre">Section</span></code>, a <code class="docutils literal notranslate"><span class="pre">Size</span></code>, an <code class="docutils literal notranslate"><span class="pre">Alignment</span></code> (and an
+<code class="docutils literal notranslate"><span class="pre">AlignmentOffset</span></code>), and a list of <code class="docutils literal notranslate"><span class="pre">Edge</span></code> instances.</p>
+<p>Blocks provide a container for binary content which must remain contiguous in
+the target address space (a <em>layout unit</em>). Many interesting low level
+operations on <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> instances involve inspecting or mutating block
+content or edges.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Content</span></code> is represented as an <code class="docutils literal notranslate"><span class="pre">llvm::StringRef</span></code>, and accessible via
+the <code class="docutils literal notranslate"><span class="pre">getContent</span></code> method. Content is only available for content blocks,
+and not for zero-fill blocks (use <code class="docutils literal notranslate"><span class="pre">isZeroFill</span></code> to check, and prefer
+<code class="docutils literal notranslate"><span class="pre">getSize</span></code> when only the block size is needed as it works for both
+zero-fill and content blocks).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Section</span></code> is represented as a <code class="docutils literal notranslate"><span class="pre">Section&amp;</span></code> reference, and accessible via
+the <code class="docutils literal notranslate"><span class="pre">getSection</span></code> method. The <code class="docutils literal notranslate"><span class="pre">Section</span></code> class is described in more detail
+below.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Size</span></code> is represented as a <code class="docutils literal notranslate"><span class="pre">size_t</span></code>, and is accessible via the
+<code class="docutils literal notranslate"><span class="pre">getSize</span></code> method for both content and zero-filled blocks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Alignment</span></code> is represented as a <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code>, and available via the
+<code class="docutils literal notranslate"><span class="pre">getAlignment</span></code> method. It represents the minimum alignment requirement (in
+bytes) of the start of the block.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AlignmentOffset</span></code> is represented as a <code class="docutils literal notranslate"><span class="pre">uint64_t</span></code>, and accessible via the
+<code class="docutils literal notranslate"><span class="pre">getAlignmentOffset</span></code> method. It represents the offset from the alignment
+required for the start of the block. This is required to support blocks
+whose minimum alignment requirement comes from data at some non-zero offset
+inside the block. E.g. if a block consists of a single byte (with byte
+alignment) followed by a uint64_t (with 8-byte alignment), then the block
+will have 8-byte alignment with an alignment offset of 7.</p></li>
+<li><p>list of <code class="docutils literal notranslate"><span class="pre">Edge</span></code> instances. An iterator range for this list is returned by
+the <code class="docutils literal notranslate"><span class="pre">edges</span></code> method. The <code class="docutils literal notranslate"><span class="pre">Edge</span></code> class is described in more detail below.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Symbol</span></code> – An offset from an <code class="docutils literal notranslate"><span class="pre">Addressable</span></code> (often a <code class="docutils literal notranslate"><span class="pre">Block</span></code>), with an
+optional <code class="docutils literal notranslate"><span class="pre">Name</span></code>, a <code class="docutils literal notranslate"><span class="pre">Linkage</span></code>, a <code class="docutils literal notranslate"><span class="pre">Scope</span></code>, a <code class="docutils literal notranslate"><span class="pre">Callable</span></code> flag, and a
+<code class="docutils literal notranslate"><span class="pre">Live</span></code> flag.</p>
+<p>Symbols make it possible to name content (blocks and addressables are
+anonymous), or target content with an <code class="docutils literal notranslate"><span class="pre">Edge</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code> is represented as an <code class="docutils literal notranslate"><span class="pre">llvm::StringRef</span></code> (equal to
+<code class="docutils literal notranslate"><span class="pre">llvm::StringRef()</span></code> if the symbol has no name), and accessible via the
+<code class="docutils literal notranslate"><span class="pre">getName</span></code> method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Linkage</span></code> is one of <em>Strong</em> or <em>Weak</em>, and is accessible via the
+<code class="docutils literal notranslate"><span class="pre">getLinkage</span></code> method. The <code class="docutils literal notranslate"><span class="pre">JITLinkContext</span></code> can use this flag to determine
+whether this symbol definition should be kept or dropped.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Scope</span></code> is one of <em>Default</em>, <em>Hidden</em>, or <em>Local</em>, and is accessible via
+the <code class="docutils literal notranslate"><span class="pre">getScope</span></code> method. The <code class="docutils literal notranslate"><span class="pre">JITLinkContext</span></code> can use this to determine
+who should be able to see the symbol. A symbol with default scope should be
+globally visible. A symbol with hidden scope should be visible to other
+definitions within the same simulated dylib (e.g. ORC <code class="docutils literal notranslate"><span class="pre">JITDylib</span></code>) or
+executable, but not from elsewhere. A symbol with local scope should only be
+visible within the current <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Callable</span></code> is a boolean which is set to true if this symbol can be called,
+and is accessible via the <code class="docutils literal notranslate"><span class="pre">isCallable</span></code> method. This can be used to
+automate the introduction of call-stubs for lazy compilation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Live</span></code> is a boolean that can be set to mark this symbol as root for
+dead-stripping purposes (see <a class="reference internal" href="#generic-link-algorithm"><span class="std std-ref">Generic Link Algorithm</span></a>). JITLink’s
+dead-stripping algorithm will propagate liveness flags through the graph to
+all reachable symbols before deleting any symbols (and blocks) that are not
+marked live.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Edge</span></code> – A quad of an <code class="docutils literal notranslate"><span class="pre">Offset</span></code> (implicitly from the start of the
+containing <code class="docutils literal notranslate"><span class="pre">Block</span></code>), a <code class="docutils literal notranslate"><span class="pre">Kind</span></code> (describing the relocation type), a
+<code class="docutils literal notranslate"><span class="pre">Target</span></code>, and an <code class="docutils literal notranslate"><span class="pre">Addend</span></code>.</p>
+<p>Edges represent relocations, and occasionally other relationships, between
+blocks and symbols.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Offset</span></code>, accessible via <code class="docutils literal notranslate"><span class="pre">getOffset</span></code>, is an offset from the start of the
+<code class="docutils literal notranslate"><span class="pre">Block</span></code> containing the <code class="docutils literal notranslate"><span class="pre">Edge</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Kind</span></code>, accessible via <code class="docutils literal notranslate"><span class="pre">getKind</span></code> is a relocation type – it describes
+what kinds of changes (if any) should be made to block content at the given
+<code class="docutils literal notranslate"><span class="pre">Offset</span></code> based on the address of the <code class="docutils literal notranslate"><span class="pre">Target</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Target</span></code>, accessible via <code class="docutils literal notranslate"><span class="pre">getTarget</span></code>, is a pointer to a <code class="docutils literal notranslate"><span class="pre">Symbol</span></code>,
+representing whose address is relevant to the fixup calculation specified by
+the edge’s <code class="docutils literal notranslate"><span class="pre">Kind</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Addend</span></code>, accessible via <code class="docutils literal notranslate"><span class="pre">getAddend</span></code>, is a constant whose interpretation
+is determined by the edge’s <code class="docutils literal notranslate"><span class="pre">Kind</span></code>.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Section</span></code> – A set of <code class="docutils literal notranslate"><span class="pre">Symbol</span></code> instances, plus a set of <code class="docutils literal notranslate"><span class="pre">Block</span></code>
+instances, with a <code class="docutils literal notranslate"><span class="pre">Name</span></code>, a set of <code class="docutils literal notranslate"><span class="pre">ProtectionFlags</span></code>, and an <code class="docutils literal notranslate"><span class="pre">Ordinal</span></code>.</p>
+<p>Sections make it easy to iterate over the symbols or blocks associated with
+a particular section in the source object file.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">blocks()</span></code> returns an iterator over the set of blocks defined in the
+section (as <code class="docutils literal notranslate"><span class="pre">Block*</span></code> pointers).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">symbols()</span></code> returns an iterator over the set of symbols defined in the
+section (as <code class="docutils literal notranslate"><span class="pre">Symbol*</span></code> pointers).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code> is represented as an <code class="docutils literal notranslate"><span class="pre">llvm::StringRef</span></code>, and is accessible via the
+<code class="docutils literal notranslate"><span class="pre">getName</span></code> method.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ProtectionFlags</span></code> are represented as a sys::Memory::ProtectionFlags enum,
+and accessible via the <code class="docutils literal notranslate"><span class="pre">getProtectionFlags</span></code> method. These flags describe
+whether the section is readable, writable, executable, or some combination
+of these. The most common combinations are <code class="docutils literal notranslate"><span class="pre">RW-</span></code> for writable data,
+<code class="docutils literal notranslate"><span class="pre">R--</span></code> for constant data, and <code class="docutils literal notranslate"><span class="pre">R-X</span></code> for code.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SectionOrdinal</span></code>, accessible via <code class="docutils literal notranslate"><span class="pre">getOrdinal</span></code>, is a number used to order
+the section relative to others. It is usually used to preserve section
+order within a segment (a set of sections with the same memory protections)
+when laying out memory.</p></li>
+</ul>
+</li>
+</ul>
+<p>For the graph-theorists: The <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> is bipartite, with one set of
+<code class="docutils literal notranslate"><span class="pre">Symbol</span></code> nodes and one set of <code class="docutils literal notranslate"><span class="pre">Addressable</span></code> nodes. Each <code class="docutils literal notranslate"><span class="pre">Symbol</span></code> node has
+one (implicit) edge to its target <code class="docutils literal notranslate"><span class="pre">Addressable</span></code>. Each <code class="docutils literal notranslate"><span class="pre">Block</span></code> has a set of
+edges (possibly empty, represented as <code class="docutils literal notranslate"><span class="pre">Edge</span></code> instances) back to elements of
+the <code class="docutils literal notranslate"><span class="pre">Symbol</span></code> set. For convenience and performance of common algorithms,
+symbols and blocks are further grouped into <code class="docutils literal notranslate"><span class="pre">Sections</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> itself provides operations for constructing, removing, and
+iterating over sections, symbols, and blocks. It also provides metadata
+and utilities relevant to the linking process:</p>
+<ul class="simple">
+<li><p>Graph element operations</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">sections</span></code> returns an iterator over all sections in the graph.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">findSectionByName</span></code> returns a pointer to the section with the given
+name (as a <code class="docutils literal notranslate"><span class="pre">Section*</span></code>) if it exists, otherwise returns a nullptr.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">blocks</span></code> returns an iterator over all blocks in the graph (across all
+sections).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">defined_symbols</span></code> returns an iterator over all defined symbols in the
+graph (across all sections).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">external_symbols</span></code> returns an iterator over all external symbols in the
+graph.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">absolute_symbols</span></code> returns an iterator over all absolute symbols in the
+graph.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">createSection</span></code> creates a section with a given name and protection flags.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">createContentBlock</span></code> creates a block with the given initial content,
+parent section, address, alignment, and alignment offset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">createZeroFillBlock</span></code> creates a zero-fill block with the given size,
+parent section, address, alignment, and alignment offset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">addExternalSymbol</span></code> creates a new addressable and symbol with a given
+name, size, and linkage.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">addAbsoluteSymbol</span></code> creates a new addressable and symbol with a given
+name, address, size, linkage, scope, and liveness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">addCommonSymbol</span></code> convenience function for creating a zero-filled block
+and weak symbol with a given name, scope, section, initial address, size,
+alignment and liveness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">addAnonymousSymbol</span></code> creates a new anonymous symbol for a given block,
+offset, size, callable-ness, and liveness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">addDefinedSymbol</span></code> creates a new symbol for a given block with a name,
+offset, size, linkage, scope, callable-ness and liveness.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">makeExternal</span></code> transforms a formerly defined symbol into an external one
+by creating a new addressable and pointing the symbol at it. The existing
+block is not deleted, but can be manually removed (if unreferenced) by
+calling <code class="docutils literal notranslate"><span class="pre">removeBlock</span></code>. All edges to the symbol remain valid, but the
+symbol must now be defined outside this <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">removeExternalSymbol</span></code> removes an external symbol and its target
+addressable. The target addressable must not be referenced by any other
+symbols.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">removeAbsoluteSymbol</span></code> removes an absolute symbol and its target
+addressable. The target addressable must not be referenced by any other
+symbols.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">removeDefinedSymbol</span></code> removes a defined symbol, but <em>does not</em> remove
+its target block.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">removeBlock</span></code> removes the given block.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">splitBlock</span></code> split a given block in two at a given index (useful where
+it is known that a block contains decomposable records, e.g. CFI records
+in an eh-frame section).</p></li>
+</ul>
+</li>
+<li><p>Graph utility operations</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">getName</span></code> returns the name of this graph, which is usually based on the
+name of the input object file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">getTargetTriple</span></code> returns an <code class="docutils literal notranslate"><span class="pre">llvm::Triple</span></code> for the executor process.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">getPointerSize</span></code> returns the size of a pointer (in bytes) in the executor
+process.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">getEndianness</span></code> returns the endianness of the executor process.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">allocateString</span></code> copies data from a given <code class="docutils literal notranslate"><span class="pre">llvm::Twine</span></code> into the
+link graph’s internal allocator. This can be used to ensure that content
+created inside a pass outlives that pass’s execution.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="generic-link-algorithm">
+<span id="id2"></span><h2>Generic Link Algorithm<a class="headerlink" href="#generic-link-algorithm" title="Link to this heading">#</a></h2>
+<p>JITLink provides a generic link algorithm which can be extended / modified at
+certain points by the introduction of JITLink <a class="reference internal" href="#passes"><span class="std std-ref">Passes</span></a>.</p>
+<p>At the end of each phase the linker packages its state into a <em>continuation</em>
+and calls the <code class="docutils literal notranslate"><span class="pre">JITLinkContext</span></code> object to perform a (potentially high-latency)
+asynchronous operation: allocating memory, resolving external symbols, and
+finally transferring linked memory to the executing process.</p>
+<ol class="arabic">
+<li><p>Phase 1</p>
+<p>This phase is called immediately by the <code class="docutils literal notranslate"><span class="pre">link</span></code> function as soon as the
+initial configuration (including the pass pipeline setup) is complete.</p>
+<ol class="arabic">
+<li><p>Run pre-prune passes.</p>
+<p>These passes are called on the graph before it is pruned. At this stage
+<code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> nodes still have their original vmaddrs. A mark-live pass
+(supplied by the <code class="docutils literal notranslate"><span class="pre">JITLinkContext</span></code>) will be run at the end of this
+sequence to mark the initial set of live symbols.</p>
+<p>Notable use cases: marking nodes live, accessing/copying graph data that
+will be pruned (e.g. metadata that’s important for the JIT, but not needed
+for the link process).</p>
+</li>
+<li><p>Prune (dead-strip) the <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code>.</p>
+<p>Removes all symbols and blocks not reachable from the initial set of live
+symbols.</p>
+<p>This allows JITLink to remove unreachable symbols / content, including
+overridden weak and redundant ODR definitions.</p>
+</li>
+<li><p>Run post-prune passes.</p>
+<p>These passes are run on the graph after dead-stripping, but before memory
+is allocated or nodes assigned their final target vmaddrs.</p>
+<p>Passes run at this stage benefit from pruning, as dead functions and data
+have been stripped from the graph. However new content can still be added
+to the graph, as target and working memory have not been allocated yet.</p>
+<p>Notable use cases: Building Global Offset Table (GOT), Procedure Linkage
+Table (PLT), and Thread Local Variable (TLV) entries.</p>
+</li>
+<li><p>Asynchronously allocate memory.</p>
+<p>Calls the <code class="docutils literal notranslate"><span class="pre">JITLinkContext</span></code>’s <code class="docutils literal notranslate"><span class="pre">JITLinkMemoryManager</span></code> to allocate both
+working and target memory for the graph. As part of this process the
+<code class="docutils literal notranslate"><span class="pre">JITLinkMemoryManager</span></code> will update the addresses of all nodes
+defined in the graph to their assigned target address.</p>
+<p>Note: This step only updates the addresses of nodes defined in this graph.
+External symbols will still have null addresses.</p>
+</li>
+</ol>
+</li>
+<li><p>Phase 2</p>
+<ol class="arabic">
+<li><p>Run post-allocation passes.</p>
+<p>These passes are run on the graph after working and target memory have
+been allocated, but before the <code class="docutils literal notranslate"><span class="pre">JITLinkContext</span></code> is notified of the
+final addresses of the symbols in the graph. This gives these passes a
+chance to set up data structures associated with target addresses before
+any JITLink clients (especially ORC queries for symbol resolution) can
+attempt to access them.</p>
+<p>Notable use cases: Setting up mappings between target addresses and
+JIT data structures, such as a mapping between <code class="docutils literal notranslate"><span class="pre">__dso_handle</span></code> and
+<code class="docutils literal notranslate"><span class="pre">JITDylib*</span></code>.</p>
+</li>
+<li><p>Notify the <code class="docutils literal notranslate"><span class="pre">JITLinkContext</span></code> of the assigned symbol addresses.</p>
+<p>Calls <code class="docutils literal notranslate"><span class="pre">JITLinkContext::notifyResolved</span></code> on the link graph, allowing
+clients to react to the symbol address assignments made for this graph.
+In ORC this is used to notify any pending queries for <em>resolved</em> symbols,
+including pending queries from concurrently running JITLink instances that
+have reached the next step and are waiting on the address of a symbol in
+this graph to proceed with their link.</p>
+</li>
+<li><p>Identify external symbols and resolve their addresses asynchronously.</p>
+<p>Calls the <code class="docutils literal notranslate"><span class="pre">JITLinkContext</span></code> to resolve the target address of any external
+symbols in the graph.</p>
+</li>
+</ol>
+</li>
+<li><p>Phase 3</p>
+<ol class="arabic">
+<li><p>Apply external symbol resolution results.</p>
+<p>This updates the addresses of all external symbols. At this point all
+nodes in the graph have their final target addresses, however node
+content still points back to the original data in the object file.</p>
+</li>
+<li><p>Run pre-fixup passes.</p>
+<p>These passes are called on the graph after all nodes have been assigned
+their final target addresses, but before node content is copied into
+working memory and fixed up. Passes run at this stage can make late
+optimizations to the graph and content based on address layout.</p>
+<p>Notable use cases: GOT and PLT relaxation, where GOT and PLT accesses are
+bypassed for fixup targets that are directly accessible under the assigned
+memory layout.</p>
+</li>
+<li><p>Copy block content to working memory and apply fixups.</p>
+<p>Copies all block content into allocated working memory (following the
+target layout) and applies fixups. Graph blocks are updated to point at
+the fixed up content.</p>
+</li>
+<li><p>Run post-fixup passes.</p>
+<p>These passes are called on the graph after fixups have been applied and
+blocks updated to point to the fixed up content.</p>
+<p>Post-fixup passes can inspect blocks contents to see the exact bytes that
+will be copied to the assigned target addresses.</p>
+</li>
+<li><p>Finalize memory asynchronously.</p>
+<p>Calls the <code class="docutils literal notranslate"><span class="pre">JITLinkMemoryManager</span></code> to copy working memory to the executor
+process and apply the requested permissions.</p>
+</li>
+</ol>
+</li>
+<li><p>Phase 3.</p>
+<ol class="arabic">
+<li><p>Notify the context that the graph has been emitted.</p>
+<p>Calls <code class="docutils literal notranslate"><span class="pre">JITLinkContext::notifyFinalized</span></code> and hands off the
+<code class="docutils literal notranslate"><span class="pre">JITLinkMemoryManager::FinalizedAlloc</span></code> object for this graph’s memory
+allocation. This allows the context to track/hold memory allocations and
+react to the newly emitted definitions. In ORC this is used to update the
+<code class="docutils literal notranslate"><span class="pre">ExecutionSession</span></code> instance’s dependence graph, which may result in
+these symbols (and possibly others) becoming <em>Ready</em> if all of their
+dependencies have also been emitted.</p>
+</li>
+</ol>
+</li>
+</ol>
+<section id="passes">
+<span id="id3"></span><h3>Passes<a class="headerlink" href="#passes" title="Link to this heading">#</a></h3>
+<p>JITLink passes are <code class="docutils literal notranslate"><span class="pre">std::function&lt;Error(LinkGraph&amp;)&gt;</span></code> instances. They are free
+to inspect and modify the given <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> subject to the constraints of
+whatever phase they are running in (see <a class="reference internal" href="#generic-link-algorithm"><span class="std std-ref">Generic Link Algorithm</span></a>). If a
+pass returns <code class="docutils literal notranslate"><span class="pre">Error::success()</span></code> then linking continues. If a pass returns
+a failure value then linking is stopped and the <code class="docutils literal notranslate"><span class="pre">JITLinkContext</span></code> is notified
+that the link failed.</p>
+<p>Passes may be used by both JITLink backends (e.g. MachO/x86-64 implements GOT
+and PLT construction as a pass), and external clients like
+<code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer::Plugin</span></code>.</p>
+<p>In combination with the open <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> API, JITLink passes enable the
+implementation of powerful new features. For example:</p>
+<ul>
+<li><p>Relaxation optimizations – A pre-fixup pass can inspect GOT accesses and PLT
+calls and identify situations where the addresses of the entry target and the
+access are close enough to be accessed directly. In this case the pass can
+rewrite the instruction stream of the containing block and update the fixup
+edges to make the access direct.</p>
+<p>Code for this looks like:</p>
+</li>
+</ul>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">Error</span><span class="w"> </span><span class="nf">relaxGOTEdges</span><span class="p">(</span><span class="n">LinkGraph</span><span class="w"> </span><span class="o">&amp;</span><span class="n">G</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">B</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">G</span><span class="p">.</span><span class="n">blocks</span><span class="p">())</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">E</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">B</span><span class="o">-&gt;</span><span class="n">edges</span><span class="p">())</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">E</span><span class="p">.</span><span class="n">getKind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">x86_64</span><span class="o">::</span><span class="n">GOTLoad</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">GOTTarget</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getGOTEntryTarget</span><span class="p">(</span><span class="n">E</span><span class="p">.</span><span class="n">getTarget</span><span class="p">());</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isInRange</span><span class="p">(</span><span class="n">B</span><span class="p">.</span><span class="n">getFixupAddress</span><span class="p">(</span><span class="n">E</span><span class="p">),</span><span class="w"> </span><span class="n">GOTTarget</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="c1">// Rewrite B.getContent() at fixup address from</span>
+<span class="w">          </span><span class="c1">// MOVQ to LEAQ</span>
+
+<span class="w">          </span><span class="c1">// Update edge target and kind.</span>
+<span class="w">          </span><span class="n">E</span><span class="p">.</span><span class="n">setTarget</span><span class="p">(</span><span class="n">GOTTarget</span><span class="p">);</span>
+<span class="w">          </span><span class="n">E</span><span class="p">.</span><span class="n">setKind</span><span class="p">(</span><span class="n">x86_64</span><span class="o">::</span><span class="n">PCRel32</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Error</span><span class="o">::</span><span class="n">success</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Metadata registration – Post allocation passes can be used to record the
+address range of sections in the target. This can be used to register the
+metadata (e.g exception handling frames, language metadata) in the target
+once memory has been finalized.</p></li>
+</ul>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">Error</span><span class="w"> </span><span class="nf">registerEHFrameSection</span><span class="p">(</span><span class="n">LinkGraph</span><span class="w"> </span><span class="o">&amp;</span><span class="n">G</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">Sec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">G</span><span class="p">.</span><span class="n">findSectionByName</span><span class="p">(</span><span class="s">&quot;__eh_frame&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">SectionRange</span><span class="w"> </span><span class="n">SR</span><span class="p">(</span><span class="o">*</span><span class="n">Sec</span><span class="p">);</span>
+<span class="w">    </span><span class="n">registerEHFrameSection</span><span class="p">(</span><span class="n">SR</span><span class="p">.</span><span class="n">getStart</span><span class="p">(),</span><span class="w"> </span><span class="n">SR</span><span class="p">.</span><span class="n">getEnd</span><span class="p">());</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Error</span><span class="o">::</span><span class="n">success</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Record call sites for later mutation – A post-allocation pass can record
+the call sites of all calls to a particular function, allowing those call
+sites to be updated later at runtime (e.g. for instrumentation, or to
+enable the function to be lazily compiled but still called directly after
+compilation).</p></li>
+</ul>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">StringRef</span><span class="w"> </span><span class="n">FunctionName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;foo&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ExecutorAddr</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CallSitesForFunction</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">RecordCallSites</span><span class="w"> </span><span class="o">=</span>
+<span class="w">  </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">LinkGraph</span><span class="w"> </span><span class="o">&amp;</span><span class="n">G</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Error</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">B</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">G</span><span class="p">.</span><span class="n">blocks</span><span class="p">())</span>
+<span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">E</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">B</span><span class="p">.</span><span class="n">edges</span><span class="p">())</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">E</span><span class="p">.</span><span class="n">getKind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">CallEdgeKind</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">            </span><span class="n">E</span><span class="p">.</span><span class="n">getTarget</span><span class="p">().</span><span class="n">hasName</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">            </span><span class="n">E</span><span class="p">.</span><span class="n">getTraget</span><span class="p">().</span><span class="n">getName</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">FunctionName</span><span class="p">)</span>
+<span class="w">          </span><span class="n">CallSitesForFunction</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">B</span><span class="p">.</span><span class="n">getFixupAddress</span><span class="p">(</span><span class="n">E</span><span class="p">));</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">Error</span><span class="o">::</span><span class="n">success</span><span class="p">();</span>
+<span class="w">  </span><span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="memory-management-with-jitlinkmemorymanager">
+<h3>Memory Management with JITLinkMemoryManager<a class="headerlink" href="#memory-management-with-jitlinkmemorymanager" title="Link to this heading">#</a></h3>
+<p>JIT linking requires allocation of two kinds of memory: working memory in the
+JIT process and target memory in the execution process (these processes and
+memory allocations may be one and the same, depending on how the user wants
+to build their JIT). It also requires that these allocations conform to the
+requested code model in the target process (e.g. MachO/x86-64’s Small code
+model requires that all code and data for a simulated dylib is allocated within
+4Gb). Finally, it is natural to make the memory manager responsible for
+transferring memory to the target address space and applying memory protections,
+since the memory manager must know how to communicate with the executor, and
+since sharing and protection assignment can often be efficiently managed (in
+the common case of running across processes on the same machine for security)
+via the host operating system’s virtual memory management APIs.</p>
+<p>To satisfy these requirements <code class="docutils literal notranslate"><span class="pre">JITLinkMemoryManager</span></code> adopts the following
+design: The memory manager itself has just two virtual methods for asynchronous
+operations (each with convenience overloads for calling synchronously):</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">/// Called when allocation has been completed.</span>
+<span class="k">using</span><span class="w"> </span><span class="n">OnAllocatedFunction</span><span class="w"> </span><span class="o">=</span>
+<span class="w">  </span><span class="n">unique_function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">Expected</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">InFlightAlloc</span><span class="o">&gt;</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="c1">/// Called when deallocation has completed.</span>
+<span class="k">using</span><span class="w"> </span><span class="n">OnDeallocatedFunction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unique_function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">Error</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="c1">/// Call to allocate memory.</span>
+<span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">allocate</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">JITLinkDylib</span><span class="w"> </span><span class="o">*</span><span class="n">JD</span><span class="p">,</span><span class="w"> </span><span class="n">LinkGraph</span><span class="w"> </span><span class="o">&amp;</span><span class="n">G</span><span class="p">,</span>
+<span class="w">                      </span><span class="n">OnAllocatedFunction</span><span class="w"> </span><span class="n">OnAllocated</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="c1">/// Call to deallocate memory.</span>
+<span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">deallocate</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">FinalizedAlloc</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Allocs</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">OnDeallocatedFunction</span><span class="w"> </span><span class="n">OnDeallocated</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">allocate</span></code> method takes a <code class="docutils literal notranslate"><span class="pre">JITLinkDylib*</span></code> representing the target
+simulated dylib, a reference to the <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> that must be allocated for,
+and a callback to run once an <code class="docutils literal notranslate"><span class="pre">InFlightAlloc</span></code> has been constructed.
+<code class="docutils literal notranslate"><span class="pre">JITLinkMemoryManager</span></code> implementations can (optionally) use the <code class="docutils literal notranslate"><span class="pre">JD</span></code>
+argument to manage a per-simulated-dylib memory pool (since code model
+constraints are typically imposed on a per-dylib basis, and not across
+dylibs) <a class="footnote-reference brackets" href="#id8" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>. The <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> describes the object file that we need to
+allocate memory for. The allocator must allocate working memory for all of
+the Blocks defined in the graph, assign address space for each Block within the
+executing processes memory, and update the Blocks’ addresses to reflect this
+assignment. Block content should be copied to working memory, but does not need
+to be transferred to executor memory yet (that will be done once the content is
+fixed up). <code class="docutils literal notranslate"><span class="pre">JITLinkMemoryManager</span></code> implementations can take full
+responsibility for these steps, or use the <code class="docutils literal notranslate"><span class="pre">BasicLayout</span></code> utility to reduce
+the task to allocating working and executor memory for <em>segments</em>: chunks of
+memory defined by permissions, alignments, content sizes, and zero-fill sizes.
+Once the allocation step is complete the memory manager should construct an
+<code class="docutils literal notranslate"><span class="pre">InFlightAlloc</span></code> object to represent the allocation, and then pass this object
+to the <code class="docutils literal notranslate"><span class="pre">OnAllocated</span></code> callback.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">InFlightAlloc</span></code> object has two virtual methods:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">OnFinalizedFunction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unique_function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">Expected</span><span class="o">&lt;</span><span class="n">FinalizedAlloc</span><span class="o">&gt;</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">OnAbandonedFunction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unique_function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">Error</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="c1">/// Called prior to finalization if the allocation should be abandoned.</span>
+<span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">abandon</span><span class="p">(</span><span class="n">OnAbandonedFunction</span><span class="w"> </span><span class="n">OnAbandoned</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="c1">/// Called to transfer working memory to the target and apply finalization.</span>
+<span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">finalize</span><span class="p">(</span><span class="n">OnFinalizedFunction</span><span class="w"> </span><span class="n">OnFinalized</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The linking process will call the <code class="docutils literal notranslate"><span class="pre">finalize</span></code> method on the <code class="docutils literal notranslate"><span class="pre">InFlightAlloc</span></code>
+object if linking succeeds up to the finalization step, otherwise it will call
+<code class="docutils literal notranslate"><span class="pre">abandon</span></code> to indicate that some error occurred during linking. A call to the
+<code class="docutils literal notranslate"><span class="pre">InFlightAlloc::finalize</span></code> method should cause content for the allocation to be
+transferred from working to executor memory, and permissions to be run. A call
+to <code class="docutils literal notranslate"><span class="pre">abandon</span></code> should result in both kinds of memory being deallocated.</p>
+<p>On successful finalization, the <code class="docutils literal notranslate"><span class="pre">InFlightAlloc::finalize</span></code> method should
+construct a <code class="docutils literal notranslate"><span class="pre">FinalizedAlloc</span></code> object (an opaque uint64_t id that the
+<code class="docutils literal notranslate"><span class="pre">JITLinkMemoryManager</span></code> can use to identify executor memory for deallocation)
+and pass it to the <code class="docutils literal notranslate"><span class="pre">OnFinalized</span></code> callback.</p>
+<p>Finalized allocations (represented by <code class="docutils literal notranslate"><span class="pre">FinalizedAlloc</span></code> objects) can be
+deallocated by calling the <code class="docutils literal notranslate"><span class="pre">JITLinkMemoryManager::dealloc</span></code> method. This method
+takes a vector of <code class="docutils literal notranslate"><span class="pre">FinalizedAlloc</span></code> objects, since it is common to deallocate
+multiple objects at the same time and this allows us to batch these requests for
+transmission to the executing process.</p>
+<p>JITLink provides a simple in-process implementation of this interface:
+<code class="docutils literal notranslate"><span class="pre">InProcessMemoryManager</span></code>. It allocates pages once and re-uses them as both
+working and target memory.</p>
+<p>ORC provides a cross-process-capable <code class="docutils literal notranslate"><span class="pre">MapperJITLinkMemoryManager</span></code> that can use
+shared memory or ORC-RPC-based communication to transfer content to the executing
+process.</p>
+</section>
+<section id="jitlinkmemorymanager-and-security">
+<h3>JITLinkMemoryManager and Security<a class="headerlink" href="#jitlinkmemorymanager-and-security" title="Link to this heading">#</a></h3>
+<p>JITLink’s ability to link JIT’d code for a separate executor process can be
+used to improve the security of a JIT system: The executor process can be
+sandboxed, run within a VM, or even run on a fully separate machine.</p>
+<p>JITLink’s memory manager interface is flexible enough to allow for a range of
+trade-offs between performance and security. For example, on a system where code
+pages must be signed (preventing code from being updated), the memory manager
+can deallocate working memory pages after linking to free memory in the process
+running JITLink. Alternatively, on a system that allows RWX pages, the memory
+manager may use the same pages for both working and target memory by marking
+them as RWX, allowing code to be modified in place without further overhead.
+Finally, if RWX pages are not permitted but dual-virtual-mappings of
+physical memory pages are, then the memory manager can dual map physical pages
+as RW- in the JITLink process and R-X in the executor process, allowing
+modification from the JITLink process but not from the executor (at the cost of
+extra administrative overhead for the dual mapping).</p>
+</section>
+<section id="error-handling">
+<h3>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading">#</a></h3>
+<p>JITLink makes extensive use of the <code class="docutils literal notranslate"><span class="pre">llvm::Error</span></code> type (see the error handling
+section of <a class="reference internal" href="ProgrammersManual.html"><span class="doc">LLVM Programmer’s Manual</span></a> for details). The link process itself, all
+passes, the memory manager interface, and operations on the <code class="docutils literal notranslate"><span class="pre">JITLinkContext</span></code>
+are all permitted to fail. Link graph construction utilities (especially parsers
+for object formats) are encouraged to validate input, and validate fixups
+(e.g. with range checks) before application.</p>
+<p>Any error will halt the link process and notify the context of failure. In ORC,
+reported failures are propagated to queries pending on definitions provided by
+the failing link, and also through edges of the dependence graph to any queries
+waiting on dependent symbols.</p>
+</section>
+</section>
+<section id="connection-to-the-orc-runtime">
+<span id="connection-to-orc-runtime"></span><h2>Connection to the ORC Runtime<a class="headerlink" href="#connection-to-the-orc-runtime" title="Link to this heading">#</a></h2>
+<p>The ORC Runtime (currently under development) aims to provide runtime support
+for advanced JIT features, including object format features that require
+non-trivial action in the executor (e.g. running initializers, managing thread
+local storage, registering with language runtimes, etc.).</p>
+<p>ORC Runtime support for object format features typically requires cooperation
+between the runtime (which executes in the executor process) and JITLink (which
+runs in the JIT process and can inspect LinkGraphs to determine what actions
+must be taken in the executor). For example: Execution of MachO static
+initializers in the ORC runtime is performed by the <code class="docutils literal notranslate"><span class="pre">jit_dlopen</span></code> function,
+which calls back to the JIT process to ask for the list of address ranges of
+<code class="docutils literal notranslate"><span class="pre">__mod_init</span></code> sections to walk. This list is collated by the
+<code class="docutils literal notranslate"><span class="pre">MachOPlatformPlugin</span></code>, which installs a pass to record this information for
+each object as it is linked into the target.</p>
+</section>
+<section id="constructing-linkgraphs">
+<span id="id5"></span><h2>Constructing LinkGraphs<a class="headerlink" href="#constructing-linkgraphs" title="Link to this heading">#</a></h2>
+<p>Clients usually access and manipulate <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> instances that were created
+for them by an <code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer</span></code> instance, but they can be created manually:</p>
+<ol class="arabic simple">
+<li><p>By directly constructing and populating a <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> instance.</p></li>
+<li><p>By using the <code class="docutils literal notranslate"><span class="pre">createLinkGraph</span></code> family of functions to create a
+<code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code> from an in-memory buffer containing an object file. This is how
+<code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer</span></code> usually creates <code class="docutils literal notranslate"><span class="pre">LinkGraphs</span></code>.</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">createLinkGraph_&lt;Object-Format&gt;_&lt;Architecture&gt;</span></code> can be used when
+both the object format and architecture are known ahead of time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">createLinkGraph_&lt;Object-Format&gt;</span></code> can be used when the object format is
+known ahead of time, but the architecture is not. In this case the
+architecture will be determined by inspection of the object header.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">createLinkGraph</span></code> can be used when neither the object format nor
+the architecture are known ahead of time. In this case the object header
+will be inspected to determine both the format and architecture.</p></li>
+</ol>
+</li>
+</ol>
+</section>
+<section id="jit-linking">
+<span id="id6"></span><h2>JIT Linking<a class="headerlink" href="#jit-linking" title="Link to this heading">#</a></h2>
+<p>The JIT linker concept was introduced in LLVM’s earlier generation of JIT APIs,
+MCJIT. In MCJIT the <em>RuntimeDyld</em> component enabled re-use of LLVM as an
+in-memory compiler by adding an in-memory link step to the end of the usual
+compiler pipeline. Rather than dumping relocatable objects to disk as a compiler
+usually would, MCJIT passed them to RuntimeDyld to be linked into a target
+process.</p>
+<p>This approach to linking differs from standard <em>static</em> or <em>dynamic</em> linking:</p>
+<p>A <em>static linker</em> takes one or more relocatable object files as input and links
+them into an executable or dynamic library on disk.</p>
+<p>A <em>dynamic linker</em> applies relocations to executables and dynamic libraries that
+have been loaded into memory.</p>
+<p>A <em>JIT linker</em> takes a single relocatable object file at a time and links it
+into a target process, usually using a context object to allow the linked code
+to resolve symbols in the target.</p>
+<section id="runtimedyld">
+<h3>RuntimeDyld<a class="headerlink" href="#runtimedyld" title="Link to this heading">#</a></h3>
+<p>In order to keep RuntimeDyld’s implementation simple MCJIT imposed some
+restrictions on compiled code:</p>
+<ol class="arabic simple">
+<li><p>It had to use the Large code model, and often restricted available relocation
+models in order to limit the kinds of relocations that had to be supported.</p></li>
+<li><p>It required strong linkage and default visibility on all symbols – behavior
+for other linkages/visibilities was not well defined.</p></li>
+<li><p>It constrained and/or prohibited the use of features requiring runtime
+support, e.g. static initializers or thread local storage.</p></li>
+</ol>
+<p>As a result of these restrictions not all language features supported by LLVM
+worked under MCJIT, and objects to be loaded under the JIT had to be compiled to
+target it (precluding the use of precompiled code from other sources under the
+JIT).</p>
+<p>RuntimeDyld also provided very limited visibility into the linking process
+itself: Clients could access conservative estimates of section size
+(RuntimeDyld bundled stub size and padding estimates into the section size
+value) and the final relocated bytes, but could not access RuntimeDyld’s
+internal object representations.</p>
+<p>Eliminating these restrictions and limitations was one of the primary motivations
+for the development of JITLink.</p>
+</section>
+</section>
+<section id="the-llvm-jitlink-tool">
+<h2>The llvm-jitlink tool<a class="headerlink" href="#the-llvm-jitlink-tool" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code> tool is a command line wrapper for the JITLink library.
+It loads some set of relocatable object files and then links them using
+JITLink. Depending on the options used it will then execute them, or validate
+the linked memory.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code> tool was originally designed to aid JITLink development by
+providing a simple environment for testing.</p>
+<section id="basic-usage">
+<h3>Basic usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h3>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code> will link the set of objects passed on the command
+line, then search for a “main” function and execute it:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>cat<span class="w"> </span>hello-world.c
+<span class="c1">#include &lt;stdio.h&gt;</span>
+
+int<span class="w"> </span>main<span class="o">(</span>int<span class="w"> </span>argc,<span class="w"> </span>char<span class="w"> </span>*argv<span class="o">[])</span><span class="w"> </span><span class="o">{</span>
+<span class="w">  </span>printf<span class="o">(</span><span class="s2">&quot;hello, world!\n&quot;</span><span class="o">)</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="m">0</span><span class="p">;</span>
+<span class="o">}</span>
+
+%<span class="w"> </span>clang<span class="w"> </span>-c<span class="w"> </span>-o<span class="w"> </span>hello-world.o<span class="w"> </span>hello-world.c
+%<span class="w"> </span>llvm-jitlink<span class="w"> </span>hello-world.o
+Hello,<span class="w"> </span>World!
+</pre></div>
+</div>
+<p>Multiple objects may be specified, and arguments may be provided to the JIT’d
+main function using the -args option:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>cat<span class="w"> </span>print-args.c
+<span class="c1">#include &lt;stdio.h&gt;</span>
+
+void<span class="w"> </span>print_args<span class="o">(</span>int<span class="w"> </span>argc,<span class="w"> </span>char<span class="w"> </span>*argv<span class="o">[])</span><span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="o">(</span>int<span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">;</span><span class="w"> </span>i<span class="w"> </span>!<span class="o">=</span><span class="w"> </span>argc<span class="p">;</span><span class="w"> </span>++i<span class="o">)</span>
+<span class="w">    </span>printf<span class="o">(</span><span class="s2">&quot;arg %i is \&quot;%s\&quot;\n&quot;</span>,<span class="w"> </span>i,<span class="w"> </span>argv<span class="o">[</span>i<span class="o">])</span><span class="p">;</span>
+<span class="o">}</span>
+
+%<span class="w"> </span>cat<span class="w"> </span>print-args-main.c
+void<span class="w"> </span>print_args<span class="o">(</span>int<span class="w"> </span>argc,<span class="w"> </span>char<span class="w"> </span>*argv<span class="o">[])</span><span class="p">;</span>
+
+int<span class="w"> </span>main<span class="o">(</span>int<span class="w"> </span>argc,<span class="w"> </span>char<span class="w"> </span>*argv<span class="o">[])</span><span class="w"> </span><span class="o">{</span>
+<span class="w">  </span>print_args<span class="o">(</span>argc,<span class="w"> </span>argv<span class="o">)</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="m">0</span><span class="p">;</span>
+<span class="o">}</span>
+
+%<span class="w"> </span>clang<span class="w"> </span>-c<span class="w"> </span>-o<span class="w"> </span>print-args.o<span class="w"> </span>print-args.c
+%<span class="w"> </span>clang<span class="w"> </span>-c<span class="w"> </span>-o<span class="w"> </span>print-args-main.o<span class="w"> </span>print-args-main.c
+%<span class="w"> </span>llvm-jitlink<span class="w"> </span>print-args.o<span class="w"> </span>print-args-main.o<span class="w"> </span>-args<span class="w"> </span>a<span class="w"> </span>b<span class="w"> </span>c
+arg<span class="w"> </span><span class="m">0</span><span class="w"> </span>is<span class="w"> </span><span class="s2">&quot;a&quot;</span>
+arg<span class="w"> </span><span class="m">1</span><span class="w"> </span>is<span class="w"> </span><span class="s2">&quot;b&quot;</span>
+arg<span class="w"> </span><span class="m">2</span><span class="w"> </span>is<span class="w"> </span><span class="s2">&quot;c&quot;</span>
+</pre></div>
+</div>
+<p>Alternative entry points may be specified using the <code class="docutils literal notranslate"><span class="pre">-entry</span> <span class="pre">&lt;entry</span> <span class="pre">point</span> <span class="pre">name&gt;</span></code> option.</p>
+<p>Other options can be found by calling <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span> <span class="pre">-help</span></code>.</p>
+</section>
+<section id="llvm-jitlink-as-a-regression-testing-utility">
+<h3>llvm-jitlink as a regression testing utility<a class="headerlink" href="#llvm-jitlink-as-a-regression-testing-utility" title="Link to this heading">#</a></h3>
+<p>One of the primary aims of <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code> was to enable readable regression
+tests for JITLink. To do this it supports two options:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-noexec</span></code> option tells llvm-jitlink to stop after looking up the entry
+point, and before attempting to execute it. Since the linked code is not
+executed, this can be used to link for other targets even if you do not have
+access to the target being linked (the <code class="docutils literal notranslate"><span class="pre">-define-abs</span></code> or <code class="docutils literal notranslate"><span class="pre">-phony-externals</span></code>
+options can be used to supply any missing definitions in this case).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-check</span> <span class="pre">&lt;check-file&gt;</span></code> option can be used to run a set of <code class="docutils literal notranslate"><span class="pre">jitlink-check</span></code>
+expressions against working memory. It is typically used in conjunction with
+<code class="docutils literal notranslate"><span class="pre">-noexec</span></code>, since the aim is to validate JIT’d memory rather than to run the
+code and <code class="docutils literal notranslate"><span class="pre">-noexec</span></code> allows us to link for any supported target architecture
+from the current process. In <code class="docutils literal notranslate"><span class="pre">-check</span></code> mode, <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code> will scan the
+given check-file for lines of the form <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">jitlink-check:</span> <span class="pre">&lt;expr&gt;</span></code>. See
+examples of this usage in <code class="docutils literal notranslate"><span class="pre">llvm/test/ExecutionEngine/JITLink</span></code>.</p>
+</section>
+<section id="remote-execution-via-llvm-jitlink-executor">
+<h3>Remote execution via llvm-jitlink-executor<a class="headerlink" href="#remote-execution-via-llvm-jitlink-executor" title="Link to this heading">#</a></h3>
+<p>By default <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code> will link the given objects into its own process,
+but this can be overridden by two options:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-oop-executor[=/path/to/executor]</span></code> option tells <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code> to
+execute the given executor (which defaults to <code class="docutils literal notranslate"><span class="pre">llvm-jitlink-executor</span></code>) and
+communicate with it via file descriptors which it passes to the executor
+as the first argument with the format <code class="docutils literal notranslate"><span class="pre">filedescs=&lt;in-fd&gt;,&lt;out-fd&gt;</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-oop-executor-connect=&lt;host&gt;:&lt;port&gt;</span></code> option tells <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code> to
+connect to an already running executor via TCP on the given host and port. To
+use this option you will need to start <code class="docutils literal notranslate"><span class="pre">llvm-jitlink-executor</span></code> manually with
+<code class="docutils literal notranslate"><span class="pre">listen=&lt;host&gt;:&lt;port&gt;</span></code> as the first argument.</p>
+</section>
+<section id="harness-mode">
+<h3>Harness mode<a class="headerlink" href="#harness-mode" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">-harness</span></code> option allows a set of input objects to be designated as a test
+harness, with the regular object files implicitly treated as objects to be
+tested. Definitions of symbols in the harness set override definitions in the
+test set, and external references from the harness cause automatic scope
+promotion of local symbols in the test set (these modifications to the usual
+linker rules are accomplished via an <code class="docutils literal notranslate"><span class="pre">ObjectLinkingLayer::Plugin</span></code> installed by
+<code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code> when it sees the <code class="docutils literal notranslate"><span class="pre">-harness</span></code> option).</p>
+<p>With these modifications in place we can selectively test functions in an object
+file by mocking those function’s callees. For example, suppose we have an object
+file, <code class="docutils literal notranslate"><span class="pre">test_code.o</span></code>, compiled from the following C source (which we need not
+have access to):</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">irrelevant_function</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">irrelevant_external</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">function_to_mock</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="cm">/* some function of X */</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">function_to_test</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">...</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">Y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">function_to_mock</span><span class="p">();</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Y is %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Y</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If we want to know how <code class="docutils literal notranslate"><span class="pre">function_to_test</span></code> behaves when we change the behavior
+of <code class="docutils literal notranslate"><span class="pre">function_to_mock</span></code> we can test it by writing a test harness:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">function_to_test</span><span class="p">();</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">function_to_mock</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">X</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;used mock utility function</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">function_to_test</span><span class="p">()</span><span class="o">:</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Under normal circumstances these objects could not be linked together:
+<code class="docutils literal notranslate"><span class="pre">function_to_test</span></code> is static and could not be resolved outside
+<code class="docutils literal notranslate"><span class="pre">test_code.o</span></code>, the two <code class="docutils literal notranslate"><span class="pre">function_to_mock</span></code> functions would result in a
+duplicate definition error, and <code class="docutils literal notranslate"><span class="pre">irrelevant_external</span></code> is undefined.
+However, using <code class="docutils literal notranslate"><span class="pre">-harness</span></code> and <code class="docutils literal notranslate"><span class="pre">-phony-externals</span></code> we can run this code
+with:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>clang<span class="w"> </span>-c<span class="w"> </span>-o<span class="w"> </span>test_code_harness.o<span class="w"> </span>test_code_harness.c
+%<span class="w"> </span>llvm-jitlink<span class="w"> </span>-phony-externals<span class="w"> </span>test_code.o<span class="w"> </span>-harness<span class="w"> </span>test_code_harness.o
+used<span class="w"> </span>mock<span class="w"> </span>utility<span class="w"> </span><span class="k">function</span>
+Y<span class="w"> </span>is<span class="w"> </span><span class="m">42</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">-harness</span></code> option may be of interest to people who want to perform some
+very late testing on build products to verify that compiled code behaves as
+expected. On basic C test cases this is relatively straightforward. Mocks for
+more complicated languages (e.g. C++) are much trickier: Any code involving
+classes tends to have a lot of non-trivial surface area (e.g. vtables) that
+would require great care to mock.</p>
+</section>
+<section id="tips-for-jitlink-backend-developers">
+<h3>Tips for JITLink backend developers<a class="headerlink" href="#tips-for-jitlink-backend-developers" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>Make liberal use of assert and <code class="docutils literal notranslate"><span class="pre">llvm::Error</span></code>. Do <em>not</em> assume that the input
+object is well formed: Return any errors produced by libObject (or your own
+object parsing code) and validate as you construct. Think carefully about the
+distinction between contract (which should be validated with asserts and
+llvm_unreachable) and environmental errors (which should generate
+<code class="docutils literal notranslate"><span class="pre">llvm::Error</span></code> instances).</p></li>
+<li><p>Don’t assume you’re linking in-process. Use libSupport’s sized,
+endian-specific types when reading/writing content in the <code class="docutils literal notranslate"><span class="pre">LinkGraph</span></code>.</p></li>
+</ol>
+<p>As a “minimum viable” JITLink wrapper, the <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code> tool is an
+invaluable resource for developers bringing in a new JITLink backend. A standard
+workflow is to start by throwing an unsupported object at the tool and seeing
+what error is returned, then fixing that (you can often make a reasonable guess
+at what should be done based on existing code for other formats or
+architectures).</p>
+<p>In debug builds of LLVM, the <code class="docutils literal notranslate"><span class="pre">-debug-only=jitlink</span></code> option dumps logs from the
+JITLink library during the link process. These can be useful for spotting some bugs at
+a glance. The <code class="docutils literal notranslate"><span class="pre">-debug-only=llvm_jitlink</span></code> option dumps logs from the <code class="docutils literal notranslate"><span class="pre">llvm-jitlink</span></code>
+tool, which can be useful for debugging both testcases (it is often less verbose than
+<code class="docutils literal notranslate"><span class="pre">-debug-only=jitlink</span></code>) and the tool itself.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-oop-executor</span></code> and <code class="docutils literal notranslate"><span class="pre">-oop-executor-connect</span></code> options are helpful for testing
+handling of cross-process and cross-architecture use cases.</p>
+</section>
+</section>
+<section id="roadmap">
+<h2>Roadmap<a class="headerlink" href="#roadmap" title="Link to this heading">#</a></h2>
+<p>JITLink is under active development. The MachO and ELF backends are mature, with
+ELF support spanning x86-64, arm64, RISC-V, LoongArch, PowerPC 64, arm32,
+SystemZ, and Hexagon. A COFF backend supports x86-64 on Windows. Initial XCOFF
+support for PowerPC 64 is available but not yet usable for general JIT compilation.</p>
+<p>Major outstanding projects include:</p>
+<ul>
+<li><p>Improve XCOFF support.</p>
+<p>The XCOFF/ppc64 backend exists but does not yet implement the relocation
+handling needed for general JIT use. Completing this would enable JITLink on
+AIX.</p>
+</li>
+<li><p>Continue improving early-stage backends.</p>
+<p>Some backends (arm32, Hexagon) support common relocations but are not yet
+ready for general use. Contributions to extend relocation coverage are welcome.</p>
+</li>
+<li><p>Implement support for other new architectures and formats.</p></li>
+</ul>
+<section id="jitlink-availability-and-feature-status">
+<h3>JITLink Availability and Feature Status<a class="headerlink" href="#jitlink-availability-and-feature-status" title="Link to this heading">#</a></h3>
+<p>The following table describes the status of the JITlink backends for various
+format / architecture combinations (as of May 2026).</p>
+<p>Support levels:</p>
+<ul class="simple">
+<li><p>None: No backend. JITLink will return an “architecture not supported” error.
+Represented by empty cells in the table below.</p></li>
+<li><p>Skeleton: A backend exists, but does not support commonly used relocations.
+Even simple programs are likely to trigger an “unsupported relocation” error.
+Backends in this state may be easy to improve by implementing new relocations.
+Consider getting involved!</p></li>
+<li><p>Basic: The backend supports simple programs, isn’t ready for general use yet.</p></li>
+<li><p>Usable: The backend is useable for general use for at least one code and
+relocation model.</p></li>
+<li><p>Good: The backend supports almost all relocations. Advanced features like
+native thread local storage may not be available yet.</p></li>
+<li><p>Complete: The backend supports all relocations and object format features.</p></li>
+</ul>
+<div class="table-wrapper colwidths-given docutils container" id="id9">
+<table class="docutils align-default" id="id9">
+<caption><span class="caption-text">Availability and Status</span><a class="headerlink" href="#id9" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 10.2%" />
+<col style="width: 22.4%" />
+<col style="width: 22.4%" />
+<col style="width: 22.4%" />
+<col style="width: 22.4%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head stub"><p>Architecture</p></th>
+<th class="head"><p>ELF</p></th>
+<th class="head"><p>COFF</p></th>
+<th class="head"><p>MachO</p></th>
+<th class="head"><p>XCOFF</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><th class="stub"><p>arm32</p></th>
+<td><p>Basic</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>arm64</p></th>
+<td><p>Usable</p></td>
+<td></td>
+<td><p>Good</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>Hexagon</p></th>
+<td><p>Basic</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>LoongArch</p></th>
+<td><p>Good</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>PowerPC 64</p></th>
+<td><p>Usable</p></td>
+<td></td>
+<td></td>
+<td><p>Skeleton</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>RISC-V</p></th>
+<td><p>Good</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>SystemZ</p></th>
+<td><p>Usable</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>x86-32</p></th>
+<td><p>Basic</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>x86-64</p></th>
+<td><p>Good</p></td>
+<td><p>Usable</p></td>
+<td><p>Good</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr class="footnotes docutils" />
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id7" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>See <code class="docutils literal notranslate"><span class="pre">llvm/examples/OrcV2Examples/LLJITWithObjectLinkingLayerPlugin</span></code> for
+a full worked example.</p>
+</aside>
+<aside class="footnote brackets" id="id8" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">2</a><span class="fn-bracket">]</span></span>
+<p>If not for <em>hidden</em> scoped symbols we could eliminate the
+<code class="docutils literal notranslate"><span class="pre">JITLinkDylib*</span></code> argument to <code class="docutils literal notranslate"><span class="pre">JITLinkMemoryManager::allocate</span></code> and
+treat every object as a separate simulated dylib for the purposes of
+memory layout. Hidden symbols break this by generating in-range accesses
+to external symbols, requiring the access and symbol to be allocated
+within range of one another. That said, providing a pre-reserved address
+range pool for each simulated dylib guarantees that the relaxation
+optimizations will kick in for all intra-dylib references, which is good
+for performance (at the cost of whatever overhead is introduced by
+reserving the address-range up-front).</p>
+</aside>
+</aside>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="DebuggingJITedCode.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Debugging JIT-ed Code</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="ORCv2.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">ORC Design and Implementation</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">JITLink and ORC’s ObjectLinkingLayer</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#jitlink-and-objectlinkinglayer">JITLink and ObjectLinkingLayer</a><ul>
+<li><a class="reference internal" href="#objectlinkinglayer-plugins">ObjectLinkingLayer Plugins</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#linkgraph">LinkGraph</a></li>
+<li><a class="reference internal" href="#generic-link-algorithm">Generic Link Algorithm</a><ul>
+<li><a class="reference internal" href="#passes">Passes</a></li>
+<li><a class="reference internal" href="#memory-management-with-jitlinkmemorymanager">Memory Management with JITLinkMemoryManager</a></li>
+<li><a class="reference internal" href="#jitlinkmemorymanager-and-security">JITLinkMemoryManager and Security</a></li>
+<li><a class="reference internal" href="#error-handling">Error Handling</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#connection-to-the-orc-runtime">Connection to the ORC Runtime</a></li>
+<li><a class="reference internal" href="#constructing-linkgraphs">Constructing LinkGraphs</a></li>
+<li><a class="reference internal" href="#jit-linking">JIT Linking</a><ul>
+<li><a class="reference internal" href="#runtimedyld">RuntimeDyld</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-llvm-jitlink-tool">The llvm-jitlink tool</a><ul>
+<li><a class="reference internal" href="#basic-usage">Basic usage</a></li>
+<li><a class="reference internal" href="#llvm-jitlink-as-a-regression-testing-utility">llvm-jitlink as a regression testing utility</a></li>
+<li><a class="reference internal" href="#remote-execution-via-llvm-jitlink-executor">Remote execution via llvm-jitlink-executor</a></li>
+<li><a class="reference internal" href="#harness-mode">Harness mode</a></li>
+<li><a class="reference internal" href="#tips-for-jitlink-backend-developers">Tips for JITLink backend developers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#roadmap">Roadmap</a><ul>
+<li><a class="reference internal" href="#jitlink-availability-and-feature-status">JITLink Availability and Feature Status</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=7d86a446"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

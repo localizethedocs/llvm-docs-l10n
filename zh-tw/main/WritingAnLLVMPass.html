@@ -1,0 +1,1426 @@
+<!doctype html>
+<html class="no-js" lang="zh-TW" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜尋" href="search.html" /><link rel="next" title="LLVM’s Analysis and Transform Passes" href="Passes.html" /><link rel="prev" title="Writing an LLVM Pass" href="WritingAnLLVMNewPMPass.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/WritingAnLLVMPass.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Writing an LLVM Pass (legacy PM version) - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜尋" name="q" aria-label="搜尋">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">常見問題集（FAQ）</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">參考</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of 參考</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural 『diff』</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">簡介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM 語言參考手冊</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM 測試基礎設施指南</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM 測試基礎設施指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">使用者指南</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of 使用者指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">使用 CMake 建置 LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">進階建置組態</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen 概覽</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen 概覽</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU 指令語法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub 使用者指南</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse 遷移指南</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM 開發者方針</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/WritingAnLLVMPass.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="writing-an-llvm-pass-legacy-pm-version">
+<h1>Writing an LLVM Pass (legacy PM version)<a class="headerlink" href="#writing-an-llvm-pass-legacy-pm-version" title="Link to this heading">#</a></h1>
+<section id="introduction-what-is-a-pass">
+<h2>Introduction — What is a pass?<a class="headerlink" href="#introduction-what-is-a-pass" title="Link to this heading">#</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>This document deals with the legacy pass manager. LLVM uses the new pass
+manager for the optimization pipeline (the codegen pipeline
+still uses the legacy pass manager), which has its own way of defining
+passes. For more details, see <a class="reference internal" href="WritingAnLLVMNewPMPass.html"><span class="doc">Writing an LLVM Pass</span></a> and
+<a class="reference internal" href="NewPassManager.html"><span class="doc">Using the New Pass Manager</span></a>.</p>
+</div>
+<p>The LLVM Pass Framework is an important part of the LLVM system, because LLVM
+passes are where most of the interesting parts of the compiler exist.  Passes
+perform the transformations and optimizations that make up the compiler, they
+build the analysis results that are used by these transformations, and they
+are, above all, a structuring technique for compiler code.</p>
+<p>All LLVM passes are subclasses of the <a class="reference external" href="/doxygen/classllvm_1_1Pass.html">Pass</a> class, which implement
+functionality by overriding virtual methods inherited from <code class="docutils literal notranslate"><span class="pre">Pass</span></code>.  Depending
+on how your pass works, you should inherit from the
+<a class="reference internal" href="#writing-an-llvm-pass-modulepass"><span class="std std-ref">ModulePass</span></a> , <a class="reference internal" href="#writing-an-llvm-pass-callgraphsccpass"><span class="std std-ref">CallGraphSCCPass</span></a>,
+<a class="reference internal" href="#writing-an-llvm-pass-functionpass"><span class="std std-ref">FunctionPass</span></a> , or <a class="reference internal" href="#writing-an-llvm-pass-looppass"><span class="std std-ref">LoopPass</span></a>, or
+<a class="reference internal" href="#writing-an-llvm-pass-regionpass"><span class="std std-ref">RegionPass</span></a> classes, which gives the system more
+information about what your pass does, and how it can be combined with other
+passes.  One of the main features of the LLVM Pass Framework is that it
+schedules passes to run in an efficient way based on the constraints that your
+pass meets (which are indicated by which class they derive from).</p>
+</section>
+<section id="pass-classes-and-requirements">
+<span id="writing-an-llvm-pass-pass-classes"></span><h2>Pass classes and requirements<a class="headerlink" href="#pass-classes-and-requirements" title="Link to this heading">#</a></h2>
+<p>One of the first things that you should do when designing a new pass is to
+decide what class you should subclass for your pass. Here we talk about the
+classes available, from the most general to the most specific.</p>
+<p>When choosing a superclass for your <code class="docutils literal notranslate"><span class="pre">Pass</span></code>, you should choose the <strong>most
+specific</strong> class possible, while still being able to meet the requirements
+listed.  This gives the LLVM Pass Infrastructure information necessary to
+optimize how passes are run, so that the resultant compiler isn’t unnecessarily
+slow.</p>
+<section id="the-immutablepass-class">
+<h3>The <code class="docutils literal notranslate"><span class="pre">ImmutablePass</span></code> class<a class="headerlink" href="#the-immutablepass-class" title="Link to this heading">#</a></h3>
+<p>The most plain and boring type of pass is the
+「<a class="reference external" href="/doxygen/classllvm_1_1ImmutablePass.html">ImmutablePass</a>」 class.  This pass
+type is used for passes that do not have to be run, do not change state, and
+never need to be updated.  This is not a normal type of transformation or
+analysis, but can provide information about the current compiler configuration.</p>
+<p>Although this pass class is very infrequently used, it is important for
+providing information about the current target machine being compiled for, and
+other static information that can affect the various transformations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ImmutablePass</span></code>es never invalidate other transformations, are never
+invalidated, and are never 「run」.</p>
+</section>
+<section id="the-modulepass-class">
+<span id="writing-an-llvm-pass-modulepass"></span><h3>The <code class="docutils literal notranslate"><span class="pre">ModulePass</span></code> class<a class="headerlink" href="#the-modulepass-class" title="Link to this heading">#</a></h3>
+<p>The <a class="reference external" href="/doxygen/classllvm_1_1ModulePass.html">ModulePass</a> class
+is the most general of all superclasses that you can use.  Deriving from
+<code class="docutils literal notranslate"><span class="pre">ModulePass</span></code> indicates that your pass uses the entire program as a unit,
+referring to function bodies in no predictable order, or adding and removing
+functions.  Because nothing is known about the behavior of <code class="docutils literal notranslate"><span class="pre">ModulePass</span></code>
+subclasses, no optimization can be done for their execution.</p>
+<p>A module pass can use function level passes (e.g. dominators) using the
+<code class="docutils literal notranslate"><span class="pre">getAnalysis</span></code> interface <code class="docutils literal notranslate"><span class="pre">getAnalysis&lt;DominatorTree&gt;(llvm::Function</span> <span class="pre">*)</span></code> to
+provide the function to retrieve analysis result for, if the function pass does
+not require any module or immutable passes.  Note that this can only be done
+for functions for which the analysis ran, e.g. in the case of dominators you
+should only ask for the <code class="docutils literal notranslate"><span class="pre">DominatorTree</span></code> for function definitions, not
+declarations.</p>
+<p>To write a correct <code class="docutils literal notranslate"><span class="pre">ModulePass</span></code> subclass, derive from <code class="docutils literal notranslate"><span class="pre">ModulePass</span></code> and
+override the <code class="docutils literal notranslate"><span class="pre">runOnModule</span></code> method with the following signature:</p>
+<section id="the-runonmodule-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">runOnModule</span></code> method<a class="headerlink" href="#the-runonmodule-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">runOnModule</span><span class="p">(</span><span class="n">Module</span><span class="w"> </span><span class="o">&amp;</span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">runOnModule</span></code> method performs the interesting work of the pass.  It
+should return <code class="docutils literal notranslate"><span class="pre">true</span></code> if the module was modified by the transformation and
+<code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</section>
+</section>
+<section id="the-callgraphsccpass-class">
+<span id="writing-an-llvm-pass-callgraphsccpass"></span><h3>The <code class="docutils literal notranslate"><span class="pre">CallGraphSCCPass</span></code> class<a class="headerlink" href="#the-callgraphsccpass-class" title="Link to this heading">#</a></h3>
+<p>The <a class="reference external" href="/doxygen/classllvm_1_1CallGraphSCCPass.html">CallGraphSCCPass</a> is used by
+passes that need to traverse the program bottom-up on the call graph (callees
+before callers).  Deriving from <code class="docutils literal notranslate"><span class="pre">CallGraphSCCPass</span></code> provides some mechanics
+for building and traversing the <code class="docutils literal notranslate"><span class="pre">CallGraph</span></code>, but also allows the system to
+optimize execution of <code class="docutils literal notranslate"><span class="pre">CallGraphSCCPass</span></code>es.  If your pass meets the
+requirements outlined below, and doesn’t meet the requirements of a
+<a class="reference internal" href="#writing-an-llvm-pass-functionpass"><span class="std std-ref">FunctionPass</span></a>, you should derive from
+<code class="docutils literal notranslate"><span class="pre">CallGraphSCCPass</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">TODO</span></code>: explain briefly what SCC, Tarjan’s algo, and B-U mean.</p>
+<p>To be explicit, CallGraphSCCPass subclasses are:</p>
+<ol class="arabic simple">
+<li><p>… <em>not allowed</em> to inspect or modify any <code class="docutils literal notranslate"><span class="pre">Function</span></code>s other than those
+in the current SCC and the direct callers and direct callees of the SCC.</p></li>
+<li><p>… <em>required</em> to preserve the current <code class="docutils literal notranslate"><span class="pre">CallGraph</span></code> object, updating it to
+reflect any changes made to the program.</p></li>
+<li><p>… <em>not allowed</em> to add or remove SCC’s from the current Module, though
+they may change the contents of an SCC.</p></li>
+<li><p>… <em>allowed</em> to add or remove global variables from the current Module.</p></li>
+<li><p>… <em>allowed</em> to maintain state across invocations of
+<a class="reference internal" href="#writing-an-llvm-pass-runonscc"><span class="std std-ref">runOnSCC</span></a> (including global data).</p></li>
+</ol>
+<p>Implementing a <code class="docutils literal notranslate"><span class="pre">CallGraphSCCPass</span></code> is slightly tricky in some cases because it
+has to handle SCCs with more than one node in it.  All of the virtual methods
+described below should return <code class="docutils literal notranslate"><span class="pre">true</span></code> if they modified the program, or
+<code class="docutils literal notranslate"><span class="pre">false</span></code> if they didn’t.</p>
+<section id="the-doinitialization-callgraph-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">doInitialization(CallGraph</span> <span class="pre">&amp;)</span></code> method<a class="headerlink" href="#the-doinitialization-callgraph-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">doInitialization</span><span class="p">(</span><span class="n">CallGraph</span><span class="w"> </span><span class="o">&amp;</span><span class="n">CG</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">doInitialization</span></code> method is allowed to do most of the things that
+<code class="docutils literal notranslate"><span class="pre">CallGraphSCCPass</span></code>es are not allowed to do.  They can add and remove
+functions, get pointers to functions, etc.  The <code class="docutils literal notranslate"><span class="pre">doInitialization</span></code> method is
+designed to do simple initialization type of stuff that does not depend on the
+SCCs being processed.  The <code class="docutils literal notranslate"><span class="pre">doInitialization</span></code> method call is not scheduled to
+overlap with any other pass executions (thus it should be very fast).</p>
+</section>
+<section id="the-runonscc-method">
+<span id="writing-an-llvm-pass-runonscc"></span><h4>The <code class="docutils literal notranslate"><span class="pre">runOnSCC</span></code> method<a class="headerlink" href="#the-runonscc-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">runOnSCC</span><span class="p">(</span><span class="n">CallGraphSCC</span><span class="w"> </span><span class="o">&amp;</span><span class="n">SCC</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">runOnSCC</span></code> method performs the interesting work of the pass, and should
+return <code class="docutils literal notranslate"><span class="pre">true</span></code> if the module was modified by the transformation, <code class="docutils literal notranslate"><span class="pre">false</span></code>
+otherwise.</p>
+</section>
+<section id="the-dofinalization-callgraph-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">doFinalization(CallGraph</span> <span class="pre">&amp;)</span></code> method<a class="headerlink" href="#the-dofinalization-callgraph-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">doFinalization</span><span class="p">(</span><span class="n">CallGraph</span><span class="w"> </span><span class="o">&amp;</span><span class="n">CG</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">doFinalization</span></code> method is an infrequently used method that is called
+when the pass framework has finished calling
+<a class="reference internal" href="#writing-an-llvm-pass-runonscc"><span class="std std-ref">runOnSCC</span></a> for every SCC in the program being compiled.</p>
+</section>
+</section>
+<section id="the-functionpass-class">
+<span id="writing-an-llvm-pass-functionpass"></span><h3>The <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code> class<a class="headerlink" href="#the-functionpass-class" title="Link to this heading">#</a></h3>
+<p>In contrast to <code class="docutils literal notranslate"><span class="pre">ModulePass</span></code> subclasses,
+<a class="reference external" href="/doxygen/classllvm_1_1Pass.html">FunctionPass</a> subclasses do have a
+predictable, local behavior that can be expected by the system.  All
+<code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code> execute on each function in the program independent of all of
+the other functions in the program.  <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code>es do not require that
+they are executed in a particular order, and <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code>es do not modify
+external functions.</p>
+<p>To be explicit, <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code> subclasses are not allowed to:</p>
+<ol class="arabic simple">
+<li><p>Inspect or modify a <code class="docutils literal notranslate"><span class="pre">Function</span></code> other than the one currently being processed.</p></li>
+<li><p>Add or remove <code class="docutils literal notranslate"><span class="pre">Function</span></code>s from the current <code class="docutils literal notranslate"><span class="pre">Module</span></code>.</p></li>
+<li><p>Add or remove global variables from the current <code class="docutils literal notranslate"><span class="pre">Module</span></code>.</p></li>
+<li><p>Maintain state across invocations of
+<a class="reference internal" href="#writing-an-llvm-pass-runonfunction"><span class="std std-ref">runOnFunction</span></a> (including global data).</p></li>
+</ol>
+<p>Implementing a <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code> is usually straightforward. <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code>es may
+override three virtual methods to do their work.  All of these methods
+should return <code class="docutils literal notranslate"><span class="pre">true</span></code> if they modified the program, or <code class="docutils literal notranslate"><span class="pre">false</span></code> if they
+didn’t.</p>
+<section id="the-doinitialization-module-method">
+<span id="writing-an-llvm-pass-doinitialization-mod"></span><h4>The <code class="docutils literal notranslate"><span class="pre">doInitialization(Module</span> <span class="pre">&amp;)</span></code> method<a class="headerlink" href="#the-doinitialization-module-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">doInitialization</span><span class="p">(</span><span class="n">Module</span><span class="w"> </span><span class="o">&amp;</span><span class="n">M</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">doInitialization</span></code> method is allowed to do most of the things that
+<code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code>es are not allowed to do.  They can add and remove functions,
+get pointers to functions, etc.  The <code class="docutils literal notranslate"><span class="pre">doInitialization</span></code> method is designed to
+do simple initialization type of stuff that does not depend on the functions
+being processed.  The <code class="docutils literal notranslate"><span class="pre">doInitialization</span></code> method call is not scheduled to
+overlap with any other pass executions (thus it should be very fast).</p>
+<p>A good example of how this method should be used is the
+<a class="reference external" href="/doxygen/LowerAllocations_8cpp-source.html">LowerAllocations</a> pass.  This pass
+converts <code class="docutils literal notranslate"><span class="pre">malloc</span></code> and <code class="docutils literal notranslate"><span class="pre">free</span></code> instructions into platform dependent
+<code class="docutils literal notranslate"><span class="pre">malloc()</span></code> and <code class="docutils literal notranslate"><span class="pre">free()</span></code> function calls.  It uses the <code class="docutils literal notranslate"><span class="pre">doInitialization</span></code>
+method to get a reference to the <code class="docutils literal notranslate"><span class="pre">malloc</span></code> and <code class="docutils literal notranslate"><span class="pre">free</span></code> functions that it
+needs, adding prototypes to the module if necessary.</p>
+</section>
+<section id="the-runonfunction-method">
+<span id="writing-an-llvm-pass-runonfunction"></span><h4>The <code class="docutils literal notranslate"><span class="pre">runOnFunction</span></code> method<a class="headerlink" href="#the-runonfunction-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">runOnFunction</span><span class="p">(</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">F</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">runOnFunction</span></code> method must be implemented by your subclass to do the
+transformation or analysis work of your pass.  As usual, a <code class="docutils literal notranslate"><span class="pre">true</span></code> value
+should be returned if the function is modified.</p>
+</section>
+<section id="the-dofinalization-module-method">
+<span id="writing-an-llvm-pass-dofinalization-mod"></span><h4>The <code class="docutils literal notranslate"><span class="pre">doFinalization(Module</span> <span class="pre">&amp;)</span></code> method<a class="headerlink" href="#the-dofinalization-module-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">doFinalization</span><span class="p">(</span><span class="n">Module</span><span class="w"> </span><span class="o">&amp;</span><span class="n">M</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">doFinalization</span></code> method is an infrequently used method that is called
+when the pass framework has finished calling
+<a class="reference internal" href="#writing-an-llvm-pass-runonfunction"><span class="std std-ref">runOnFunction</span></a> for every function in the program being
+compiled.</p>
+</section>
+</section>
+<section id="the-looppass-class">
+<span id="writing-an-llvm-pass-looppass"></span><h3>The <code class="docutils literal notranslate"><span class="pre">LoopPass</span></code> class<a class="headerlink" href="#the-looppass-class" title="Link to this heading">#</a></h3>
+<p>All <code class="docutils literal notranslate"><span class="pre">LoopPass</span></code> execute on each <a class="reference internal" href="LoopTerminology.html#loop-terminology"><span class="std std-ref">loop</span></a> in the function
+independent of all of the other loops in the function.  <code class="docutils literal notranslate"><span class="pre">LoopPass</span></code> processes
+loops in loop nest order such that outer most loop is processed last.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LoopPass</span></code> subclasses are allowed to update loop nest using <code class="docutils literal notranslate"><span class="pre">LPPassManager</span></code>
+interface.  Implementing a loop pass is usually straightforward.
+<code class="docutils literal notranslate"><span class="pre">LoopPass</span></code>es may override three virtual methods to do their work.  All
+these methods should return <code class="docutils literal notranslate"><span class="pre">true</span></code> if they modified the program, or <code class="docutils literal notranslate"><span class="pre">false</span></code>
+if they didn’t.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">LoopPass</span></code> subclass which is intended to run as part of the main loop pass
+pipeline needs to preserve all of the same <em>function</em> analyses that the other
+loop passes in its pipeline require. To make that easier,
+a <code class="docutils literal notranslate"><span class="pre">getLoopAnalysisUsage</span></code> function is provided by <code class="docutils literal notranslate"><span class="pre">LoopUtils.h</span></code>. It can be
+called within the subclass’s <code class="docutils literal notranslate"><span class="pre">getAnalysisUsage</span></code> override to get consistent
+and correct behavior. Analogously, <code class="docutils literal notranslate"><span class="pre">INITIALIZE_PASS_DEPENDENCY(LoopPass)</span></code>
+will initialize this set of function analyses.</p>
+<section id="the-doinitialization-loop-lppassmanager-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">doInitialization(Loop</span> <span class="pre">*,</span> <span class="pre">LPPassManager</span> <span class="pre">&amp;)</span></code> method<a class="headerlink" href="#the-doinitialization-loop-lppassmanager-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">doInitialization</span><span class="p">(</span><span class="n">Loop</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">LPPassManager</span><span class="w"> </span><span class="o">&amp;</span><span class="n">LPM</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">doInitialization</span></code> method is designed to do simple initialization type of
+stuff that does not depend on the functions being processed.  The
+<code class="docutils literal notranslate"><span class="pre">doInitialization</span></code> method call is not scheduled to overlap with any other
+pass executions (thus it should be very fast).  <code class="docutils literal notranslate"><span class="pre">LPPassManager</span></code> interface
+should be used to access <code class="docutils literal notranslate"><span class="pre">Function</span></code> or <code class="docutils literal notranslate"><span class="pre">Module</span></code> level analysis information.</p>
+</section>
+<section id="the-runonloop-method">
+<span id="writing-an-llvm-pass-runonloop"></span><h4>The <code class="docutils literal notranslate"><span class="pre">runOnLoop</span></code> method<a class="headerlink" href="#the-runonloop-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">runOnLoop</span><span class="p">(</span><span class="n">Loop</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">LPPassManager</span><span class="w"> </span><span class="o">&amp;</span><span class="n">LPM</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">runOnLoop</span></code> method must be implemented by your subclass to do the
+transformation or analysis work of your pass.  As usual, a <code class="docutils literal notranslate"><span class="pre">true</span></code> value
+should be returned if the function is modified.  <code class="docutils literal notranslate"><span class="pre">LPPassManager</span></code> interface
+should be used to update loop nest.</p>
+</section>
+<section id="the-dofinalization-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">doFinalization()</span></code> method<a class="headerlink" href="#the-dofinalization-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">doFinalization</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">doFinalization</span></code> method is an infrequently used method that is called
+when the pass framework has finished calling
+<a class="reference internal" href="#writing-an-llvm-pass-runonloop"><span class="std std-ref">runOnLoop</span></a> for every loop in the program being compiled.</p>
+</section>
+</section>
+<section id="the-regionpass-class">
+<span id="writing-an-llvm-pass-regionpass"></span><h3>The <code class="docutils literal notranslate"><span class="pre">RegionPass</span></code> class<a class="headerlink" href="#the-regionpass-class" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">RegionPass</span></code> is similar to <a class="reference internal" href="#writing-an-llvm-pass-looppass"><span class="std std-ref">LoopPass</span></a>,
+but executes on each single entry single exit region in the function.
+<code class="docutils literal notranslate"><span class="pre">RegionPass</span></code> processes regions in nested order such that the outer most
+region is processed last.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RegionPass</span></code> subclasses are allowed to update the region tree by using the
+<code class="docutils literal notranslate"><span class="pre">RGPassManager</span></code> interface.  You may override three virtual methods of
+<code class="docutils literal notranslate"><span class="pre">RegionPass</span></code> to implement your own region pass.  All these methods should
+return <code class="docutils literal notranslate"><span class="pre">true</span></code> if they modified the program, or <code class="docutils literal notranslate"><span class="pre">false</span></code> if they did not.</p>
+<section id="the-doinitialization-region-rgpassmanager-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">doInitialization(Region</span> <span class="pre">*,</span> <span class="pre">RGPassManager</span> <span class="pre">&amp;)</span></code> method<a class="headerlink" href="#the-doinitialization-region-rgpassmanager-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">doInitialization</span><span class="p">(</span><span class="n">Region</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">RGPassManager</span><span class="w"> </span><span class="o">&amp;</span><span class="n">RGM</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">doInitialization</span></code> method is designed to do simple initialization type of
+stuff that does not depend on the functions being processed.  The
+<code class="docutils literal notranslate"><span class="pre">doInitialization</span></code> method call is not scheduled to overlap with any other
+pass executions (thus it should be very fast).  <code class="docutils literal notranslate"><span class="pre">RPPassManager</span></code> interface
+should be used to access <code class="docutils literal notranslate"><span class="pre">Function</span></code> or <code class="docutils literal notranslate"><span class="pre">Module</span></code> level analysis information.</p>
+</section>
+<section id="the-runonregion-method">
+<span id="writing-an-llvm-pass-runonregion"></span><h4>The <code class="docutils literal notranslate"><span class="pre">runOnRegion</span></code> method<a class="headerlink" href="#the-runonregion-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">runOnRegion</span><span class="p">(</span><span class="n">Region</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">RGPassManager</span><span class="w"> </span><span class="o">&amp;</span><span class="n">RGM</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">runOnRegion</span></code> method must be implemented by your subclass to do the
+transformation or analysis work of your pass.  As usual, a true value should be
+returned if the region is modified.  <code class="docutils literal notranslate"><span class="pre">RGPassManager</span></code> interface should be used to
+update region tree.</p>
+</section>
+<section id="id1">
+<h4>The <code class="docutils literal notranslate"><span class="pre">doFinalization()</span></code> method<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">doFinalization</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">doFinalization</span></code> method is an infrequently used method that is called
+when the pass framework has finished calling
+<a class="reference internal" href="#writing-an-llvm-pass-runonregion"><span class="std std-ref">runOnRegion</span></a> for every region in the program being
+compiled.</p>
+</section>
+</section>
+<section id="the-machinefunctionpass-class">
+<h3>The <code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code> class<a class="headerlink" href="#the-machinefunctionpass-class" title="Link to this heading">#</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code> is a part of the LLVM code generator that executes on
+the machine-dependent representation of each LLVM function in the program.</p>
+<p>Code generator passes are registered and initialized specially by
+<code class="docutils literal notranslate"><span class="pre">TargetMachine::addPassesToEmitFile</span></code> and similar routines, so they cannot
+generally be run from the <strong class="program">opt</strong> or <strong class="program">bugpoint</strong> commands.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code> is also a <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code>, so all the restrictions
+that apply to a <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code> also apply to it.  <code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code>es
+also have additional restrictions.  In particular, <code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code>es
+are not allowed to do any of the following:</p>
+<ol class="arabic simple">
+<li><p>Modify or create any LLVM IR <code class="docutils literal notranslate"><span class="pre">Instruction</span></code>s, <code class="docutils literal notranslate"><span class="pre">BasicBlock</span></code>s,
+<code class="docutils literal notranslate"><span class="pre">Argument</span></code>s, <code class="docutils literal notranslate"><span class="pre">Function</span></code>s, <code class="docutils literal notranslate"><span class="pre">GlobalVariable</span></code>s,
+<code class="docutils literal notranslate"><span class="pre">GlobalAlias</span></code>es, or <code class="docutils literal notranslate"><span class="pre">Module</span></code>s.</p></li>
+<li><p>Modify a <code class="docutils literal notranslate"><span class="pre">MachineFunction</span></code> other than the one currently being processed.</p></li>
+<li><p>Maintain state across invocations of
+<a class="reference internal" href="#writing-an-llvm-pass-runonmachinefunction"><span class="std std-ref">runOnMachineFunction</span></a> (including global data).</p></li>
+</ol>
+<section id="the-runonmachinefunction-machinefunction-mf-method">
+<span id="writing-an-llvm-pass-runonmachinefunction"></span><h4>The <code class="docutils literal notranslate"><span class="pre">runOnMachineFunction(MachineFunction</span> <span class="pre">&amp;MF)</span></code> method<a class="headerlink" href="#the-runonmachinefunction-machinefunction-mf-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">runOnMachineFunction</span><span class="p">(</span><span class="n">MachineFunction</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MF</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">runOnMachineFunction</span></code> can be considered the main entry point of a
+<code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code>; that is, you should override this method to do the
+work of your <code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">runOnMachineFunction</span></code> method is called on every <code class="docutils literal notranslate"><span class="pre">MachineFunction</span></code> in a
+<code class="docutils literal notranslate"><span class="pre">Module</span></code>, so that the <code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code> may perform optimizations on
+the machine-dependent representation of the function.  If you want to get at
+the LLVM <code class="docutils literal notranslate"><span class="pre">Function</span></code> for the <code class="docutils literal notranslate"><span class="pre">MachineFunction</span></code> you’re working on, use
+<code class="docutils literal notranslate"><span class="pre">MachineFunction</span></code>’s <code class="docutils literal notranslate"><span class="pre">getFunction()</span></code> accessor method — but remember, you
+may not modify the LLVM <code class="docutils literal notranslate"><span class="pre">Function</span></code> or its contents from a
+<code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code>.</p>
+</section>
+</section>
+<section id="pass-registration">
+<span id="writing-an-llvm-pass-registration"></span><h3>Pass registration<a class="headerlink" href="#pass-registration" title="Link to this heading">#</a></h3>
+<p>Passes are registered with the <code class="docutils literal notranslate"><span class="pre">RegisterPass</span></code> template.  The template
+parameter is the name of the pass that is to be used on the command line to
+specify that the pass should be added to a program. The first argument is the
+name of the pass, which is to be used for the <a class="reference internal" href="CommandGuide/opt.html#cmdoption-opt-help"><code class="xref std std-option docutils literal notranslate"><span class="pre">-help</span></code></a> output of
+programs, as well as for debug output generated by the <code class="docutils literal notranslate"><span class="pre">--debug-pass</span></code> option.</p>
+<p>If you want your pass to be easily dumpable, you should implement the virtual
+print method:</p>
+<section id="the-print-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">print</span></code> method<a class="headerlink" href="#the-print-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">print</span><span class="p">(</span><span class="n">llvm</span><span class="o">::</span><span class="n">raw_ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="n">O</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Module</span><span class="w"> </span><span class="o">*</span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">print</span></code> method must be implemented by 「analyses」 in order to print a
+human-readable version of the analysis results.  This is useful for debugging
+an analysis itself, as well as for other people to figure out how an analysis
+works.  Use the opt <code class="docutils literal notranslate"><span class="pre">-analyze</span></code> argument to invoke this method.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">llvm::raw_ostream</span></code> parameter specifies the stream to write the results
+on, and the <code class="docutils literal notranslate"><span class="pre">Module</span></code> parameter gives a pointer to the top level module of the
+program that has been analyzed.  Note however that this pointer may be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>
+in certain circumstances (such as calling the <code class="docutils literal notranslate"><span class="pre">Pass::dump()</span></code> from a
+debugger), so it should only be used to enhance debug output, it should not be
+depended on.</p>
+</section>
+<section id="scheduling-a-machinefunctionpass">
+<h4>Scheduling a MachineFunctionPass<a class="headerlink" href="#scheduling-a-machinefunctionpass" title="Link to this heading">#</a></h4>
+<p>Backends create a <code class="docutils literal notranslate"><span class="pre">TargetPassConfig</span></code> and use <code class="docutils literal notranslate"><span class="pre">addPass</span></code> to schedule
+<code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code>es. External plugins can register a callback to modify
+and insert additional passes:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">RegisterTargetPassConfigCallback</span><span class="w"> </span><span class="n">X</span><span class="p">{[](</span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">TM</span><span class="p">,</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="o">&amp;</span><span class="n">PM</span><span class="p">,</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="n">TPC</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">TPC</span><span class="o">-&gt;</span><span class="n">insertPass</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">);</span>
+<span class="w">  </span><span class="n">TPC</span><span class="o">-&gt;</span><span class="n">substitutePass</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">);</span>
+<span class="p">}};</span>
+</pre></div>
+</div>
+<p>Note that passes still have to be registered:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">initCodeGenPlugin</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">initializeExamplePass</span><span class="p">(</span><span class="o">*</span><span class="n">PassRegistry</span><span class="o">::</span><span class="n">getPassRegistry</span><span class="p">());</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="specifying-interactions-between-passes">
+<span id="writing-an-llvm-pass-interaction"></span><h3>Specifying interactions between passes<a class="headerlink" href="#specifying-interactions-between-passes" title="Link to this heading">#</a></h3>
+<p>One of the main responsibilities of the <code class="docutils literal notranslate"><span class="pre">PassManager</span></code> is to make sure that
+passes interact with each other correctly.  Because <code class="docutils literal notranslate"><span class="pre">PassManager</span></code> tries to
+<a class="reference internal" href="#writing-an-llvm-pass-passmanager"><span class="std std-ref">optimize the execution of passes</span></a> it
+must know how the passes interact with each other and what dependencies exist
+between the various passes.  To track this, each pass can declare the set of
+passes that are required to be executed before the current pass, and the passes
+which are invalidated by the current pass.</p>
+<p>Typically this functionality is used to require that analysis results are
+computed before your pass is run.  Running arbitrary transformation passes can
+invalidate the computed analysis results, which is what the invalidation set
+specifies.  If a pass does not implement the
+<a class="reference internal" href="#writing-an-llvm-pass-getanalysisusage"><span class="std std-ref">getAnalysisUsage</span></a> method, it defaults to not having any
+prerequisite passes, and invalidating <strong>all</strong> other passes.</p>
+<section id="the-getanalysisusage-method">
+<span id="writing-an-llvm-pass-getanalysisusage"></span><h4>The <code class="docutils literal notranslate"><span class="pre">getAnalysisUsage</span></code> method<a class="headerlink" href="#the-getanalysisusage-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">getAnalysisUsage</span><span class="p">(</span><span class="n">AnalysisUsage</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Info</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>By implementing the <code class="docutils literal notranslate"><span class="pre">getAnalysisUsage</span></code> method, the required and invalidated
+sets may be specified for your transformation.  The implementation should fill
+in the <a class="reference external" href="/doxygen/classllvm_1_1AnalysisUsage.html">AnalysisUsage</a> object with
+information about which passes are required and not invalidated.  To do this, a
+pass may call any of the following methods on the <code class="docutils literal notranslate"><span class="pre">AnalysisUsage</span></code> object:</p>
+</section>
+<section id="the-analysisusage-addrequired-and-analysisusage-addrequiredtransitive-methods">
+<h4>The <code class="docutils literal notranslate"><span class="pre">AnalysisUsage::addRequired&lt;&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">AnalysisUsage::addRequiredTransitive&lt;&gt;</span></code> methods<a class="headerlink" href="#the-analysisusage-addrequired-and-analysisusage-addrequiredtransitive-methods" title="Link to this heading">#</a></h4>
+<p>If your pass requires a previous pass to be executed (an analysis for example),
+it can use one of these methods to arrange for it to be run before your pass.
+LLVM has many different types of analyses and passes that can be required,
+spanning the range from <code class="docutils literal notranslate"><span class="pre">DominatorSet</span></code> to <code class="docutils literal notranslate"><span class="pre">BreakCriticalEdges</span></code>.  Requiring
+<code class="docutils literal notranslate"><span class="pre">BreakCriticalEdges</span></code>, for example, guarantees that there will be no critical
+edges in the CFG when your pass has been run.</p>
+<p>Some analyses chain to other analyses to do their job.  For example, an
+<a class="reference internal" href="AliasAnalysis.html"><span class="doc">AliasAnalysis</span></a> implementation is required to
+<a class="reference internal" href="AliasAnalysis.html#aliasanalysis-chaining"><span class="std std-ref">chain</span></a> to other alias analysis passes.  In cases where
+analyses chain, the <code class="docutils literal notranslate"><span class="pre">addRequiredTransitive</span></code> method should be used instead of
+the <code class="docutils literal notranslate"><span class="pre">addRequired</span></code> method.  This informs the <code class="docutils literal notranslate"><span class="pre">PassManager</span></code> that the
+transitively required pass should be alive as long as the requiring pass is.</p>
+</section>
+<section id="the-analysisusage-addpreserved-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">AnalysisUsage::addPreserved&lt;&gt;</span></code> method<a class="headerlink" href="#the-analysisusage-addpreserved-method" title="Link to this heading">#</a></h4>
+<p>One of the jobs of the <code class="docutils literal notranslate"><span class="pre">PassManager</span></code> is to optimize how and when analyses are
+run.  In particular, it attempts to avoid recomputing data unless it needs to.
+For this reason, passes are allowed to declare that they preserve (i.e., they
+don’t invalidate) an existing analysis if it’s available.  For example, a
+simple constant folding pass would not modify the CFG, so it can’t possibly
+affect the results of dominator analysis.  By default, all passes are assumed
+to invalidate all others.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AnalysisUsage</span></code> class provides several methods which are useful in
+certain circumstances that are related to <code class="docutils literal notranslate"><span class="pre">addPreserved</span></code>.  In particular, the
+<code class="docutils literal notranslate"><span class="pre">setPreservesAll</span></code> method can be called to indicate that the pass does not
+modify the LLVM program at all (which is true for analyses), and the
+<code class="docutils literal notranslate"><span class="pre">setPreservesCFG</span></code> method can be used by transformations that change
+instructions in the program but do not modify the CFG or terminator
+instructions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">addPreserved</span></code> is particularly useful for transformations like
+<code class="docutils literal notranslate"><span class="pre">BreakCriticalEdges</span></code>.  This pass knows how to update a small set of loop and
+dominator related analyses if they exist, so it can preserve them, despite the
+fact that it hacks on the CFG.</p>
+</section>
+<section id="example-implementations-of-getanalysisusage">
+<h4>Example implementations of <code class="docutils literal notranslate"><span class="pre">getAnalysisUsage</span></code><a class="headerlink" href="#example-implementations-of-getanalysisusage" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// This example modifies the program, but does not modify the CFG</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">LICM::getAnalysisUsage</span><span class="p">(</span><span class="n">AnalysisUsage</span><span class="w"> </span><span class="o">&amp;</span><span class="n">AU</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">AU</span><span class="p">.</span><span class="n">setPreservesCFG</span><span class="p">();</span>
+<span class="w">  </span><span class="n">AU</span><span class="p">.</span><span class="n">addRequired</span><span class="o">&lt;</span><span class="n">LoopInfoWrapperPass</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="the-getanalysis-and-getanalysisifavailable-methods">
+<span id="writing-an-llvm-pass-getanalysis"></span><h4>The <code class="docutils literal notranslate"><span class="pre">getAnalysis&lt;&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">getAnalysisIfAvailable&lt;&gt;</span></code> methods<a class="headerlink" href="#the-getanalysis-and-getanalysisifavailable-methods" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">Pass::getAnalysis&lt;&gt;</span></code> method is automatically inherited by your class,
+providing you with access to the passes that you declared that you required
+with the <a class="reference internal" href="#writing-an-llvm-pass-getanalysisusage"><span class="std std-ref">getAnalysisUsage</span></a>
+method.  It takes a single template argument that specifies which pass class
+you want, and returns a reference to that pass.  For example:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="nf">LICM::runOnFunction</span><span class="p">(</span><span class="n">Function</span><span class="w"> </span><span class="o">&amp;</span><span class="n">F</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">LoopInfo</span><span class="w"> </span><span class="o">&amp;</span><span class="n">LI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getAnalysis</span><span class="o">&lt;</span><span class="n">LoopInfoWrapperPass</span><span class="o">&gt;</span><span class="p">().</span><span class="n">getLoopInfo</span><span class="p">();</span>
+<span class="w">  </span><span class="c1">//...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This method call returns a reference to the pass desired.  You may get a
+runtime assertion failure if you attempt to get an analysis that you did not
+declare as required in your
+<a class="reference internal" href="#writing-an-llvm-pass-getanalysisusage"><span class="std std-ref">getAnalysisUsage</span></a> implementation.  This method can be
+called by your <code class="docutils literal notranslate"><span class="pre">run*</span></code> method implementation, or by any other local method
+invoked by your <code class="docutils literal notranslate"><span class="pre">run*</span></code> method.</p>
+<p>A module level pass can use function level analysis info using this interface.
+For example:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="nf">ModuleLevelPass::runOnModule</span><span class="p">(</span><span class="n">Module</span><span class="w"> </span><span class="o">&amp;</span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">//...</span>
+<span class="w">  </span><span class="n">DominatorTree</span><span class="w"> </span><span class="o">&amp;</span><span class="n">DT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getAnalysis</span><span class="o">&lt;</span><span class="n">DominatorTree</span><span class="o">&gt;</span><span class="p">(</span><span class="n">Func</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">//...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In above example, <code class="docutils literal notranslate"><span class="pre">runOnFunction</span></code> for <code class="docutils literal notranslate"><span class="pre">DominatorTree</span></code> is called by pass
+manager before returning a reference to the desired pass.</p>
+<p>If your pass is capable of updating analyses if they exist (e.g.,
+<code class="docutils literal notranslate"><span class="pre">BreakCriticalEdges</span></code>, as described above), you can use the
+<code class="docutils literal notranslate"><span class="pre">getAnalysisIfAvailable</span></code> method, which returns a pointer to the analysis if
+it is active.  For example:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">DominatorSet</span><span class="w"> </span><span class="o">*</span><span class="n">DS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getAnalysisIfAvailable</span><span class="o">&lt;</span><span class="n">DominatorSet</span><span class="o">&gt;</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// A DominatorSet is active.  This code will update it.</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="pass-statistics">
+<h2>Pass Statistics<a class="headerlink" href="#pass-statistics" title="Link to this heading">#</a></h2>
+<p>The <a class="reference external" href="/doxygen/Statistic_8h_source.html">Statistic</a> class is
+designed to be an easy way to expose various success metrics from passes.
+These statistics are printed at the end of a run, when the <a class="reference internal" href="CommandGuide/opt.html#cmdoption-opt-stats"><code class="xref std std-option docutils literal notranslate"><span class="pre">-stats</span></code></a>
+command line option is enabled on the command line.  See the
+<a class="reference internal" href="ProgrammersManual.html#statistic"><span class="std std-ref">Statistics section</span></a> in the Programmer’s Manual for details.</p>
+<section id="what-passmanager-does">
+<span id="writing-an-llvm-pass-passmanager"></span><h3>What PassManager does<a class="headerlink" href="#what-passmanager-does" title="Link to this heading">#</a></h3>
+<p>The <a class="reference external" href="/doxygen/PassManager_8h_source.html">PassManager</a>
+<a class="reference external" href="/doxygen/classllvm_1_1PassManager.html">class</a> takes a list of
+passes, ensures their <a class="reference internal" href="#writing-an-llvm-pass-interaction"><span class="std std-ref">prerequisites</span></a>
+are set up correctly, and then schedules passes to run efficiently.  All of the
+LLVM tools that run passes use the PassManager for execution of these passes.</p>
+<p>The PassManager does two main things to try to reduce the execution time of a
+series of passes:</p>
+<ol class="arabic">
+<li><p><strong>Share analysis results.</strong>  The <code class="docutils literal notranslate"><span class="pre">PassManager</span></code> attempts to avoid
+recomputing analysis results as much as possible.  This means keeping track
+of which analyses are available already, which analyses get invalidated, and
+which analyses are needed to be run for a pass.  An important part of work
+is that the <code class="docutils literal notranslate"><span class="pre">PassManager</span></code> tracks the exact lifetime of all analysis
+results, allowing it to <a class="reference internal" href="#writing-an-llvm-pass-releasememory"><span class="std std-ref">free memory</span></a> allocated to holding analysis results
+as soon as they are no longer needed.</p></li>
+<li><p><strong>Pipeline the execution of passes on the program.</strong>  The <code class="docutils literal notranslate"><span class="pre">PassManager</span></code>
+attempts to get better cache and memory usage behavior out of a series of
+passes by pipelining the passes together.  This means that, given a series
+of consecutive <a class="reference internal" href="#writing-an-llvm-pass-functionpass"><span class="std std-ref">FunctionPass</span></a>, it
+will execute all of the
+<a class="reference internal" href="#writing-an-llvm-pass-functionpass"><span class="std std-ref">FunctionPass</span></a> on the first function, then all of the
+<a class="reference internal" href="#writing-an-llvm-pass-functionpass"><span class="std std-ref">FunctionPasses</span></a> on the second
+function, etc… until the entire program has been run through the passes.</p>
+<p>This improves the cache behavior of the compiler, because it is only
+touching the LLVM program representation for a single function at a time,
+instead of traversing the entire program.  It reduces the memory consumption
+of compiler, because, for example, only one
+<a class="reference external" href="/doxygen/classllvm_1_1DominatorSet.html">DominatorSet</a> needs to be
+calculated at a time.</p>
+</li>
+</ol>
+<p>The effectiveness of the <code class="docutils literal notranslate"><span class="pre">PassManager</span></code> is influenced directly by how much
+information it has about the behaviors of the passes it is scheduling.  For
+example, the 「preserved」 set is intentionally conservative in the face of an
+unimplemented <a class="reference internal" href="#writing-an-llvm-pass-getanalysisusage"><span class="std std-ref">getAnalysisUsage</span></a>
+method.  Not implementing when it should be implemented will have the effect of
+not allowing any analysis results to live across the execution of your pass.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">PassManager</span></code> class exposes a <code class="docutils literal notranslate"><span class="pre">--debug-pass</span></code> command line options that
+is useful for debugging pass execution, seeing how things work, and diagnosing
+when you should be preserving more analyses than you currently are.  (To get
+information about all of the variants of the <code class="docutils literal notranslate"><span class="pre">--debug-pass</span></code> option, just type
+「<code class="docutils literal notranslate"><span class="pre">llc</span> <span class="pre">-help-hidden</span></code>」).</p>
+<p>By using the –debug-pass=Structure option, for example, we can see inspect the
+default optimization pipelines, e.g. (the output has been trimmed):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llc<span class="w"> </span>-mtriple<span class="o">=</span>arm64--<span class="w"> </span>-O3<span class="w"> </span>-debug-pass<span class="o">=</span>Structure<span class="w"> </span>file.ll<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
+<span class="gp gp-VirtualEnv">(...)</span>
+<span class="go">ModulePass Manager</span>
+<span class="go">Pre-ISel Intrinsic Lowering</span>
+<span class="go">FunctionPass Manager</span>
+<span class="go">  Expand IR instructions</span>
+<span class="go">  Expand Atomic instructions</span>
+<span class="go">  FunctionPass Manager</span>
+<span class="go">    Dominator Tree Construction</span>
+<span class="go">FunctionPass Manager</span>
+<span class="go">  Simplify the CFG</span>
+<span class="go">  Dominator Tree Construction</span>
+<span class="go">  Natural Loop Information</span>
+<span class="go">  Canonicalize natural loops</span>
+<span class="gp gp-VirtualEnv">(...)</span>
+</pre></div>
+</div>
+<section id="the-releasememory-method">
+<span id="writing-an-llvm-pass-releasememory"></span><h4>The <code class="docutils literal notranslate"><span class="pre">releaseMemory</span></code> method<a class="headerlink" href="#the-releasememory-method" title="Link to this heading">#</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">releaseMemory</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">PassManager</span></code> automatically determines when to compute analysis results,
+and how long to keep them around for.  Because the lifetime of the pass object
+itself is effectively the entire duration of the compilation process, we need
+some way to free analysis results when they are no longer useful.  The
+<code class="docutils literal notranslate"><span class="pre">releaseMemory</span></code> virtual method is the way to do this.</p>
+<p>If you are writing an analysis or any other pass that retains a significant
+amount of state (for use by another pass which 「requires」 your pass and uses
+the <a class="reference internal" href="#writing-an-llvm-pass-getanalysis"><span class="std std-ref">getAnalysis</span></a> method) you should
+implement <code class="docutils literal notranslate"><span class="pre">releaseMemory</span></code> to, well, release the memory allocated to maintain
+this internal state.  This method is called after the <code class="docutils literal notranslate"><span class="pre">run*</span></code> method for the
+class, before the next call of <code class="docutils literal notranslate"><span class="pre">run*</span></code> in your pass.</p>
+</section>
+</section>
+</section>
+<section id="registering-dynamically-loaded-passes">
+<h2>Registering dynamically loaded passes<a class="headerlink" href="#registering-dynamically-loaded-passes" title="Link to this heading">#</a></h2>
+<p><em>Size matters</em> when constructing production quality tools using LLVM, both for
+the purposes of distribution, and for regulating the resident code size when
+running on the target system.  Therefore, it becomes desirable to selectively
+use some passes, while omitting others and maintain the flexibility to change
+configurations later on.  You want to be able to do all this, and, provide
+feedback to the user.  This is where pass registration comes into play.</p>
+<p>The fundamental mechanisms for pass registration are the
+<code class="docutils literal notranslate"><span class="pre">MachinePassRegistry</span></code> class and subclasses of <code class="docutils literal notranslate"><span class="pre">MachinePassRegistryNode</span></code>.</p>
+<p>An instance of <code class="docutils literal notranslate"><span class="pre">MachinePassRegistry</span></code> is used to maintain a list of
+<code class="docutils literal notranslate"><span class="pre">MachinePassRegistryNode</span></code> objects.  This instance maintains the list and
+communicates additions and deletions to the command line interface.</p>
+<p>An instance of <code class="docutils literal notranslate"><span class="pre">MachinePassRegistryNode</span></code> subclass is used to maintain
+information provided about a particular pass.  This information includes the
+command line name, the command help string and the address of the function used
+to create an instance of the pass.  A global static constructor of one of these
+instances <em>registers</em> with a corresponding <code class="docutils literal notranslate"><span class="pre">MachinePassRegistry</span></code>, the static
+destructor <em>unregisters</em>.  Thus a pass that is statically linked in the tool
+will be registered at start up.  A dynamically loaded pass will register on
+load and unregister at unload.</p>
+<section id="using-existing-registries">
+<h3>Using existing registries<a class="headerlink" href="#using-existing-registries" title="Link to this heading">#</a></h3>
+<p>There are predefined registries to track instruction scheduling
+(<code class="docutils literal notranslate"><span class="pre">RegisterScheduler</span></code>) and register allocation (<code class="docutils literal notranslate"><span class="pre">RegisterRegAlloc</span></code>) machine
+passes.  Here we will describe how to <em>register</em> a register allocator machine
+pass.</p>
+<p>Implement your register allocator machine pass.  In your register allocator
+<code class="docutils literal notranslate"><span class="pre">.cpp</span></code> file add the following include:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;llvm/CodeGen/RegAllocRegistry.h&quot;</span>
+</pre></div>
+</div>
+<p>Also in your register allocator <code class="docutils literal notranslate"><span class="pre">.cpp</span></code> file, define a creator function in the
+form:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">FunctionPass</span><span class="w"> </span><span class="o">*</span><span class="nf">createMyRegisterAllocator</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MyRegisterAllocator</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that the signature of this function should match the type of
+<code class="docutils literal notranslate"><span class="pre">RegisterRegAlloc::FunctionPassCtor</span></code>.  In the same file add the 「installing」
+declaration, in the form:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">RegisterRegAlloc</span><span class="w"> </span><span class="n">myRegAlloc</span><span class="p">(</span><span class="s">&quot;myregalloc&quot;</span><span class="p">,</span>
+<span class="w">                                   </span><span class="s">&quot;my register allocator help string&quot;</span><span class="p">,</span>
+<span class="w">                                   </span><span class="n">createMyRegisterAllocator</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Note the two spaces prior to the help string produces a tidy result on the
+<a class="reference internal" href="CommandGuide/opt.html#cmdoption-opt-help"><code class="xref std std-option docutils literal notranslate"><span class="pre">-help</span></code></a> query.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>llc<span class="w"> </span>-help
+<span class="go">  ...</span>
+<span class="go">  -regalloc                    - Register allocator to use (default=linearscan)</span>
+<span class="go">    =linearscan                -   linear scan register allocator</span>
+<span class="go">    =local                     -   local register allocator</span>
+<span class="go">    =simple                    -   simple register allocator</span>
+<span class="go">    =myregalloc                -   my register allocator help string</span>
+<span class="go">  ...</span>
+</pre></div>
+</div>
+<p>And that’s it.  The user is now free to use <code class="docutils literal notranslate"><span class="pre">-regalloc=myregalloc</span></code> as an
+option.  Registering instruction schedulers is similar except use the
+<code class="docutils literal notranslate"><span class="pre">RegisterScheduler</span></code> class.  Note that the
+<code class="docutils literal notranslate"><span class="pre">RegisterScheduler::FunctionPassCtor</span></code> is significantly different from
+<code class="docutils literal notranslate"><span class="pre">RegisterRegAlloc::FunctionPassCtor</span></code>.</p>
+<p>To force the load/linking of your register allocator into the
+<strong class="program">llc</strong>/<strong class="program">lli</strong> tools, add your creator function’s global
+declaration to <code class="docutils literal notranslate"><span class="pre">Passes.h</span></code> and add a 「pseudo」 call line to
+<code class="docutils literal notranslate"><span class="pre">llvm/Codegen/LinkAllCodegenComponents.h</span></code>.</p>
+</section>
+<section id="creating-new-registries">
+<h3>Creating new registries<a class="headerlink" href="#creating-new-registries" title="Link to this heading">#</a></h3>
+<p>The easiest way to get started is to clone one of the existing registries; we
+recommend <code class="docutils literal notranslate"><span class="pre">llvm/CodeGen/RegAllocRegistry.h</span></code>.  The key things to modify are
+the class name and the <code class="docutils literal notranslate"><span class="pre">FunctionPassCtor</span></code> type.</p>
+<p>Then you need to declare the registry.  Example: if your pass registry is
+<code class="docutils literal notranslate"><span class="pre">RegisterMyPasses</span></code> then define:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">MachinePassRegistry</span><span class="o">&lt;</span><span class="n">RegisterMyPasses</span><span class="o">::</span><span class="n">FunctionPassCtor</span><span class="o">&gt;</span><span class="w"> </span><span class="n">RegisterMyPasses</span><span class="o">::</span><span class="n">Registry</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>And finally, declare the command line option for your passes.  Example:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">cl</span><span class="o">::</span><span class="n">opt</span><span class="o">&lt;</span><span class="n">RegisterMyPasses</span><span class="o">::</span><span class="n">FunctionPassCtor</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span>
+<span class="w">        </span><span class="n">RegisterPassParser</span><span class="o">&lt;</span><span class="n">RegisterMyPasses</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&gt;</span>
+<span class="n">MyPassOpt</span><span class="p">(</span><span class="s">&quot;mypass&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="n">cl</span><span class="o">::</span><span class="n">init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">createDefaultMyPass</span><span class="p">),</span>
+<span class="w">          </span><span class="n">cl</span><span class="o">::</span><span class="n">desc</span><span class="p">(</span><span class="s">&quot;my pass option help&quot;</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>Here the command option is 「<code class="docutils literal notranslate"><span class="pre">mypass</span></code>」, with <code class="docutils literal notranslate"><span class="pre">createDefaultMyPass</span></code> as the
+default creator.</p>
+</section>
+<section id="using-gdb-with-dynamically-loaded-passes">
+<h3>Using GDB with dynamically loaded passes<a class="headerlink" href="#using-gdb-with-dynamically-loaded-passes" title="Link to this heading">#</a></h3>
+<p>Unfortunately, using GDB with dynamically loaded passes is not as easy as it
+should be.  First of all, you can’t set a breakpoint in a shared object that
+has not been loaded yet, and second of all there are problems with inlined
+functions in shared objects.  Here are some suggestions to debugging your pass
+with GDB.</p>
+<p>For sake of discussion, I’m going to assume that you are debugging a
+transformation invoked by <strong class="program">opt</strong>, although nothing described here
+depends on that.</p>
+<section id="setting-a-breakpoint-in-your-pass">
+<h4>Setting a breakpoint in your pass<a class="headerlink" href="#setting-a-breakpoint-in-your-pass" title="Link to this heading">#</a></h4>
+<p>First thing you do is start gdb on the opt process:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>gdb<span class="w"> </span>opt
+<span class="go">GNU gdb 5.0</span>
+<span class="go">Copyright 2000 Free Software Foundation, Inc.</span>
+<span class="go">GDB is free software, covered by the GNU General Public License, and you are</span>
+<span class="go">welcome to change it and/or distribute copies of it under certain conditions.</span>
+<span class="go">Type &quot;show copying&quot; to see the conditions.</span>
+<span class="go">There is absolutely no warranty for GDB.  Type &quot;show warranty&quot; for details.</span>
+<span class="go">This GDB was configured as &quot;sparc-sun-solaris2.6&quot;...</span>
+<span class="gp gp-VirtualEnv">(gdb)</span>
+</pre></div>
+</div>
+<p>Note that <strong class="program">opt</strong> has a lot of debugging information in it, so it takes
+time to load.  Be patient.  Since we cannot set a breakpoint in our pass yet
+(the shared object isn’t loaded until runtime), we must execute the process,
+and have it stop before it invokes our pass, but after it has loaded the shared
+object.  The most foolproof way of doing this is to set a breakpoint in
+<code class="docutils literal notranslate"><span class="pre">PassManager::run</span></code> and then run the process with the arguments you want:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">break</span><span class="w"> </span>llvm::PassManager::run
+<span class="go">Breakpoint 1 at 0x2413bc: file Pass.cpp, line 70.</span>
+<span class="gp gp-VirtualEnv">(gdb)</span> <span class="go">run test.bc -load $(LLVMTOP)/llvm/Debug+Asserts/lib/[libname].so -[passoption]</span>
+<span class="go">Starting program: opt test.bc -load $(LLVMTOP)/llvm/Debug+Asserts/lib/[libname].so -[passoption]</span>
+<span class="go">Breakpoint 1, PassManager::run (this=0xffbef174, M=@0x70b298) at Pass.cpp:70</span>
+<span class="go">70      bool PassManager::run(Module &amp;M) { return PM-&gt;run(M); }</span>
+<span class="gp gp-VirtualEnv">(gdb)</span>
+</pre></div>
+</div>
+<p>Once the <strong class="program">opt</strong> stops in the <code class="docutils literal notranslate"><span class="pre">PassManager::run</span></code> method you are now
+free to set breakpoints in your pass so that you can trace through execution or
+do other standard debugging stuff.</p>
+</section>
+<section id="miscellaneous-problems">
+<h4>Miscellaneous Problems<a class="headerlink" href="#miscellaneous-problems" title="Link to this heading">#</a></h4>
+<p>Once you have the basics down, there are a couple of problems that GDB has,
+some with solutions, some without.</p>
+<ul class="simple">
+<li><p>Inline functions have bogus stack information.  In general, GDB does a pretty
+good job getting stack traces and stepping through inline functions.  When a
+pass is dynamically loaded however, it somehow completely loses this
+capability.  The only solution I know of is to de-inline a function (move it
+from the body of a class to a <code class="docutils literal notranslate"><span class="pre">.cpp</span></code> file).</p></li>
+<li><p>Restarting the program breaks breakpoints.  After following the information
+above, you have succeeded in getting some breakpoints planted in your pass.
+Next thing you know, you restart the program (i.e., you type 「<code class="docutils literal notranslate"><span class="pre">run</span></code>」 again),
+and you start getting errors about breakpoints being unsettable.  The only
+way I have found to 「fix」 this problem is to delete the breakpoints that are
+already set in your pass, run the program, and re-set the breakpoints once
+execution stops in <code class="docutils literal notranslate"><span class="pre">PassManager::run</span></code>.</p></li>
+</ul>
+<p>Hopefully these tips will help with common case debugging situations.  If you’d
+like to contribute some tips of your own, just contact <a class="reference external" href="mailto:sabre&#37;&#52;&#48;nondot&#46;org">Chris</a>.</p>
+</section>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="Passes.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">LLVM’s Analysis and Transform Passes</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="WritingAnLLVMNewPMPass.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Writing an LLVM Pass</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Writing an LLVM Pass (legacy PM version)</a><ul>
+<li><a class="reference internal" href="#introduction-what-is-a-pass">Introduction — What is a pass?</a></li>
+<li><a class="reference internal" href="#pass-classes-and-requirements">Pass classes and requirements</a><ul>
+<li><a class="reference internal" href="#the-immutablepass-class">The <code class="docutils literal notranslate"><span class="pre">ImmutablePass</span></code> class</a></li>
+<li><a class="reference internal" href="#the-modulepass-class">The <code class="docutils literal notranslate"><span class="pre">ModulePass</span></code> class</a><ul>
+<li><a class="reference internal" href="#the-runonmodule-method">The <code class="docutils literal notranslate"><span class="pre">runOnModule</span></code> method</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-callgraphsccpass-class">The <code class="docutils literal notranslate"><span class="pre">CallGraphSCCPass</span></code> class</a><ul>
+<li><a class="reference internal" href="#the-doinitialization-callgraph-method">The <code class="docutils literal notranslate"><span class="pre">doInitialization(CallGraph</span> <span class="pre">&amp;)</span></code> method</a></li>
+<li><a class="reference internal" href="#the-runonscc-method">The <code class="docutils literal notranslate"><span class="pre">runOnSCC</span></code> method</a></li>
+<li><a class="reference internal" href="#the-dofinalization-callgraph-method">The <code class="docutils literal notranslate"><span class="pre">doFinalization(CallGraph</span> <span class="pre">&amp;)</span></code> method</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-functionpass-class">The <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code> class</a><ul>
+<li><a class="reference internal" href="#the-doinitialization-module-method">The <code class="docutils literal notranslate"><span class="pre">doInitialization(Module</span> <span class="pre">&amp;)</span></code> method</a></li>
+<li><a class="reference internal" href="#the-runonfunction-method">The <code class="docutils literal notranslate"><span class="pre">runOnFunction</span></code> method</a></li>
+<li><a class="reference internal" href="#the-dofinalization-module-method">The <code class="docutils literal notranslate"><span class="pre">doFinalization(Module</span> <span class="pre">&amp;)</span></code> method</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-looppass-class">The <code class="docutils literal notranslate"><span class="pre">LoopPass</span></code> class</a><ul>
+<li><a class="reference internal" href="#the-doinitialization-loop-lppassmanager-method">The <code class="docutils literal notranslate"><span class="pre">doInitialization(Loop</span> <span class="pre">*,</span> <span class="pre">LPPassManager</span> <span class="pre">&amp;)</span></code> method</a></li>
+<li><a class="reference internal" href="#the-runonloop-method">The <code class="docutils literal notranslate"><span class="pre">runOnLoop</span></code> method</a></li>
+<li><a class="reference internal" href="#the-dofinalization-method">The <code class="docutils literal notranslate"><span class="pre">doFinalization()</span></code> method</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-regionpass-class">The <code class="docutils literal notranslate"><span class="pre">RegionPass</span></code> class</a><ul>
+<li><a class="reference internal" href="#the-doinitialization-region-rgpassmanager-method">The <code class="docutils literal notranslate"><span class="pre">doInitialization(Region</span> <span class="pre">*,</span> <span class="pre">RGPassManager</span> <span class="pre">&amp;)</span></code> method</a></li>
+<li><a class="reference internal" href="#the-runonregion-method">The <code class="docutils literal notranslate"><span class="pre">runOnRegion</span></code> method</a></li>
+<li><a class="reference internal" href="#id1">The <code class="docutils literal notranslate"><span class="pre">doFinalization()</span></code> method</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-machinefunctionpass-class">The <code class="docutils literal notranslate"><span class="pre">MachineFunctionPass</span></code> class</a><ul>
+<li><a class="reference internal" href="#the-runonmachinefunction-machinefunction-mf-method">The <code class="docutils literal notranslate"><span class="pre">runOnMachineFunction(MachineFunction</span> <span class="pre">&amp;MF)</span></code> method</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pass-registration">Pass registration</a><ul>
+<li><a class="reference internal" href="#the-print-method">The <code class="docutils literal notranslate"><span class="pre">print</span></code> method</a></li>
+<li><a class="reference internal" href="#scheduling-a-machinefunctionpass">Scheduling a MachineFunctionPass</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#specifying-interactions-between-passes">Specifying interactions between passes</a><ul>
+<li><a class="reference internal" href="#the-getanalysisusage-method">The <code class="docutils literal notranslate"><span class="pre">getAnalysisUsage</span></code> method</a></li>
+<li><a class="reference internal" href="#the-analysisusage-addrequired-and-analysisusage-addrequiredtransitive-methods">The <code class="docutils literal notranslate"><span class="pre">AnalysisUsage::addRequired&lt;&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">AnalysisUsage::addRequiredTransitive&lt;&gt;</span></code> methods</a></li>
+<li><a class="reference internal" href="#the-analysisusage-addpreserved-method">The <code class="docutils literal notranslate"><span class="pre">AnalysisUsage::addPreserved&lt;&gt;</span></code> method</a></li>
+<li><a class="reference internal" href="#example-implementations-of-getanalysisusage">Example implementations of <code class="docutils literal notranslate"><span class="pre">getAnalysisUsage</span></code></a></li>
+<li><a class="reference internal" href="#the-getanalysis-and-getanalysisifavailable-methods">The <code class="docutils literal notranslate"><span class="pre">getAnalysis&lt;&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">getAnalysisIfAvailable&lt;&gt;</span></code> methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pass-statistics">Pass Statistics</a><ul>
+<li><a class="reference internal" href="#what-passmanager-does">What PassManager does</a><ul>
+<li><a class="reference internal" href="#the-releasememory-method">The <code class="docutils literal notranslate"><span class="pre">releaseMemory</span></code> method</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#registering-dynamically-loaded-passes">Registering dynamically loaded passes</a><ul>
+<li><a class="reference internal" href="#using-existing-registries">Using existing registries</a></li>
+<li><a class="reference internal" href="#creating-new-registries">Creating new registries</a></li>
+<li><a class="reference internal" href="#using-gdb-with-dynamically-loaded-passes">Using GDB with dynamically loaded passes</a><ul>
+<li><a class="reference internal" href="#setting-a-breakpoint-in-your-pass">Setting a breakpoint in your pass</a></li>
+<li><a class="reference internal" href="#miscellaneous-problems">Miscellaneous Problems</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=0d9984b1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=d9a6981e"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

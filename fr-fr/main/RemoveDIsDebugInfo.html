@@ -1,0 +1,1097 @@
+<!doctype html>
+<html class="no-js" lang="fr-FR" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Recherche" href="search.html" /><link rel="next" title="Key Instructions debug info in LLVM and Clang" href="KeyInstructionsDebugInfo.html" /><link rel="prev" title="Instruction referencing for debug info" href="InstrRefDebugInfo.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/RemoveDIsDebugInfo.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Debug info migration: From intrinsics to records - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Recherche" name="q" aria-label="Recherche">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural “diff”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/RemoveDIsDebugInfo.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="debug-info-migration-from-intrinsics-to-records">
+<h1>Debug info migration: From intrinsics to records<a class="headerlink" href="#debug-info-migration-from-intrinsics-to-records" title="Link to this heading">#</a></h1>
+<p>We’re planning on removing debug info intrinsics from LLVM, as they’re slow, unwieldy and can confuse optimisation passes if they’re not expecting them. Instead of having a sequence of instructions that looks like this:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>    %add = add i32 %foo, %bar
+    call void @llvm.dbg.value(metadata %add, ...
+    %sub = sub i32 %add, %tosub
+    call void @llvm.dbg.value(metadata %sub, ...
+    call void @a_normal_function()
+</pre></div>
+</div>
+<p>with <code class="docutils literal notranslate"><span class="pre">dbg.value</span></code> intrinsics representing debug info records, it would instead be printed as:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>    %add = add i32 %foo, %bar
+      #dbg_value(%add, ...
+    %sub = sub i32 %add, %tosub
+      #dbg_value(%sub, ...
+    call void @a_normal_function()
+</pre></div>
+</div>
+<p>The debug records are not instructions, do not appear in the instruction list, and won’t appear in your optimisation passes unless you go digging for them deliberately.</p>
+<section id="great-what-do-i-need-to-do">
+<h2>Great, what do I need to do!<a class="headerlink" href="#great-what-do-i-need-to-do" title="Link to this heading">#</a></h2>
+<p>We’ve largely completed the migration. The remaining rough edge is that going forwards, instructions must be inserted into basic blocks using iterators rather than instruction pointers. In almost all circumstances you can just call <code class="docutils literal notranslate"><span class="pre">getIterator</span></code> on an instruction pointer – however, if you call a function that returns the start of a basic block, such as:</p>
+<ol class="arabic simple">
+<li><p>BasicBlock::begin</p></li>
+<li><p>BasicBlock::getFirstNonPHIIt</p></li>
+<li><p>BasicBlock::getFirstInsertionPt</p></li>
+</ol>
+<p>Then you must past that iterator into the insertion function without modification (the iterator carries a debug-info bit). That’s all! Read on for a more detailed explanation.</p>
+<section id="api-changes">
+<h3>API Changes<a class="headerlink" href="#api-changes" title="Link to this heading">#</a></h3>
+<p>There are two significant changes to be aware of. Firstly, we’re adding a single bit of debug relevant data to the <code class="docutils literal notranslate"><span class="pre">BasicBlock::iterator</span></code> class (it’s so that we can determine whether ranges intend on including debug info at the beginning of a block or not). That means when writing passes that insert LLVM IR instructions, you need to identify positions with <code class="docutils literal notranslate"><span class="pre">BasicBlock::iterator</span></code> rather than just a bare <code class="docutils literal notranslate"><span class="pre">Instruction</span> <span class="pre">*</span></code>. Most of the time this means that after identifying where you intend on inserting something, you must also call <code class="docutils literal notranslate"><span class="pre">getIterator</span></code> on the instruction position – however when inserting at the start of a block you <em>must</em> use <code class="docutils literal notranslate"><span class="pre">getFirstInsertionPt</span></code>, <code class="docutils literal notranslate"><span class="pre">getFirstNonPHIIt</span></code> or <code class="docutils literal notranslate"><span class="pre">begin</span></code> and use that iterator to insert, rather than just fetching a pointer to the first instruction.</p>
+<p>The second matter is that if you transfer sequences of instructions from one place to another manually, i.e. repeatedly using <code class="docutils literal notranslate"><span class="pre">moveBefore</span></code> where you might have used <code class="docutils literal notranslate"><span class="pre">splice</span></code>, then you should instead use the method <code class="docutils literal notranslate"><span class="pre">moveBeforePreserving</span></code>. <code class="docutils literal notranslate"><span class="pre">moveBeforePreserving</span></code> will transfer debug info records with the instruction they’re attached to. This is something that happens automatically today – if you use <code class="docutils literal notranslate"><span class="pre">moveBefore</span></code> on every element of an instruction sequence, then debug intrinsics will be moved in the normal course of your code, but we lose this behaviour with non-instruction debug info.</p>
+<p>For a more in-depth overview of how to update existing code to support debug records, see <a class="reference internal" href="#how-to-update-existing-code">the guide below</a>.</p>
+</section>
+<section id="textual-ir-changes">
+<h3>Textual IR Changes<a class="headerlink" href="#textual-ir-changes" title="Link to this heading">#</a></h3>
+<p>As we change from using debug intrinsics to debug records, any tools that depend on parsing IR produced by LLVM will need to handle the new format. For the most part, the difference between the printed form of a debug intrinsic call and a debug record is trivial:</p>
+<ol class="arabic simple">
+<li><p>An extra 2 spaces of indentation are added.</p></li>
+<li><p>The text <code class="docutils literal notranslate"><span class="pre">(tail|notail|musttail)?</span> <span class="pre">call</span> <span class="pre">void</span> <span class="pre">&#64;llvm.dbg.&lt;type&gt;</span></code> is replaced with <code class="docutils literal notranslate"><span class="pre">#dbg_&lt;type&gt;</span></code>.</p></li>
+<li><p>The leading <code class="docutils literal notranslate"><span class="pre">metadata</span> </code> is removed from each argument to the intrinsic.</p></li>
+<li><p>The DILocation changes from being an instruction attachment with the format <code class="docutils literal notranslate"><span class="pre">!dbg</span> <span class="pre">!&lt;Num&gt;</span></code>, to being an ordinary argument, i.e. <code class="docutils literal notranslate"><span class="pre">!&lt;Num&gt;</span></code>, that is passed as the final argument to the debug record.</p></li>
+</ol>
+<p>Following these rules, we have this example of a debug intrinsic and the equivalent debug record:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>; Debug Intrinsic:
+  call void @llvm.dbg.value(metadata i32 %add, metadata !10, metadata !DIExpression()), !dbg !20
+; Debug Record:
+    #dbg_value(i32 %add, !10, !DIExpression(), !20)
+</pre></div>
+</div>
+<section id="test-updates">
+<h4>Test updates<a class="headerlink" href="#test-updates" title="Link to this heading">#</a></h4>
+<p>Any tests downstream of the main LLVM repo that test the IR output of LLVM may break as a result of the change to using records. Updating an individual test to expect records instead of intrinsics should be trivial, given the update rules above. Updating many tests may be burdensome however; to update the lit tests in the main repository, the following steps were used:</p>
+<ol class="arabic">
+<li><p>Collect the list of failing lit tests into a single file, <code class="docutils literal notranslate"><span class="pre">failing-tests.txt</span></code>, separated by (and ending with) newlines.</p></li>
+<li><p>Use the following line to split the failing tests into tests that use update_test_checks and tests that don’t:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ while IFS= read -r f; do grep -q &quot;Assertions have been autogenerated by&quot; &quot;$f&quot; &amp;&amp; echo &quot;$f&quot; &gt;&gt; update-checks-tests.txt || echo &quot;$f&quot; &gt;&gt; manual-tests.txt; done &lt; failing-tests.txt
+</pre></div>
+</div>
+</li>
+<li><p>For the tests that use update_test_checks, run the appropriate update_test_checks script - for the main LLVM repo, this was achieved with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ xargs ./llvm/utils/update_test_checks.py --opt-binary ./build/bin/opt &lt; update-checks-tests.txt
+$ xargs ./llvm/utils/update_cc_test_checks.py --llvm-bin ./build/bin/ &lt; update-checks-tests.txt
+</pre></div>
+</div>
+</li>
+<li><p>The remaining tests can be manually updated, although if there is a large number of tests then the following scripts may be useful; firstly, a script used to extract the check-line prefixes from a file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cat ./get-checks.sh
+#!/bin/bash
+
+# Always add CHECK, since it&#39;s more effort than it&#39;s worth to filter files where
+# every RUN line uses other check prefixes.
+# Then detect every instance of &quot;check-prefix(es)=...&quot; and add the
+# comma-separated arguments as extra checks.
+for filename in &quot;$@&quot;
+do
+    echo &quot;$filename,CHECK&quot;
+    allchecks=$(grep -Eo &#39;check-prefix(es)?[ =][A-Z0-9_,-]+&#39; $filename | sed -E &#39;s/.+[= ]([A-Z0-9_,-]+).*/\1/g; s/,/\n/g&#39;)
+    for check in $allchecks; do
+        echo &quot;$filename,$check&quot;
+    done
+done
+</pre></div>
+</div>
+<p>Then a second script to perform the work of actually updating the check-lines in each of the failing tests, with a series of simple substitution patterns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cat ./substitute-checks.sh
+#!/bin/bash
+
+file=&quot;$1&quot;
+check=&quot;$2&quot;
+
+# Any test that explicitly tests debug intrinsic output is not suitable to
+# update by this script.
+if grep -q &quot;write-experimental-debuginfo=false&quot; &quot;$file&quot;; then
+    exit 0
+fi
+
+sed -i -E -e &quot;
+/(#|;|\/\/).*$check[A-Z0-9_\-]*:/!b
+/DIGlobalVariableExpression/b
+/!llvm.dbg./bpostcall
+s/((((((no|must)?tail )?call.*)?void )?@)?llvm.)?dbg\.([a-z]+)/#dbg_\7/
+:postcall
+/declare #dbg_/d
+s/metadata //g
+s/metadata\{/{/g
+s/DIExpression\(([^)]*)\)\)(,( !dbg)?)?/DIExpression(\1),/
+/#dbg_/!b
+s/((\))?(,) )?!dbg (![0-9]+)/\3\4\2/
+s/((\))?(, ))?!dbg/\3/
+&quot; &quot;$file&quot;
+</pre></div>
+</div>
+<p>Both of these scripts combined can be used on the list in <code class="docutils literal notranslate"><span class="pre">manual-tests.txt</span></code> as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cat manual-tests.txt | xargs ./get-checks.sh | sort | uniq | awk -F &#39;,&#39; &#39;{ system(&quot;./substitute-checks.sh &quot; $1 &quot; &quot; $2) }&#39;
+</pre></div>
+</div>
+<p>These scripts dealt successfully with the vast majority of checks in <code class="docutils literal notranslate"><span class="pre">clang/test</span></code> and <code class="docutils literal notranslate"><span class="pre">llvm/test</span></code>.</p>
+</li>
+<li><p>Verify the resulting tests pass, and detect any failing tests:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ xargs ./build/bin/llvm-lit -q &lt; failing-tests.txt
+********************
+Failed Tests (5):
+LLVM :: DebugInfo/Generic/dbg-value-lower-linenos.ll
+LLVM :: Transforms/HotColdSplit/transfer-debug-info.ll
+LLVM :: Transforms/ObjCARC/basic.ll
+LLVM :: Transforms/ObjCARC/ensure-that-exception-unwind-path-is-visited.ll
+LLVM :: Transforms/SafeStack/X86/debug-loc2.ll
+
+
+Total Discovered Tests: 295
+Failed: 5 (1.69%)
+</pre></div>
+</div>
+</li>
+<li><p>Some tests may have failed - the update scripts are simplistic and preserve no context across lines, and so there are cases that they will not handle; the remaining cases must be manually updated (or handled by further scripts).</p></li>
+</ol>
+</section>
+</section>
+</section>
+<section id="c-api-changes">
+<h2>C-API changes<a class="headerlink" href="#c-api-changes" title="Link to this heading">#</a></h2>
+<p>Some new functions that have been added are temporary and will be deprecated in the future. The intention is that they’ll help downstream projects adapt during the transition period.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Deleted</span> <span class="n">functions</span>
+<span class="o">-----------------</span>
+<span class="n">LLVMDIBuilderInsertDeclareBefore</span>   <span class="c1"># Insert a debug record (new debug info format) instead of a debug intrinsic (old debug info format).</span>
+<span class="n">LLVMDIBuilderInsertDeclareAtEnd</span>    <span class="c1"># Same as above.</span>
+<span class="n">LLVMDIBuilderInsertDbgValueBefore</span>  <span class="c1"># Same as above.</span>
+<span class="n">LLVMDIBuilderInsertDbgValueAtEnd</span>   <span class="c1"># Same as above.</span>
+
+<span class="n">New</span> <span class="n">functions</span> <span class="p">(</span><span class="n">to</span> <span class="n">be</span> <span class="n">deprecated</span><span class="p">)</span>
+<span class="o">--------------------------------</span>
+<span class="n">LLVMIsNewDbgInfoFormat</span>     <span class="c1"># Returns true if the module is in the new non-instruction mode.</span>
+<span class="n">LLVMSetIsNewDbgInfoFormat</span>  <span class="c1"># Convert to the requested debug info format.</span>
+
+<span class="n">New</span> <span class="n">functions</span> <span class="p">(</span><span class="n">no</span> <span class="n">plans</span> <span class="n">to</span> <span class="n">deprecate</span><span class="p">)</span>
+<span class="o">-------------------------------------</span>
+<span class="n">LLVMGetFirstDbgRecord</span>                    <span class="c1"># Obtain the first debug record attached to an instruction.</span>
+<span class="n">LLVMGetLastDbgRecord</span>                     <span class="c1"># Obtain the last debug record attached to an instruction.</span>
+<span class="n">LLVMGetNextDbgRecord</span>                     <span class="c1"># Get next debug record or NULL.</span>
+<span class="n">LLVMGetPreviousDbgRecord</span>                 <span class="c1"># Get previous debug record or NULL.</span>
+<span class="n">LLVMDIBuilderInsertDeclareRecordBefore</span>   <span class="c1"># Insert a debug record (new debug info format).</span>
+<span class="n">LLVMDIBuilderInsertDeclareRecordAtEnd</span>    <span class="c1"># Same as above. See info below.</span>
+<span class="n">LLVMDIBuilderInsertDbgValueRecordBefore</span>  <span class="c1"># Same as above. See info below.</span>
+<span class="n">LLVMDIBuilderInsertDbgValueRecordAtEnd</span>   <span class="c1"># Same as above. See info below.</span>
+
+<span class="n">LLVMPositionBuilderBeforeDbgRecords</span>          <span class="c1"># See info below.</span>
+<span class="n">LLVMPositionBuilderBeforeInstrAndDbgRecords</span>  <span class="c1"># See info below.</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">LLVMDIBuilderInsertDeclareRecordBefore</span></code>, <code class="docutils literal notranslate"><span class="pre">LLVMDIBuilderInsertDeclareRecordAtEnd</span></code>, <code class="docutils literal notranslate"><span class="pre">LLVMDIBuilderInsertDbgValueRecordBefore</span></code> and <code class="docutils literal notranslate"><span class="pre">LLVMDIBuilderInsertDbgValueRecordAtEnd</span></code> are replacing the deleted <code class="docutils literal notranslate"><span class="pre">LLVMDIBuilderInsertDeclareBefore-style</span></code> functions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LLVMPositionBuilderBeforeDbgRecords</span></code> and <code class="docutils literal notranslate"><span class="pre">LLVMPositionBuilderBeforeInstrAndDbgRecords</span></code> behave the same as <code class="docutils literal notranslate"><span class="pre">LLVMPositionBuilder</span></code> and <code class="docutils literal notranslate"><span class="pre">LLVMPositionBuilderBefore</span></code> except the insertion position is set before the debug records that precede the target instruction. Note that this doesn’t mean that debug intrinsics before the chosen instruction are skipped, only debug records (which unlike debug records are not themselves instructions).</p>
+<p>If you don’t know which function to call then follow this rule:
+If you are trying to insert at the start of a block, or purposfully skip debug intrinsics to determine the insertion point for any other reason, then call the new functions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LLVMPositionBuilder</span></code> and <code class="docutils literal notranslate"><span class="pre">LLVMPositionBuilderBefore</span></code> are unchanged. They insert before the indicated instruction but after any attached debug records.</p>
+<p><code class="docutils literal notranslate"><span class="pre">LLVMGetFirstDbgRecord</span></code>, <code class="docutils literal notranslate"><span class="pre">LLVMGetLastDbgRecord</span></code>, <code class="docutils literal notranslate"><span class="pre">LLVMGetNextDbgRecord</span></code> and <code class="docutils literal notranslate"><span class="pre">LLVMGetPreviousDbgRecord</span></code> can be used for iterating over debug records attached to instructions (provided as <code class="docutils literal notranslate"><span class="pre">LLVMValueRef</span></code>).</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">LLVMDbgRecordRef</span><span class="w"> </span><span class="n">DbgRec</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">DbgRec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LLVMGetFirstDbgRecord</span><span class="p">(</span><span class="n">Inst</span><span class="p">);</span><span class="w"> </span><span class="n">DbgRec</span><span class="p">;</span>
+<span class="w">     </span><span class="n">DbgRec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LLVMGetNextDbgRecord</span><span class="p">(</span><span class="n">DbgRec</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// do something with DbgRec</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">LLVMDbgRecordRef</span><span class="w"> </span><span class="n">DbgRec</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">DbgRec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LLVMGetLastDbgRecord</span><span class="p">(</span><span class="n">Inst</span><span class="p">);</span><span class="w"> </span><span class="n">DbgRec</span><span class="p">;</span>
+<span class="w">     </span><span class="n">DbgRec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LLVMGetPreviousDbgRecord</span><span class="p">(</span><span class="n">DbgRec</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// do something with DbgRec</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="the-new-debug-record-model">
+<h2>The new « Debug Record » model<a class="headerlink" href="#the-new-debug-record-model" title="Link to this heading">#</a></h2>
+<p>Below is a brief overview of the new representation that replaces debug intrinsics; for an instructive guide on updating old code, see <a class="reference internal" href="#how-to-update-existing-code">here</a>.</p>
+<section id="what-exactly-have-you-replaced-debug-intrinsics-with">
+<h3>What exactly have you replaced debug intrinsics with?<a class="headerlink" href="#what-exactly-have-you-replaced-debug-intrinsics-with" title="Link to this heading">#</a></h3>
+<p>We’re using a dedicated C++ class called <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code> to store debug info, with a one-to-one relationship between each instance of a debug intrinsic and each <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code> object in any LLVM IR program; these <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code>s are represented in the IR as non-instruction debug records, as described in the [Source Level Debugging](project:SourceLevelDebugging.md#Debug Records) document. This class has a set of subclasses that store exactly the same information as is stored in debugging intrinsics. Each one also has almost entirely the same set of methods, that behave in the same way:</p>
+<p>https://llvm.org/docs/doxygen/classllvm_1_1DbgRecord.html
+https://llvm.org/docs/doxygen/classllvm_1_1DbgVariableRecord.html
+https://llvm.org/docs/doxygen/classllvm_1_1DbgLabelRecord.html</p>
+<p>This allows you to treat a <code class="docutils literal notranslate"><span class="pre">DbgVariableRecord</span></code> as if it’s a <code class="docutils literal notranslate"><span class="pre">dbg.value</span></code>/<code class="docutils literal notranslate"><span class="pre">dbg.declare</span></code>/<code class="docutils literal notranslate"><span class="pre">dbg.assign</span></code> intrinsic most of the time, for example in generic (auto-param) lambdas, and the same for <code class="docutils literal notranslate"><span class="pre">DbgLabelRecord</span></code> and <code class="docutils literal notranslate"><span class="pre">dbg.label</span></code>s.</p>
+</section>
+<section id="how-do-these-dbgrecords-fit-into-the-instruction-stream">
+<h3>How do these <code class="docutils literal notranslate"><span class="pre">DbgRecords</span></code> fit into the instruction stream?<a class="headerlink" href="#how-do-these-dbgrecords-fit-into-the-instruction-stream" title="Link to this heading">#</a></h3>
+<p>Like so:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>                 +---------------+          +---------------+
+----------------&gt;|  Instruction  +---------&gt;|  Instruction  |
+                 +-------+-------+          +---------------+
+                         |
+                         |
+                         |
+                         |
+                         v
+                  +-------------+
+          &lt;-------+  DbgMarker  |&lt;-------
+         /        +-------------+        \
+        /                                 \
+       /                                   \
+      v                                     ^
+ +-------------+    +-------------+   +-------------+
+ |  DbgRecord  +---&gt;|  DbgRecord  +--&gt;|  DbgRecord  |
+ +-------------+    +-------------+   +-------------+
+</pre></div>
+</div>
+<p>Each instruction has a pointer to a <code class="docutils literal notranslate"><span class="pre">DbgMarker</span></code> (which will become optional), that contains a list of <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code> objects. No debugging records appear in the instruction list at all. <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code>s have a parent pointer to their owning <code class="docutils literal notranslate"><span class="pre">DbgMarker</span></code>, and each <code class="docutils literal notranslate"><span class="pre">DbgMarker</span></code> has a pointer back to it’s owning instruction.</p>
+<p>Not shown are the links from DbgRecord to other parts of the <code class="docutils literal notranslate"><span class="pre">Value</span></code>/<code class="docutils literal notranslate"><span class="pre">Metadata</span></code> hierachy: <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code> subclasses have tracking pointers to the DIMetadata that they use, and <code class="docutils literal notranslate"><span class="pre">DbgVariableRecord</span></code> has references to <code class="docutils literal notranslate"><span class="pre">Value</span></code>s that are stored in a <code class="docutils literal notranslate"><span class="pre">DebugValueUser</span></code> base class. This refers to a <code class="docutils literal notranslate"><span class="pre">ValueAsMetadata</span></code> object referring to <code class="docutils literal notranslate"><span class="pre">Value</span></code>s, via the <code class="docutils literal notranslate"><span class="pre">TrackingMetadata</span></code> facility.</p>
+<p>The various kinds of debug intrinsic (value, declare, assign, label) are all stored in <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code> subclasses, with a « RecordKind » field distinguishing <code class="docutils literal notranslate"><span class="pre">DbgLabelRecord</span></code>s from <code class="docutils literal notranslate"><span class="pre">DbgVariableRecord</span></code>s, and a <code class="docutils literal notranslate"><span class="pre">LocationType</span></code> field in the <code class="docutils literal notranslate"><span class="pre">DbgVariableRecord</span></code> class further disambiguating the various debug variable intrinsics it can represent.</p>
+</section>
+</section>
+<section id="how-to-update-existing-code">
+<h2>How to update existing code<a class="headerlink" href="#how-to-update-existing-code" title="Link to this heading">#</a></h2>
+<p>Any existing code that interacts with debug intrinsics in some way will need to be updated to interact with debug records in the same way. A few quick rules to keep in mind when updating code:</p>
+<ul>
+<li><p>Debug records will not be seen when iterating over instructions; to find the debug records that appear immediately before an instruction, you’ll need to iterate over <code class="docutils literal notranslate"><span class="pre">Instruction::getDbgRecordRange()</span></code>.</p></li>
+<li><p>Debug records have interfaces that are identical to those of debug intrinsics, meaning that any code that operates on debug intrinsics can be trivially applied to debug records as well. The exceptions for this are <code class="docutils literal notranslate"><span class="pre">Instruction</span></code> or <code class="docutils literal notranslate"><span class="pre">CallInst</span></code> methods that don’t logically apply to debug records, and <code class="docutils literal notranslate"><span class="pre">isa</span></code>/<code class="docutils literal notranslate"><span class="pre">cast</span></code>/<code class="docutils literal notranslate"><span class="pre">dyn_cast</span></code> methods, are replaced by methods on the <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code> class itself.</p></li>
+<li><p>Debug records cannot appear in a module that also contains debug intrinsics; the two are mutually exclusive. As debug records are the future format, handling records correctly should be prioritized in new code.</p></li>
+<li><p>Until support for intrinsics is no longer present, a valid hotfix for code that only handles debug intrinsics and is non-trivial to update is to convert the module to the intrinsic format using <code class="docutils literal notranslate"><span class="pre">Module::setIsNewDbgInfoFormat</span></code>, and convert it back afterwards.</p>
+<ul class="simple">
+<li><p>This can also be performed within a lexical scope for a module or an individual function using the class <code class="docutils literal notranslate"><span class="pre">ScopedDbgInfoFormatSetter</span></code>:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">handleModule</span><span class="p">(</span><span class="n">Module</span> <span class="o">&amp;</span><span class="n">M</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">{</span>
+    <span class="n">ScopedDbgInfoFormatSetter</span> <span class="n">FormatSetter</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">false</span><span class="p">);</span>
+    <span class="n">handleModuleWithDebugIntrinsics</span><span class="p">(</span><span class="n">M</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="o">//</span> <span class="n">Module</span> <span class="n">returns</span> <span class="n">to</span> <span class="n">previous</span> <span class="n">debug</span> <span class="n">info</span> <span class="nb">format</span> <span class="n">after</span> <span class="n">exiting</span> <span class="n">the</span> <span class="n">above</span> <span class="n">block</span><span class="o">.</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Below is a rough guide on how existing code that currently supports debug intrinsics can be updated to support debug records.</p>
+<section id="creating-debug-records">
+<h3>Creating debug records<a class="headerlink" href="#creating-debug-records" title="Link to this heading">#</a></h3>
+<p>Debug records will automatically be created by the <code class="docutils literal notranslate"><span class="pre">DIBuilder</span></code> class when the new format is enabled. As with instructions, it is also possible to call <code class="docutils literal notranslate"><span class="pre">DbgRecord::clone</span></code> to create an unattached copy of an existing record.</p>
+</section>
+<section id="skipping-debug-records-ignoring-debug-uses-of-values-stably-counting-instructions-etc">
+<h3>Skipping debug records, ignoring debug-uses of <code class="docutils literal notranslate"><span class="pre">Values</span></code>, stably counting instructions, etc.<a class="headerlink" href="#skipping-debug-records-ignoring-debug-uses-of-values-stably-counting-instructions-etc" title="Link to this heading">#</a></h3>
+<p>This will all happen transparently without needing to think about it!</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n">Instruction</span> <span class="o">&amp;</span><span class="n">I</span> <span class="p">:</span> <span class="n">BB</span><span class="p">)</span> <span class="p">{</span>
+  <span class="o">//</span> <span class="n">Old</span><span class="p">:</span> <span class="n">Skips</span> <span class="n">debug</span> <span class="n">intrinsics</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">isa</span><span class="o">&lt;</span><span class="n">DbgInfoIntrinsic</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">I</span><span class="p">))</span>
+    <span class="k">continue</span><span class="p">;</span>
+  <span class="o">//</span> <span class="n">New</span><span class="p">:</span> <span class="n">No</span> <span class="n">extra</span> <span class="n">code</span> <span class="n">needed</span><span class="p">,</span> <span class="n">debug</span> <span class="n">records</span> <span class="n">are</span> <span class="n">skipped</span> <span class="n">by</span> <span class="n">default</span><span class="o">.</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="finding-debug-records">
+<h3>Finding debug records<a class="headerlink" href="#finding-debug-records" title="Link to this heading">#</a></h3>
+<p>Utilities such as <code class="docutils literal notranslate"><span class="pre">findDbgUsers</span></code> and the like now have an optional argument that will return the set of <code class="docutils literal notranslate"><span class="pre">DbgVariableRecord</span></code> records that refer to a <code class="docutils literal notranslate"><span class="pre">Value</span></code>. You should be able to treat them the same as intrinsics.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">//</span> <span class="n">Old</span><span class="p">:</span>
+  <span class="n">SmallVector</span><span class="o">&lt;</span><span class="n">DbgVariableIntrinsic</span> <span class="o">*&gt;</span> <span class="n">DbgUsers</span><span class="p">;</span>
+  <span class="n">findDbgUsers</span><span class="p">(</span><span class="n">DbgUsers</span><span class="p">,</span> <span class="n">V</span><span class="p">);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">auto</span> <span class="o">*</span><span class="n">DVI</span> <span class="p">:</span> <span class="n">DbgUsers</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">DVI</span><span class="o">-&gt;</span><span class="n">getParent</span><span class="p">()</span> <span class="o">!=</span> <span class="n">BB</span><span class="p">)</span>
+      <span class="n">DVI</span><span class="o">-&gt;</span><span class="n">replaceVariableLocationOp</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">New</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="o">//</span> <span class="n">New</span><span class="p">:</span>
+  <span class="n">SmallVector</span><span class="o">&lt;</span><span class="n">DbgVariableIntrinsic</span> <span class="o">*&gt;</span> <span class="n">DbgUsers</span><span class="p">;</span>
+  <span class="n">SmallVector</span><span class="o">&lt;</span><span class="n">DbgVariableRecord</span> <span class="o">*&gt;</span> <span class="n">DVRUsers</span><span class="p">;</span>
+  <span class="n">findDbgUsers</span><span class="p">(</span><span class="n">DbgUsers</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">DVRUsers</span><span class="p">);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">auto</span> <span class="o">*</span><span class="n">DVI</span> <span class="p">:</span> <span class="n">DbgUsers</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">DVI</span><span class="o">-&gt;</span><span class="n">getParent</span><span class="p">()</span> <span class="o">!=</span> <span class="n">BB</span><span class="p">)</span>
+      <span class="n">DVI</span><span class="o">-&gt;</span><span class="n">replaceVariableLocationOp</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">New</span><span class="p">);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">auto</span> <span class="o">*</span><span class="n">DVR</span> <span class="p">:</span> <span class="n">DVRUsers</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">DVR</span><span class="o">-&gt;</span><span class="n">getParent</span><span class="p">()</span> <span class="o">!=</span> <span class="n">BB</span><span class="p">)</span>
+      <span class="n">DVR</span><span class="o">-&gt;</span><span class="n">replaceVariableLocationOp</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">New</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="examining-debug-records-at-positions">
+<h3>Examining debug records at positions<a class="headerlink" href="#examining-debug-records-at-positions" title="Link to this heading">#</a></h3>
+<p>Call <code class="docutils literal notranslate"><span class="pre">Instruction::getDbgRecordRange()</span></code> to get the range of <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code> objects that are attached to an instruction.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>for (Instruction &amp;I : BB) {
+  // Old: Uses a data member of a debug intrinsic, and then skips to the next
+  // instruction.
+  if (DbgInfoIntrinsic *DII = dyn_cast&lt;DbgInfoIntrinsic&gt;(&amp;I)) {
+    recordDebugLocation(DII-&gt;getDebugLoc());
+    continue;
+  }
+  // New: Iterates over the debug records that appear before `I`, and treats
+  // them identically to the intrinsic block above.
+  // NB: This should always appear at the top of the for-loop, so that we
+  // process the debug records preceding `I` before `I` itself.
+  for (DbgRecord &amp;DR = I.getDbgRecordRange()) {
+    recordDebugLocation(DR.getDebugLoc());
+  }
+  processInstruction(I);
+}
+</pre></div>
+</div>
+<p>This can also be passed through the function <code class="docutils literal notranslate"><span class="pre">filterDbgVars</span></code> to specifically
+iterate over DbgVariableRecords, which are more commonly used.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>for (Instruction &amp;I : BB) {
+  // Old: If `I` is a DbgVariableIntrinsic we record the variable, and apply
+  // extra logic if it is an `llvm.dbg.declare`.
+  if (DbgVariableIntrinsic *DVI = dyn_cast&lt;DbgVariableIntrinsic&gt;(&amp;I)) {
+    recordVariable(DVI-&gt;getVariable());
+    if (DbgDeclareInst *DDI = dyn_cast&lt;DbgDeclareInst&gt;(DVI))
+      recordDeclareAddress(DDI-&gt;getAddress());
+    continue;
+  }
+  // New: `filterDbgVars` is used to iterate over only DbgVariableRecords.
+  for (DbgVariableRecord &amp;DVR = filterDbgVars(I.getDbgRecordRange())) {
+    recordVariable(DVR.getVariable());
+    // Debug variable records are not cast to subclasses; simply call the
+    // appropriate `isDbgX()` check, and use the methods as normal.
+    if (DVR.isDbgDeclare())
+      recordDeclareAddress(DVR.getAddress());
+  }
+  // ...
+}
+</pre></div>
+</div>
+</section>
+<section id="processing-individual-debug-records">
+<h3>Processing individual debug records<a class="headerlink" href="#processing-individual-debug-records" title="Link to this heading">#</a></h3>
+<p>In most cases, any code that operates on debug intrinsics can be extracted to a template function or auto lambda (if it is not already in one) that can be applied to both debug intrinsics and debug records - though keep in mind the main exception that <code class="docutils literal notranslate"><span class="pre">isa</span></code>/<code class="docutils literal notranslate"><span class="pre">cast</span></code>/<code class="docutils literal notranslate"><span class="pre">dyn_cast</span></code> do not apply to <code class="docutils literal notranslate"><span class="pre">DbgVariableRecord</span></code> types.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>// Old: Function that operates on debug variable intrinsics in a BasicBlock, and
+// collects llvm.dbg.declares.
+void processDbgInfoInBlock(BasicBlock &amp;BB,
+                           SmallVectorImpl&lt;DbgDeclareInst*&gt; &amp;DeclareIntrinsics) {
+  for (Instruction &amp;I : BB) {
+    if (DbgVariableIntrinsic *DVI = dyn_cast&lt;DbgVariableIntrinsic&gt;(&amp;I)) {
+      processVariableValue(DebugVariable(DVI), DVI-&gt;getValue());
+      if (DbgDeclareInst *DDI = dyn_cast&lt;DbgDeclareInst&gt;(DVI))
+        Declares.push_back(DDI);
+      else if (!isa&lt;Constant&gt;(DVI-&gt;getValue()))
+        DVI-&gt;setKillLocation();
+    }
+  }
+}
+
+// New: Template function is used to deduplicate handling of intrinsics and
+// records.
+// An overloaded function is also used to handle isa/cast/dyn_cast operations
+// for intrinsics and records, since those functions cannot be directly applied
+// to DbgRecords.
+DbgDeclareInst *DynCastToDeclare(DbgVariableIntrinsic *DVI) {
+  return dyn_cast&lt;DbgDeclareInst&gt;(DVI);
+}
+DbgVariableRecord *DynCastToDeclare(DbgVariableRecord *DVR) {
+  return DVR-&gt;isDbgDeclare() ? DVR : nullptr;
+}
+
+template&lt;typename DbgVarTy, DbgDeclTy&gt;
+void processDbgVariable(DbgVarTy *DbgVar,
+                       SmallVectorImpl&lt;DbgDeclTy*&gt; &amp;Declares) {
+    processVariableValue(DebugVariable(DbgVar), DbgVar-&gt;getValue());
+    if (DbgDeclTy *DbgDeclare = DynCastToDeclare(DbgVar))
+      Declares.push_back(DbgDeclare);
+    else if (!isa&lt;Constant&gt;(DbgVar-&gt;getValue()))
+      DbgVar-&gt;setKillLocation();
+};
+
+void processDbgInfoInBlock(BasicBlock &amp;BB,
+                           SmallVectorImpl&lt;DbgDeclareInst*&gt; &amp;DeclareIntrinsics,
+                           SmallVectorImpl&lt;DbgVariableRecord*&gt; &amp;DeclareRecords) {
+  for (Instruction &amp;I : BB) {
+    if (DbgVariableIntrinsic *DVI = dyn_cast&lt;DbgVariableIntrinsic&gt;(&amp;I))
+      processDbgVariable(DVI, DeclareIntrinsics);
+    for (DbgVariableRecord *DVR : filterDbgVars(I.getDbgRecordRange()))
+      processDbgVariable(DVR, DeclareRecords);
+  }
+}
+</pre></div>
+</div>
+</section>
+<section id="moving-and-deleting-debug-records">
+<h3>Moving and deleting debug records<a class="headerlink" href="#moving-and-deleting-debug-records" title="Link to this heading">#</a></h3>
+<p>You can use <code class="docutils literal notranslate"><span class="pre">DbgRecord::removeFromParent</span></code> to unlink a <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code> from it’s marker, and then <code class="docutils literal notranslate"><span class="pre">BasicBlock::insertDbgRecordBefore</span></code> or <code class="docutils literal notranslate"><span class="pre">BasicBlock::insertDbgRecordAfter</span></code> to re-insert the <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code> somewhere else. You cannot insert a <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code> at an arbitary point in a list of <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code>s (if you’re doing this with <code class="docutils literal notranslate"><span class="pre">llvm.dbg.value</span></code>s then it’s unlikely to be correct).</p>
+<p>Erase <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code>s by calling <code class="docutils literal notranslate"><span class="pre">eraseFromParent</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">//</span> <span class="n">Old</span><span class="p">:</span> <span class="n">Move</span> <span class="n">a</span> <span class="n">debug</span> <span class="n">intrinsic</span> <span class="n">to</span> <span class="n">the</span> <span class="n">start</span> <span class="n">of</span> <span class="n">the</span> <span class="n">block</span><span class="p">,</span> <span class="ow">and</span> <span class="n">delete</span> <span class="nb">all</span> <span class="n">other</span> <span class="n">intrinsics</span> <span class="k">for</span> <span class="n">the</span> <span class="n">same</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">block</span><span class="o">.</span>
+<span class="n">void</span> <span class="n">moveDbgIntrinsicToStart</span><span class="p">(</span><span class="n">DbgVariableIntrinsic</span> <span class="o">*</span><span class="n">DVI</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">ParentBB</span> <span class="o">=</span> <span class="n">DVI</span><span class="o">-&gt;</span><span class="n">getParent</span><span class="p">();</span>
+  <span class="n">DVI</span><span class="o">-&gt;</span><span class="n">removeFromParent</span><span class="p">();</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">Instruction</span> <span class="o">&amp;</span><span class="n">I</span> <span class="p">:</span> <span class="n">ParentBB</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">auto</span> <span class="o">*</span><span class="n">BlockDVI</span> <span class="o">=</span> <span class="n">dyn_cast</span><span class="o">&lt;</span><span class="n">DbgVariableIntrinsic</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">I</span><span class="p">))</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">BlockDVI</span><span class="o">-&gt;</span><span class="n">getVariable</span><span class="p">()</span> <span class="o">==</span> <span class="n">DVI</span><span class="o">-&gt;</span><span class="n">getVariable</span><span class="p">())</span>
+        <span class="n">BlockDVI</span><span class="o">-&gt;</span><span class="n">eraseFromParent</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="n">DVI</span><span class="o">-&gt;</span><span class="n">insertBefore</span><span class="p">(</span><span class="n">ParentBB</span><span class="o">-&gt;</span><span class="n">getFirstInsertionPt</span><span class="p">());</span>
+<span class="p">}</span>
+
+<span class="o">//</span> <span class="n">New</span><span class="p">:</span> <span class="n">Perform</span> <span class="n">the</span> <span class="n">same</span> <span class="n">operation</span><span class="p">,</span> <span class="n">but</span> <span class="k">for</span> <span class="n">a</span> <span class="n">debug</span> <span class="n">record</span><span class="o">.</span>
+<span class="n">void</span> <span class="n">moveDbgRecordToStart</span><span class="p">(</span><span class="n">DbgVariableRecord</span> <span class="o">*</span><span class="n">DVR</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">BasicBlock</span> <span class="o">*</span><span class="n">ParentBB</span> <span class="o">=</span> <span class="n">DVR</span><span class="o">-&gt;</span><span class="n">getParent</span><span class="p">();</span>
+  <span class="n">DVR</span><span class="o">-&gt;</span><span class="n">removeFromParent</span><span class="p">();</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">Instruction</span> <span class="o">&amp;</span><span class="n">I</span> <span class="p">:</span> <span class="n">ParentBB</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">auto</span> <span class="o">&amp;</span><span class="n">BlockDVR</span> <span class="p">:</span> <span class="n">filterDbgVars</span><span class="p">(</span><span class="n">I</span><span class="o">.</span><span class="n">getDbgRecordRange</span><span class="p">()))</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">BlockDVR</span><span class="o">-&gt;</span><span class="n">getVariable</span><span class="p">()</span> <span class="o">==</span> <span class="n">DVR</span><span class="o">-&gt;</span><span class="n">getVariable</span><span class="p">())</span>
+        <span class="n">BlockDVR</span><span class="o">-&gt;</span><span class="n">eraseFromParent</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="n">DVR</span><span class="o">-&gt;</span><span class="n">insertBefore</span><span class="p">(</span><span class="n">ParentBB</span><span class="o">-&gt;</span><span class="n">getFirstInsertionPt</span><span class="p">());</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="what-about-dangling-debug-records">
+<h3>What about dangling debug records?<a class="headerlink" href="#what-about-dangling-debug-records" title="Link to this heading">#</a></h3>
+<p>If you have a block like so:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>    foo:
+      %bar = add i32 %baz...
+      dbg.value(metadata i32 %bar,...
+      br label %xyzzy
+</pre></div>
+</div>
+<p>your optimisation pass may wish to erase the terminator and then do something to the block. This is easy to do when debug info is kept in instructions, but with <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code>s there is no trailing instruction to attach the variable information to in the block above, once the terminator is erased. For such degenerate blocks, <code class="docutils literal notranslate"><span class="pre">DbgRecord</span></code>s are stored temporarily in a map in <code class="docutils literal notranslate"><span class="pre">LLVMContext</span></code>, and are re-inserted when a terminator is reinserted to the block or other instruction inserted at <code class="docutils literal notranslate"><span class="pre">end()</span></code>.</p>
+<p>This can technically lead to trouble in the vanishingly rare scenario where an optimisation pass erases a terminator and then decides to erase the whole block. (We recommend not doing that).</p>
+</section>
+<section id="anything-else">
+<h3>Anything else?<a class="headerlink" href="#anything-else" title="Link to this heading">#</a></h3>
+<p>The above guide does not comprehensively cover every pattern that could apply to debug intrinsics; as mentioned at the <a class="reference internal" href="#how-to-update-existing-code">start of the guide</a>, you can temporarily convert the target module from debug records to intrinsics as a stopgap measure. Most operations that can be performed on debug intrinsics have exact equivalents for debug records, but if you encounter any exceptions, reading the class docs (linked <a class="reference internal" href="#what-exactly-have-you-replaced-debug-intrinsics-with">here</a>) may give some insight, there may be examples in the existing codebase, and you can always ask for help on the <a class="reference external" href="https://discourse.llvm.org/tag/debuginfo">forums</a>.</p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="KeyInstructionsDebugInfo.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Key Instructions debug info in LLVM and Clang</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="InstrRefDebugInfo.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Instruction referencing for debug info</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Debug info migration: From intrinsics to records</a><ul>
+<li><a class="reference internal" href="#great-what-do-i-need-to-do">Great, what do I need to do!</a><ul>
+<li><a class="reference internal" href="#api-changes">API Changes</a></li>
+<li><a class="reference internal" href="#textual-ir-changes">Textual IR Changes</a><ul>
+<li><a class="reference internal" href="#test-updates">Test updates</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#c-api-changes">C-API changes</a></li>
+<li><a class="reference internal" href="#the-new-debug-record-model">The new « Debug Record » model</a><ul>
+<li><a class="reference internal" href="#what-exactly-have-you-replaced-debug-intrinsics-with">What exactly have you replaced debug intrinsics with?</a></li>
+<li><a class="reference internal" href="#how-do-these-dbgrecords-fit-into-the-instruction-stream">How do these <code class="docutils literal notranslate"><span class="pre">DbgRecords</span></code> fit into the instruction stream?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-to-update-existing-code">How to update existing code</a><ul>
+<li><a class="reference internal" href="#creating-debug-records">Creating debug records</a></li>
+<li><a class="reference internal" href="#skipping-debug-records-ignoring-debug-uses-of-values-stably-counting-instructions-etc">Skipping debug records, ignoring debug-uses of <code class="docutils literal notranslate"><span class="pre">Values</span></code>, stably counting instructions, etc.</a></li>
+<li><a class="reference internal" href="#finding-debug-records">Finding debug records</a></li>
+<li><a class="reference internal" href="#examining-debug-records-at-positions">Examining debug records at positions</a></li>
+<li><a class="reference internal" href="#processing-individual-debug-records">Processing individual debug records</a></li>
+<li><a class="reference internal" href="#moving-and-deleting-debug-records">Moving and deleting debug records</a></li>
+<li><a class="reference internal" href="#what-about-dangling-debug-records">What about dangling debug records?</a></li>
+<li><a class="reference internal" href="#anything-else">Anything else?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=711a3ba7"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=a56f2464"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

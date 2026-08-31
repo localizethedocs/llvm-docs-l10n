@@ -1,0 +1,1605 @@
+<!doctype html>
+<html class="no-js" lang="zh-TW" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜尋" href="search.html" /><link rel="next" title="Machine Learning - Guided Optimization (MLGO)" href="MLGO.html" /><link rel="prev" title="YAML I/O" href="YamlIO.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/ConvergenceAndUniformity.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Convergence And Uniformity - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜尋" name="q" aria-label="搜尋">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">常見問題集（FAQ）</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="Reference.html">參考</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of 參考</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural 『diff』</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">簡介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM 語言參考手冊</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM 測試基礎設施指南</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM 測試基礎設施指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="UserGuides.html">使用者指南</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of 使用者指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">使用 CMake 建置 LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">進階建置組態</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen 概覽</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen 概覽</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU 指令語法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub 使用者指南</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse 遷移指南</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM 開發者方針</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/ConvergenceAndUniformity.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="convergence-and-uniformity">
+<span id="id1"></span><h1>Convergence And Uniformity<a class="headerlink" href="#convergence-and-uniformity" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>簡介<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>In some environments, groups of threads execute the same program in parallel,
+where efficient communication within a group is established using special
+primitives called <a class="reference internal" href="ConvergentOperations.html#convergent-operations"><span class="std std-ref">convergent operations</span></a>. The
+outcome of a convergent operation is sensitive to the set of threads that
+participate in it.</p>
+<p>The intuitive picture of <em>convergence</em> is built around threads executing in
+「lock step」 — a set of threads is thought of as <em>converged</em> if they are all
+executing 「the same sequence of instructions together」. Such threads may
+<em>diverge</em> at a <em>divergent branch</em>, and they may later <em>reconverge</em> at some
+common program point.</p>
+<p>In this intuitive picture, when converged threads execute an instruction, the
+resulting value is said to be <em>uniform</em> if it is the same in those threads, and
+<em>divergent</em> otherwise. Correspondingly, a branch is said to be a uniform branch
+if its condition is uniform, and it is a divergent branch otherwise.</p>
+<p>But the assumption of lock-step execution is not necessary for describing
+communication at convergent operations. It also constrains the implementation
+(compiler as well as hardware) by overspecifying how threads execute in such a
+parallel environment. To eliminate this assumption:</p>
+<ul class="simple">
+<li><p>We define convergence as a relation between the execution of each instruction
+by different threads and not as a relation between the threads themselves.
+This definition is reasonable for known targets and is compatible with the
+semantics of <a class="reference internal" href="ConvergentOperations.html#convergent-operations"><span class="std std-ref">convergent operations</span></a> in LLVM IR.</p></li>
+<li><p>We also define uniformity in terms of this convergence. The output of an
+instruction can be examined for uniformity across multiple threads only if the
+corresponding executions of that instruction are converged.</p></li>
+</ul>
+<p>This document describes a static analysis for determining convergence at each
+instruction in a function. The analysis extends previous work on divergence
+analysis <a class="reference internal" href="#divergencespmd" id="id2"><span>[DivergenceSPMD]</span></a> to cover irreducible control-flow. The described
+analysis is used in LLVM to implement a UniformityAnalysis that determines the
+uniformity of value(s) computed at each instruction in an LLVM IR or MIR
+function.</p>
+<div role="list" class="citation-list">
+<div class="citation" id="divergencespmd" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">DivergenceSPMD</a><span class="fn-bracket">]</span></span>
+<p>Julian Rosemann, Simon Moll, and Sebastian
+Hack. 2021. An Abstract Interpretation for SPMD Divergence on
+Reducible Control Flow Graphs. Proc. ACM Program. Lang. 5, POPL,
+Article 31 (January 2021), 35 pages.
+<a class="reference external" href="https://doi.org/10.1145/3434312">https://doi.org/10.1145/3434312</a></p>
+</div>
+</div>
+</section>
+<section id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Link to this heading">#</a></h2>
+<p>Divergent branches constrain
+program transforms such as changing the CFG or moving a convergent
+operation to a different point of the CFG. Performing these
+transformations across a divergent branch can change the sets of
+threads that execute convergent operations convergently. While these
+constraints are out of scope for this document,
+uniformity analysis allows these transformations to identify
+uniform branches where these constraints do not hold.</p>
+<p>Uniformity is also useful by itself on targets that execute threads in
+groups with shared execution resources (e.g. waves, warps, or
+subgroups):</p>
+<ul class="simple">
+<li><p>Uniform outputs can potentially be computed or stored on shared
+resources.</p></li>
+<li><p>These targets must 「linearize」 a divergent branch to ensure that
+each side of the branch is followed by the corresponding threads in
+the same group. But linearization is unnecessary at uniform
+branches, since the whole group of threads follows either one side
+of the branch or the other.</p></li>
+</ul>
+</section>
+<section id="terminology">
+<h2>Terminology<a class="headerlink" href="#terminology" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>Cycles</dt><dd><p>Described in <a class="reference internal" href="CycleTerminology.html#cycle-terminology"><span class="std std-ref">LLVM Cycle Terminology</span></a>.</p>
+</dd>
+<dt>Closed path</dt><dd><p>Described in <a class="reference internal" href="CycleTerminology.html#cycle-closed-path"><span class="std std-ref">Closed Paths and Cycles</span></a>.</p>
+</dd>
+<dt>Disjoint paths</dt><dd><p>Two paths in a CFG are said to be disjoint if the only nodes common
+to both are the start node or the end node, or both.</p>
+</dd>
+<dt>Join node</dt><dd><p>A join node of a branch is a node reachable along disjoint paths
+starting from that branch.</p>
+</dd>
+<dt>Diverged path</dt><dd><p>A diverged path is a path that starts from a divergent branch and
+either reaches a join node of the branch or reaches the end of the
+function without passing through any join node of the branch.</p>
+</dd>
+</dl>
+</section>
+<section id="threads-and-dynamic-instances">
+<span id="convergence-dynamic-instances"></span><h2>Threads and Dynamic Instances<a class="headerlink" href="#threads-and-dynamic-instances" title="Link to this heading">#</a></h2>
+<p>Each occurrence of an instruction in the program source is called a
+<em>static instance</em>. When a thread executes a program, each execution of
+a static instance produces a distinct <em>dynamic instance</em> of that
+instruction.</p>
+<p>Each thread produces a unique sequence of dynamic instances:</p>
+<ul class="simple">
+<li><p>The sequence is generated along branch decisions and loop
+traversals.</p></li>
+<li><p>Starts with a dynamic instance of a 「first」 instruction.</p></li>
+<li><p>Continues with dynamic instances of successive 「next」
+instructions.</p></li>
+</ul>
+<p>Threads are independent; some targets may choose to execute them in
+groups in order to share resources when possible.</p>
+<figure class="align-default" id="convergence-natural-loop">
+<img alt="_images/convergence-natural-loop.png" src="_images/convergence-natural-loop.png" />
+</figure>
+<div class="table-wrapper docutils container" id="convergence-thread-example">
+<table class="docutils align-left" id="convergence-thread-example">
+<tbody>
+<tr class="row-odd"><td></td>
+<td></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>9</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Thread 1</p></td>
+<td><p>Entry1</p></td>
+<td><p>H1</p></td>
+<td><p>B1</p></td>
+<td><p>L1</p></td>
+<td><p>H3</p></td>
+<td></td>
+<td><p>L3</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>Exit</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thread 2</p></td>
+<td><p>Entry1</p></td>
+<td><p>H2</p></td>
+<td></td>
+<td><p>L2</p></td>
+<td><p>H4</p></td>
+<td><p>B2</p></td>
+<td><p>L4</p></td>
+<td><p>H5</p></td>
+<td><p>B3</p></td>
+<td><p>L5</p></td>
+<td><p>Exit</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In the above table, each row is a different thread, listing the
+dynamic instances produced by that thread from left to right. Each
+thread executes the same program that starts with an <code class="docutils literal notranslate"><span class="pre">Entry</span></code> node
+and ends with an <code class="docutils literal notranslate"><span class="pre">Exit</span></code> node, but different threads may take
+different paths through the control flow of the program. The columns
+are numbered merely for convenience, and empty cells have no special
+meaning. Dynamic instances listed in the same column are converged.</p>
+</section>
+<section id="convergence">
+<span id="convergence-definition"></span><h2>Convergence<a class="headerlink" href="#convergence" title="Link to this heading">#</a></h2>
+<p><em>Convergence-before</em> is a strict partial order over dynamic instances
+that is defined as the transitive closure of:</p>
+<ol class="arabic simple">
+<li><p>If dynamic instance <code class="docutils literal notranslate"><span class="pre">P</span></code> is executed strictly before <code class="docutils literal notranslate"><span class="pre">Q</span></code> in the
+same thread, then <code class="docutils literal notranslate"><span class="pre">P</span></code> is <em>convergence-before</em> <code class="docutils literal notranslate"><span class="pre">Q</span></code>.</p></li>
+<li><p>If dynamic instance <code class="docutils literal notranslate"><span class="pre">P</span></code> is executed strictly before <code class="docutils literal notranslate"><span class="pre">Q1</span></code> in the
+same thread, and <code class="docutils literal notranslate"><span class="pre">Q1</span></code> is <em>converged-with</em> <code class="docutils literal notranslate"><span class="pre">Q2</span></code>, then <code class="docutils literal notranslate"><span class="pre">P</span></code> is
+<em>convergence-before</em> <code class="docutils literal notranslate"><span class="pre">Q2</span></code>.</p></li>
+<li><p>If dynamic instance <code class="docutils literal notranslate"><span class="pre">P1</span></code> is <em>converged-with</em> <code class="docutils literal notranslate"><span class="pre">P2</span></code>, and <code class="docutils literal notranslate"><span class="pre">P2</span></code>
+is executed strictly before <code class="docutils literal notranslate"><span class="pre">Q</span></code> in the same thread, then <code class="docutils literal notranslate"><span class="pre">P1</span></code>
+is <em>convergence-before</em> <code class="docutils literal notranslate"><span class="pre">Q</span></code>.</p></li>
+</ol>
+<div class="table-wrapper docutils container" id="convergence-order-example">
+<table class="docutils align-left" id="convergence-order-example">
+<tbody>
+<tr class="row-odd"><td></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-even"><td><p>Thread 1</p></td>
+<td><p>Entry</p></td>
+<td><p>…</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>S2</p></td>
+<td><p>T</p></td>
+<td><p>…</p></td>
+<td><p>Exit</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thread 2</p></td>
+<td><p>Entry</p></td>
+<td><p>…</p></td>
+<td></td>
+<td><p>Q2</p></td>
+<td><p>R</p></td>
+<td><p>S1</p></td>
+<td></td>
+<td><p>…</p></td>
+<td><p>Exit</p></td>
+</tr>
+<tr class="row-even"><td><p>Thread 3</p></td>
+<td><p>Entry</p></td>
+<td><p>…</p></td>
+<td><p>P</p></td>
+<td><p>Q1</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>…</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The above table shows partial sequences of dynamic instances from
+different threads. Dynamic instances in the same column are assumed
+to be converged (i.e., related to each other in the converged-with
+relation). The resulting convergence order includes the edges <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">-&gt;</span>
+<span class="pre">Q2</span></code>, <code class="docutils literal notranslate"><span class="pre">Q1</span> <span class="pre">-&gt;</span> <span class="pre">R</span></code>, <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">-&gt;</span> <span class="pre">R</span></code>, <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">-&gt;</span> <span class="pre">T</span></code>, etc.</p>
+<p><em>Converged-with</em> is a transitive symmetric relation over dynamic instances
+produced by <em>different threads</em> for the <em>same static instance</em>.</p>
+<p>It is impractical to provide any one definition for the <em>converged-with</em>
+relation, since different environments may wish to relate dynamic instances in
+different ways. The fact that <em>convergence-before</em> is a strict partial order is
+a constraint on the <em>converged-with</em> relation. It is trivially satisfied if
+different dynamic instances are never converged. Below, we provide a relation
+called <a class="reference internal" href="#convergence-maximal"><span class="std std-ref">maximal converged-with</span></a>, which satisifies
+<em>convergence-before</em> and is suitable for known targets.</p>
+<div class="admonition note" id="convergence-note-convergence">
+<p class="admonition-title">備註</p>
+<ol class="arabic simple">
+<li><p>The convergence-before relation is not
+directly observable. Program transforms are in general free to
+change the order of instructions, even though that obviously
+changes the convergence-before relation.</p></li>
+<li><p>Converged dynamic instances need not be executed at the same
+time or even on the same resource. Converged dynamic instances
+of a convergent operation may appear to do so but that is an
+implementation detail.</p></li>
+<li><p>The fact that <code class="docutils literal notranslate"><span class="pre">P</span></code> is convergence-before
+<code class="docutils literal notranslate"><span class="pre">Q</span></code> does not automatically imply that <code class="docutils literal notranslate"><span class="pre">P</span></code> happens-before
+<code class="docutils literal notranslate"><span class="pre">Q</span></code> in a memory model sense.</p></li>
+</ol>
+</div>
+<section id="maximal-convergence">
+<span id="convergence-maximal"></span><h3>Maximal Convergence<a class="headerlink" href="#maximal-convergence" title="Link to this heading">#</a></h3>
+<p>This section defines a constraint that may be used to
+produce a <em>maximal converged-with</em> relation without violating the
+strict <em>convergence-before</em> order. This maximal converged-with
+relation is reasonable for real targets and is compatible with
+convergent operations.</p>
+<p>The maximal converged-with relation is defined in terms of cycle
+headers, with the assumption that threads converge at the header on every
+「iteration」 of the cycle. Informally, two threads execute the same iteration of
+a cycle if they both previously executed the cycle header the same number of
+times after they entered that cycle. In general, this needs to account for the
+iterations of parent cycles as well.</p>
+<blockquote>
+<div><p><strong>Maximal converged-with:</strong></p>
+<p>Dynamic instances <code class="docutils literal notranslate"><span class="pre">X1</span></code> and <code class="docutils literal notranslate"><span class="pre">X2</span></code> produced by different threads
+for the same static instance <code class="docutils literal notranslate"><span class="pre">X</span></code> are converged in the maximal
+converged-with relation if and only if:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">X</span></code> is not contained in any cycle, or,</p></li>
+<li><p>For every cycle <code class="docutils literal notranslate"><span class="pre">C</span></code> with header <code class="docutils literal notranslate"><span class="pre">H</span></code> that contains <code class="docutils literal notranslate"><span class="pre">X</span></code>:</p>
+<ul>
+<li><p>every dynamic instance <code class="docutils literal notranslate"><span class="pre">H1</span></code> of <code class="docutils literal notranslate"><span class="pre">H</span></code> that precedes <code class="docutils literal notranslate"><span class="pre">X1</span></code> in
+the respective thread is convergence-before <code class="docutils literal notranslate"><span class="pre">X2</span></code>, and,</p></li>
+<li><p>every dynamic instance <code class="docutils literal notranslate"><span class="pre">H2</span></code> of <code class="docutils literal notranslate"><span class="pre">H</span></code> that precedes <code class="docutils literal notranslate"><span class="pre">X2</span></code> in
+the respective thread is convergence-before <code class="docutils literal notranslate"><span class="pre">X1</span></code>,</p></li>
+<li><p>without assuming that <code class="docutils literal notranslate"><span class="pre">X1</span></code> is converged with <code class="docutils literal notranslate"><span class="pre">X2</span></code>.</p></li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Cycle headers may not be unique to a given CFG if it is irreducible. Each
+cycle hierarchy for the same CFG results in a different maximal
+converged-with relation.</p>
+<p>For brevity, the rest of the document restricts the term
+<em>converged</em> to mean 「related under the maximal converged-with
+relation for the given cycle hierarchy」.</p>
+</div>
+<p>Maximal convergence can now be demonstrated in the earlier example as follows:</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-left">
+<tbody>
+<tr class="row-odd"><td></td>
+<td></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>9</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Thread 1</p></td>
+<td><p>Entry1</p></td>
+<td><p>H1</p></td>
+<td><p>B1</p></td>
+<td><p>L1</p></td>
+<td><p>H3</p></td>
+<td></td>
+<td><p>L3</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>Exit</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thread 2</p></td>
+<td><p>Entry2</p></td>
+<td><p>H2</p></td>
+<td></td>
+<td><p>L2</p></td>
+<td><p>H4</p></td>
+<td><p>B2</p></td>
+<td><p>L4</p></td>
+<td><p>H5</p></td>
+<td><p>B3</p></td>
+<td><p>L5</p></td>
+<td><p>Exit</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Entry1</span></code> and <code class="docutils literal notranslate"><span class="pre">Entry2</span></code> are converged.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H1</span></code> and <code class="docutils literal notranslate"><span class="pre">H2</span></code> are converged.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">B1</span></code> and <code class="docutils literal notranslate"><span class="pre">B2</span></code> are not converged due to <code class="docutils literal notranslate"><span class="pre">H4</span></code> which is not
+convergence-before <code class="docutils literal notranslate"><span class="pre">B1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H3</span></code> and <code class="docutils literal notranslate"><span class="pre">H4</span></code> are converged.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H3</span></code> is not converged with <code class="docutils literal notranslate"><span class="pre">H5</span></code> due to <code class="docutils literal notranslate"><span class="pre">H4</span></code> which is not
+convergence-before <code class="docutils literal notranslate"><span class="pre">H3</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">L1</span></code> and <code class="docutils literal notranslate"><span class="pre">L2</span></code> are converged.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">L3</span></code> and <code class="docutils literal notranslate"><span class="pre">L4</span></code> are converged.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">L3</span></code> is not converged with <code class="docutils literal notranslate"><span class="pre">L5</span></code> due to <code class="docutils literal notranslate"><span class="pre">H5</span></code> which is not
+convergence-before <code class="docutils literal notranslate"><span class="pre">L3</span></code>.</p></li>
+</ul>
+</section>
+<section id="dependence-on-cycles-headers">
+<span id="convergence-cycle-headers"></span><h3>Dependence on Cycles Headers<a class="headerlink" href="#dependence-on-cycles-headers" title="Link to this heading">#</a></h3>
+<p>Contradictions in <em>convergence-before</em> are possible only between two
+nodes that are inside some cycle. The dynamic instances of such nodes
+may be interleaved in the same thread, and this interleaving may be
+different for different threads. Cycle headers serve as implicit
+<em>points of convergence</em> in the maximal converged-with relation.
+When a thread executes a node <code class="docutils literal notranslate"><span class="pre">X</span></code> once and then executes it again,
+it must have followed a closed path in the CFG that includes <code class="docutils literal notranslate"><span class="pre">X</span></code>.
+Such a path must pass through the header of at least one cycle — the
+smallest cycle that includes the entire closed path. In a given
+thread, two dynamic instances of <code class="docutils literal notranslate"><span class="pre">X</span></code> are either separated by the
+execution of at least one cycle header, or <code class="docutils literal notranslate"><span class="pre">X</span></code> itself is a cycle
+header.</p>
+<p>Consider a sequence of nested cycles <code class="docutils literal notranslate"><span class="pre">C1</span></code>, <code class="docutils literal notranslate"><span class="pre">C2</span></code>, …, <code class="docutils literal notranslate"><span class="pre">Ck</span></code> such
+that <code class="docutils literal notranslate"><span class="pre">C1</span></code> is the outermost cycle and <code class="docutils literal notranslate"><span class="pre">Ck</span></code> is the innermost cycle,
+with headers <code class="docutils literal notranslate"><span class="pre">H1</span></code>, <code class="docutils literal notranslate"><span class="pre">H2</span></code>, …, <code class="docutils literal notranslate"><span class="pre">Hk</span></code> respectively. When a thread
+enters the cycle <code class="docutils literal notranslate"><span class="pre">Ck</span></code>, any of the following is possible:</p>
+<ol class="arabic simple">
+<li><p>The thread directly entered cycle <code class="docutils literal notranslate"><span class="pre">Ck</span></code> without having executed
+any of the headers <code class="docutils literal notranslate"><span class="pre">H1</span></code> to <code class="docutils literal notranslate"><span class="pre">Hk</span></code>.</p></li>
+<li><p>The thread executed some or all of the nested headers one or more
+times.</p></li>
+</ol>
+<p>The maximal converged-with relation captures the following intuition
+about cycles:</p>
+<ol class="arabic">
+<li><p>When two threads enter a top-level cycle <code class="docutils literal notranslate"><span class="pre">C1</span></code>, they execute
+converged dynamic instances of every node that is a <a class="reference internal" href="CycleTerminology.html#cycle-parent-block"><span class="std std-ref">child</span></a> of <code class="docutils literal notranslate"><span class="pre">C1</span></code>.</p></li>
+<li><p>When two threads enter a nested cycle <code class="docutils literal notranslate"><span class="pre">Ck</span></code>, they execute
+converged dynamic instances of every node that is a child of
+<code class="docutils literal notranslate"><span class="pre">Ck</span></code>, until either thread exits <code class="docutils literal notranslate"><span class="pre">Ck</span></code>, if and only if they
+executed converged dynamic instances of the last nested header that
+either thread encountered.</p>
+<p>Note that when a thread exits a nested cycle <code class="docutils literal notranslate"><span class="pre">Ck</span></code>, it must follow
+a closed path outside <code class="docutils literal notranslate"><span class="pre">Ck</span></code> to reenter it. This requires executing
+the header of some outer cycle, as described earlier.</p>
+</li>
+</ol>
+<p>Consider two dynamic instances <code class="docutils literal notranslate"><span class="pre">X1</span></code> and <code class="docutils literal notranslate"><span class="pre">X2</span></code> produced by threads <code class="docutils literal notranslate"><span class="pre">T1</span></code>
+and <code class="docutils literal notranslate"><span class="pre">T2</span></code> for a node <code class="docutils literal notranslate"><span class="pre">X</span></code> that is a child of nested cycle <code class="docutils literal notranslate"><span class="pre">Ck</span></code>.
+Maximal convergence relates <code class="docutils literal notranslate"><span class="pre">X1</span></code> and <code class="docutils literal notranslate"><span class="pre">X2</span></code> as follows:</p>
+<ol class="arabic simple">
+<li><p>If neither thread executed any header from <code class="docutils literal notranslate"><span class="pre">H1</span></code> to <code class="docutils literal notranslate"><span class="pre">Hk</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">X1</span></code> and <code class="docutils literal notranslate"><span class="pre">X2</span></code> are converged.</p></li>
+<li><p>Otherwise, if there are no converged dynamic instances <code class="docutils literal notranslate"><span class="pre">Q1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Q2</span></code> of any header <code class="docutils literal notranslate"><span class="pre">Q</span></code> from <code class="docutils literal notranslate"><span class="pre">H1</span></code> to <code class="docutils literal notranslate"><span class="pre">Hk</span></code> (where <code class="docutils literal notranslate"><span class="pre">Q</span></code> is
+possibly the same as <code class="docutils literal notranslate"><span class="pre">X</span></code>), such that <code class="docutils literal notranslate"><span class="pre">Q1</span></code> precedes <code class="docutils literal notranslate"><span class="pre">X1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Q2</span></code> precedes <code class="docutils literal notranslate"><span class="pre">X2</span></code> in the respective threads, then <code class="docutils literal notranslate"><span class="pre">X1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">X2</span></code> are not converged.</p></li>
+<li><p>Otherwise, consider the pair <code class="docutils literal notranslate"><span class="pre">Q1</span></code> and <code class="docutils literal notranslate"><span class="pre">Q2</span></code> of converged dynamic
+instances of a header <code class="docutils literal notranslate"><span class="pre">Q</span></code> from <code class="docutils literal notranslate"><span class="pre">H1</span></code> to <code class="docutils literal notranslate"><span class="pre">Hk</span></code> that occur most
+recently before <code class="docutils literal notranslate"><span class="pre">X1</span></code> and <code class="docutils literal notranslate"><span class="pre">X2</span></code> in the respective threads. Then
+<code class="docutils literal notranslate"><span class="pre">X1</span></code> and <code class="docutils literal notranslate"><span class="pre">X2</span></code> are converged if and only if there is no dynamic
+instance of any header from <code class="docutils literal notranslate"><span class="pre">H1</span></code> to <code class="docutils literal notranslate"><span class="pre">Hk</span></code> that occurs between
+<code class="docutils literal notranslate"><span class="pre">Q1</span></code> and <code class="docutils literal notranslate"><span class="pre">X1</span></code> in thread <code class="docutils literal notranslate"><span class="pre">T1</span></code>, or between <code class="docutils literal notranslate"><span class="pre">Q2</span></code> and <code class="docutils literal notranslate"><span class="pre">X2</span></code> in
+thread <code class="docutils literal notranslate"><span class="pre">T2</span></code>. In other words, <code class="docutils literal notranslate"><span class="pre">Q1</span></code> and <code class="docutils literal notranslate"><span class="pre">Q2</span></code> represent the last
+point of convergence, with no other header being executed before
+executing <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p></li>
+</ol>
+<p><strong>Example:</strong></p>
+<figure class="align-default" id="convergence-both-diverged-nested">
+<img alt="_images/convergence-both-diverged-nested.png" src="_images/convergence-both-diverged-nested.png" />
+</figure>
+<p>The above figure shows two nested irreducible cycles with headers
+<code class="docutils literal notranslate"><span class="pre">R</span></code> and <code class="docutils literal notranslate"><span class="pre">S</span></code>. The nodes <code class="docutils literal notranslate"><span class="pre">Entry</span></code> and <code class="docutils literal notranslate"><span class="pre">Q</span></code> have divergent
+branches. The table below shows the convergence between three threads
+taking different paths through the CFG. Dynamic instances listed in
+the same column are converged.</p>
+<blockquote>
+<div><div class="table-wrapper docutils container">
+<table class="docutils align-left">
+<tbody>
+<tr class="row-odd"><td></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-even"><td><p>Thread1</p></td>
+<td><p>Entry</p></td>
+<td><p>P1</p></td>
+<td><p>Q1</p></td>
+<td><p>S1</p></td>
+<td><p>P3</p></td>
+<td><p>Q3</p></td>
+<td><p>R1</p></td>
+<td><p>S2</p></td>
+<td><p>Exit</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thread2</p></td>
+<td><p>Entry</p></td>
+<td><p>P2</p></td>
+<td><p>Q2</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>R2</p></td>
+<td><p>S3</p></td>
+<td><p>Exit</p></td>
+</tr>
+<tr class="row-even"><td><p>Thread3</p></td>
+<td><p>Entry</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>R3</p></td>
+<td><p>S4</p></td>
+<td><p>Exit</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">P2</span></code> and <code class="docutils literal notranslate"><span class="pre">P3</span></code> are not converged due to <code class="docutils literal notranslate"><span class="pre">S1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Q2</span></code> and <code class="docutils literal notranslate"><span class="pre">Q3</span></code> are not converged due to <code class="docutils literal notranslate"><span class="pre">S1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">S1</span></code> and <code class="docutils literal notranslate"><span class="pre">S3</span></code> are not converged due to <code class="docutils literal notranslate"><span class="pre">R2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">S1</span></code> and <code class="docutils literal notranslate"><span class="pre">S4</span></code> are not converged due to <code class="docutils literal notranslate"><span class="pre">R3</span></code></p></li>
+</ul>
+<p>Informally, <code class="docutils literal notranslate"><span class="pre">T1</span></code> and <code class="docutils literal notranslate"><span class="pre">T2</span></code> execute the inner cycle a different
+number of times, without executing the header of the outer cycle. All
+threads converge in the outer cycle when they first execute the header
+of the outer cycle.</p>
+</section>
+</section>
+<section id="uniformity">
+<span id="convergence-uniformity"></span><h2>Uniformity<a class="headerlink" href="#uniformity" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>The output of two converged dynamic instances is uniform if and
+only if it compares equal for those two dynamic instances.</p></li>
+<li><p>The output of a static instance <code class="docutils literal notranslate"><span class="pre">X</span></code> is uniform <em>for a given set
+of threads</em> if and only if it is uniform for every pair of
+converged dynamic instances of <code class="docutils literal notranslate"><span class="pre">X</span></code> produced by those threads.</p></li>
+</ol>
+<p>A non-uniform value is said to be <em>divergent</em>.</p>
+<p>For a set <code class="docutils literal notranslate"><span class="pre">S</span></code> of threads, the uniformity of each output of a static
+instance is determined as follows:</p>
+<ol class="arabic simple">
+<li><p>The semantics of the instruction may specify the output to be
+uniform.</p></li>
+<li><p>Otherwise, the output is divergent if the static instance is not
+<a class="reference internal" href="#convergence-m-converged"><span class="std std-ref">m-converged</span></a>.</p></li>
+<li><p>Otherwise, if the static instance is m-converged:</p>
+<ol class="arabic simple">
+<li><p>If it is a PHI node, its output is uniform if and only
+if for every pair of converged dynamic instances produced by all
+threads in <code class="docutils literal notranslate"><span class="pre">S</span></code>:</p>
+<ol class="loweralpha simple">
+<li><p>Both instances choose the same output from converged
+dynamic instances, and,</p></li>
+<li><p>That output is uniform for all threads in <code class="docutils literal notranslate"><span class="pre">S</span></code>.</p></li>
+</ol>
+</li>
+<li><p>Otherwise, the output is uniform if and only if the input
+operands are uniform for all threads in <code class="docutils literal notranslate"><span class="pre">S</span></code>.</p></li>
+</ol>
+</li>
+</ol>
+<section id="divergent-cycle-exits">
+<h3>Divergent Cycle Exits<a class="headerlink" href="#divergent-cycle-exits" title="Link to this heading">#</a></h3>
+<p>When a divergent branch occurs inside a cycle, it is possible that a
+diverged path continues to an exit of the cycle. This is called a
+divergent cycle exit. If the cycle is irreducible, the diverged path
+may re-enter and eventually reach a join within the cycle. Such a join
+should be examined for the <a class="reference internal" href="#convergence-diverged-entry"><span class="std std-ref">diverged entry</span></a> criterion.</p>
+<p>Nodes along the diverged path that lie outside the cycle experience
+<em>temporal divergence</em>, when two threads executing convergently inside
+the cycle produce uniform values, but exit the cycle along the same
+divergent path after executing the header a different number of times
+(informally, on different iterations of the cycle). For a node <code class="docutils literal notranslate"><span class="pre">N</span></code>
+inside the cycle the outputs may be uniform for the two threads, but
+any use <code class="docutils literal notranslate"><span class="pre">U</span></code> outside the cycle receives a value from non-converged
+dynamic instances of <code class="docutils literal notranslate"><span class="pre">N</span></code>. An output of <code class="docutils literal notranslate"><span class="pre">U</span></code> may be divergent,
+depending on the semantics of the instruction.</p>
+</section>
+</section>
+<section id="static-uniformity-analysis">
+<span id="uniformity-analysis"></span><h2>Static Uniformity Analysis<a class="headerlink" href="#static-uniformity-analysis" title="Link to this heading">#</a></h2>
+<p>Irreducible control flow results in different cycle hierarchies
+depending on the choice of headers during depth-first traversal. As a
+result, a static analysis cannot always determine the convergence of
+nodes in irreducible cycles, and any uniformity analysis is limited to
+those static instances whose convergence is independent of the cycle
+hierarchy:</p>
+<blockquote id="convergence-m-converged">
+<div><p><strong>m-converged static instances:</strong></p>
+<p>A static instance <code class="docutils literal notranslate"><span class="pre">X</span></code> is <em>m-converged</em> for a given CFG if and only
+if the maximal converged-with relation for its dynamic instances is
+the same in every cycle hierarchy that can be constructed for that CFG.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>In other words, two dynamic instances <code class="docutils literal notranslate"><span class="pre">X1</span></code> and <code class="docutils literal notranslate"><span class="pre">X2</span></code> of an
+m-converged static instance <code class="docutils literal notranslate"><span class="pre">X</span></code> are converged in some cycle
+hierarchy if and only if they are also converged in every other
+cycle hierarchy for the same CFG.</p>
+<p>As noted earlier, for brevity, we restrict the term <em>converged</em> to
+mean 「related under the maximal converged-with relation for a given
+cycle hierarchy」.</p>
+</div>
+</div></blockquote>
+<p>Each node <code class="docutils literal notranslate"><span class="pre">X</span></code> in a given CFG is reported to be m-converged if and
+only if every cycle that contains <code class="docutils literal notranslate"><span class="pre">X</span></code> satisfies the following necessary
+conditions:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Every divergent branch inside the cycle satisfies the
+<a class="reference internal" href="#convergence-diverged-entry"><span class="std std-ref">diverged entry criterion</span></a>, and,</p></li>
+<li><p>There are no <a class="reference internal" href="#convergence-diverged-outside"><span class="std std-ref">diverged paths reaching the
+cycle</span></a> from a divergent branch
+outside it.</p></li>
+</ol>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>A reducible cycle <a class="reference internal" href="#convergence-reducible-cycle"><span class="std std-ref">trivially satisfies</span></a> the above conditions. In particular,
+if the whole CFG is reducible, then all nodes in the CFG are
+m-converged.</p>
+</div>
+<p>The uniformity of each output of a static instance
+is determined using the criteria
+<a class="reference internal" href="#convergence-uniformity"><span class="std std-ref">described earlier</span></a>. The discovery of
+divergent outputs may cause their uses (including branches) to also
+become divergent. The analysis propagates this divergence until a
+fixed point is reached.</p>
+<p>The convergence inferred using these criteria is a safe subset of the
+maximal converged-with relation for any cycle hierarchy. In
+particular, it is sufficient to determine if a static instance is
+m-converged for a given cycle hierarchy <code class="docutils literal notranslate"><span class="pre">T</span></code>, even if that fact is
+not detected when examining some other cycle hierarchy <code class="docutils literal notranslate"><span class="pre">T'</span></code>.</p>
+<p>This property allows compiler transforms to use the uniformity
+analysis without being affected by DFS choices made in the underlying
+cycle analysis. When two transforms use different instances of the
+uniformity analysis for the same CFG, a 「divergent value」 result in
+one analysis instance cannot contradict a 「uniform value」 result in
+the other.</p>
+<p>Generic transforms such as SimplifyCFG, CSE, and loop transforms
+commonly change the program in ways that change the maximal
+converged-with relations. This also means that a value that was
+previously uniform can become divergent after such a transform.
+Uniformity has to be recomputed after such transforms.</p>
+<section id="divergent-branch-inside-a-cycle">
+<h3>Divergent Branch inside a Cycle<a class="headerlink" href="#divergent-branch-inside-a-cycle" title="Link to this heading">#</a></h3>
+<figure class="align-default" id="convergence-divergent-inside">
+<img alt="_images/convergence-divergent-inside.png" src="_images/convergence-divergent-inside.png" />
+</figure>
+<p>The above figure shows a divergent branch <code class="docutils literal notranslate"><span class="pre">Q</span></code> inside an irreducible
+cyclic region. When two threads diverge at <code class="docutils literal notranslate"><span class="pre">Q</span></code>, the convergence of
+dynamic instances within the cyclic region depends on the cycle
+hierarchy chosen:</p>
+<ol class="arabic simple">
+<li><p>In an implementation that detects a single cycle <code class="docutils literal notranslate"><span class="pre">C</span></code> with header
+<code class="docutils literal notranslate"><span class="pre">P</span></code>, convergence inside the cycle is determined by <code class="docutils literal notranslate"><span class="pre">P</span></code>.</p></li>
+<li><p>In an implementation that detects two nested cycles with headers
+<code class="docutils literal notranslate"><span class="pre">R</span></code> and <code class="docutils literal notranslate"><span class="pre">S</span></code>, convergence inside those cycles is determined by
+their respective headers.</p></li>
+</ol>
+<p id="convergence-diverged-entry">A conservative approach would be to simply report all nodes inside
+irreducible cycles as having divergent outputs. But it is desirable to
+recognize m-converged nodes in the CFG in order to maximize
+uniformity. This section describes one such pattern of nodes derived
+from <em>closed paths</em>, which are a property of the CFG and do not depend
+on the cycle hierarchy.</p>
+<blockquote>
+<div><p><strong>Diverged Entry Criterion:</strong></p>
+<p>The dynamic instances of all the nodes in a closed path <code class="docutils literal notranslate"><span class="pre">P</span></code> are
+m-converged only if for every divergent branch <code class="docutils literal notranslate"><span class="pre">B</span></code> and its
+join node <code class="docutils literal notranslate"><span class="pre">J</span></code> that lie on <code class="docutils literal notranslate"><span class="pre">P</span></code>, there is no entry to <code class="docutils literal notranslate"><span class="pre">P</span></code> which
+lies on a diverged path from <code class="docutils literal notranslate"><span class="pre">B</span></code> to <code class="docutils literal notranslate"><span class="pre">J</span></code>.</p>
+</div></blockquote>
+<figure class="align-default" id="convergence-closed-path">
+<img alt="_images/convergence-closed-path.png" src="_images/convergence-closed-path.png" />
+</figure>
+<p>Consider the closed path <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">-&gt;</span> <span class="pre">Q</span> <span class="pre">-&gt;</span> <span class="pre">R</span> <span class="pre">-&gt;</span> <span class="pre">S</span></code> in the above figure.
+<code class="docutils literal notranslate"><span class="pre">P</span></code> and <code class="docutils literal notranslate"><span class="pre">R</span></code> are <a class="reference internal" href="CycleTerminology.html#cycle-closed-path"><span class="std std-ref">entries to the closed
+path</span></a>. <code class="docutils literal notranslate"><span class="pre">Q</span></code> is a divergent branch and <code class="docutils literal notranslate"><span class="pre">S</span></code> is a
+join for that branch, with diverged paths <code class="docutils literal notranslate"><span class="pre">Q</span> <span class="pre">-&gt;</span> <span class="pre">R</span> <span class="pre">-&gt;</span> <span class="pre">S</span></code> and <code class="docutils literal notranslate"><span class="pre">Q</span> <span class="pre">-&gt;</span>
+<span class="pre">S</span></code>.</p>
+<ul>
+<li><p>If a diverged entry <code class="docutils literal notranslate"><span class="pre">R</span></code> exists, then in some cycle hierarchy,
+<code class="docutils literal notranslate"><span class="pre">R</span></code> is the header of the smallest cycle <code class="docutils literal notranslate"><span class="pre">C</span></code> containing the
+closed path and a <a class="reference internal" href="CycleTerminology.html#cycle-definition"><span class="std std-ref">child cycle</span></a> <code class="docutils literal notranslate"><span class="pre">C'</span></code>
+exists in the set <code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">-</span> <span class="pre">R</span></code>, containing both branch <code class="docutils literal notranslate"><span class="pre">Q</span></code> and join
+<code class="docutils literal notranslate"><span class="pre">S</span></code>. When threads diverge at <code class="docutils literal notranslate"><span class="pre">Q</span></code>, one subset <code class="docutils literal notranslate"><span class="pre">M</span></code> continues
+inside cycle <code class="docutils literal notranslate"><span class="pre">C'</span></code>, while the complement <code class="docutils literal notranslate"><span class="pre">N</span></code> exits <code class="docutils literal notranslate"><span class="pre">C'</span></code> and
+reaches <code class="docutils literal notranslate"><span class="pre">R</span></code>. Dynamic instances of <code class="docutils literal notranslate"><span class="pre">S</span></code> executed by threads in set
+<code class="docutils literal notranslate"><span class="pre">M</span></code> are not converged with those executed in set <code class="docutils literal notranslate"><span class="pre">N</span></code> due to the
+presence of <code class="docutils literal notranslate"><span class="pre">R</span></code>. Informally, threads that diverge at <code class="docutils literal notranslate"><span class="pre">Q</span></code>
+reconverge in the same iteration of the outer cycle <code class="docutils literal notranslate"><span class="pre">C</span></code>, but they
+may have executed the inner cycle <code class="docutils literal notranslate"><span class="pre">C'</span></code> differently.</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-left">
+<tbody>
+<tr class="row-odd"><td></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>9</p></td>
+<td><p>10</p></td>
+<td><p>11</p></td>
+</tr>
+<tr class="row-even"><td><p>Thread1</p></td>
+<td><p>Entry</p></td>
+<td><p>P1</p></td>
+<td><p>Q1</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>R1</p></td>
+<td><p>S1</p></td>
+<td><p>P3</p></td>
+<td><p>…</p></td>
+<td><p>Exit</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thread2</p></td>
+<td><p>Entry</p></td>
+<td><p>P2</p></td>
+<td><p>Q2</p></td>
+<td><p>S2</p></td>
+<td><p>P4</p></td>
+<td><p>Q4</p></td>
+<td><p>R2</p></td>
+<td><p>S4</p></td>
+<td></td>
+<td></td>
+<td><p>Exit</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In the table above, <code class="docutils literal notranslate"><span class="pre">S2</span></code> is not converged with <code class="docutils literal notranslate"><span class="pre">S1</span></code> due to <code class="docutils literal notranslate"><span class="pre">R1</span></code>.</p>
+</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">R</span></code> does not exist, or if any node other than <code class="docutils literal notranslate"><span class="pre">R</span></code> is the
+header of <code class="docutils literal notranslate"><span class="pre">C</span></code>, then no such child cycle <code class="docutils literal notranslate"><span class="pre">C'</span></code> is detected.
+Threads that diverge at <code class="docutils literal notranslate"><span class="pre">Q</span></code> execute converged dynamic instances of
+<code class="docutils literal notranslate"><span class="pre">S</span></code> since they do not encounter the cycle header on any path from
+<code class="docutils literal notranslate"><span class="pre">Q</span></code> to <code class="docutils literal notranslate"><span class="pre">S</span></code>. Informally, threads that diverge at <code class="docutils literal notranslate"><span class="pre">Q</span></code>
+reconverge at <code class="docutils literal notranslate"><span class="pre">S</span></code> in the same iteration of <code class="docutils literal notranslate"><span class="pre">C</span></code>.</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-left">
+<tbody>
+<tr class="row-odd"><td></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>9</p></td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-even"><td><p>Thread1</p></td>
+<td><p>Entry</p></td>
+<td><p>P1</p></td>
+<td><p>Q1</p></td>
+<td><p>R1</p></td>
+<td><p>S1</p></td>
+<td><p>P3</p></td>
+<td><p>Q3</p></td>
+<td><p>R3</p></td>
+<td><p>S3</p></td>
+<td><p>Exit</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thread2</p></td>
+<td><p>Entry</p></td>
+<td><p>P2</p></td>
+<td><p>Q2</p></td>
+<td></td>
+<td><p>S2</p></td>
+<td><p>P4</p></td>
+<td><p>Q4</p></td>
+<td><p>R2</p></td>
+<td><p>S4</p></td>
+<td><p>Exit</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>In general, the cycle <code class="docutils literal notranslate"><span class="pre">C</span></code> in the above statements is not
+expected to be the same cycle for different headers. Cycles and
+their headers are tightly coupled; for different headers in the
+same outermost cycle, the child cycles detected may be different.
+The property relevant to the above examples is that for every
+closed path, there is a cycle <code class="docutils literal notranslate"><span class="pre">C</span></code> that contains the path and
+whose header is on that path.</p>
+</div>
+</div></blockquote>
+<p>The diverged entry criterion must be checked for every closed path
+passing through a divergent branch <code class="docutils literal notranslate"><span class="pre">B</span></code> and its join <code class="docutils literal notranslate"><span class="pre">J</span></code>. Since
+<a class="reference internal" href="CycleTerminology.html#cycle-closed-path-header"><span class="std std-ref">every closed path passes through the header of some
+cycle</span></a>, this amounts to checking every cycle
+<code class="docutils literal notranslate"><span class="pre">C</span></code> that contains <code class="docutils literal notranslate"><span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">J</span></code>. When the header of <code class="docutils literal notranslate"><span class="pre">C</span></code>
+dominates the join <code class="docutils literal notranslate"><span class="pre">J</span></code>, there can be no entry to any path from the
+header to <code class="docutils literal notranslate"><span class="pre">J</span></code>, which includes any diverged path from <code class="docutils literal notranslate"><span class="pre">B</span></code> to <code class="docutils literal notranslate"><span class="pre">J</span></code>.
+This is also true for any closed paths passing through the header of
+an outer cycle that contains <code class="docutils literal notranslate"><span class="pre">C</span></code>.</p>
+<p>Thus, the diverged entry criterion can be conservatively simplified
+as follows:</p>
+<blockquote>
+<div><p>For a divergent branch <code class="docutils literal notranslate"><span class="pre">B</span></code> and its join node <code class="docutils literal notranslate"><span class="pre">J</span></code>, the nodes in a
+cycle <code class="docutils literal notranslate"><span class="pre">C</span></code> that contains both <code class="docutils literal notranslate"><span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">J</span></code> are m-converged only
+if:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">B</span></code> strictly dominates <code class="docutils literal notranslate"><span class="pre">J</span></code>, or,</p></li>
+<li><p>The header <code class="docutils literal notranslate"><span class="pre">H</span></code> of <code class="docutils literal notranslate"><span class="pre">C</span></code> strictly dominates <code class="docutils literal notranslate"><span class="pre">J</span></code>, or,</p></li>
+<li><p>Recursively, there is cycle <code class="docutils literal notranslate"><span class="pre">C'</span></code> inside <code class="docutils literal notranslate"><span class="pre">C</span></code> that satisfies the
+same condition.</p></li>
+</ul>
+</div></blockquote>
+<p>When <code class="docutils literal notranslate"><span class="pre">J</span></code> is the same as <code class="docutils literal notranslate"><span class="pre">H</span></code> or <code class="docutils literal notranslate"><span class="pre">B</span></code>, the trivial dominance is
+insufficient to make any statement about entries to diverged paths.</p>
+</section>
+<section id="diverged-paths-reaching-a-cycle">
+<span id="convergence-diverged-outside"></span><h3>Diverged Paths reaching a Cycle<a class="headerlink" href="#diverged-paths-reaching-a-cycle" title="Link to this heading">#</a></h3>
+<figure class="align-default" id="convergence-divergent-outside">
+<img alt="_images/convergence-divergent-outside.png" src="_images/convergence-divergent-outside.png" />
+</figure>
+<p>The figure shows two cycle hierarchies with a divergent branch in
+<code class="docutils literal notranslate"><span class="pre">Entry</span></code> instead of <code class="docutils literal notranslate"><span class="pre">Q</span></code>. For two threads that enter the closed path
+<code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">-&gt;</span> <span class="pre">Q</span> <span class="pre">-&gt;</span> <span class="pre">R</span> <span class="pre">-&gt;</span> <span class="pre">S</span></code> at <code class="docutils literal notranslate"><span class="pre">P</span></code> and <code class="docutils literal notranslate"><span class="pre">R</span></code> respectively, the convergence
+of dynamic instances generated along the path depends on whether <code class="docutils literal notranslate"><span class="pre">P</span></code>
+or <code class="docutils literal notranslate"><span class="pre">R</span></code> is the header.</p>
+<ul>
+<li><p>Convergence when <code class="docutils literal notranslate"><span class="pre">P</span></code> is the header.</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-left">
+<tbody>
+<tr class="row-odd"><td></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>9</p></td>
+<td><p>10</p></td>
+<td><p>11</p></td>
+<td><p>12</p></td>
+<td><p>13</p></td>
+</tr>
+<tr class="row-even"><td><p>Thread1</p></td>
+<td><p>Entry</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>P1</p></td>
+<td><p>Q1</p></td>
+<td><p>R1</p></td>
+<td><p>S1</p></td>
+<td><p>P3</p></td>
+<td><p>Q3</p></td>
+<td></td>
+<td><p>S3</p></td>
+<td><p>Exit</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thread2</p></td>
+<td><p>Entry</p></td>
+<td></td>
+<td><p>R2</p></td>
+<td><p>S2</p></td>
+<td><p>P2</p></td>
+<td><p>Q2</p></td>
+<td></td>
+<td><p>S2</p></td>
+<td><p>P4</p></td>
+<td><p>Q4</p></td>
+<td><p>R3</p></td>
+<td><p>S4</p></td>
+<td><p>Exit</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</li>
+<li><p>Convergence when <code class="docutils literal notranslate"><span class="pre">R</span></code> is the header.</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-left">
+<tbody>
+<tr class="row-odd"><td></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>9</p></td>
+<td><p>10</p></td>
+<td><p>11</p></td>
+<td><p>12</p></td>
+</tr>
+<tr class="row-even"><td><p>Thread1</p></td>
+<td><p>Entry</p></td>
+<td></td>
+<td><p>P1</p></td>
+<td><p>Q1</p></td>
+<td><p>R1</p></td>
+<td><p>S1</p></td>
+<td><p>P3</p></td>
+<td><p>Q3</p></td>
+<td><p>S3</p></td>
+<td></td>
+<td></td>
+<td><p>Exit</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thread2</p></td>
+<td><p>Entry</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>R2</p></td>
+<td><p>S2</p></td>
+<td><p>P2</p></td>
+<td><p>Q2</p></td>
+<td><p>S2</p></td>
+<td><p>P4</p></td>
+<td><p>…</p></td>
+<td><p>Exit</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</li>
+</ul>
+<p>Thus, when diverged paths reach different entries of an irreducible
+cycle from outside the cycle, the static analysis conservatively
+reports every node in the cycle as not m-converged.</p>
+</section>
+<section id="reducible-cycle">
+<span id="convergence-reducible-cycle"></span><h3>Reducible Cycle<a class="headerlink" href="#reducible-cycle" title="Link to this heading">#</a></h3>
+<p>If <code class="docutils literal notranslate"><span class="pre">C</span></code> is a reducible cycle with header <code class="docutils literal notranslate"><span class="pre">H</span></code>, then in any DFS,
+<code class="docutils literal notranslate"><span class="pre">H</span></code> <a class="reference internal" href="CycleTerminology.html#cycle-reducible-headers"><span class="std std-ref">must be the header of some cycle</span></a>
+<code class="docutils literal notranslate"><span class="pre">C'</span></code> that contains <code class="docutils literal notranslate"><span class="pre">C</span></code>. Independent of the DFS, there is no entry
+to the subgraph <code class="docutils literal notranslate"><span class="pre">C</span></code> other than <code class="docutils literal notranslate"><span class="pre">H</span></code> itself. Thus, we have the
+following:</p>
+<ol class="arabic simple">
+<li><p>The diverged entry criterion is trivially satisfied for a divergent
+branch and its join, where both are inside subgraph <code class="docutils literal notranslate"><span class="pre">C</span></code>.</p></li>
+<li><p>When diverged paths reach the subgraph <code class="docutils literal notranslate"><span class="pre">C</span></code> from outside, their
+convergence is always determined by the same header <code class="docutils literal notranslate"><span class="pre">H</span></code>.</p></li>
+</ol>
+<p>Clearly, this can be determined only in a cycle hierarchy <code class="docutils literal notranslate"><span class="pre">T</span></code> where
+<code class="docutils literal notranslate"><span class="pre">C</span></code> is detected as a reducible cycle. No such conclusion can be made
+in a different cycle hierarchy <code class="docutils literal notranslate"><span class="pre">T'</span></code> where <code class="docutils literal notranslate"><span class="pre">C</span></code> is part of a larger
+cycle <code class="docutils literal notranslate"><span class="pre">C'</span></code> with the same header, but this does not contradict the
+conclusion in <code class="docutils literal notranslate"><span class="pre">T</span></code>.</p>
+</section>
+</section>
+<section id="controlled-convergence">
+<h2>Controlled Convergence<a class="headerlink" href="#controlled-convergence" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="ConvergentOperations.html#dynamic-instances-and-convergence-tokens"><span class="std std-ref">Convergence control tokens</span></a>
+provide an explicit semantics for determining which threads are converged at a
+given point in the program. The impact of this is incorporated in a
+<a class="reference internal" href="ConvergentOperations.html#controlled-maximal-converged-with"><span class="std std-ref">controlled maximal converged-with</span></a>
+relation over dynamic instances and a <a class="reference internal" href="ConvergentOperations.html#controlled-m-converged"><span class="std std-ref">controlled m-converged</span></a> property of static instances. The <a class="reference internal" href="#uniformity-analysis"><span class="std std-ref">uniformity
+analysis</span></a> implemented in LLVM includes this for targets
+that support convergence control tokens.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="MLGO.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Machine Learning - Guided Optimization (MLGO)</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="YamlIO.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">YAML I/O</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Convergence And Uniformity</a><ul>
+<li><a class="reference internal" href="#introduction">簡介</a></li>
+<li><a class="reference internal" href="#motivation">Motivation</a></li>
+<li><a class="reference internal" href="#terminology">Terminology</a></li>
+<li><a class="reference internal" href="#threads-and-dynamic-instances">Threads and Dynamic Instances</a></li>
+<li><a class="reference internal" href="#convergence">Convergence</a><ul>
+<li><a class="reference internal" href="#maximal-convergence">Maximal Convergence</a></li>
+<li><a class="reference internal" href="#dependence-on-cycles-headers">Dependence on Cycles Headers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#uniformity">Uniformity</a><ul>
+<li><a class="reference internal" href="#divergent-cycle-exits">Divergent Cycle Exits</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#static-uniformity-analysis">Static Uniformity Analysis</a><ul>
+<li><a class="reference internal" href="#divergent-branch-inside-a-cycle">Divergent Branch inside a Cycle</a></li>
+<li><a class="reference internal" href="#diverged-paths-reaching-a-cycle">Diverged Paths reaching a Cycle</a></li>
+<li><a class="reference internal" href="#reducible-cycle">Reducible Cycle</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#controlled-convergence">Controlled Convergence</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=0d9984b1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=d9a6981e"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

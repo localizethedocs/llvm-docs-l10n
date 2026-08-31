@@ -1,0 +1,1451 @@
+<!doctype html>
+<html class="no-js" lang="en-US" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Global Instruction Selection" href="GlobalISel/index.html" /><link rel="prev" title="LLVM Bitcode File Format" href="BitCodeFormat.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/MIRLangRef.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Machine IR (MIR) Format Reference Manual - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="Reference.html">Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/MIRLangRef.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="machine-ir-mir-format-reference-manual">
+<h1>Machine IR (MIR) Format Reference Manual<a class="headerlink" href="#machine-ir-mir-format-reference-manual" title="Link to this heading">#</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This is a work in progress.</p>
+</div>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>This document is a reference manual for the Machine IR (MIR) serialization
+format. MIR is a human-readable serialization format that is used to represent
+LLVM’s <a class="reference internal" href="CodeGenerator.html#machine-code-representation"><span class="std std-ref">machine specific intermediate representation</span></a>.</p>
+<p>The MIR serialization format is designed to be used for testing the code
+generation passes in LLVM.</p>
+</section>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The MIR serialization format uses a YAML container. YAML is a standard
+data serialization language, and the full YAML language spec can be read at
+<a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#Introduction">yaml.org</a>.</p>
+<p>A MIR file is split into a series of <a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2800132">YAML documents</a>. The first document
+can contain an optional embedded LLVM IR module, and the rest of the documents
+contain the serialized machine functions.</p>
+</section>
+<section id="mir-testing-guide">
+<h2>MIR Testing Guide<a class="headerlink" href="#mir-testing-guide" title="Link to this heading">#</a></h2>
+<p>You can use the MIR format for testing in two different ways:</p>
+<ul class="simple">
+<li><p>You can write MIR tests that invoke a single code generation pass using the
+<code class="docutils literal notranslate"><span class="pre">-run-pass</span></code> option in llc.</p></li>
+<li><p>You can use llc’s <code class="docutils literal notranslate"><span class="pre">-stop-after</span></code> option with existing or new LLVM assembly
+tests and check the MIR output of a specific code generation pass.</p></li>
+</ul>
+<section id="testing-individual-code-generation-passes">
+<h3>Testing Individual Code Generation Passes<a class="headerlink" href="#testing-individual-code-generation-passes" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">-run-pass</span></code> option in llc allows you to create MIR tests that invoke just
+a single code generation pass. When this option is used, llc will parse an
+input MIR file, run the specified code generation pass(es), and output the
+resulting MIR code.</p>
+<p>You can generate an input MIR file for the test by using the <code class="docutils literal notranslate"><span class="pre">-stop-after</span></code> or
+<code class="docutils literal notranslate"><span class="pre">-stop-before</span></code> option in llc. For example, if you would like to write a test
+for the post register allocation pseudo instruction expansion pass, you can
+specify the machine copy propagation pass in the <code class="docutils literal notranslate"><span class="pre">-stop-after</span></code> option, as it
+runs just before the pass that we are trying to test:</p>
+<p><code class="docutils literal notranslate"><span class="pre">llc</span> <span class="pre">-stop-after=machine-cp</span> <span class="pre">bug-trigger.ll</span> <span class="pre">-o</span> <span class="pre">test.mir</span></code></p>
+<p>If the same pass is run multiple times, a run index can be included
+after the name with a comma.</p>
+<p><code class="docutils literal notranslate"><span class="pre">llc</span> <span class="pre">-stop-after=dead-mi-elimination,1</span> <span class="pre">bug-trigger.ll</span> <span class="pre">-o</span> <span class="pre">test.mir</span></code></p>
+<p>After generating the input MIR file, you’ll have to add a <code class="docutils literal notranslate"><span class="pre">RUN</span></code> line that uses
+the <code class="docutils literal notranslate"><span class="pre">-run-pass</span></code> option to it. In order to test the post register allocation
+pseudo instruction expansion pass on X86-64, a run line like the one shown
+below can be used:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>`# RUN: llc -o - %s -mtriple=x86_64-- -run-pass=postrapseudos | FileCheck %s`
+</pre></div>
+</div>
+<p>The MIR files are target dependent, so they have to be placed in the
+target-specific test directories (<code class="docutils literal notranslate"><span class="pre">lib/CodeGen/TARGETNAME</span></code>). They also need to
+specify a target triple or a target architecture either in the <code class="docutils literal notranslate"><span class="pre">RUN</span></code> line or in
+the embedded LLVM IR module.</p>
+<section id="simplifying-mir-files">
+<h4>Simplifying MIR files<a class="headerlink" href="#simplifying-mir-files" title="Link to this heading">#</a></h4>
+<p>The MIR code coming out of <code class="docutils literal notranslate"><span class="pre">-stop-after</span></code>/<code class="docutils literal notranslate"><span class="pre">-stop-before</span></code> is very verbose.
+Tests are more accessible and future proof when simplified:</p>
+<ul class="simple">
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">-simplify-mir</span></code> option with llc.</p></li>
+<li><p>Machine function attributes often have default values or the test works just
+as well with default values. Typical candidates for this are: <code class="docutils literal notranslate"><span class="pre">alignment:</span></code>,
+<code class="docutils literal notranslate"><span class="pre">exposesReturnsTwice</span></code>, <code class="docutils literal notranslate"><span class="pre">legalized</span></code>, <code class="docutils literal notranslate"><span class="pre">regBankSelected</span></code>, <code class="docutils literal notranslate"><span class="pre">selected</span></code>.
+The whole <code class="docutils literal notranslate"><span class="pre">frameInfo</span></code> section is often unnecessary if there is no special
+frame usage in the function. <code class="docutils literal notranslate"><span class="pre">tracksRegLiveness</span></code> on the other hand is often
+necessary for some passes that care about block livein lists.</p></li>
+<li><p>The (global) <code class="docutils literal notranslate"><span class="pre">liveins:</span></code> list is typically only interesting for early
+instruction selection passes and can be removed when testing later passes.
+The per-block <code class="docutils literal notranslate"><span class="pre">liveins:</span></code> on the other hand are necessary if
+<code class="docutils literal notranslate"><span class="pre">tracksRegLiveness</span></code> is true.</p></li>
+<li><p>Branch probability data in block <code class="docutils literal notranslate"><span class="pre">successors:</span></code> lists can be dropped if the
+test doesn’t depend on it. Example:
+<code class="docutils literal notranslate"><span class="pre">successors:</span> <span class="pre">%bb.1(0x40000000),</span> <span class="pre">%bb.2(0x40000000)</span></code> can be replaced with
+<code class="docutils literal notranslate"><span class="pre">successors:</span> <span class="pre">%bb.1,</span> <span class="pre">%bb.2</span></code>.</p></li>
+<li><p>MIR code contains a whole IR module. This is necessary because there are
+no equivalents in MIR for global variables, references to external functions,
+function attributes, metadata, debug info. Instead, some MIR data references
+the IR constructs. You can often remove them if the test doesn’t depend on
+them.</p></li>
+<li><p>Alias Analysis is performed on IR values. These are referenced by memory
+operands in MIR. Example: <code class="docutils literal notranslate"><span class="pre">::</span> <span class="pre">(load</span> <span class="pre">8</span> <span class="pre">from</span> <span class="pre">%ir.foobar,</span> <span class="pre">!alias.scope</span> <span class="pre">!9)</span></code>.
+If the test doesn’t depend on (good) alias analysis the references can be
+dropped: <code class="docutils literal notranslate"><span class="pre">::</span> <span class="pre">(load</span> <span class="pre">8)</span></code></p></li>
+<li><p>MIR blocks can reference IR blocks for debug printing, profile information,
+or debug locations. Example: <code class="docutils literal notranslate"><span class="pre">bb.42.myblock</span></code> in MIR references the IR block
+<code class="docutils literal notranslate"><span class="pre">myblock</span></code>. It is usually possible to drop the <code class="docutils literal notranslate"><span class="pre">.myblock</span></code> reference and simply
+use <code class="docutils literal notranslate"><span class="pre">bb.42</span></code>.</p></li>
+<li><p>If there are no memory operands or blocks referencing the IR, then the
+IR function can be replaced by a parameterless dummy function like
+<code class="docutils literal notranslate"><span class="pre">define</span> <span class="pre">&#64;func()</span> <span class="pre">{</span> <span class="pre">ret</span> <span class="pre">void</span> <span class="pre">}</span></code>.</p></li>
+<li><p>It is possible to drop the whole IR section of the MIR file if it only
+contains dummy functions (see above). The <code class="docutils literal notranslate"><span class="pre">.mir</span></code> loader will create the
+IR functions automatically in this case.</p></li>
+</ul>
+</section>
+</section>
+<section id="limitations">
+<span id="id1"></span><h3>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">#</a></h3>
+<p>Currently, the MIR format has several limitations in terms of which state it
+can serialize:</p>
+<ul class="simple">
+<li><p>The target-specific state in the target-specific <code class="docutils literal notranslate"><span class="pre">MachineFunctionInfo</span></code>
+subclasses isn’t serialized at the moment.</p></li>
+<li><p>The target-specific <code class="docutils literal notranslate"><span class="pre">MachineConstantPoolValue</span></code> subclasses (in the ARM and
+SystemZ backends) aren’t serialized at the moment.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">MCSymbol</span></code> machine operands don’t support temporary or local symbols.</p></li>
+<li><p>A lot of the state in <code class="docutils literal notranslate"><span class="pre">MachineModuleInfo</span></code> isn’t serialized - only the CFI
+instructions and the variable debug information from MMI are serialized right
+now.</p></li>
+</ul>
+<p>These limitations impose restrictions on what you can test with the MIR format.
+For now, tests that would like to test some behaviour that depends on the state
+of temporary or local <code class="docutils literal notranslate"><span class="pre">MCSymbol</span></code>  operands or the exception handling state in
+MMI, can’t use the MIR format. As well as that, tests that test some behaviour
+that depends on the state of the target-specific <code class="docutils literal notranslate"><span class="pre">MachineFunctionInfo</span></code> or
+<code class="docutils literal notranslate"><span class="pre">MachineConstantPoolValue</span></code> subclasses can’t use the MIR format at the moment.</p>
+</section>
+</section>
+<section id="high-level-structure">
+<h2>High Level Structure<a class="headerlink" href="#high-level-structure" title="Link to this heading">#</a></h2>
+<section id="embedded-module">
+<span id="id2"></span><h3>Embedded Module<a class="headerlink" href="#embedded-module" title="Link to this heading">#</a></h3>
+<p>When the first YAML document contains a <a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2795688">YAML block literal string</a>, the MIR
+parser will treat this string as an LLVM assembly language string that
+represents an embedded LLVM IR module.
+Here is an example of a YAML document that contains an LLVM module:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="w">   </span><span class="k">define</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="vg">@inc</span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="nl">entry:</span>
+<span class="w">     </span><span class="nv nv-Anonymous">%0</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">load</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%x</span>
+<span class="w">     </span><span class="nv nv-Anonymous">%1</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv nv-Anonymous">%0</span><span class="p">,</span><span class="w"> </span><span class="m">1</span>
+<span class="w">     </span><span class="k">store</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv nv-Anonymous">%1</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%x</span>
+<span class="w">     </span><span class="k">ret</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv nv-Anonymous">%1</span>
+<span class="w">   </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="machine-functions">
+<h3>Machine Functions<a class="headerlink" href="#machine-functions" title="Link to this heading">#</a></h3>
+<p>The remaining YAML documents contain the machine functions. This is an example
+of such a YAML document:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span> ---
+ name:            inc
+ tracksRegLiveness: true
+ liveins:
+   - { reg: &#39;$rdi&#39; }
+ callSites:
+   - { bb: 0, offset: 3, fwdArgRegs:
+       - { arg: 0, reg: &#39;$edi&#39; } }
+ body: |
+   bb.0.entry:
+     liveins: $rdi
+
+     $eax = MOV32rm $rdi, 1, _, 0, _
+     $eax = INC32r killed $eax, implicit-def dead $eflags
+     MOV32mr killed $rdi, 1, _, 0, _, $eax
+     CALL64pcrel32 @foo &lt;regmask...&gt;
+     RETQ $eax
+ ...
+</pre></div>
+</div>
+<p>The document above consists of attributes that represent the various
+properties and data structures in a machine function.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">name</span></code> is required, and its value should be identical to the
+name of a function that this machine function is based on.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">body</span></code> is a <a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2795688">YAML block literal string</a>. Its value represents
+the function’s machine basic blocks and their machine instructions.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">callSites</span></code> is a representation of call site information which
+keeps track of call instructions and registers used to transfer call arguments.</p>
+</section>
+</section>
+<section id="machine-instructions-format-reference">
+<h2>Machine Instructions Format Reference<a class="headerlink" href="#machine-instructions-format-reference" title="Link to this heading">#</a></h2>
+<p>The machine basic blocks and their instructions are represented using a custom,
+human-readable serialization language. This language is used in the
+<a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2795688">YAML block literal string</a> that corresponds to the machine function’s body.</p>
+<p>A source string that uses this language contains a list of machine basic
+blocks, which are described in the section below.</p>
+<section id="machine-basic-blocks">
+<h3>Machine Basic Blocks<a class="headerlink" href="#machine-basic-blocks" title="Link to this heading">#</a></h3>
+<p>A machine basic block is defined in a single block definition source construct
+that contains the block’s ID.
+The example below defines two blocks that have an ID of zero and one:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0:
+  &lt;instructions&gt;
+bb.1:
+  &lt;instructions&gt;
+</pre></div>
+</div>
+<p>A machine basic block can also have a name. It should be specified after the ID
+in the block’s definition:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0.entry:       ; This block&#39;s name is &quot;entry&quot;
+   &lt;instructions&gt;
+</pre></div>
+</div>
+<p>The block’s name should be identical to the name of the IR block that this
+machine block is based on.</p>
+<section id="block-references">
+<span id="id3"></span><h4>Block References<a class="headerlink" href="#block-references" title="Link to this heading">#</a></h4>
+<p>The machine basic blocks are identified by their ID numbers. Individual
+blocks are referenced using the following syntax:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%bb.&lt;id&gt;
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="nv">%bb.0</span>
+</pre></div>
+</div>
+<p>The following syntax is also supported, but the former syntax is preferred for
+block references:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%bb.&lt;id&gt;[.&lt;name&gt;]
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="nv">%bb.1.then</span>
+</pre></div>
+</div>
+</section>
+<section id="successors">
+<h4>Successors<a class="headerlink" href="#successors" title="Link to this heading">#</a></h4>
+<p>The machine basic block’s successors must be specified before any of the
+instructions:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0.entry:
+  successors: %bb.1.then, %bb.2.else
+  &lt;instructions&gt;
+bb.1.then:
+  &lt;instructions&gt;
+bb.2.else:
+  &lt;instructions&gt;
+</pre></div>
+</div>
+<p>The branch weights can be specified in parentheses after the successor blocks.
+The example below defines a block that has two successors with branch weights
+of 32 and 16:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0.entry:
+  successors: %bb.1.then(32), %bb.2.else(16)
+</pre></div>
+</div>
+</section>
+<section id="live-in-registers">
+<span id="bb-liveins"></span><h4>Live In Registers<a class="headerlink" href="#live-in-registers" title="Link to this heading">#</a></h4>
+<p>The machine basic block’s live in registers have to be specified before any of
+its instructions:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0.entry:
+  liveins: $edi, $esi
+</pre></div>
+</div>
+<p>The list of live in registers and successors can be empty. The language also
+allows multiple live in register and successor lists; they are combined into
+one list by the parser.</p>
+</section>
+<section id="miscellaneous-attributes">
+<h4>Miscellaneous Attributes<a class="headerlink" href="#miscellaneous-attributes" title="Link to this heading">#</a></h4>
+<p>The attributes <code class="docutils literal notranslate"><span class="pre">IsAddressTaken</span></code>, <code class="docutils literal notranslate"><span class="pre">IsLandingPad</span></code>,
+<code class="docutils literal notranslate"><span class="pre">IsInlineAsmBrIndirectTarget</span></code> and <code class="docutils literal notranslate"><span class="pre">Alignment</span></code> can be specified in parentheses
+after the block’s definition:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>bb.0.entry (address-taken):
+  &lt;instructions&gt;
+bb.2.else (align 4):
+  &lt;instructions&gt;
+bb.3(landing-pad, align 4):
+  &lt;instructions&gt;
+bb.4 (inlineasm-br-indirect-target):
+  &lt;instructions&gt;
+</pre></div>
+</div>
+<!-- TODO: Describe the way the reference to an unnamed LLVM IR block can be
+   preserved. -->
+<p><code class="docutils literal notranslate"><span class="pre">Alignment</span></code> is specified in bytes, and must be a power of two.</p>
+</section>
+</section>
+<section id="machine-instructions">
+<span id="mir-instructions"></span><h3>Machine Instructions<a class="headerlink" href="#machine-instructions" title="Link to this heading">#</a></h3>
+<p>A machine instruction is composed of a name,
+<a class="reference internal" href="#machine-operands"><span class="std std-ref">machine operands</span></a>,
+<a class="reference internal" href="#instruction-flags"><span class="std std-ref">instruction flags</span></a>, and machine memory operands.</p>
+<p>The instruction’s name is usually specified before the operands. The example
+below shows an instance of the X86 <code class="docutils literal notranslate"><span class="pre">RETQ</span></code> instruction with a single machine
+operand:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>RETQ $eax
+</pre></div>
+</div>
+<p>However, if the machine instruction has one or more explicitly defined register
+operands, the instruction’s name has to be specified after them. The example
+below shows an instance of the AArch64 <code class="docutils literal notranslate"><span class="pre">LDPXpost</span></code> instruction with three
+defined register operands:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$sp, $fp, $lr = LDPXpost $sp, 2
+</pre></div>
+</div>
+<p>The instruction names are serialized using the exact definitions from the
+target’s <code class="docutils literal notranslate"><span class="pre">*InstrInfo.td</span></code> files, and they are case sensitive. This means that
+similar instruction names like <code class="docutils literal notranslate"><span class="pre">TSTri</span></code> and <code class="docutils literal notranslate"><span class="pre">tSTRi</span></code> represent different
+machine instructions.</p>
+<section id="instruction-flags">
+<span id="id4"></span><h4>Instruction Flags<a class="headerlink" href="#instruction-flags" title="Link to this heading">#</a></h4>
+<p>The flag <code class="docutils literal notranslate"><span class="pre">frame-setup</span></code> or <code class="docutils literal notranslate"><span class="pre">frame-destroy</span></code> can be specified before the
+instruction’s name:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$fp = frame-setup ADDXri $sp, 0, 0
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$x21, $x20 = frame-destroy LDPXi $sp
+</pre></div>
+</div>
+</section>
+<section id="bundled-instructions">
+<span id="registers"></span><h4>Bundled Instructions<a class="headerlink" href="#bundled-instructions" title="Link to this heading">#</a></h4>
+<p>The syntax for bundled instructions is the following:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>BUNDLE implicit-def $r0, implicit-def $r1, implicit $r2 {
+  $r0 = SOME_OP $r2
+  $r1 = ANOTHER_OP internal $r0
+}
+</pre></div>
+</div>
+<p>The first instruction is often a bundle header. The instructions between <code class="docutils literal notranslate"><span class="pre">{</span></code>
+and <code class="docutils literal notranslate"><span class="pre">}</span></code> are bundled with the first instruction.</p>
+</section>
+</section>
+<section id="mir-registers">
+<span id="id5"></span><h3>Registers<a class="headerlink" href="#mir-registers" title="Link to this heading">#</a></h3>
+<p>Registers are one of the key primitives in the machine instruction
+serialization language. They are primarily used in the
+<a class="reference internal" href="#register-operands"><span class="std std-ref">register machine operands</span></a>,
+but they can also be used in a number of other places, like the
+<a class="reference internal" href="#bb-liveins"><span class="std std-ref">basic block’s live in list</span></a>.</p>
+<p>The physical registers are identified by their name and by the ‘$’ prefix sigil.
+They use the following syntax:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$&lt;name&gt;
+</pre></div>
+</div>
+<p>The example below shows three X86 physical registers:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$eax
+$r15
+$eflags
+</pre></div>
+</div>
+<p>The virtual registers are identified by their ID number and by the ‘%’ sigil.
+They use the following syntax:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%&lt;id&gt;
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%0
+</pre></div>
+</div>
+<p>The null registers are represented using an underscore (’<code class="docutils literal notranslate"><span class="pre">_</span></code>’). They can also be
+represented using a ‘<code class="docutils literal notranslate"><span class="pre">$noreg</span></code>’ named register, although the former syntax
+is preferred.</p>
+</section>
+<section id="machine-operands">
+<span id="id6"></span><h3>Machine Operands<a class="headerlink" href="#machine-operands" title="Link to this heading">#</a></h3>
+<p>There are eighteen different kinds of machine operands, and all of them can be
+serialized.</p>
+<section id="immediate-operands">
+<h4>Immediate Operands<a class="headerlink" href="#immediate-operands" title="Link to this heading">#</a></h4>
+<p>The immediate machine operands are untyped, 64-bit signed integers. The
+example below shows an instance of the X86 <code class="docutils literal notranslate"><span class="pre">MOV32ri</span></code> instruction that has an
+immediate machine operand <code class="docutils literal notranslate"><span class="pre">-42</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$eax = MOV32ri -42
+</pre></div>
+</div>
+<p>An immediate operand is also used to represent a subregister index when the
+machine instruction has one of the following opcodes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">EXTRACT_SUBREG</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">INSERT_SUBREG</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">REG_SEQUENCE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SUBREG_TO_REG</span></code></p></li>
+</ul>
+<p>In case this is true, the Machine Operand is printed according to the target.</p>
+<p>For example:</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">AArch64RegisterInfo.td</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>def sub_32 : SubRegIndex&lt;32&gt;;
+</pre></div>
+</div>
+<p>If the second operand is an immediate with the value <code class="docutils literal notranslate"><span class="pre">15</span></code> (a target-dependent
+value), based on the instruction’s opcode and the operand’s index the operand
+will be printed as <code class="docutils literal notranslate"><span class="pre">%subreg.sub_32</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%1:gpr64 = SUBREG_TO_REG %0, %subreg.sub_32
+</pre></div>
+</div>
+<p>For integers larger than 64 bits, we use a special machine operand, <code class="docutils literal notranslate"><span class="pre">MO_CImmediate</span></code>,
+which stores the immediate in a <code class="docutils literal notranslate"><span class="pre">ConstantInt</span></code> using an <code class="docutils literal notranslate"><span class="pre">APInt</span></code> (LLVM’s
+arbitrary-precision integers).</p>
+<!-- TODO: Describe the FPIMM immediate operands. -->
+</section>
+<section id="register-operands">
+<span id="id7"></span><h4>Register Operands<a class="headerlink" href="#register-operands" title="Link to this heading">#</a></h4>
+<p>The <a class="reference internal" href="#registers"><span class="std std-ref">register</span></a> primitive is used to represent the register
+machine operands. The register operands can also have optional
+<a class="reference internal" href="#register-flags"><span class="std std-ref">register flags</span></a>,
+<a class="reference internal" href="#subregister-indices"><span class="std std-ref">a subregister index</span></a>,
+and a reference to the tied register operand.
+The full syntax of a register operand is shown below:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[&lt;flags&gt;] &lt;register&gt; [ .&lt;subregister-idx-name&gt; ] [ :&lt;register-class&gt; ] [ (tied-def &lt;tied-op&gt;) ] [ (&lt;type&gt;) ]
+</pre></div>
+</div>
+<p>This example shows an instance of the X86 <code class="docutils literal notranslate"><span class="pre">XOR32rr</span></code> instruction that has
+5 register operands with different register flags:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dead $eax = XOR32rr undef $eax, undef $eax, implicit-def dead $eflags, implicit-def $al
+</pre></div>
+</div>
+<p>Note that subregister-index, register-class and type cannot be specified for
+physical registers. Additionally, tied-def can only be specified for a use.</p>
+<section id="register-flags">
+<span id="id8"></span><h5>Register Flags<a class="headerlink" href="#register-flags" title="Link to this heading">#</a></h5>
+<p>The table below shows all of the possible register flags along with the
+corresponding internal <code class="docutils literal notranslate"><span class="pre">llvm::RegState</span></code> representation:</p>
+<!-- Keep this in sync with MachineInstrBuilder.h -->
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Internal Value</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">def</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Define</span></code></p></td>
+<td><p>Register definition.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">implicit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Implicit</span></code></p></td>
+<td><p>Not emitted register (e.g., carry, or temporary result).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">killed</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Kill</span></code></p></td>
+<td><p>The last use of a register.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dead</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Dead</span></code></p></td>
+<td><p>Unused definition.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">undef</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Undef</span></code></p></td>
+<td><p>Value of the register doesn’t matter.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">early-clobber</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::EarlyClobber</span></code></p></td>
+<td><p>Register definition happens before uses.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">debug-use</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Debug</span></code></p></td>
+<td><p>Register ‘use’ is for debugging purpose.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">internal</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::InternalRead</span></code></p></td>
+<td><p>Register reads a value that is defined inside the same instruction or bundle.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">renamable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::Renamable</span></code></p></td>
+<td><p>Register that may be renamed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">implicit-def</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegState::ImplicitDefine</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">implicit</span></code> and <code class="docutils literal notranslate"><span class="pre">def</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="subregister-indices">
+<span id="id9"></span><h5>Subregister Indices<a class="headerlink" href="#subregister-indices" title="Link to this heading">#</a></h5>
+<p>The register machine operands can reference a portion of a register by using
+the subregister indices. The example below shows an instance of the <code class="docutils literal notranslate"><span class="pre">COPY</span></code>
+pseudo instruction that uses the X86 <code class="docutils literal notranslate"><span class="pre">sub_8bit</span></code> subregister index to copy 8
+lower bits from the 32-bit virtual register 0 to the 8-bit virtual register 1:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%1 = COPY %0.sub_8bit
+</pre></div>
+</div>
+<p>The names of the subregister indices are target specific, and are typically
+defined in the target’s <code class="docutils literal notranslate"><span class="pre">*RegisterInfo.td</span></code> file.</p>
+</section>
+</section>
+<section id="constant-pool-indices">
+<h4>Constant Pool Indices<a class="headerlink" href="#constant-pool-indices" title="Link to this heading">#</a></h4>
+<p>A constant pool index (CPI) operand is printed using its index in the
+function’s <code class="docutils literal notranslate"><span class="pre">MachineConstantPool</span></code> and an offset.</p>
+<p>For example, a CPI with the index 1 and offset 8:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%1:gr64 = MOV64ri %const.1 + 8
+</pre></div>
+</div>
+<p>For a CPI with the index 0 and offset -12:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%1:gr64 = MOV64ri %const.0 - 12
+</pre></div>
+</div>
+<p>A constant pool entry is bound to an LLVM IR <code class="docutils literal notranslate"><span class="pre">Constant</span></code> or a target-specific
+<code class="docutils literal notranslate"><span class="pre">MachineConstantPoolValue</span></code>. When serializing all the function’s constants, the
+following format is used:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>constants:
+  - id:               &lt;index&gt;
+    value:            &lt;value&gt;
+    alignment:        &lt;alignment&gt;
+    isTargetSpecific: &lt;target-specific&gt;
+</pre></div>
+</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;index&gt;</span></code> is a 32-bit unsigned integer;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;value&gt;</span></code> is a <a class="reference external" href="https://www.llvm.org/docs/LangRef.html#constants">LLVM IR Constant</a>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;alignment&gt;</span></code> is a 32-bit unsigned integer specified in bytes, and must be
+power of two;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;target-specific&gt;</span></code> is either true or false.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>constants:
+  - id:               0
+    value:            &#39;double 3.250000e+00&#39;
+    alignment:        8
+  - id:               1
+    value:            &#39;g-(LPC0+8)&#39;
+    alignment:        4
+    isTargetSpecific: true
+</pre></div>
+</div>
+</section>
+<section id="global-value-operands">
+<h4>Global Value Operands<a class="headerlink" href="#global-value-operands" title="Link to this heading">#</a></h4>
+<p>The global value machine operands reference the global values from the
+<a class="reference internal" href="#embedded-module"><span class="std std-ref">embedded LLVM IR module</span></a>.
+The example below shows an instance of the X86 <code class="docutils literal notranslate"><span class="pre">MOV64rm</span></code> instruction that has
+a global value operand named <code class="docutils literal notranslate"><span class="pre">G</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$rax = MOV64rm $rip, 1, _, @G, _
+</pre></div>
+</div>
+<p>The named global values are represented using an identifier with the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> prefix.
+If the identifier doesn’t match the regular expression
+<code class="docutils literal notranslate"><span class="pre">[-a-zA-Z$._][-a-zA-Z$._0-9]*</span></code>, then this identifier must be quoted.</p>
+<p>The unnamed global values are represented using an unsigned numeric value with
+the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> prefix, as in the following examples: <code class="docutils literal notranslate"><span class="pre">&#64;0</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;989</span></code>.</p>
+</section>
+<section id="target-dependent-index-operands">
+<h4>Target-dependent Index Operands<a class="headerlink" href="#target-dependent-index-operands" title="Link to this heading">#</a></h4>
+<p>A target index operand is a target-specific index and an offset. The
+target-specific index is printed using target-specific names and a positive or
+negative offset.</p>
+<p>For example, the <code class="docutils literal notranslate"><span class="pre">amdgpu-constdata-start</span></code> is associated with the index <code class="docutils literal notranslate"><span class="pre">0</span></code>
+in the AMDGPU backend. So if we have a target index operand with the index 0
+and the offset 8:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$sgpr2 = S_ADD_U32 _, target-index(amdgpu-constdata-start) + 8, implicit-def _, implicit-def _
+</pre></div>
+</div>
+</section>
+<section id="jump-table-index-operands">
+<h4>Jump-table Index Operands<a class="headerlink" href="#jump-table-index-operands" title="Link to this heading">#</a></h4>
+<p>A jump-table index operand with the index 0 is printed as follows:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tBR_JTr killed $r0, %jump-table.0
+</pre></div>
+</div>
+<p>A machine jump-table entry contains a list of <code class="docutils literal notranslate"><span class="pre">MachineBasicBlocks</span></code>. When serializing all the function’s jump-table entries, the following format is used:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>jumpTable:
+  kind:             &lt;kind&gt;
+  entries:
+    - id:             &lt;index&gt;
+      blocks:         [ &lt;bbreference&gt;, &lt;bbreference&gt;, ... ]
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;kind&gt;</span></code> describes how the jump table is represented and emitted (plain address, relocations, PIC, etc.), and each <code class="docutils literal notranslate"><span class="pre">&lt;index&gt;</span></code> is a 32-bit unsigned integer and <code class="docutils literal notranslate"><span class="pre">blocks</span></code> contains a list of <a class="reference internal" href="#block-references"><span class="std std-ref">machine basic block references</span></a>.</p>
+<p>Example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>jumpTable:
+  kind:             inline
+  entries:
+    - id:             0
+      blocks:         [ &#39;%bb.3&#39;, &#39;%bb.9&#39;, &#39;%bb.4.d3&#39; ]
+    - id:             1
+      blocks:         [ &#39;%bb.7&#39;, &#39;%bb.7&#39;, &#39;%bb.4.d3&#39;, &#39;%bb.5&#39; ]
+</pre></div>
+</div>
+</section>
+<section id="external-symbol-operands">
+<h4>External Symbol Operands<a class="headerlink" href="#external-symbol-operands" title="Link to this heading">#</a></h4>
+<p>An external symbol operand is represented using an identifier with the <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>
+prefix. The identifier is surrounded with ““‘s and escaped if it has any
+special non-printable characters in it.</p>
+<p>Example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CALL64pcrel32 &amp;__stack_chk_fail, csr_64, implicit $rsp, implicit-def $rsp
+</pre></div>
+</div>
+</section>
+<section id="mcsymbol-operands">
+<h4>MCSymbol Operands<a class="headerlink" href="#mcsymbol-operands" title="Link to this heading">#</a></h4>
+<p>An <code class="docutils literal notranslate"><span class="pre">MCSymbol</span></code> operand holds a pointer to an <code class="docutils literal notranslate"><span class="pre">MCSymbol</span></code>. For the limitations
+of this operand in MIR, see <a class="reference internal" href="#limitations"><span class="std std-ref">limitations</span></a>.</p>
+<p>The syntax is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>EH_LABEL &lt;mcsymbol Ltmp1&gt;
+</pre></div>
+</div>
+</section>
+<section id="debug-instruction-reference-operands">
+<h4>Debug Instruction Reference Operands<a class="headerlink" href="#debug-instruction-reference-operands" title="Link to this heading">#</a></h4>
+<p>A debug instruction reference operand is a pair of indices, referring to an
+instruction and an operand within that instruction, respectively; see
+<a class="reference internal" href="#instruction-referencing-locations"><span class="std std-ref">Instruction referencing locations</span></a>.</p>
+<p>The example below uses a reference to Instruction 1, Operand 0:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DBG_INSTR_REF !123, !DIExpression(DW_OP_LLVM_arg, 0), dbg-instr-ref(1, 0), debug-location !456
+</pre></div>
+</div>
+</section>
+<section id="cfiindex-operands">
+<h4>CFIIndex Operands<a class="headerlink" href="#cfiindex-operands" title="Link to this heading">#</a></h4>
+<p>A CFI Index operand holds an index into a per-function side-table,
+<code class="docutils literal notranslate"><span class="pre">MachineFunction::getFrameInstructions()</span></code>, which references all the frame
+instructions in a <code class="docutils literal notranslate"><span class="pre">MachineFunction</span></code>. A <code class="docutils literal notranslate"><span class="pre">CFI_INSTRUCTION</span></code> may look like it
+contains multiple operands, but the only operand it contains is the CFI Index.
+The other operands are tracked by the <code class="docutils literal notranslate"><span class="pre">MCCFIInstruction</span></code> object.</p>
+<p>The syntax is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CFI_INSTRUCTION offset $w30, -16
+</pre></div>
+</div>
+<p>which may be emitted later in the MC layer as:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>.cfi_offset w30, -16
+</pre></div>
+</div>
+</section>
+<section id="intrinsicid-operands">
+<h4>IntrinsicID Operands<a class="headerlink" href="#intrinsicid-operands" title="Link to this heading">#</a></h4>
+<p>An Intrinsic ID operand contains a generic intrinsic ID or a target-specific ID.</p>
+<p>The syntax for the <code class="docutils literal notranslate"><span class="pre">returnaddress</span></code> intrinsic is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$x0 = COPY intrinsic(@llvm.returnaddress)
+</pre></div>
+</div>
+</section>
+<section id="predicate-operands">
+<h4>Predicate Operands<a class="headerlink" href="#predicate-operands" title="Link to this heading">#</a></h4>
+<p>A Predicate operand contains an IR predicate from <code class="docutils literal notranslate"><span class="pre">CmpInst::Predicate</span></code>, like
+<code class="docutils literal notranslate"><span class="pre">ICMP_EQ</span></code>, etc.</p>
+<p>For an int eq predicate <code class="docutils literal notranslate"><span class="pre">ICMP_EQ</span></code>, the syntax is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%2:gpr(s32) = G_ICMP intpred(eq), %0, %1
+</pre></div>
+</div>
+</section>
+<section id="lanemask-operands">
+<h4>LaneMask Operands<a class="headerlink" href="#lanemask-operands" title="Link to this heading">#</a></h4>
+<p>A LaneMask operand contains a LaneBitmask struct representing the covering of a
+register with sub-registers. Instructions typically associate a LaneMask operand
+with one or more Register operands, and use it to represent sub-register
+granularity information like liveness for those associated Register operands.</p>
+<p>For example, the COPY_LANEMASK instruction uses this operand to copy only active
+lanes (of the source register) in the mask. The syntax for it would look like:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$vgpr1 = COPY_LANEMASK $vgpr0, lanemask(0x00000000000000C0)
+</pre></div>
+</div>
+<!-- TODO: Describe the parsers default behaviour when optional YAML attributes
+   are missing.
+TODO: Describe the syntax for virtual register YAML definitions.
+TODO: Describe the machine function's YAML flag attributes.
+TODO: Describe the syntax for the register mask machine operands.
+TODO: Describe the frame information YAML mapping.
+TODO: Describe the syntax of the stack object machine operands and their
+   YAML definitions.
+TODO: Describe the syntax of the block address machine operands.
+TODO: Describe the syntax of the metadata machine operands, and the
+   instructions debug location attribute.
+TODO: Describe the syntax of the register live out machine operands.
+TODO: Describe the syntax of the machine memory operands. -->
+</section>
+<section id="comments">
+<h4>Comments<a class="headerlink" href="#comments" title="Link to this heading">#</a></h4>
+<p>Machine operands can have C/C++ style comments, which are annotations enclosed
+between <code class="docutils literal notranslate"><span class="pre">/*</span></code> and <code class="docutils literal notranslate"><span class="pre">*/</span></code> to improve readability of e.g., immediate operands.
+In the example below, ARM instructions EOR and BCC and immediate operands
+<code class="docutils literal notranslate"><span class="pre">14</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code> have been annotated with their condition codes (CC)
+definitions, i.e. the <code class="docutils literal notranslate"><span class="pre">always</span></code> and <code class="docutils literal notranslate"><span class="pre">eq</span></code> condition codes:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dead renamable $r2, $cpsr = tEOR killed renamable $r2, renamable $r1, 14 /* CC::always */, $noreg
+t2Bcc %bb.4, 0 /* CC:eq */, killed $cpsr
+</pre></div>
+</div>
+<p>As these annotations are comments, they are ignored by the MI parser.
+Comments can be added or customized by overriding InstrInfo’s hook
+<code class="docutils literal notranslate"><span class="pre">createMIROperandComment()</span></code>.</p>
+</section>
+</section>
+<section id="debug-info-constructs">
+<h3>Debug-Info constructs<a class="headerlink" href="#debug-info-constructs" title="Link to this heading">#</a></h3>
+<p>Most of the debugging information in a MIR file is found in the metadata
+of the embedded module. Within a machine function, that metadata is referred to
+by various constructs to describe source locations and variable locations.</p>
+<section id="source-locations">
+<h4>Source locations<a class="headerlink" href="#source-locations" title="Link to this heading">#</a></h4>
+<p>Every MIR instruction may optionally have a trailing reference to a
+<code class="docutils literal notranslate"><span class="pre">DILocation</span></code> metadata node, after all operands and symbols, but before
+memory operands:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$rbp = MOV64rr $rdi, debug-location !12
+</pre></div>
+</div>
+<p>The source location attachment is synonymous with the <code class="docutils literal notranslate"><span class="pre">!dbg</span></code> metadata
+attachment in LLVM-IR. The absence of a source location attachment will be
+represented by an empty <code class="docutils literal notranslate"><span class="pre">DebugLoc</span></code> object in the machine instruction.</p>
+</section>
+<section id="fixed-variable-locations">
+<h4>Fixed variable locations<a class="headerlink" href="#fixed-variable-locations" title="Link to this heading">#</a></h4>
+<p>There are several ways of specifying variable locations. The simplest is
+describing a variable that is permanently located on the stack. In the stack
+or fixedStack attribute of the machine function, the variable, scope, and
+any qualifying location modifier are provided:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>- { id: 0, name: offset.addr, offset: -24, size: 8, alignment: 8, stack-id: default,
+ 4  debug-info-variable: &#39;!1&#39;, debug-info-expression: &#39;!DIExpression()&#39;,
+    debug-info-location: &#39;!2&#39; }
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">debug-info-variable</span></code> identifies a DILocalVariable metadata node,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debug-info-expression</span></code> adds qualifiers to the variable location,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debug-info-location</span></code> identifies a DILocation metadata node.</p></li>
+</ul>
+<p>These metadata attributes correspond to the operands of a <code class="docutils literal notranslate"><span class="pre">#dbg_declare</span></code>
+IR debug record, see the <a class="reference internal" href="SourceLevelDebugging.html#debug-records"><span class="std std-ref">source level debugging</span></a> documentation.</p>
+</section>
+<section id="varying-variable-locations">
+<h4>Varying variable locations<a class="headerlink" href="#varying-variable-locations" title="Link to this heading">#</a></h4>
+<p>Variables that are not always on the stack or change location are specified
+with the <code class="docutils literal notranslate"><span class="pre">DBG_VALUE</span></code>  meta machine instruction. It is synonymous with the
+<code class="docutils literal notranslate"><span class="pre">#dbg_value</span></code> IR record, and is written:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DBG_VALUE $rax, $noreg, !123, !DIExpression(), debug-location !456
+</pre></div>
+</div>
+<p>The operands to which respectively:</p>
+<ol class="arabic simple">
+<li><p>Identifies a machine location such as a register, immediate, or frame index,</p></li>
+<li><p>Is either $noreg, or immediate value zero if an extra level of indirection is to be added to the first operand,</p></li>
+<li><p>Identifies a <code class="docutils literal notranslate"><span class="pre">DILocalVariable</span></code> metadata node,</p></li>
+<li><p>Specifies an expression qualifying the variable location, either inline or as a metadata node reference,</p></li>
+</ol>
+<p>While the source location identifies the <code class="docutils literal notranslate"><span class="pre">DILocation</span></code> for the scope of the
+variable. The second operand (<code class="docutils literal notranslate"><span class="pre">IsIndirect</span></code>) is deprecated and to be deleted.
+All additional qualifiers for the variable location should be made through the
+expression metadata.</p>
+</section>
+<section id="instruction-referencing-locations">
+<span id="id10"></span><h4>Instruction referencing locations<a class="headerlink" href="#instruction-referencing-locations" title="Link to this heading">#</a></h4>
+<p>This experimental feature aims to separate the specification of variable
+<em>values</em> from the program point where a variable takes on that value. Changes
+in a variable value occur in the same manner as <code class="docutils literal notranslate"><span class="pre">DBG_VALUE</span></code> meta instructions
+but using <code class="docutils literal notranslate"><span class="pre">DBG_INSTR_REF</span></code>. Variable values are identified by a pair of
+instruction number and operand number. Consider the example below:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$rbp = MOV64ri 0, debug-instr-number 1, debug-location !12
+DBG_INSTR_REF !123, !DIExpression(DW_OP_LLVM_arg, 0), dbg-instr-ref(1, 0), debug-location !456
+</pre></div>
+</div>
+<p>Instruction numbers are directly attached to machine instructions with an
+optional <code class="docutils literal notranslate"><span class="pre">debug-instr-number</span></code> attachment, before the optional
+<code class="docutils literal notranslate"><span class="pre">debug-location</span></code> attachment. The value defined in <code class="docutils literal notranslate"><span class="pre">$rbp</span></code> in the code
+above would be identified by the pair <code class="docutils literal notranslate"><span class="pre">&lt;1,</span> <span class="pre">0&gt;</span></code>.</p>
+<p>The 3rd operand of the <code class="docutils literal notranslate"><span class="pre">DBG_INSTR_REF</span></code> above records the instruction
+and operand number <code class="docutils literal notranslate"><span class="pre">&lt;1,</span> <span class="pre">0&gt;</span></code>, identifying the value defined by the <code class="docutils literal notranslate"><span class="pre">MOV64ri</span></code>.
+The first two operands to <code class="docutils literal notranslate"><span class="pre">DBG_INSTR_REF</span></code> are identical to <code class="docutils literal notranslate"><span class="pre">DBG_VALUE_LIST</span></code>,
+and the <code class="docutils literal notranslate"><span class="pre">DBG_INSTR_REF</span></code> s position records where the variable takes on the
+designated value in the same way.</p>
+<p>More information about how these constructs are used is available in
+<a class="reference internal" href="InstrRefDebugInfo.html"><span class="doc">Instruction referencing for debug info</span></a>. The related documents <a class="reference internal" href="SourceLevelDebugging.html"><span class="doc">Source Level Debugging with LLVM</span></a> and
+<a class="reference internal" href="HowToUpdateDebugInfo.html"><span class="doc">How to Update Debug Info: A Guide for LLVM Pass Authors</span></a> may be useful as well.</p>
+</section>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="GlobalISel/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Global Instruction Selection</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="BitCodeFormat.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">LLVM Bitcode File Format</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Machine IR (MIR) Format Reference Manual</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#mir-testing-guide">MIR Testing Guide</a><ul>
+<li><a class="reference internal" href="#testing-individual-code-generation-passes">Testing Individual Code Generation Passes</a><ul>
+<li><a class="reference internal" href="#simplifying-mir-files">Simplifying MIR files</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#limitations">Limitations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#high-level-structure">High Level Structure</a><ul>
+<li><a class="reference internal" href="#embedded-module">Embedded Module</a></li>
+<li><a class="reference internal" href="#machine-functions">Machine Functions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#machine-instructions-format-reference">Machine Instructions Format Reference</a><ul>
+<li><a class="reference internal" href="#machine-basic-blocks">Machine Basic Blocks</a><ul>
+<li><a class="reference internal" href="#block-references">Block References</a></li>
+<li><a class="reference internal" href="#successors">Successors</a></li>
+<li><a class="reference internal" href="#live-in-registers">Live In Registers</a></li>
+<li><a class="reference internal" href="#miscellaneous-attributes">Miscellaneous Attributes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#machine-instructions">Machine Instructions</a><ul>
+<li><a class="reference internal" href="#instruction-flags">Instruction Flags</a></li>
+<li><a class="reference internal" href="#bundled-instructions">Bundled Instructions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mir-registers">Registers</a></li>
+<li><a class="reference internal" href="#machine-operands">Machine Operands</a><ul>
+<li><a class="reference internal" href="#immediate-operands">Immediate Operands</a></li>
+<li><a class="reference internal" href="#register-operands">Register Operands</a><ul>
+<li><a class="reference internal" href="#register-flags">Register Flags</a></li>
+<li><a class="reference internal" href="#subregister-indices">Subregister Indices</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#constant-pool-indices">Constant Pool Indices</a></li>
+<li><a class="reference internal" href="#global-value-operands">Global Value Operands</a></li>
+<li><a class="reference internal" href="#target-dependent-index-operands">Target-dependent Index Operands</a></li>
+<li><a class="reference internal" href="#jump-table-index-operands">Jump-table Index Operands</a></li>
+<li><a class="reference internal" href="#external-symbol-operands">External Symbol Operands</a></li>
+<li><a class="reference internal" href="#mcsymbol-operands">MCSymbol Operands</a></li>
+<li><a class="reference internal" href="#debug-instruction-reference-operands">Debug Instruction Reference Operands</a></li>
+<li><a class="reference internal" href="#cfiindex-operands">CFIIndex Operands</a></li>
+<li><a class="reference internal" href="#intrinsicid-operands">IntrinsicID Operands</a></li>
+<li><a class="reference internal" href="#predicate-operands">Predicate Operands</a></li>
+<li><a class="reference internal" href="#lanemask-operands">LaneMask Operands</a></li>
+<li><a class="reference internal" href="#comments">Comments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#debug-info-constructs">Debug-Info constructs</a><ul>
+<li><a class="reference internal" href="#source-locations">Source locations</a></li>
+<li><a class="reference internal" href="#fixed-variable-locations">Fixed variable locations</a></li>
+<li><a class="reference internal" href="#varying-variable-locations">Varying variable locations</a></li>
+<li><a class="reference internal" href="#instruction-referencing-locations">Instruction referencing locations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=ccd1e645"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

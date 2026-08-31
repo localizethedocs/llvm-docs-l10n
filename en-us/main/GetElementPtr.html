@@ -1,0 +1,1095 @@
+<!doctype html>
+<html class="no-js" lang="en-US" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Scudo Hardened Allocator" href="ScudoHardenedAllocator.html" /><link rel="prev" title="LLVM Branch Weight Metadata" href="BranchWeightMetadata.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/GetElementPtr.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>The Often Misunderstood GEP Instruction - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="Reference.html">Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/GetElementPtr.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="the-often-misunderstood-gep-instruction">
+<h1>The Often Misunderstood GEP Instruction<a class="headerlink" href="#the-often-misunderstood-gep-instruction" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>This document seeks to dispel the mystery and confusion surrounding LLVM’s
+<a class="reference external" href="LangRef.html#getelementptr-instruction">GetElementPtr</a> (GEP) instruction.
+Questions about the wily GEP instruction are probably the most frequent
+questions once a developer gets down to coding with LLVM. Here we lay
+out the sources of confusion and show that the GEP instruction is really quite
+simple.</p>
+</section>
+<section id="address-computation">
+<h2>Address Computation<a class="headerlink" href="#address-computation" title="Link to this heading">#</a></h2>
+<p>When people are first confronted with the GEP instruction, they tend to relate
+it to known concepts from other programming paradigms, most notably C array
+indexing and field selection. GEP closely resembles C array indexing and field
+selection, however it is a little different and this leads to the following
+questions.</p>
+<section id="what-is-the-first-index-of-the-gep-instruction">
+<h3>What is the first index of the GEP instruction?<a class="headerlink" href="#what-is-the-first-index-of-the-gep-instruction" title="Link to this heading">#</a></h3>
+<p>Quick answer: The index stepping through the second operand.</p>
+<p>The confusion with the first index usually arises from thinking about the
+GetElementPtr instruction as if it were a C index operator. They aren’t the
+same. For example, when we write, in C:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">AType</span><span class="w"> </span><span class="o">*</span><span class="n">Foo</span><span class="p">;</span>
+<span class="p">...</span>
+<span class="n">X</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Foo</span><span class="o">-&gt;</span><span class="n">F</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>it is natural to think that there is only one index, the selection of the field
+<code class="docutils literal notranslate"><span class="pre">F</span></code>.  However, in this example, <code class="docutils literal notranslate"><span class="pre">Foo</span></code> is a pointer. That pointer
+must be indexed explicitly in LLVM. C, on the other hand, indexes through it
+transparently.  To arrive at the same address location as the C code, you would
+provide the GEP instruction with two index operands. The first operand indexes
+through the pointer; the second operand indexes the field <code class="docutils literal notranslate"><span class="pre">F</span></code> of the
+structure, just as if you wrote:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Foo</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">F</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Sometimes this question gets rephrased as:</p>
+<blockquote id="gep-index-through-first-pointer">
+<div><p><em>Why is it okay to index through the first pointer, but subsequent pointers
+won’t be dereferenced?</em></p>
+</div></blockquote>
+<p>The answer is simply because memory does not have to be accessed to perform the
+computation. The second operand to the GEP instruction must be a value of a
+pointer type. The value of the pointer is provided directly to the GEP
+instruction as an operand without any need for accessing memory. It must,
+therefore, be indexed and requires an index operand. Consider this example:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">munger_struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">f1</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">f2</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">munge</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">munger_struct</span><span class="w"> </span><span class="o">*</span><span class="n">P</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">P</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">f1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">P</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">f1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">P</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">f2</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="p">...</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">munger_struct</span><span class="w"> </span><span class="n">Array</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+<span class="p">...</span>
+<span class="n">munge</span><span class="p">(</span><span class="n">Array</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In this “C” example, the front end compiler (Clang) will generate three GEP
+instructions for the three indices through “P” in the assignment statement.  The
+function argument <code class="docutils literal notranslate"><span class="pre">P</span></code> will be the second operand of each of these GEP
+instructions.  The third operand indexes through that pointer.  The fourth
+operand will be the field offset into the <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">munger_struct</span></code> type, for
+either the <code class="docutils literal notranslate"><span class="pre">f1</span></code> or <code class="docutils literal notranslate"><span class="pre">f2</span></code> field. So, in LLVM assembly the <code class="docutils literal notranslate"><span class="pre">munge</span></code> function
+looks like:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@munge</span><span class="p">(</span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%P</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="nl">entry:</span>
+<span class="w">  </span><span class="nv">%tmp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">getelementptr</span><span class="w"> </span><span class="nv">%struct.munger_struct</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%P</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span>
+<span class="w">  </span><span class="nv">%tmp1</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">load</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%tmp</span>
+<span class="w">  </span><span class="nv">%tmp2</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">getelementptr</span><span class="w"> </span><span class="nv">%struct.munger_struct</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%P</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">1</span>
+<span class="w">  </span><span class="nv">%tmp3</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">load</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%tmp2</span>
+<span class="w">  </span><span class="nv">%tmp4</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv">%tmp3</span><span class="p">,</span><span class="w"> </span><span class="nv">%tmp1</span>
+<span class="w">  </span><span class="nv">%tmp5</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">getelementptr</span><span class="w"> </span><span class="nv">%struct.munger_struct</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%P</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span>
+<span class="w">  </span><span class="k">store</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="nv">%tmp4</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%tmp5</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="k">void</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In each case the second operand is the pointer through which the GEP instruction
+starts. The same is true whether the second operand is an argument, allocated
+memory, or a global variable.</p>
+<p>To make this clear, let’s consider a more obtuse example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>@MyVar = external global i32
+...
+%idx1 = getelementptr i32, ptr @MyVar, i64 0
+%idx2 = getelementptr i32, ptr @MyVar, i64 1
+%idx3 = getelementptr i32, ptr @MyVar, i64 2
+</pre></div>
+</div>
+<p>These GEP instructions are simply making address computations from the base
+address of <code class="docutils literal notranslate"><span class="pre">MyVar</span></code>.  They compute, as follows (using C syntax):</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">idx1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MyVar</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">0</span>
+<span class="n">idx2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MyVar</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">4</span>
+<span class="n">idx3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MyVar</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">8</span>
+</pre></div>
+</div>
+<p>Since the type <code class="docutils literal notranslate"><span class="pre">i32</span></code> is known to be four bytes long, the indices 0, 1 and 2
+translate into memory offsets of 0, 4, and 8, respectively. No memory is
+accessed to make these computations because the address of <code class="docutils literal notranslate"><span class="pre">&#64;MyVar</span></code> is passed
+directly to the GEP instructions.</p>
+<p>The obtuse part of this example is in the cases of <code class="docutils literal notranslate"><span class="pre">%idx2</span></code> and <code class="docutils literal notranslate"><span class="pre">%idx3</span></code>. They
+result in the computation of addresses that point to memory past the end of the
+<code class="docutils literal notranslate"><span class="pre">&#64;MyVar</span></code> global, which is only one <code class="docutils literal notranslate"><span class="pre">i32</span></code> long, not three <code class="docutils literal notranslate"><span class="pre">i32</span></code>s long.
+While this is legal in LLVM, it is inadvisable because any load or store with
+the pointer that results from these GEP instructions would trigger undefined
+behavior (UB).</p>
+</section>
+<section id="why-is-the-extra-0-index-required">
+<h3>Why is the extra 0 index required?<a class="headerlink" href="#why-is-the-extra-0-index-required" title="Link to this heading">#</a></h3>
+<p>Quick answer: there are no superfluous indices.</p>
+<p>This question arises most often when the GEP instruction is applied to a global
+variable which is always a pointer type. For example, consider this:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%MyStruct = external global { ptr, i32 }
+...
+%idx = getelementptr { ptr, i32 }, ptr %MyStruct, i64 0, i32 1
+</pre></div>
+</div>
+<p>The GEP above yields a <code class="docutils literal notranslate"><span class="pre">ptr</span></code> by indexing the <code class="docutils literal notranslate"><span class="pre">i32</span></code> typed field of the
+structure <code class="docutils literal notranslate"><span class="pre">%MyStruct</span></code>. When people first look at it, they wonder why the <code class="docutils literal notranslate"><span class="pre">i64</span>
+<span class="pre">0</span></code> index is needed. However, a closer inspection of how globals and GEPs work
+reveals the need. Becoming aware of the following facts will dispel the
+confusion:</p>
+<ol class="arabic simple">
+<li><p>The type of <code class="docutils literal notranslate"><span class="pre">%MyStruct</span></code> is <em>not</em> <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">ptr,</span> <span class="pre">i32</span> <span class="pre">}</span></code> but rather <code class="docutils literal notranslate"><span class="pre">ptr</span></code>.
+That is, <code class="docutils literal notranslate"><span class="pre">%MyStruct</span></code> is a pointer (to a structure), not a structure itself.</p></li>
+<li><p>Point #1 is evidenced by noticing the type of the second operand of the GEP
+instruction (<code class="docutils literal notranslate"><span class="pre">%MyStruct</span></code>) which is <code class="docutils literal notranslate"><span class="pre">ptr</span></code>.</p></li>
+<li><p>The first index, <code class="docutils literal notranslate"><span class="pre">i64</span> <span class="pre">0</span></code> is required to step over the global variable
+<code class="docutils literal notranslate"><span class="pre">%MyStruct</span></code>.  Since the second argument to the GEP instruction must always
+be a value of pointer type, the first index steps through that pointer. A
+value of 0 means 0 elements offset from that pointer.</p></li>
+<li><p>The second index, <code class="docutils literal notranslate"><span class="pre">i32</span> <span class="pre">1</span></code> selects the second field of the structure (the
+<code class="docutils literal notranslate"><span class="pre">i32</span></code>).</p></li>
+</ol>
+</section>
+<section id="what-is-dereferenced-by-gep">
+<h3>What is dereferenced by GEP?<a class="headerlink" href="#what-is-dereferenced-by-gep" title="Link to this heading">#</a></h3>
+<p>Quick answer: nothing.</p>
+<p>The GetElementPtr instruction dereferences nothing. That is, it doesn’t access
+memory in any way. That’s what the Load and Store instructions are for.  GEP is
+only involved in the computation of addresses. For example, consider this:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>@MyVar = external global { i32, ptr }
+...
+%idx = getelementptr { i32, ptr }, ptr @MyVar, i64 0, i32 1
+%arr = load ptr, ptr %idx
+%idx = getelementptr [40 x i32], ptr %arr, i64 0, i64 17
+</pre></div>
+</div>
+<p>In this example, we have a global variable, <code class="docutils literal notranslate"><span class="pre">&#64;MyVar</span></code>, which is a pointer to
+a structure containing a pointer. Let’s assume that this inner pointer points
+to an array of type <code class="docutils literal notranslate"><span class="pre">[40</span> <span class="pre">x</span> <span class="pre">i32]</span></code>. The above IR will first compute the address
+of the inner pointer, then load the pointer, and then compute the address of
+the 18th array element.</p>
+<p>This cannot be expressed in a single GEP instruction, because it requires
+a memory dereference in between. However, the following example would work
+fine:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>@MyVar = external global { i32, [40 x i32 ] }
+...
+%idx = getelementptr { i32, [40 x i32] }, ptr @MyVar, i64 0, i32 1, i64 17
+</pre></div>
+</div>
+<p>In this case, the structure does not contain a pointer and the GEP instruction
+can index through the global variable, into the second field of the structure
+and access the 18th <code class="docutils literal notranslate"><span class="pre">i32</span></code> in the array there.</p>
+</section>
+<section id="why-don-t-gep-x-0-0-1-and-gep-x-1-alias">
+<h3>Why don’t GEP x,0,0,1 and GEP x,1 alias?<a class="headerlink" href="#why-don-t-gep-x-0-0-1-and-gep-x-1-alias" title="Link to this heading">#</a></h3>
+<p>Quick Answer: They compute different address locations.</p>
+<p>If you look at the first indices in these GEP instructions you find that they
+are different (0 and 1), therefore the address computation diverges with that
+index. Consider this example:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="vg">@MyVar</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">external</span><span class="w"> </span><span class="k">global</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="m">10</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i32</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<span class="nv">%idx1</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">getelementptr</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="m">10</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i32</span><span class="p">]</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="vg">@MyVar</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="m">1</span>
+<span class="nv">%idx2</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">getelementptr</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="m">10</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i32</span><span class="p">]</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="vg">@MyVar</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<p>In this example, <code class="docutils literal notranslate"><span class="pre">idx1</span></code> computes the address of the second integer in the
+array that is in the structure in <code class="docutils literal notranslate"><span class="pre">&#64;MyVar</span></code>, that is <code class="docutils literal notranslate"><span class="pre">MyVar+4</span></code>.  However,
+<code class="docutils literal notranslate"><span class="pre">idx2</span></code> computes the address of <em>the next</em> structure after <code class="docutils literal notranslate"><span class="pre">&#64;MyVar</span></code>, that is
+<code class="docutils literal notranslate"><span class="pre">MyVar+40</span></code>, because it indexes past the ten 4-byte integers in <code class="docutils literal notranslate"><span class="pre">MyVar</span></code>.
+Obviously, in such a situation, the pointers don’t alias.</p>
+</section>
+<section id="why-do-gep-x-1-0-0-and-gep-x-1-alias">
+<h3>Why do GEP x,1,0,0 and GEP x,1 alias?<a class="headerlink" href="#why-do-gep-x-1-0-0-and-gep-x-1-alias" title="Link to this heading">#</a></h3>
+<p>Quick Answer: They compute the same address location.</p>
+<p>These two GEP instructions will compute the same address because indexing
+through the 0th element does not change the address. Consider this example:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="vg">@MyVar</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">global</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="m">10</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i32</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<span class="nv">%idx1</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">getelementptr</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="m">10</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i32</span><span class="p">]</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="vg">@MyVar</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="m">0</span>
+<span class="nv">%idx2</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">getelementptr</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="m">10</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i32</span><span class="p">]</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="vg">@MyVar</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<p>In this example, the value of <code class="docutils literal notranslate"><span class="pre">%idx1</span></code> is <code class="docutils literal notranslate"><span class="pre">MyVar+40</span></code>, and the value of
+<code class="docutils literal notranslate"><span class="pre">%idx2</span></code> is also <code class="docutils literal notranslate"><span class="pre">MyVar+40</span></code>.</p>
+</section>
+<section id="can-gep-index-into-vector-elements">
+<h3>Can GEP index into vector elements?<a class="headerlink" href="#can-gep-index-into-vector-elements" title="Link to this heading">#</a></h3>
+<p>This hasn’t always been forcefully disallowed, though it’s not recommended.  It
+leads to awkward special cases in the optimizers, and fundamental inconsistency
+in the IR. In the future, it will probably be outright disallowed.</p>
+</section>
+<section id="what-effect-do-address-spaces-have-on-geps">
+<h3>What effect do address spaces have on GEPs?<a class="headerlink" href="#what-effect-do-address-spaces-have-on-geps" title="Link to this heading">#</a></h3>
+<p>None, except that the address space qualifier on the second operand pointer type
+always matches the address space qualifier on the result type.</p>
+</section>
+<section id="how-is-gep-different-from-ptrtoint-arithmetic-and-inttoptr">
+<h3>How is GEP different from <code class="docutils literal notranslate"><span class="pre">ptrtoint</span></code>, arithmetic, and <code class="docutils literal notranslate"><span class="pre">inttoptr</span></code>?<a class="headerlink" href="#how-is-gep-different-from-ptrtoint-arithmetic-and-inttoptr" title="Link to this heading">#</a></h3>
+<p>It’s very similar; there are only subtle differences.</p>
+<p>With ptrtoint, you have to pick an integer type. One approach is to pick i64;
+this is safe on everything LLVM supports (LLVM internally assumes pointers are
+never wider than 64 bits in many places), and the optimizer will actually narrow
+the i64 arithmetic down to the actual pointer size on targets which don’t
+support 64-bit arithmetic in most cases. However, there are some cases where it
+doesn’t do this. With GEP you can avoid this problem.</p>
+<p>Also, GEP carries additional pointer aliasing rules. It’s invalid to take a GEP
+from one object, address into a different separately allocated object, and
+dereference it. IR producers (front-ends) must follow this rule, and consumers
+(optimizers, specifically alias analysis) benefit from being able to rely on
+it. See the <a class="reference internal" href="#rules">Rules</a> section for more information.</p>
+<p>And, GEP is more concise in common cases.</p>
+<p>However, for the underlying integer computation implied, there is no
+difference.</p>
+</section>
+<section id="i-m-writing-a-backend-for-a-target-which-needs-custom-lowering-for-gep-how-do-i-do-this">
+<h3>I’m writing a backend for a target which needs custom lowering for GEP. How do I do this?<a class="headerlink" href="#i-m-writing-a-backend-for-a-target-which-needs-custom-lowering-for-gep-how-do-i-do-this" title="Link to this heading">#</a></h3>
+<p>You don’t. The integer computation implied by a GEP is target-independent.
+Typically what you’ll need to do is make your backend pattern-match expression
+trees involving ADD, MUL, etc., which are what GEP is lowered into. This has the
+advantage of letting your code work correctly in more cases.</p>
+<p>GEP does use target-dependent parameters for the size and layout of data types,
+which targets can customize.</p>
+<p>If you require support for addressing units which are not 8 bits, you’ll need to
+fix a lot of code in the backend, with GEP lowering being only a small piece of
+the overall picture.</p>
+</section>
+<section id="how-does-vla-addressing-work-with-geps">
+<h3>How does VLA addressing work with GEPs?<a class="headerlink" href="#how-does-vla-addressing-work-with-geps" title="Link to this heading">#</a></h3>
+<p>GEPs don’t natively support VLAs. LLVM’s type system is entirely static, and GEP
+address computations are guided by an LLVM type.</p>
+<p>VLA indices can be implemented as linearized indices. For example, an expression
+like <code class="docutils literal notranslate"><span class="pre">X[a][b][c]</span></code>, must be effectively lowered into a form like
+<code class="docutils literal notranslate"><span class="pre">X[a*m+b*n+c]</span></code>, so that it appears to the GEP as a single-dimensional array
+reference.</p>
+<p>This means if you want to write an analysis which understands array indices and
+you want to support VLAs, your code will have to be prepared to reverse-engineer
+the linearization. One way to solve this problem is to use the ScalarEvolution
+library, which always presents VLA and non-VLA indexing in the same manner.</p>
+</section>
+</section>
+<section id="rules">
+<span id="id1"></span><h2>Rules<a class="headerlink" href="#rules" title="Link to this heading">#</a></h2>
+<section id="what-happens-if-an-array-index-is-out-of-bounds">
+<h3>What happens if an array index is out of bounds?<a class="headerlink" href="#what-happens-if-an-array-index-is-out-of-bounds" title="Link to this heading">#</a></h3>
+<p>There are two senses in which an array index can be out of bounds.</p>
+<p>First, there’s the array type which comes from the (static) type of the first
+operand to the GEP. Indices greater than the number of elements in the
+corresponding static array type are valid. There is no problem with out of
+bounds indices in this sense. Indexing into an array only depends on the size of
+the array element, not the number of elements.</p>
+<p>A common example of how this is used is arrays where the size is not known.
+It’s common to use array types with zero length to represent these. The fact
+that the static type says there are zero elements is irrelevant; it’s perfectly
+valid to compute arbitrary element indices, as the computation only depends on
+the size of the array element, not the number of elements. Note that zero-sized
+arrays are not a special case here.</p>
+<p>This sense is unconnected with <code class="docutils literal notranslate"><span class="pre">inbounds</span></code> keyword. The <code class="docutils literal notranslate"><span class="pre">inbounds</span></code> keyword is
+designed to describe low-level pointer arithmetic overflow conditions, rather
+than high-level array indexing rules.</p>
+<p>Analysis passes which wish to understand array indexing should not assume that
+the static array type bounds are respected.</p>
+<p>The second sense of being out of bounds is computing an address that’s beyond
+the actual underlying allocated object.</p>
+<p>With the <code class="docutils literal notranslate"><span class="pre">inbounds</span></code> keyword, the result value of the GEP is <code class="docutils literal notranslate"><span class="pre">poison</span></code> if the
+address is outside the actual underlying allocated object and not the address
+one-past-the-end.</p>
+<p>Without the <code class="docutils literal notranslate"><span class="pre">inbounds</span></code> keyword, there are no restrictions on computing
+out-of-bounds addresses. Obviously, performing a load or a store requires an
+address of allocated and sufficiently aligned memory. But the GEP itself is only
+concerned with computing addresses.</p>
+</section>
+<section id="can-array-indices-be-negative">
+<h3>Can array indices be negative?<a class="headerlink" href="#can-array-indices-be-negative" title="Link to this heading">#</a></h3>
+<p>Yes. This is basically a special case of array indices being out of bounds.</p>
+</section>
+<section id="can-i-compare-two-values-computed-with-geps">
+<h3>Can I compare two values computed with GEPs?<a class="headerlink" href="#can-i-compare-two-values-computed-with-geps" title="Link to this heading">#</a></h3>
+<p>Yes. If both addresses are within the same allocated object, or
+one-past-the-end, you’ll get the comparison result you expect. If either is
+outside of it, integer arithmetic wrapping may occur, so the comparison may not
+be meaningful.</p>
+</section>
+<section id="can-i-do-gep-with-a-different-pointer-type-than-the-type-of-the-underlying-object">
+<h3>Can I do GEP with a different pointer type than the type of the underlying object?<a class="headerlink" href="#can-i-do-gep-with-a-different-pointer-type-than-the-type-of-the-underlying-object" title="Link to this heading">#</a></h3>
+<p>Yes. There are no restrictions on bitcasting a pointer value to an arbitrary
+pointer type. The types in a GEP serve only to define the parameters for the
+underlying integer computation. They need not correspond with the actual type of
+the underlying object.</p>
+<p>Furthermore, loads and stores don’t have to use the same types as the type of
+the underlying object. Types in this context serve only to specify memory size
+and alignment. Beyond that they are merely a hint to the optimizer indicating
+how the value will likely be used.</p>
+</section>
+<section id="can-i-cast-an-object-s-address-to-integer-and-add-it-to-null">
+<h3>Can I cast an object’s address to integer and add it to null?<a class="headerlink" href="#can-i-cast-an-object-s-address-to-integer-and-add-it-to-null" title="Link to this heading">#</a></h3>
+<p>You can compute an address that way, but if you use GEP to do the add, you can’t
+use that pointer to actually access the object, unless the object is managed
+outside of LLVM.</p>
+<p>The underlying integer computation is sufficiently defined; null has a defined
+value — zero — and you can add whatever value you want to it.</p>
+<p>However, it’s invalid to access (load from or store to) an LLVM-aware object
+with such a pointer. This includes <code class="docutils literal notranslate"><span class="pre">GlobalVariables</span></code>, <code class="docutils literal notranslate"><span class="pre">Allocas</span></code>, and objects
+pointed to by noalias pointers.</p>
+<p>If you really need this functionality, you can do the arithmetic with explicit
+integer instructions, and use inttoptr to convert the result to an address. Most
+of GEP’s special aliasing rules do not apply to pointers computed from ptrtoint,
+arithmetic, and inttoptr sequences.</p>
+</section>
+<section id="can-i-compute-the-distance-between-two-objects-and-add-that-value-to-one-address-to-compute-the-other-address">
+<h3>Can I compute the distance between two objects, and add that value to one address to compute the other address?<a class="headerlink" href="#can-i-compute-the-distance-between-two-objects-and-add-that-value-to-one-address-to-compute-the-other-address" title="Link to this heading">#</a></h3>
+<p>As with arithmetic on null, you can use GEP to compute an address that way, but
+you can’t use that pointer to actually access the object if you do, unless the
+object is managed outside of LLVM.</p>
+<p>Also as above, ptrtoint and inttoptr provide an alternative way to do this which
+do not have this restriction.</p>
+</section>
+<section id="can-i-do-type-based-alias-analysis-on-llvm-ir">
+<h3>Can I do type-based alias analysis on LLVM IR?<a class="headerlink" href="#can-i-do-type-based-alias-analysis-on-llvm-ir" title="Link to this heading">#</a></h3>
+<p>You can’t do type-based alias analysis using LLVM’s built-in type system,
+because LLVM has no restrictions on mixing types in addressing, loads or stores.</p>
+<p>LLVM’s type-based alias analysis pass uses metadata to describe a different type
+system (such as the C type system), and performs type-based aliasing on top of
+that.  Further details are in the
+<a class="reference external" href="LangRef.html#tbaa-metadata">language reference</a>.</p>
+</section>
+<section id="what-happens-if-a-gep-computation-overflows">
+<h3>What happens if a GEP computation overflows?<a class="headerlink" href="#what-happens-if-a-gep-computation-overflows" title="Link to this heading">#</a></h3>
+<p>If the GEP lacks the <code class="docutils literal notranslate"><span class="pre">inbounds</span></code> keyword, the value is the result from
+evaluating the implied two’s complement integer computation. However, since
+there’s no guarantee of where an object will be allocated in the address space,
+such values have limited meaning.</p>
+<p>If the GEP has the <code class="docutils literal notranslate"><span class="pre">inbounds</span></code> keyword, the result value is <code class="docutils literal notranslate"><span class="pre">poison</span></code>
+if the GEP overflows (i.e. wraps around the end of the address space).</p>
+<p>As such, there are some ramifications of this for inbounds GEPs: scales implied
+by array/vector/pointer indices are always known to be “nsw” since they are
+signed values that are scaled by the element size.  These values are also
+allowed to be negative (e.g. “<code class="docutils literal notranslate"><span class="pre">gep</span> <span class="pre">i32,</span> <span class="pre">ptr</span> <span class="pre">%P,</span> <span class="pre">i32</span> <span class="pre">-1</span></code>”) but the pointer
+itself is logically treated as an unsigned value.  This means that GEPs have an
+asymmetric relation between the pointer base (which is treated as unsigned) and
+the offset applied to it (which is treated as signed). The result of the
+additions within the offset calculation cannot have signed overflow, but when
+applied to the base pointer, there can be signed overflow.</p>
+</section>
+<section id="how-can-i-tell-if-my-front-end-is-following-the-rules">
+<h3>How can I tell if my front-end is following the rules?<a class="headerlink" href="#how-can-i-tell-if-my-front-end-is-following-the-rules" title="Link to this heading">#</a></h3>
+<p>There is currently no checker for the getelementptr rules. Currently, the only
+way to do this is to manually check each place in your front-end where
+GetElementPtr operators are created.</p>
+<p>It’s not possible to write a checker which could find all rule violations
+statically. It would be possible to write a checker which works by instrumenting
+the code with dynamic checks though. Alternatively, it would be possible to
+write a static checker which catches a subset of possible problems. However, no
+such checker exists today.</p>
+</section>
+</section>
+<section id="rationale">
+<h2>Rationale<a class="headerlink" href="#rationale" title="Link to this heading">#</a></h2>
+<section id="why-is-gep-designed-this-way">
+<h3>Why is GEP designed this way?<a class="headerlink" href="#why-is-gep-designed-this-way" title="Link to this heading">#</a></h3>
+<p>The design of GEP has the following goals, in rough unofficial order of
+priority:</p>
+<ul class="simple">
+<li><p>Support C, C-like languages, and languages which can be conceptually lowered
+into C (this covers a lot).</p></li>
+<li><p>Support optimizations such as those that are common in C compilers. In
+particular, GEP is a cornerstone of LLVM’s <a class="reference external" href="LangRef.html#pointeraliasing">pointer aliasing
+model</a>.</p></li>
+<li><p>Provide a consistent method for computing addresses so that address
+computations don’t need to be a part of load and store instructions in the IR.</p></li>
+<li><p>Support non-C-like languages, to the extent that it doesn’t interfere with
+other goals.</p></li>
+<li><p>Minimize target-specific information in the IR.</p></li>
+</ul>
+</section>
+<section id="why-do-struct-member-indices-always-use-i32">
+<h3>Why do struct member indices always use <code class="docutils literal notranslate"><span class="pre">i32</span></code>?<a class="headerlink" href="#why-do-struct-member-indices-always-use-i32" title="Link to this heading">#</a></h3>
+<p>The specific type i32 is probably just a historical artifact, however it’s wide
+enough for all practical purposes, so there’s been no need to change it.  It
+doesn’t necessarily imply i32 address arithmetic; it’s just an identifier which
+identifies a field in a struct. Requiring that all struct indices be the same
+reduces the range of possibilities for cases where two GEPs are effectively the
+same but have distinct operand types.</p>
+</section>
+<section id="what-s-an-uglygep">
+<h3>What’s an uglygep?<a class="headerlink" href="#what-s-an-uglygep" title="Link to this heading">#</a></h3>
+<p>Some LLVM optimizers operate on GEPs by internally lowering them into more
+primitive integer expressions, which allows them to be combined with other
+integer expressions and/or split into multiple separate integer expressions. If
+they’ve made non-trivial changes, translating back into LLVM IR can involve
+reverse-engineering the structure of the addressing in order to fit it into the
+static type of the original first operand. It isn’t always possible to fully
+reconstruct this structure; sometimes the underlying addressing doesn’t
+correspond with the static type at all. In such cases the optimizer instead will
+emit a GEP with the base pointer cast to a simple address-unit pointer, using
+the name “uglygep”. This isn’t pretty, but it’s just as valid, and it’s
+sufficient to preserve the pointer aliasing guarantees that GEP provides.</p>
+</section>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<p>In summary, here are some things to always remember about the GetElementPtr
+instruction:</p>
+<ol class="arabic simple">
+<li><p>The GEP instruction never accesses memory, it only provides pointer
+computations.</p></li>
+<li><p>The second operand to the GEP instruction is always a pointer and it must be
+indexed.</p></li>
+<li><p>There are no superfluous indices for the GEP instruction.</p></li>
+<li><p>Trailing zero indices are superfluous for pointer aliasing, but not for the
+types of the pointers.</p></li>
+<li><p>Leading zero indices are not superfluous for pointer aliasing nor the types
+of the pointers.</p></li>
+</ol>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="ScudoHardenedAllocator.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Scudo Hardened Allocator</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="BranchWeightMetadata.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">LLVM Branch Weight Metadata</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">The Often Misunderstood GEP Instruction</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#address-computation">Address Computation</a><ul>
+<li><a class="reference internal" href="#what-is-the-first-index-of-the-gep-instruction">What is the first index of the GEP instruction?</a></li>
+<li><a class="reference internal" href="#why-is-the-extra-0-index-required">Why is the extra 0 index required?</a></li>
+<li><a class="reference internal" href="#what-is-dereferenced-by-gep">What is dereferenced by GEP?</a></li>
+<li><a class="reference internal" href="#why-don-t-gep-x-0-0-1-and-gep-x-1-alias">Why don’t GEP x,0,0,1 and GEP x,1 alias?</a></li>
+<li><a class="reference internal" href="#why-do-gep-x-1-0-0-and-gep-x-1-alias">Why do GEP x,1,0,0 and GEP x,1 alias?</a></li>
+<li><a class="reference internal" href="#can-gep-index-into-vector-elements">Can GEP index into vector elements?</a></li>
+<li><a class="reference internal" href="#what-effect-do-address-spaces-have-on-geps">What effect do address spaces have on GEPs?</a></li>
+<li><a class="reference internal" href="#how-is-gep-different-from-ptrtoint-arithmetic-and-inttoptr">How is GEP different from <code class="docutils literal notranslate"><span class="pre">ptrtoint</span></code>, arithmetic, and <code class="docutils literal notranslate"><span class="pre">inttoptr</span></code>?</a></li>
+<li><a class="reference internal" href="#i-m-writing-a-backend-for-a-target-which-needs-custom-lowering-for-gep-how-do-i-do-this">I’m writing a backend for a target which needs custom lowering for GEP. How do I do this?</a></li>
+<li><a class="reference internal" href="#how-does-vla-addressing-work-with-geps">How does VLA addressing work with GEPs?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rules">Rules</a><ul>
+<li><a class="reference internal" href="#what-happens-if-an-array-index-is-out-of-bounds">What happens if an array index is out of bounds?</a></li>
+<li><a class="reference internal" href="#can-array-indices-be-negative">Can array indices be negative?</a></li>
+<li><a class="reference internal" href="#can-i-compare-two-values-computed-with-geps">Can I compare two values computed with GEPs?</a></li>
+<li><a class="reference internal" href="#can-i-do-gep-with-a-different-pointer-type-than-the-type-of-the-underlying-object">Can I do GEP with a different pointer type than the type of the underlying object?</a></li>
+<li><a class="reference internal" href="#can-i-cast-an-object-s-address-to-integer-and-add-it-to-null">Can I cast an object’s address to integer and add it to null?</a></li>
+<li><a class="reference internal" href="#can-i-compute-the-distance-between-two-objects-and-add-that-value-to-one-address-to-compute-the-other-address">Can I compute the distance between two objects, and add that value to one address to compute the other address?</a></li>
+<li><a class="reference internal" href="#can-i-do-type-based-alias-analysis-on-llvm-ir">Can I do type-based alias analysis on LLVM IR?</a></li>
+<li><a class="reference internal" href="#what-happens-if-a-gep-computation-overflows">What happens if a GEP computation overflows?</a></li>
+<li><a class="reference internal" href="#how-can-i-tell-if-my-front-end-is-following-the-rules">How can I tell if my front-end is following the rules?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rationale">Rationale</a><ul>
+<li><a class="reference internal" href="#why-is-gep-designed-this-way">Why is GEP designed this way?</a></li>
+<li><a class="reference internal" href="#why-do-struct-member-indices-always-use-i32">Why do struct member indices always use <code class="docutils literal notranslate"><span class="pre">i32</span></code>?</a></li>
+<li><a class="reference internal" href="#what-s-an-uglygep">What’s an uglygep?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=ccd1e645"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

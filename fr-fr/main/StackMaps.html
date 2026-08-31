@@ -1,0 +1,1132 @@
+<!doctype html>
+<html class="no-js" lang="fr-FR" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Recherche" href="search.html" /><link rel="next" title="Coroutines in LLVM" href="Coroutines.html" /><link rel="prev" title="LLVM’s Optional Rich Disassembly Output" href="MarkedUpDisassembly.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/StackMaps.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Stack maps and patch points in LLVM - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Recherche" name="q" aria-label="Recherche">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="Reference.html">Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural “diff”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/StackMaps.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="stack-maps-and-patch-points-in-llvm">
+<h1>Stack maps and patch points in LLVM<a class="headerlink" href="#stack-maps-and-patch-points-in-llvm" title="Link to this heading">#</a></h1>
+<section id="definitions">
+<h2>Definitions<a class="headerlink" href="#definitions" title="Link to this heading">#</a></h2>
+<p>In this document we refer to the « runtime » collectively as all
+components that serve as the LLVM client, including the LLVM IR
+generator, object code consumer, and code patcher.</p>
+<p>A stack map records the location of <code class="docutils literal notranslate"><span class="pre">live</span> <span class="pre">values</span></code> at a particular
+instruction address. These <code class="docutils literal notranslate"><span class="pre">live</span> <span class="pre">values</span></code> do not refer to all the
+LLVM values live across the stack map. Instead, they are only the
+values that the runtime requires to be live at this point. For
+example, they may be the values the runtime will need to resume
+program execution at that point independent of the compiled function
+containing the stack map.</p>
+<p>LLVM emits stack map data into the object code within a designated
+<a class="reference internal" href="#stackmap-section"><span class="std std-ref">Stack Map Section</span></a>. This stack map data contains a record for
+each stack map. The record stores the stack map’s instruction address
+and contains an entry for each mapped value. Each entry encodes a
+value’s location as a register, stack offset, or constant.</p>
+<p>A patch point is an instruction address at which space is reserved for
+patching a new instruction sequence at run time. Patch points look
+much like calls to LLVM. They take arguments that follow a calling
+convention and may return a value. They also imply stack map
+generation, which allows the runtime to locate the patchpoint and
+find the location of <code class="docutils literal notranslate"><span class="pre">live</span> <span class="pre">values</span></code> at that point.</p>
+</section>
+<section id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Link to this heading">#</a></h2>
+<p>This functionality is currently experimental but is potentially useful
+in a variety of settings, the most obvious being a runtime (JIT)
+compiler. Example applications of the patchpoint intrinsics are
+implementing an inline call cache for polymorphic method dispatch or
+optimizing the retrieval of properties in dynamically typed languages
+such as JavaScript.</p>
+<p>The intrinsics documented here are currently used by the JavaScript
+compiler within the open source WebKit project, see the <a class="reference external" href="https://trac.webkit.org/wiki/FTLJIT">FTL JIT</a>, but they are designed to be
+used whenever stack maps or code patching are needed. Because the
+intrinsics have experimental status, compatibility across LLVM
+releases is not guaranteed.</p>
+<p>The stack map functionality described in this document is separate
+from the functionality described in
+<a class="reference internal" href="GarbageCollection.html#stack-map"><span class="std std-ref">Computing stack maps</span></a>. <cite>GCFunctionMetadata</cite> provides the location of
+pointers into a collected heap captured by the <cite>GCRoot</cite> intrinsic,
+which can also be considered a « stack map ». Unlike the stack maps
+defined above, the <cite>GCFunctionMetadata</cite> stack map interface does not
+provide a way to associate live register values of arbitrary type with
+an instruction address, nor does it specify a format for the resulting
+stack map. The stack maps described here could potentially provide
+richer information to a garbage collecting runtime, but that usage
+will not be discussed in this document.</p>
+</section>
+<section id="intrinsics">
+<h2>Intrinsics<a class="headerlink" href="#intrinsics" title="Link to this heading">#</a></h2>
+<p>The following two kinds of intrinsics can be used to implement stack
+maps and patch points: <code class="docutils literal notranslate"><span class="pre">llvm.experimental.stackmap</span></code> and
+<code class="docutils literal notranslate"><span class="pre">llvm.experimental.patchpoint</span></code>. Both kinds of intrinsics generate a
+stack map record, and they both allow some form of code patching. They
+can be used independently (i.e. <code class="docutils literal notranslate"><span class="pre">llvm.experimental.patchpoint</span></code>
+implicitly generates a stack map without the need for an additional
+call to <code class="docutils literal notranslate"><span class="pre">llvm.experimental.stackmap</span></code>). The choice of which to use
+depends on whether it is necessary to reserve space for code patching
+and whether any of the intrinsic arguments should be lowered according
+to calling conventions. <code class="docutils literal notranslate"><span class="pre">llvm.experimental.stackmap</span></code> does not
+reserve any space, nor does it expect any call arguments. If the
+runtime patches code at the stack map’s address, it will destructively
+overwrite the program text. This is unlike
+<code class="docutils literal notranslate"><span class="pre">llvm.experimental.patchpoint</span></code>, which reserves space for in-place
+patching without overwriting surrounding code. The
+<code class="docutils literal notranslate"><span class="pre">llvm.experimental.patchpoint</span></code> intrinsic also lowers a specified
+number of arguments according to its calling convention. This allows
+patched code to make in-place function calls without marshaling.</p>
+<p>Each instance of one of these intrinsics generates a stack map record
+in the <a class="reference internal" href="#stackmap-section"><span class="std std-ref">Stack Map Section</span></a>. The record includes an ID, allowing
+the runtime to uniquely identify the stack map, and the offset within
+the code from the beginning of the enclosing function.</p>
+<section id="llvm-experimental-stackmap-intrinsic">
+<h3>“<code class="docutils literal notranslate"><span class="pre">llvm.experimental.stackmap</span></code>” Intrinsic<a class="headerlink" href="#llvm-experimental-stackmap-intrinsic" title="Link to this heading">#</a></h3>
+<section id="syntax">
+<h4>Syntax:<a class="headerlink" href="#syntax" title="Link to this heading">#</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">declare</span> <span class="n">void</span>
+  <span class="nd">@llvm</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">stackmap</span><span class="p">(</span><span class="n">i64</span> <span class="o">&lt;</span><span class="nb">id</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">i32</span> <span class="o">&lt;</span><span class="n">numShadowBytes</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="overview">
+<h4>Overview:<a class="headerlink" href="#overview" title="Link to this heading">#</a></h4>
+<p>The “<code class="docutils literal notranslate"><span class="pre">llvm.experimental.stackmap</span></code>” intrinsic records the location of
+specified values in the stack map without generating any code.</p>
+</section>
+<section id="operands">
+<h4>Operands:<a class="headerlink" href="#operands" title="Link to this heading">#</a></h4>
+<p>The first operand is an ID to be encoded within the stack map. The
+second operand is the number of shadow bytes following the
+intrinsic. These first two operands should be immediate, e.g. cannot
+be passed as variables. The variable number of operands that follow are
+the <code class="docutils literal notranslate"><span class="pre">live</span> <span class="pre">values</span></code> for which locations will be recorded in the stack map.</p>
+<p>To use this intrinsic as a bare-bones stack map, with no code patching
+support, the number of shadow bytes can be set to zero.</p>
+</section>
+<section id="semantics">
+<h4>Semantics:<a class="headerlink" href="#semantics" title="Link to this heading">#</a></h4>
+<p>The stack map intrinsic generates no code in place, unless nops are
+needed to cover its shadow (see below). However, its offset from
+function entry is stored in the stack map. This is the relative
+instruction address immediately following the instructions that
+precede the stack map.</p>
+<p>The stack map ID allows a runtime to locate the desired stack map
+record. LLVM passes this ID through directly to the stack map
+record without checking uniqueness.</p>
+<p>LLVM guarantees a shadow of instructions following the stack map’s
+instruction offset during which neither the end of the basic block nor
+another call to <code class="docutils literal notranslate"><span class="pre">llvm.experimental.stackmap</span></code> or
+<code class="docutils literal notranslate"><span class="pre">llvm.experimental.patchpoint</span></code> may occur. This allows the runtime to
+patch the code at this point in response to an event triggered from
+outside the code. The code for instructions following the stack map
+may be emitted in the stack map’s shadow, and these instructions may
+be overwritten by destructive patching. Without shadow bytes, this
+destructive patching could overwrite program text or data outside the
+current function. We disallow overlapping stack map shadows so that
+the runtime does not need to consider this corner case.</p>
+<p>For example, a stack map with 8-byte shadow:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@runtime</span><span class="p">()</span>
+<span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="p">(</span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span><span class="w"> </span><span class="vg">@llvm.experimental.stackmap</span><span class="p">(</span><span class="kt">i64</span><span class="w"> </span><span class="m">77</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">8</span><span class="p">,</span>
+<span class="w">                                                      </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%ptr</span><span class="p">)</span>
+<span class="nv">%val</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">load</span><span class="w"> </span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%ptr</span>
+<span class="nv">%add</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="nv">%val</span><span class="p">,</span><span class="w"> </span><span class="m">3</span>
+<span class="k">ret</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="nv">%add</span>
+</pre></div>
+</div>
+<p>May require one byte of nop-padding:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0x00 callq _runtime
+0x05 nop                &lt;--- stack map address
+0x06 movq (%rdi), %rax
+0x07 addq $3, %rax
+0x0a popq %rdx
+0x0b ret                &lt;---- end of 8-byte shadow
+</pre></div>
+</div>
+<p>Now, if the runtime needs to invalidate the compiled code, it may
+patch 8 bytes of code at the stack map’s address at follows:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0x00 callq _runtime
+0x05 movl  $0xffff, %rax &lt;--- patched code at stack map address
+0x0a callq *%rax         &lt;---- end of 8-byte shadow
+</pre></div>
+</div>
+<p>This way, after the normal call to the runtime returns, the code will
+execute a patched call to a special entry point that can rebuild a
+stack frame from the values located by the stack map.</p>
+</section>
+</section>
+<section id="llvm-experimental-patchpoint-intrinsic">
+<h3>“<code class="docutils literal notranslate"><span class="pre">llvm.experimental.patchpoint.*</span></code>” Intrinsic<a class="headerlink" href="#llvm-experimental-patchpoint-intrinsic" title="Link to this heading">#</a></h3>
+<section id="id1">
+<h4>Syntax:<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">declare</span> <span class="n">void</span>
+  <span class="nd">@llvm</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">patchpoint</span><span class="o">.</span><span class="n">void</span><span class="p">(</span><span class="n">i64</span> <span class="o">&lt;</span><span class="nb">id</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">i32</span> <span class="o">&lt;</span><span class="n">numBytes</span><span class="o">&gt;</span><span class="p">,</span>
+                                     <span class="n">ptr</span> <span class="o">&lt;</span><span class="n">target</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">i32</span> <span class="o">&lt;</span><span class="n">numArgs</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">declare</span> <span class="n">i64</span>
+  <span class="nd">@llvm</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">patchpoint</span><span class="o">.</span><span class="n">i64</span><span class="p">(</span><span class="n">i64</span> <span class="o">&lt;</span><span class="nb">id</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">i32</span> <span class="o">&lt;</span><span class="n">numBytes</span><span class="o">&gt;</span><span class="p">,</span>
+                                    <span class="n">ptr</span> <span class="o">&lt;</span><span class="n">target</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">i32</span> <span class="o">&lt;</span><span class="n">numArgs</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h4>Overview:<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<p>The “<code class="docutils literal notranslate"><span class="pre">llvm.experimental.patchpoint.*</span></code>” intrinsics creates a function
+call to the specified <code class="docutils literal notranslate"><span class="pre">&lt;target&gt;</span></code> and records the location of specified
+values in the stack map.</p>
+</section>
+<section id="id3">
+<h4>Operands:<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<p>The first operand is an ID, the second operand is the number of bytes
+reserved for the patchable region, the third operand is the target
+address of a function (optionally null), and the fourth operand
+specifies how many of the following variable operands are considered
+function call arguments. The remaining variable number of operands are
+the <code class="docutils literal notranslate"><span class="pre">live</span> <span class="pre">values</span></code> for which locations will be recorded in the stack
+map.</p>
+</section>
+<section id="id4">
+<h4>Semantics:<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
+<p>The patch point intrinsic generates a stack map. It also emits a
+function call to the address specified by <code class="docutils literal notranslate"><span class="pre">&lt;target&gt;</span></code> if the address
+is not a constant null. The function call and its arguments are
+lowered according to the calling convention specified at the
+intrinsic’s callsite. Variants of the intrinsic with non-void return
+type also return a value according to calling convention.</p>
+<p>On PowerPC, note that <code class="docutils literal notranslate"><span class="pre">&lt;target&gt;</span></code> must be the ABI function pointer for the
+intended target of the indirect call. Specifically, when compiling for the
+ELF V1 ABI, <code class="docutils literal notranslate"><span class="pre">&lt;target&gt;</span></code> is the function-descriptor address normally used as
+the C/C++ function-pointer representation.</p>
+<p>Requesting zero patch point arguments is valid. In this case, all
+variable operands are handled just like
+<code class="docutils literal notranslate"><span class="pre">llvm.experimental.stackmap.*</span></code>. The difference is that space will
+still be reserved for patching, a call will be emitted, and a return
+value is allowed.</p>
+<p>The location of the arguments are not normally recorded in the stack
+map because they are already fixed by the calling convention. The
+remaining <code class="docutils literal notranslate"><span class="pre">live</span> <span class="pre">values</span></code> will have their location recorded, which
+could be a register, stack location, or constant. A special calling
+convention has been introduced for use with stack maps, anyregcc,
+which forces the arguments to be loaded into registers but allows
+those register to be dynamically allocated. These argument registers
+will have their register locations recorded in the stack map in
+addition to the remaining <code class="docutils literal notranslate"><span class="pre">live</span> <span class="pre">values</span></code>.</p>
+<p>The patch point also emits nops to cover at least <code class="docutils literal notranslate"><span class="pre">&lt;numBytes&gt;</span></code> of
+instruction encoding space. Hence, the client must ensure that
+<code class="docutils literal notranslate"><span class="pre">&lt;numBytes&gt;</span></code> is enough to encode a call to the target address on the
+supported targets. If the call target is constant null, then there is
+no minimum requirement. A zero-byte null target patchpoint is
+valid.</p>
+<p>The runtime may patch the code emitted for the patch point, including
+the call sequence and nops. However, the runtime may not assume
+anything about the code LLVM emits within the reserved space. Partial
+patching is not allowed. The runtime must patch all reserved bytes,
+padding with nops if necessary.</p>
+<p>This example shows a patch point reserving 15 bytes, with one argument
+in $rdi, and a return value in $rax per native calling convention:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="nv">%target</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">inttoptr</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="m">-281474976710654</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="kt">ptr</span>
+<span class="nv">%val</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="p">(</span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span>
+<span class="w">         </span><span class="vg">@llvm.experimental.patchpoint.i64</span><span class="p">(</span><span class="kt">i64</span><span class="w"> </span><span class="m">78</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">15</span><span class="p">,</span>
+<span class="w">                                           </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%target</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="nv">%ptr</span><span class="p">)</span>
+<span class="nv">%add</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="nv">%val</span><span class="p">,</span><span class="w"> </span><span class="m">3</span>
+<span class="k">ret</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="nv">%add</span>
+</pre></div>
+</div>
+<p>May generate:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0x00 movabsq $0xffff000000000002, %r11 &lt;--- patch point address
+0x0a callq   *%r11
+0x0d nop
+0x0e nop                               &lt;--- end of reserved 15-bytes
+0x0f addq    $0x3, %rax
+0x10 movl    %rax, 8(%rsp)
+</pre></div>
+</div>
+<p>Note that no stack map locations will be recorded. If the patched code
+sequence does not need arguments fixed to specific calling convention
+registers, then the <code class="docutils literal notranslate"><span class="pre">anyregcc</span></code> convention may be used:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>%val = call anyregcc @llvm.experimental.patchpoint(i64 78, i32 15,
+                                                   ptr %target, i32 1,
+                                                   ptr %ptr)
+</pre></div>
+</div>
+<p>The stack map now indicates the location of the %ptr argument and
+return value:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Stack Map: ID=78, Loc0=%r9 Loc1=%r8
+</pre></div>
+</div>
+<p>The patch code sequence may now use the argument that happened to be
+allocated in %r8 and return a value allocated in %r9:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0x00 movslq 4(%r8) %r9              &lt;--- patched code at patch point address
+0x03 nop
+...
+0x0e nop                            &lt;--- end of reserved 15-bytes
+0x0f addq    $0x3, %r9
+0x10 movl    %r9, 8(%rsp)
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="stack-map-format">
+<span id="stackmap-format"></span><h2>Stack Map Format<a class="headerlink" href="#stack-map-format" title="Link to this heading">#</a></h2>
+<p>The existence of a stack map or patch point intrinsic within an LLVM
+Module forces code emission to create a <a class="reference internal" href="#stackmap-section"><span class="std std-ref">Stack Map Section</span></a>. The
+format of this section follows:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Header {
+  uint8  : Stack Map Version (current version is 3)
+  uint8  : Reserved (expected to be 0)
+  uint16 : Reserved (expected to be 0)
+}
+uint32 : NumFunctions
+uint32 : NumConstants
+uint32 : NumRecords
+StkSizeRecord[NumFunctions] {
+  uint64 : Function Address
+  uint64 : Stack Size (or UINT64_MAX if not statically known)
+  uint64 : Record Count
+}
+Constants[NumConstants] {
+  uint64 : LargeConstant
+}
+StkMapRecord[NumRecords] {
+  uint64 : PatchPoint ID
+  uint32 : Instruction Offset
+  uint16 : Reserved (record flags)
+  uint16 : NumLocations
+  Location[NumLocations] {
+    uint8  : Register | Direct | Indirect | Constant | ConstantIndex
+    uint8  : Reserved (expected to be 0)
+    uint16 : Location Size
+    uint16 : Dwarf RegNum
+    uint16 : Reserved (expected to be 0)
+    int32  : Offset or SmallConstant
+  }
+  uint32 : Padding (only if required to align to 8 byte)
+  uint16 : Padding
+  uint16 : NumLiveOuts
+  LiveOuts[NumLiveOuts]
+    uint16 : Dwarf RegNum
+    uint8  : Reserved
+    uint8  : Size in Bytes
+  }
+  uint32 : Padding (only if required to align to 8 byte)
+}
+</pre></div>
+</div>
+<p>The first byte of each location encodes a type that indicates how to
+interpret the <code class="docutils literal notranslate"><span class="pre">RegNum</span></code> and <code class="docutils literal notranslate"><span class="pre">Offset</span></code> fields as follows:</p>
+<div class="table-wrapper docutils container">
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Encoding</p></td>
+<td><p>Type</p></td>
+<td><p>Value</p></td>
+<td><p>Description</p></td>
+</tr>
+<tr class="row-even"><td><p>0x1</p></td>
+<td><p>Register</p></td>
+<td><p>Reg</p></td>
+<td><p>Value in a register</p></td>
+</tr>
+<tr class="row-odd"><td><p>0x2</p></td>
+<td><p>Direct</p></td>
+<td><p>Reg + Offset</p></td>
+<td><p>Frame index value</p></td>
+</tr>
+<tr class="row-even"><td><p>0x3</p></td>
+<td><p>Indirect</p></td>
+<td><p>[Reg + Offset]</p></td>
+<td><p>Spilled value</p></td>
+</tr>
+<tr class="row-odd"><td><p>0x4</p></td>
+<td><p>Constant</p></td>
+<td><p>Offset</p></td>
+<td><p>Small constant</p></td>
+</tr>
+<tr class="row-even"><td><p>0x5</p></td>
+<td><p>ConstIndex</p></td>
+<td><p>Constants[Offset]</p></td>
+<td><p>Large constant</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In the common case, a value is available in a register, and the
+<code class="docutils literal notranslate"><span class="pre">Offset</span></code> field will be zero. Values spilled to the stack are encoded
+as <code class="docutils literal notranslate"><span class="pre">Indirect</span></code> locations. The runtime must load those values from a
+stack address, typically in the form <code class="docutils literal notranslate"><span class="pre">[BP</span> <span class="pre">+</span> <span class="pre">Offset]</span></code>. If an
+<code class="docutils literal notranslate"><span class="pre">alloca</span></code> value is passed directly to a stack map intrinsic, then
+LLVM may fold the frame index into the stack map as an optimization to
+avoid allocating a register or stack slot. These frame indices will be
+encoded as <code class="docutils literal notranslate"><span class="pre">Direct</span></code> locations in the form <code class="docutils literal notranslate"><span class="pre">BP</span> <span class="pre">+</span> <span class="pre">Offset</span></code>. LLVM may
+also optimize constants by emitting them directly in the stack map,
+either in the <code class="docutils literal notranslate"><span class="pre">Offset</span></code> of a <code class="docutils literal notranslate"><span class="pre">Constant</span></code> location or in the constant
+pool, referred to by <code class="docutils literal notranslate"><span class="pre">ConstantIndex</span></code> locations.</p>
+<p>At each callsite, a « liveout » register list is also recorded. These
+are the registers that are live across the stackmap and therefore must
+be saved by the runtime. This is an important optimization when the
+patchpoint intrinsic is used with a calling convention that by default
+preserves most registers as callee-save.</p>
+<p>Each entry in the liveout register list contains a DWARF register
+number and size in bytes. The stackmap format deliberately omits
+specific subregister information. Instead the runtime must interpret
+this information conservatively. For example, if the stackmap reports
+one byte at <code class="docutils literal notranslate"><span class="pre">%rax</span></code>, then the value may be in either <code class="docutils literal notranslate"><span class="pre">%al</span></code> or
+<code class="docutils literal notranslate"><span class="pre">%ah</span></code>. It doesn’t matter in practice, because the runtime will
+simply save <code class="docutils literal notranslate"><span class="pre">%rax</span></code>. However, if the stackmap reports 16 bytes at
+<code class="docutils literal notranslate"><span class="pre">%ymm0</span></code>, then the runtime can safely optimize by saving only
+<code class="docutils literal notranslate"><span class="pre">%xmm0</span></code>.</p>
+<p>The stack map format is a contract between an LLVM SVN revision and
+the runtime. It is currently experimental and may change in the short
+term, but minimizing the need to update the runtime is
+important. Consequently, the stack map design is motivated by
+simplicity and extensibility. Compactness of the representation is
+secondary because the runtime is expected to parse the data
+immediately after compiling a module and encode the information in its
+own format. Since the runtime controls the allocation of sections, it
+can reuse the same stack map space for multiple modules.</p>
+<p>Stackmap support is currently only implemented for 64-bit
+platforms. However, a 32-bit implementation should be able to use the
+same format with an insignificant amount of wasted space.</p>
+<section id="stack-map-section">
+<span id="stackmap-section"></span><h3>Stack Map Section<a class="headerlink" href="#stack-map-section" title="Link to this heading">#</a></h3>
+<p>A JIT compiler can easily access this section by providing its own
+memory manager via the LLVM C API
+<code class="docutils literal notranslate"><span class="pre">LLVMCreateSimpleMCJITMemoryManager()</span></code>. When creating the memory
+manager, the JIT provides a callback:
+<code class="docutils literal notranslate"><span class="pre">LLVMMemoryManagerAllocateDataSectionCallback()</span></code>. When LLVM creates
+this section, it invokes the callback and passes the section name. The
+JIT can record the in-memory address of the section at this time and
+later parse it to recover the stack map data.</p>
+<p>For MachO (e.g. on Darwin), the stack map section name is
+« __llvm_stackmaps ». The segment name is « __LLVM_STACKMAPS ».</p>
+<p>For ELF (e.g. on Linux), the stack map section name is
+« .llvm_stackmaps ».  The segment name is « __LLVM_STACKMAPS ».</p>
+</section>
+</section>
+<section id="stack-map-usage">
+<h2>Stack Map Usage<a class="headerlink" href="#stack-map-usage" title="Link to this heading">#</a></h2>
+<p>The stack map support described in this document can be used to
+precisely determine the location of values at a specific position in
+the code. LLVM does not maintain any mapping between those values and
+any higher-level entity. The runtime must be able to interpret the
+stack map record given only the ID, offset, and the order of the
+locations, records, and functions, which LLVM preserves.</p>
+<p>Note that this is quite different from the goal of debug information,
+which is a best-effort attempt to track the location of named
+variables at every instruction.</p>
+<p>An important motivation for this design is to allow a runtime to
+commandeer a stack frame when execution reaches an instruction address
+associated with a stack map. The runtime must be able to rebuild a
+stack frame and resume program execution using the information
+provided by the stack map. For example, execution may resume in an
+interpreter or a recompiled version of the same function.</p>
+<p>This usage restricts LLVM optimization. Clearly, LLVM must not move
+stores across a stack map. However, loads must also be handled
+conservatively. If the load may trigger an exception, hoisting it
+above a stack map could be invalid. For example, the runtime may
+determine that a load is safe to execute without a type check given
+the current state of the type system. If the type system changes while
+some activation of the load’s function exists on the stack, the load
+becomes unsafe. The runtime can prevent subsequent execution of that
+load by immediately patching any stack map location that lies between
+the current call site and the load (typically, the runtime would
+simply patch all stack map locations to invalidate the function). If
+the compiler had hoisted the load above the stack map, then the
+program could crash before the runtime could take back control.</p>
+<p>To enforce these semantics, stackmap and patchpoint intrinsics are
+considered to potentially read and write all memory. This may limit
+optimization more than some clients desire. This limitation may be
+avoided by marking the call site as « readonly ». In the future we may
+also allow meta-data to be added to the intrinsic call to express
+aliasing, thereby allowing optimizations to hoist certain loads above
+stack maps.</p>
+<section id="direct-stack-map-entries">
+<h3>Direct Stack Map Entries<a class="headerlink" href="#direct-stack-map-entries" title="Link to this heading">#</a></h3>
+<p>As shown in <a class="reference internal" href="#stackmap-section"><span class="std std-ref">Stack Map Section</span></a>, a Direct stack map location
+records the address of frame index. This address is itself the value
+that the runtime requested. This differs from Indirect locations,
+which refer to a stack locations from which the requested values must
+be loaded. Direct locations can communicate the address if an alloca,
+while Indirect locations handle register spills.</p>
+<p>For example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>entry:
+  %a = alloca i64...
+  llvm.experimental.stackmap(i64 &lt;ID&gt;, i32 &lt;shadowBytes&gt;, ptr %a)
+</pre></div>
+</div>
+<p>The runtime can determine this alloca’s relative location on the
+stack immediately after compilation, or at any time thereafter. This
+differs from Register and Indirect locations, because the runtime can
+only read the values in those locations when execution reaches the
+instruction address of the stack map.</p>
+<p>This functionality requires LLVM to treat entry-block allocas
+specially when they are directly consumed by an intrinsics. (This is
+the same requirement imposed by the llvm.gcroot intrinsic.) LLVM
+transformations must not substitute the alloca with any intervening
+value. This can be verified by the runtime simply by checking that the
+stack map’s location is a Direct location type.</p>
+</section>
+</section>
+<section id="supported-architectures">
+<h2>Supported Architectures<a class="headerlink" href="#supported-architectures" title="Link to this heading">#</a></h2>
+<p>Support for StackMap generation and the related intrinsics requires
+some code for each backend.  Today, only a subset of LLVM’s backends
+are supported.  The currently supported architectures are X86_64,
+PowerPC, AArch64 and SystemZ.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="Coroutines.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Coroutines in LLVM</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="MarkedUpDisassembly.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">LLVM’s Optional Rich Disassembly Output</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Stack maps and patch points in LLVM</a><ul>
+<li><a class="reference internal" href="#definitions">Definitions</a></li>
+<li><a class="reference internal" href="#motivation">Motivation</a></li>
+<li><a class="reference internal" href="#intrinsics">Intrinsics</a><ul>
+<li><a class="reference internal" href="#llvm-experimental-stackmap-intrinsic">“<code class="docutils literal notranslate"><span class="pre">llvm.experimental.stackmap</span></code>” Intrinsic</a><ul>
+<li><a class="reference internal" href="#syntax">Syntax:</a></li>
+<li><a class="reference internal" href="#overview">Overview:</a></li>
+<li><a class="reference internal" href="#operands">Operands:</a></li>
+<li><a class="reference internal" href="#semantics">Semantics:</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#llvm-experimental-patchpoint-intrinsic">“<code class="docutils literal notranslate"><span class="pre">llvm.experimental.patchpoint.*</span></code>” Intrinsic</a><ul>
+<li><a class="reference internal" href="#id1">Syntax:</a></li>
+<li><a class="reference internal" href="#id2">Overview:</a></li>
+<li><a class="reference internal" href="#id3">Operands:</a></li>
+<li><a class="reference internal" href="#id4">Semantics:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#stack-map-format">Stack Map Format</a><ul>
+<li><a class="reference internal" href="#stack-map-section">Stack Map Section</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#stack-map-usage">Stack Map Usage</a><ul>
+<li><a class="reference internal" href="#direct-stack-map-entries">Direct Stack Map Entries</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#supported-architectures">Supported Architectures</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=711a3ba7"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=a56f2464"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

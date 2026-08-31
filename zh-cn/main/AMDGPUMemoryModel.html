@@ -1,0 +1,1113 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜索" href="search.html" /><link rel="next" title="User Guide for SPIR-V Target" href="SPIRVUsage.html" /><link rel="prev" title="AMDGPU Execution Synchronization" href="AMDGPUExecutionSynchronization.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/AMDGPUMemoryModel.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>AMDGPU Memory Model - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜索" name="q" aria-label="搜索">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/AMDGPUMemoryModel.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="amdgpu-memory-model">
+<span id="amdgpu-memmodel"></span><h1>AMDGPU Memory Model<a class="headerlink" href="#amdgpu-memory-model" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="LangRef.html#memmodel"><span class="std std-ref">LLVM memory model</span></a> provides broad guarantees that are
+sufficient to implement inter-thread communication via memory. But in most
+communication patterns, not all memory accesses performed by a thread need to be
+exposed to other threads. Even when they do need to be exposed, not all threads
+may need to observe these memory accesses. This document describes the <em>AMDGPU
+memory model</em> that allows the user to control how the side-effects of memory
+accesses are propagated across threads. The programmer expresses this using
+<strong>new intrinsics and metadata</strong> as described below, and the implementation can
+then choose a more efficient mechanism to complete them, such as the cache
+policy bits in an AMDGPU device.</p>
+<p>The AMDGPU memory model allows executions that are not allowed by the LLVM
+memory model. At the same time, a simple mapping can be used to implement these
+new intrinsics and metadata using operations defined in the default LLVM memory
+model. Thus, <strong>there exists a safe-by-default implementation</strong> that produces
+executions that are valid in both models.</p>
+</section>
+<section id="terminology">
+<h2>Terminology<a class="headerlink" href="#terminology" title="Link to this heading">#</a></h2>
+<dl class="simple myst">
+<dt>Memory Accesses</dt><dd><p>Operations that read or write locations in memory are termed as <em>memory
+accesses</em>. Typical examples are <code class="docutils literal notranslate"><span class="pre">load</span></code>, <code class="docutils literal notranslate"><span class="pre">store</span></code> and atomic instructions,
+as well as many intrinsics.</p>
+</dd>
+<dt>Synchronizing Operations</dt><dd><p>Synchronizing operations control how the side-effects of memory accesses are
+propagated in the system. Typical examples are atomic operations (including
+fences) with at least <code class="docutils literal notranslate"><span class="pre">release</span></code> or <code class="docutils literal notranslate"><span class="pre">acquire</span></code> ordering.</p>
+</dd>
+</dl>
+</section>
+<section id="scopes">
+<span id="amdgpu-scopes"></span><h2>Scopes<a class="headerlink" href="#scopes" title="Link to this heading">#</a></h2>
+<p>A <em>scope</em> is an abstract description of sets of memory accesses and
+synchronizing operations in a multi-threaded execution environment. Each such
+set is called an <em>instance</em> of that scope, or a <em>scope instance</em> for short.</p>
+<ul class="simple">
+<li><p>Each memory access or synchronizing operation belongs to at most one
+instance of every scope defined by the target.</p></li>
+<li><p>When an operation <code class="docutils literal notranslate"><span class="pre">X</span></code> specifies a scope <code class="docutils literal notranslate"><span class="pre">S</span></code>, it indicates the instance of
+<code class="docutils literal notranslate"><span class="pre">S</span></code> that contains <code class="docutils literal notranslate"><span class="pre">X</span></code>. This scope instance is also termed as <em>X’s instance
+of scope S</em>, or just <em>X’s scope instance</em> when <code class="docutils literal notranslate"><span class="pre">S</span></code> is implied by the
+context.</p></li>
+<li><p>When an operation does not specify a scope, it indicates the <em>system</em>
+scope defined below.</p></li>
+</ul>
+<section id="llvm-scopes">
+<h3>LLVM scopes<a class="headerlink" href="#llvm-scopes" title="Link to this heading">#</a></h3>
+<p>The LLVM Language Reference defines the following <a class="reference internal" href="LangRef.html#syncscope"><span class="std std-ref">scopes</span></a>:</p>
+<dl class="simple myst">
+<dt><em>system scope</em> (empty string “”)</dt><dd><p>There exists a single instance of this scope that contains the memory accesses
+and synchronizing operations performed by all threads.</p>
+</dd>
+<dt>“singlethread” scope</dt><dd><p>Each thread corresponds to a “singlethread” scope instance that contains the
+memory accesses and synchronizing operations performed by that thread.</p>
+</dd>
+</dl>
+</section>
+<section id="id1">
+<h3>AMDGPU scopes<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>The AMDGPU backend further refines the LLVM scopes with the following
+target-defined scopes and constraints:</p>
+<ul class="simple">
+<li><p><em>system scope</em> (same as LLVM)</p></li>
+<li><p>“agent” scope</p></li>
+<li><p>“cluster” scope</p></li>
+<li><p>“workgroup” scope</p></li>
+<li><p>“wavefront” scope</p></li>
+<li><p>“singlethread” scope (same as LLVM)</p></li>
+</ul>
+<p>These are arranged from largest scope (<em>system scope</em>) to smallest scope
+(“singlethread”).</p>
+<ul class="simple">
+<li><p>Every instance <code class="docutils literal notranslate"><span class="pre">X</span></code> of some scope <code class="docutils literal notranslate"><span class="pre">S1</span></code> other than “singlethread” scope is
+partitioned by the scope <code class="docutils literal notranslate"><span class="pre">S2</span></code> one level below it. Each subset defined by this
+partition is an instance of <code class="docutils literal notranslate"><span class="pre">S2</span></code> and is called a <em>subscope instance</em> of <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p></li>
+<li><p>It follows that if two scope instances <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> intersect, then their
+intersection is the smaller of <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code>.</p></li>
+<li><p>A scope <code class="docutils literal notranslate"><span class="pre">S1</span></code> is a <em>subscope</em> of a scope <code class="docutils literal notranslate"><span class="pre">S2</span></code> if every instance of <code class="docutils literal notranslate"><span class="pre">S1</span></code>
+is a subscope instance of some instance of <code class="docutils literal notranslate"><span class="pre">S2</span></code>.</p></li>
+</ul>
+<p><strong>Inclusive Scopes</strong>: Two operations <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> are said to have <em>inclusive
+scopes</em> if the scope instance of each operation contains the other operation. In
+that case, the <em>common scope instance</em> <code class="docutils literal notranslate"><span class="pre">S'</span></code> of <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> is the
+intersection of their scope instances. The scope corresponding to <code class="docutils literal notranslate"><span class="pre">S'</span></code> is also
+termed as the <em>common scope</em> of <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code>.</p>
+</section>
+</section>
+<section id="availability-and-visibility">
+<h2>Availability and Visibility<a class="headerlink" href="#availability-and-visibility" title="Link to this heading">#</a></h2>
+<p>The AMDGPU memory model is built on top of the <a class="reference internal" href="LangRef.html#memmodel"><span class="std std-ref">happens-before</span></a>
+order defined by the LLVM memory model. But when one of the new intrinsics or
+metadata is used, <strong>happens-before by itself is not sufficient</strong> to describe its
+observable effects. Instead, the AMDGPU model uses <em>availability</em> and
+<em>visibility</em> to describe how the side-effects of these operations propagate to
+other threads.</p>
+<p>Availability determines how <em>far</em> the side-effects of a write have been
+forwarded in the system relative to that write. Visibility determines how
+<em>close</em> the side-effects of the same write have reached relative to an observer
+operation (typically a read).</p>
+<p>The AMDGPU memory model <em>does not change the structure of happens-before</em>, but
+changes the rules that determine how operations may observe the side-effects of
+other operations that <em>happen-before</em> them.</p>
+<p>Consider a write <code class="docutils literal notranslate"><span class="pre">W</span></code> that <code class="docutils literal notranslate"><span class="pre">happens-before</span></code> a read <code class="docutils literal notranslate"><span class="pre">R</span></code> to the same address:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">R</span></code> can potentially observe the side-effects of <code class="docutils literal notranslate"><span class="pre">W</span></code> <strong>only if W is
+visible</strong> to <code class="docutils literal notranslate"><span class="pre">R</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">W</span></code> can potentially be visible to <code class="docutils literal notranslate"><span class="pre">R</span></code> <strong>only if W is first made
+available</strong> to <code class="docutils literal notranslate"><span class="pre">R</span></code>.</p></li>
+</ul>
+<p>The instructions used in the default LLVM memory model automatically satisfy
+these necessary conditions, and hence they can be explained using the rules from
+either memory model. But the new intrinsics and metadata <em>opt out</em> of the LLVM
+memory model, and can only be explained using the AMDGPU memory model.</p>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>We introduce new intrinsics because metadata cannot be used to express the
+availability and visibility of ordinary
+load/store operations, because the scope is necessary for correctness. In a
+hypothetical operation like this:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">store</span><span class="w"> </span><span class="kt">ptr</span><span class="w"> </span><span class="k">addrspace</span><span class="p">(</span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="nv">%ptr</span><span class="p">,</span><span class="w"> </span><span class="p">&lt;</span><span class="m">4</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i32</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%value</span><span class="p">,</span><span class="w"> </span><span class="nv">!mmra</span><span class="w"> </span><span class="p">!{</span><span class="nv">!&quot;amdgcn-av&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">!&quot;workgroup&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>If the metadata is dropped or ignored, there is no guarantee that the store
+will become available at the intended scope. In implementation terms, the
+store may be completed at a nearer cache than the one required for that
+scope. A corresponding <em>load-visible</em> that does not access the same near
+cache will fail to observe this store.</p>
+</div>
+<section id="store-available">
+<span id="amdgpu-store-available"></span><h3>store-available<a class="headerlink" href="#store-available" title="Link to this heading">#</a></h3>
+<p>A <em>store-available</em> operation <code class="docutils literal notranslate"><span class="pre">X</span></code> writes data to the specified location, and
+then propagates those side-effects up to its scope instance <code class="docutils literal notranslate"><span class="pre">S</span></code> and also all
+the subscope instances of <code class="docutils literal notranslate"><span class="pre">S</span></code> that contain <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="vg">@llvm.amdgcn.av.store.b128</span><span class="p">(</span><span class="nv">%addr</span><span class="p">,</span><span class="w"> </span><span class="nv">%value</span><span class="p">,</span><span class="w"> </span><span class="k">metadata</span><span class="w"> </span><span class="nv">!scope</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&#64;llvm.amdgcn.av.store.b128</span></code> intrinsic performs a non-atomic
+<em>store-available</em> operation on <code class="docutils literal notranslate"><span class="pre">%addr</span></code> with scope <code class="docutils literal notranslate"><span class="pre">!scope</span></code>. See
+<a class="reference internal" href="AMDGPUUsage.html#amdgpu-av-load-store"><span class="std std-ref">‘llvm.amdgcn.av’ Intrinsics</span></a> for details.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">store</span><span class="w"> </span><span class="k">atomic</span><span class="w"> </span><span class="p">...,</span><span class="w"> </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span>
+<span class="k">atomicrmw</span><span class="w">    </span><span class="p">...,</span><span class="w"> </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span>
+<span class="k">cmpxchg</span><span class="w">      </span><span class="p">...,</span><span class="w"> </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>An atomic operation that results in a store operation is a <em>store-available</em>
+operation with scope <code class="docutils literal notranslate"><span class="pre">syncscope</span></code>.</p>
+</section>
+<section id="load-visible">
+<span id="amdgpu-load-visible"></span><h3>load-visible<a class="headerlink" href="#load-visible" title="Link to this heading">#</a></h3>
+<p>A <em>load-visible</em> operation <code class="docutils literal notranslate"><span class="pre">Y</span></code> retrieves the state of the specified location
+from its scope instance <code class="docutils literal notranslate"><span class="pre">S</span></code>, and then loads the value at that location. In
+addition, it makes the retrieved state visible to all subscope instances of <code class="docutils literal notranslate"><span class="pre">S</span></code>
+that contain <code class="docutils literal notranslate"><span class="pre">Y</span></code>.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="nv">%value</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="vg">@llvm.amdgcn.av.load.b128</span><span class="p">(</span><span class="nv">%addr</span><span class="p">,</span><span class="w"> </span><span class="k">metadata</span><span class="w"> </span><span class="nv">!scope</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&#64;llvm.amdgcn.av.load.b128</span></code> intrinsic performs a non-atomic <em>load-visible</em>
+operation on <code class="docutils literal notranslate"><span class="pre">%addr</span></code> with scope <code class="docutils literal notranslate"><span class="pre">!scope</span></code>. See <a class="reference internal" href="AMDGPUUsage.html#amdgpu-av-load-store"><span class="std std-ref">‘llvm.amdgcn.av’ Intrinsics</span></a> for
+details.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="nv">%value</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">load</span><span class="w"> </span><span class="k">atomic</span><span class="w"> </span><span class="p">...,</span><span class="w"> </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span>
+<span class="nv">%value</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">atomicrmw</span><span class="w">   </span><span class="p">...,</span><span class="w"> </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span>
+<span class="nv">%value</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">cmpxchg</span><span class="w">     </span><span class="p">...,</span><span class="w"> </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>An atomic operation that results in a read operation is a <em>load-visible</em>
+operation with scope <code class="docutils literal notranslate"><span class="pre">syncscope</span></code>.</p>
+</section>
+<section id="addrspace-3-accesses">
+<h3>addrspace(3) Accesses<a class="headerlink" href="#addrspace-3-accesses" title="Link to this heading">#</a></h3>
+<p>Any access to <code class="docutils literal notranslate"><span class="pre">addrspace(3)</span></code> (aka LDS or local) always results in a <em>store-available</em> or
+<em>load-visible</em> operation with scope “workgroup”.</p>
+<p>Any access to <code class="docutils literal notranslate"><span class="pre">addrspace(0)</span></code> (aka flat or global) always results in a
+<em>store-available</em> or <em>load-visible</em> operation with scope “workgroup”, if the
+flat address resolves to <code class="docutils literal notranslate"><span class="pre">addrspace(3)</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>This is independent of the <code class="docutils literal notranslate"><span class="pre">syncscope</span></code> of an atomic access. For example, even if
+a <code class="docutils literal notranslate"><span class="pre">store</span> <span class="pre">atomic</span></code> to <code class="docutils literal notranslate"><span class="pre">addrspace(3)</span></code> specifies a smaller <code class="docutils literal notranslate"><span class="pre">syncscope</span></code> such as “wavefront”, the
+side-effects are made available at “workgroup” scope. In other words, the scope
+for atomicity is not always the same as the scope for availability/visibility.</p>
+</div>
+</section>
+<section id="amdgcn-av-metadata">
+<span id="amdgpu-av-metadata"></span><h3>!”amdgcn-av” metadata<a class="headerlink" href="#amdgcn-av-metadata" title="Link to this heading">#</a></h3>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="nv">!mmra</span><span class="w"> </span><span class="p">!{</span><span class="nv">!&quot;amdgcn-av&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">!&quot;none&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The presence of this metadata removes the ability of synchronizing operations to
+establish availability and visibility, and essentially creates <em>non-av</em> synchronizing
+operations.</p>
+<p>For a synchronizing operation which itself accesses memory (e.g., <code class="docutils literal notranslate"><span class="pre">store</span> <span class="pre">atomic</span> <span class="pre">release</span></code> or <code class="docutils literal notranslate"><span class="pre">load</span> <span class="pre">atomic</span> <span class="pre">acquire</span></code>), the metadata does not affect the
+availability or the visibility of the access performed by the operation itself.
+It only affects the synchronization of other memory accesses.</p>
+</section>
+<section id="make-available-and-make-visible">
+<h3>make-available and make-visible<a class="headerlink" href="#make-available-and-make-visible" title="Link to this heading">#</a></h3>
+<p><em>make-available</em> and <em>make-visible</em> operations propagate certain side-effects
+from or to the specified scope respectively. They are similar to the
+<em>store-available</em> and <em>load-visible</em> operations, except that their effect is not
+limited to specific locations.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">store</span><span class="w"> </span><span class="k">atomic</span><span class="w"> </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span><span class="w"> </span><span class="p">&lt;</span><span class="err">ordering</span><span class="p">&gt;</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nv">!mmra</span><span class="w"> </span><span class="p">!{</span><span class="nv">!&quot;amdgcn-av&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">!&quot;none&quot;</span><span class="p">}]</span>
+<span class="k">load</span><span class="w"> </span><span class="k">atomic</span><span class="w">  </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span><span class="w"> </span><span class="p">&lt;</span><span class="err">ordering</span><span class="p">&gt;</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nv">!mmra</span><span class="w"> </span><span class="p">!{</span><span class="nv">!&quot;amdgcn-av&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">!&quot;none&quot;</span><span class="p">}]</span>
+<span class="k">atomicrmw</span><span class="w">    </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span><span class="w"> </span><span class="p">&lt;</span><span class="err">ordering</span><span class="p">&gt;</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nv">!mmra</span><span class="w"> </span><span class="p">!{</span><span class="nv">!&quot;amdgcn-av&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">!&quot;none&quot;</span><span class="p">}]</span>
+<span class="k">cmpxchg</span><span class="w">      </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span><span class="w"> </span><span class="p">&lt;</span><span class="err">ordering</span><span class="p">&gt;</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nv">!mmra</span><span class="w"> </span><span class="p">!{</span><span class="nv">!&quot;amdgcn-av&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">!&quot;none&quot;</span><span class="p">}]</span>
+<span class="k">fence</span><span class="w">        </span><span class="p">[</span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;&lt;target-scope&gt;&quot;</span><span class="p">)]</span><span class="w"> </span><span class="p">&lt;</span><span class="err">ordering</span><span class="p">&gt;</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="nv">!mmra</span><span class="w"> </span><span class="p">!{</span><span class="nv">!&quot;amdgcn-av&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">!&quot;none&quot;</span><span class="p">}]</span>
+</pre></div>
+</div>
+<p>A synchronizing operation with at least <code class="docutils literal notranslate"><span class="pre">release</span></code> ordering is a
+<em>make-available</em> operation with scope <code class="docutils literal notranslate"><span class="pre">syncscope</span></code>, if it is not marked as
+<code class="docutils literal notranslate"><span class="pre">!{!&quot;amdgcn-av&quot;,</span> <span class="pre">!&quot;none&quot;}</span></code>.</p>
+<p>A synchronizing operation with at least <code class="docutils literal notranslate"><span class="pre">acquire</span></code> ordering is a
+<em>make-visible</em> operation with scope <code class="docutils literal notranslate"><span class="pre">syncscope</span></code>, if it is not marked as
+<code class="docutils literal notranslate"><span class="pre">!{!&quot;amdgcn-av&quot;,</span> <span class="pre">!&quot;none&quot;}</span></code>.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="c">; This includes the following operations:</span>
+<span class="c">; - The atomic store at &quot;agent&quot; scope,</span>
+<span class="c">; - A store-available operation at &quot;agent&quot; scope on `ptr`,</span>
+<span class="c">; - A *make-available* operation at &quot;agent&quot; scope that affects previous memory accesses.</span>
+<span class="k">store</span><span class="w"> </span><span class="k">atomic</span><span class="w"> </span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;agent&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">release</span><span class="w"> </span><span class="kt">ptr</span>
+
+<span class="c">; This includes the following operations:</span>
+<span class="c">; - The atomic store at &quot;agent&quot; scope,</span>
+<span class="c">; - A store-available operation at &quot;agent&quot; scope on `ptr`.</span>
+<span class="c">; Notably, it does not include a *make-available* operation on other memory accesses.</span>
+<span class="k">store</span><span class="w"> </span><span class="k">atomic</span><span class="w"> </span><span class="k">syncscope</span><span class="p">(</span><span class="s">&quot;agent&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">release</span><span class="w"> </span><span class="kt">ptr</span><span class="p">,</span><span class="w"> </span><span class="nv">!mmra</span><span class="w"> </span><span class="p">!{</span><span class="nv">!&quot;amdgcn-av&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">!&quot;none&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="ordering">
+<h2>Ordering<a class="headerlink" href="#ordering" title="Link to this heading">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p><strong>TODO:</strong> These ordering operations affect all address spaces. We need to
+eventually make that a parameter similar to the storage class parameter on
+operations and orders in Vulkan.</p>
+</div>
+<section id="availability-operation">
+<h3>Availability Operation<a class="headerlink" href="#availability-operation" title="Link to this heading">#</a></h3>
+<p>An operation <code class="docutils literal notranslate"><span class="pre">X</span></code> is an <em>availability operation</em> on a write <code class="docutils literal notranslate"><span class="pre">W</span></code> if one of the
+following holds:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">X</span></code> is <code class="docutils literal notranslate"><span class="pre">W</span></code> itself, and <code class="docutils literal notranslate"><span class="pre">W</span></code> is a <em>store-available</em> operation, or,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">X</span></code> is a <em>make-available</em> operation that follows <code class="docutils literal notranslate"><span class="pre">W</span></code> in program order,
+or,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">X</span></code> is a <em>make-available</em> operation whose scope instance includes <code class="docutils literal notranslate"><span class="pre">W</span></code>,
+and there is an availability operation <code class="docutils literal notranslate"><span class="pre">Z</span></code> on <code class="docutils literal notranslate"><span class="pre">W</span></code> such that:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Z</span></code> happens-before <code class="docutils literal notranslate"><span class="pre">X</span></code>, and,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Z</span></code>’s scope instance includes <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p></li>
+</ul>
+</li>
+</ul>
+<p>Then <code class="docutils literal notranslate"><span class="pre">X</span></code> makes <code class="docutils literal notranslate"><span class="pre">W</span></code> available in its own scope instance <code class="docutils literal notranslate"><span class="pre">S</span></code> and every
+subscope instance of <code class="docutils literal notranslate"><span class="pre">S</span></code> that also includes <code class="docutils literal notranslate"><span class="pre">W</span></code>.</p>
+</section>
+<section id="visibility-operation">
+<h3>Visibility Operation<a class="headerlink" href="#visibility-operation" title="Link to this heading">#</a></h3>
+<p>An operation <code class="docutils literal notranslate"><span class="pre">Y</span></code> is a <em>visibility operation</em> on a write <code class="docutils literal notranslate"><span class="pre">W</span></code> if <code class="docutils literal notranslate"><span class="pre">Y</span></code> is a
+<em>load-visible</em> operation to the same address, or a <em>make-visible</em> operation,
+and one of the following holds:</p>
+<ul>
+<li><p>There exists an <em>availability</em> operation <code class="docutils literal notranslate"><span class="pre">X</span></code> on write <code class="docutils literal notranslate"><span class="pre">W</span></code> such that:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">X</span></code> happens-before <code class="docutils literal notranslate"><span class="pre">Y</span></code>, and,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> have inclusive scopes.</p></li>
+</ul>
+<p>Then <code class="docutils literal notranslate"><span class="pre">Y</span></code> makes <code class="docutils literal notranslate"><span class="pre">W</span></code> visible in the common scope instance <code class="docutils literal notranslate"><span class="pre">S</span></code> of <code class="docutils literal notranslate"><span class="pre">X</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Y</span></code>, and every subscope instance of <code class="docutils literal notranslate"><span class="pre">S</span></code> that includes <code class="docutils literal notranslate"><span class="pre">Y</span></code>.</p>
+</li>
+<li><p>There exists a <em>visibility</em> operation <code class="docutils literal notranslate"><span class="pre">X</span></code> on write <code class="docutils literal notranslate"><span class="pre">W</span></code> such that:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">X</span></code> happens-before <code class="docutils literal notranslate"><span class="pre">Y</span></code>, and,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">X</span></code> makes <code class="docutils literal notranslate"><span class="pre">W</span></code> visible in a scope instance <code class="docutils literal notranslate"><span class="pre">S1</span></code> that includes <code class="docutils literal notranslate"><span class="pre">Y</span></code>, and,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">X</span></code> is included in the scope instance <code class="docutils literal notranslate"><span class="pre">S2</span></code> of <code class="docutils literal notranslate"><span class="pre">Y</span></code>.</p></li>
+</ul>
+<p>Then <code class="docutils literal notranslate"><span class="pre">Y</span></code> makes <code class="docutils literal notranslate"><span class="pre">W</span></code> visible in the intersection <code class="docutils literal notranslate"><span class="pre">S</span></code> of <code class="docutils literal notranslate"><span class="pre">S1</span></code> and <code class="docutils literal notranslate"><span class="pre">S2</span></code>,
+and every subscope instance of <code class="docutils literal notranslate"><span class="pre">S</span></code> that includes <code class="docutils literal notranslate"><span class="pre">Y</span></code>.</p>
+</li>
+</ul>
+</section>
+<section id="location-order">
+<h3>Location Order<a class="headerlink" href="#location-order" title="Link to this heading">#</a></h3>
+<p>A write <code class="docutils literal notranslate"><span class="pre">W</span></code> is <em>location-ordered</em> before an access <code class="docutils literal notranslate"><span class="pre">Y</span></code> to the same address
+if <code class="docutils literal notranslate"><span class="pre">W</span></code> is program-ordered before <code class="docutils literal notranslate"><span class="pre">Y</span></code>.</p>
+<p>A write <code class="docutils literal notranslate"><span class="pre">W</span></code> is <em>location-ordered</em> before a write <code class="docutils literal notranslate"><span class="pre">W1</span></code> to the same address if
+there exists an availability operation <code class="docutils literal notranslate"><span class="pre">Z</span></code> on <code class="docutils literal notranslate"><span class="pre">W</span></code> such that:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Z</span></code> happens-before <code class="docutils literal notranslate"><span class="pre">W1</span></code>, and,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">W1</span></code> is included in <code class="docutils literal notranslate"><span class="pre">Z</span></code>’s scope instance.</p></li>
+</ul>
+<p>A write <code class="docutils literal notranslate"><span class="pre">W</span></code> is <em>location-ordered</em> before a read <code class="docutils literal notranslate"><span class="pre">R</span></code> to the same address if
+there exists a visibility operation <code class="docutils literal notranslate"><span class="pre">Z</span></code> on write <code class="docutils literal notranslate"><span class="pre">W</span></code> such that:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Z</span></code> is <code class="docutils literal notranslate"><span class="pre">R</span></code> itself, or,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Z</span></code> precedes <code class="docutils literal notranslate"><span class="pre">R</span></code> in program order.</p></li>
+</ul>
+<p>A read <code class="docutils literal notranslate"><span class="pre">R</span></code> is <em>location-ordered</em> before an access (read and/or write) <code class="docutils literal notranslate"><span class="pre">X</span></code> to the
+same address if it happens-before <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p>
+<p>The AMDGPU memory model overrides the definition of each byte in the
+<a class="reference internal" href="LangRef.html#memmodel"><span class="std std-ref">LLVM memory model</span></a> as follows.</p>
+<p>Every (defined) read operation <code class="docutils literal notranslate"><span class="pre">R</span></code> reads a series of bytes written by
+(defined) write operations. Each initialized global is assumed to have an
+initial <em>system scoped</em> atomic write operation that is <em>location-ordered</em> before
+any other read or write to that same location.</p>
+<p>For each byte of a read <code class="docutils literal notranslate"><span class="pre">R</span></code>, <code class="docutils literal notranslate"><span class="pre">R</span></code> may see any write to the same byte, except:</p>
+<ul class="simple">
+<li><p>If a write <code class="docutils literal notranslate"><span class="pre">W1</span></code> is <em>location-ordered</em> before a write <code class="docutils literal notranslate"><span class="pre">W2</span></code>, and <code class="docutils literal notranslate"><span class="pre">W2</span></code> is
+<em>location-ordered</em> before a read <code class="docutils literal notranslate"><span class="pre">R</span></code>, then <code class="docutils literal notranslate"><span class="pre">R</span></code> may not see <code class="docutils literal notranslate"><span class="pre">W1</span></code>.</p></li>
+<li><p>If a read <code class="docutils literal notranslate"><span class="pre">R</span></code> is <em>location-ordered</em> before a write <code class="docutils literal notranslate"><span class="pre">W3</span></code>, then <code class="docutils literal notranslate"><span class="pre">R</span></code> may not see
+<code class="docutils literal notranslate"><span class="pre">W3</span></code>.</p></li>
+</ul>
+<p>The value returned by <code class="docutils literal notranslate"><span class="pre">R</span></code> is then defined as follows:</p>
+<ul class="simple">
+<li><p>If no write is <em>location-ordered</em> before a read <code class="docutils literal notranslate"><span class="pre">R</span></code>, then <code class="docutils literal notranslate"><span class="pre">R</span></code> returns
+<code class="docutils literal notranslate"><span class="pre">undef</span></code>.</p></li>
+<li><p>Otherwise if the set consisting of <code class="docutils literal notranslate"><span class="pre">R</span></code> and all writes that <code class="docutils literal notranslate"><span class="pre">R</span></code> may see
+contains only atomic operations with inclusive scopes, then <code class="docutils literal notranslate"><span class="pre">R</span></code> returns the
+value written by one of those writes.</p></li>
+<li><p>Otherwise, if <code class="docutils literal notranslate"><span class="pre">R</span></code> may see some write that is not <em>location-ordered</em> before
+<code class="docutils literal notranslate"><span class="pre">R</span></code>, then <code class="docutils literal notranslate"><span class="pre">R</span></code> returns <code class="docutils literal notranslate"><span class="pre">undef</span></code>.</p></li>
+<li><p>Otherwise, if <code class="docutils literal notranslate"><span class="pre">R</span></code> may see exactly one write <code class="docutils literal notranslate"><span class="pre">W</span></code>, then <code class="docutils literal notranslate"><span class="pre">R</span></code> returns the
+value written by <code class="docutils literal notranslate"><span class="pre">W</span></code>.</p></li>
+<li><p>Otherwise, <code class="docutils literal notranslate"><span class="pre">R</span></code> returns <code class="docutils literal notranslate"><span class="pre">undef</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="properties">
+<h2>Properties<a class="headerlink" href="#properties" title="Link to this heading">#</a></h2>
+<div class="admonition tip">
+<p class="admonition-title">小技巧</p>
+<p>This section is informational.</p>
+</div>
+<p>The following properties follow from the definitions above:</p>
+<ol class="arabic simple">
+<li><p><strong>Happens-before is necessary for location-order.</strong> An access <code class="docutils literal notranslate"><span class="pre">X</span></code> is
+<em>location-ordered</em> before an access <code class="docutils literal notranslate"><span class="pre">Y</span></code> only if <code class="docutils literal notranslate"><span class="pre">X</span></code> happens-before <code class="docutils literal notranslate"><span class="pre">Y</span></code>.
+This follows from the definition of availability and visibility operations,
+which always require a happens-before link with the preceding operation in
+the chain.</p></li>
+<li><p><strong>A write cannot be made available in a scope that does not contain it.</strong> The
+definition of an availability operation <code class="docutils literal notranslate"><span class="pre">X</span></code> requires that <code class="docutils literal notranslate"><span class="pre">X</span></code>’s scope
+instance includes <code class="docutils literal notranslate"><span class="pre">W</span></code> as a precondition. Since every scope instance that
+includes <code class="docutils literal notranslate"><span class="pre">X</span></code> also includes <code class="docutils literal notranslate"><span class="pre">W</span></code>, availability cannot reach a scope
+instance that excludes <code class="docutils literal notranslate"><span class="pre">W</span></code>. In other words, availability can only “expand
+outwards” into progressively larger scopes.</p></li>
+<li><p><strong>Visibility is bounded by availability.</strong> When a write is available in a
+scope instance, it can be made visible in that scope instance by a visibility
+operation with the corresponding scope. Subsequent <em>make-visible</em> operations
+make that write visible into narrower scope instances towards the observer.</p></li>
+<li><p><strong>A write can be made visible in a scope instance that does not contain it.</strong>
+The definition of a <em>visibility operation</em> anchors scope instances to the
+observer (<code class="docutils literal notranslate"><span class="pre">Y</span></code>), not to the original write. The only precondition is that the
+write must already be visible or available in the scope instance of the
+visibility operation.</p></li>
+<li><p><strong>Availability and visibility chains.</strong> For a write <code class="docutils literal notranslate"><span class="pre">W</span></code> to be visible to a
+read <code class="docutils literal notranslate"><span class="pre">R</span></code> anywhere in the system, the sufficient condition is a chain of
+happens-before edges that include availability and visibility operations with
+inclusive scopes. It is not necessary that <code class="docutils literal notranslate"><span class="pre">W</span></code> and <code class="docutils literal notranslate"><span class="pre">R</span></code> themselves have
+inclusive scopes. Each link in the availability and visibility definitions
+only checks the immediate predecessor, so intermediate operations can bridge
+scope gaps that the endpoints cannot satisfy directly. Such a chain passes
+through at least one availability operation and at least one visibility
+operation with inclusive scopes, such that their common scope includes both
+<code class="docutils literal notranslate"><span class="pre">W</span></code> and <code class="docutils literal notranslate"><span class="pre">R</span></code>.</p></li>
+</ol>
+</section>
+<section id="the-vulkan-memory-model">
+<span id="amdgcn-av-vulkan"></span><h2>The Vulkan Memory Model<a class="headerlink" href="#the-vulkan-memory-model" title="Link to this heading">#</a></h2>
+<p>The AMDGPU memory model draws heavily on the Vulkan memory model. In
+particular, the following instructions are equivalent.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 20.0%" />
+<col style="width: 55.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>LLVM</p></th>
+<th class="head"><p>SPIRV</p></th>
+<th class="head"><p>Available/Visible Semantics</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">load</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpLoad</span> <span class="pre">NonPrivatePointer</span></code></p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">load-visible</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpLoad</span> <span class="pre">NonPrivatePointer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MakePointerVisible</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">store</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpStore</span> <span class="pre">NonPrivatePointer</span></code></p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">store-available</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpStore</span> <span class="pre">NonPrivatePointer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MakePointerAvailable</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">load</span> <span class="pre">atomic</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpAtomicLoad</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MakePointerVisible</span></code>. Also <code class="docutils literal notranslate"><span class="pre">MakeVisible</span></code> when order is at least <code class="docutils literal notranslate"><span class="pre">acquire</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">load</span> <span class="pre">atomic</span></code><br><code class="docutils literal notranslate"><span class="pre">!{!&quot;amdgcn-av&quot;,</span> <span class="pre">!&quot;none&quot;}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpAtomicLoad</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MakePointerVisible</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">store</span> <span class="pre">atomic</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpAtomicStore</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MakePointerAvailable</span></code>. Also <code class="docutils literal notranslate"><span class="pre">MakeAvailable</span></code> when order is at least <code class="docutils literal notranslate"><span class="pre">release</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">store</span> <span class="pre">atomic</span></code><br><code class="docutils literal notranslate"><span class="pre">!{!&quot;amdgcn-av&quot;,</span> <span class="pre">!&quot;none&quot;}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpAtomicStore</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MakePointerAvailable</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fence</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpMemoryBarrier</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MakeAvailable</span></code> when order is at least <code class="docutils literal notranslate"><span class="pre">release</span></code>, and <code class="docutils literal notranslate"><span class="pre">MakeVisible</span></code> when order is at least <code class="docutils literal notranslate"><span class="pre">acquire</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fence</span></code><br><code class="docutils literal notranslate"><span class="pre">!{!&quot;amdgcn-av&quot;,</span> <span class="pre">!&quot;none&quot;}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpMemoryBarrier</span></code></p></td>
+<td><p>-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="admonition note">
+<p class="admonition-title">备注</p>
+<p>The above table is representative only, and does not aim to be exhaustive. In
+particular, it does not list composite atomic operations like <code class="docutils literal notranslate"><span class="pre">rmw</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cmpxchg</span></code>. The ordering and semantics of these operations can be determined
+by combining suitable rules such as:</p>
+<ul class="simple">
+<li><p>“<code class="docutils literal notranslate"><span class="pre">MakeAvailable</span></code> if the order is at least <code class="docutils literal notranslate"><span class="pre">release</span></code>, and the operation
+results in a store”,</p></li>
+<li><p>“Only if it is not marked as <code class="docutils literal notranslate"><span class="pre">!{!&quot;amdgcn-av&quot;,</span> <span class="pre">!&quot;none&quot;}</span></code>”, etc.</p></li>
+</ul>
+</div>
+<p>The AMDGPU memory model is a special case of the Vulkan memory model:</p>
+<ol class="arabic simple">
+<li><p>LLVM fence/atomic ordering operations have <code class="docutils literal notranslate"><span class="pre">MakeAvailable</span></code> / <code class="docutils literal notranslate"><span class="pre">MakeVisible</span></code>
+semantics by default, thus satisfying the availability and visibility chains
+required in Vulkan. Hence the LLVM memory model is a “strong” subset of the
+Vulkan memory model.</p></li>
+<li><p>The AMDGPU memory model described here makes it possible to opt-out of the
+default <code class="docutils literal notranslate"><span class="pre">MakeAvailable</span></code> and <code class="docutils literal notranslate"><span class="pre">MakeVisible</span></code> semantics, and instead specify it
+on select places including the new <em>load-visible</em> and <em>store-available</em>
+operations. This expands the subset of the Vulkan memory model that can now
+be expressed in LLVM IR.</p></li>
+</ol>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="SPIRVUsage.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">User Guide for SPIR-V Target</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="AMDGPUExecutionSynchronization.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">AMDGPU Execution Synchronization</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">AMDGPU Memory Model</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#terminology">Terminology</a></li>
+<li><a class="reference internal" href="#scopes">Scopes</a><ul>
+<li><a class="reference internal" href="#llvm-scopes">LLVM scopes</a></li>
+<li><a class="reference internal" href="#id1">AMDGPU scopes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#availability-and-visibility">Availability and Visibility</a><ul>
+<li><a class="reference internal" href="#store-available">store-available</a></li>
+<li><a class="reference internal" href="#load-visible">load-visible</a></li>
+<li><a class="reference internal" href="#addrspace-3-accesses">addrspace(3) Accesses</a></li>
+<li><a class="reference internal" href="#amdgcn-av-metadata">!”amdgcn-av” metadata</a></li>
+<li><a class="reference internal" href="#make-available-and-make-visible">make-available and make-visible</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ordering">Ordering</a><ul>
+<li><a class="reference internal" href="#availability-operation">Availability Operation</a></li>
+<li><a class="reference internal" href="#visibility-operation">Visibility Operation</a></li>
+<li><a class="reference internal" href="#location-order">Location Order</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#properties">Properties</a></li>
+<li><a class="reference internal" href="#the-vulkan-memory-model">The Vulkan Memory Model</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=7d86a446"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

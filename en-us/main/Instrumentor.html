@@ -1,0 +1,1588 @@
+<!doctype html>
+<html class="no-js" lang="en-US" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Instruction referencing for debug info" href="InstrRefDebugInfo.html" /><link rel="prev" title="How to Update Debug Info: A Guide for LLVM Pass Authors" href="HowToUpdateDebugInfo.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/Instrumentor.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>The LLVM Instrumentor Pass - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/Instrumentor.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="the-llvm-instrumentor-pass">
+<h1>The LLVM Instrumentor Pass<a class="headerlink" href="#the-llvm-instrumentor-pass" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>The <strong>Instrumentor</strong> is a highly configurable instrumentation pass for LLVM-IR
+that allows users to insert custom runtime function calls at various program
+points. Unlike traditional instrumentation tools that are hardcoded for
+specific purposes (like sanitizers or profilers), the Instrumentor provides a
+flexible, configuration-driven approach where users can specify:</p>
+<ul class="simple">
+<li><p><strong>What</strong> to instrument (loads, stores, allocations, function calls, etc.)</p></li>
+<li><p><strong>Where</strong> to instrument (before or after operations)</p></li>
+<li><p><strong>What information</strong> to pass to the runtime (pointers, values, sizes, types, etc.)</p></li>
+<li><p><strong>Whether</strong> to modify program behavior (replace values, redirect pointers, etc.)</p></li>
+</ul>
+<p>The Instrumentor is designed to support a wide variety of use cases including:</p>
+<ul class="simple">
+<li><p>Custom memory profilers and trackers</p></li>
+<li><p>Performance analysis tools</p></li>
+<li><p>Dynamic program analysis</p></li>
+<li><p>Debugging and tracing utilities</p></li>
+<li><p>Stack usage monitoring</p></li>
+<li><p>Custom sanitizers and checkers</p></li>
+</ul>
+<p>To use the Instrumentor it is recommended to run the wizard script located at
+<code class="docutils literal notranslate"><span class="pre">./llvm/utils/instrumentor-config-wizard.py</span></code>. The script will interactively
+create a configuration file and a stub runtime which is required to be linked
+into the instrumented program.</p>
+</section>
+<section id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading">#</a></h2>
+<section id="configurable-instrumentation-opportunities">
+<h3>Configurable Instrumentation Opportunities<a class="headerlink" href="#configurable-instrumentation-opportunities" title="Link to this heading">#</a></h3>
+<p>The Instrumentor supports instrumentation at multiple levels:</p>
+<dl class="simple myst">
+<dt><strong>Instruction-level:</strong></dt><dd><ul class="simple">
+<li><p><strong>Load instructions</strong>: Instrument memory reads with access to pointer, loaded value, alignment, size, atomicity, etc.</p></li>
+<li><p><strong>Store instructions</strong>: Instrument memory writes with access to pointer, stored value, alignment, size, atomicity, etc.</p></li>
+<li><p><strong>Alloca instructions</strong>: Instrument stack allocations with access to size, alignment, and allocated address</p></li>
+</ul>
+</dd>
+<dt><strong>Function-level:</strong></dt><dd><ul class="simple">
+<li><p><strong>Function entry</strong>: Instrument at function start with access to function name, address, arguments, etc.</p></li>
+<li><p><strong>Function exit</strong>: Instrument at function return</p></li>
+</ul>
+</dd>
+<dt><strong>Future extensions:</strong></dt><dd><ul class="simple">
+<li><p>Basic block entry/exit</p></li>
+<li><p>Module-level initialization</p></li>
+<li><p>Global variable access</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="pre-and-post-instrumentation">
+<h3>PRE and POST Instrumentation<a class="headerlink" href="#pre-and-post-instrumentation" title="Link to this heading">#</a></h3>
+<p>Each instrumentation opportunity supports two positions:</p>
+<ul class="simple">
+<li><p><strong>PRE</strong>: Insert instrumentation <strong>before</strong> the operation occurs</p>
+<ul>
+<li><p>For loads: can inspect/modify the pointer before reading</p></li>
+<li><p>For stores: can inspect/modify the pointer and value before writing</p></li>
+<li><p>For allocas: can modify the allocation size</p></li>
+<li><p>For functions: instrument at function entry, inspect/replace arguments</p></li>
+</ul>
+</li>
+<li><p><strong>POST</strong>: Insert instrumentation <strong>after</strong> the operation occurs</p>
+<ul>
+<li><p>For loads: can inspect/modify the loaded value</p></li>
+<li><p>For stores: instrument after the write completes</p></li>
+<li><p>For allocas: can inspect/modify the allocated address</p></li>
+<li><p>For functions: instrument at function exit</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="selective-argument-passing">
+<h3>Selective Argument Passing<a class="headerlink" href="#selective-argument-passing" title="Link to this heading">#</a></h3>
+<p>For each instrumentation opportunity, users can individually enable/disable specific arguments to control:</p>
+<ul class="simple">
+<li><p>What information is passed to the runtime function</p></li>
+<li><p>The signature of the generated runtime function</p></li>
+<li><p>Performance overhead (fewer arguments = faster calls)</p></li>
+</ul>
+<p>For example, for load instrumentation, you can choose to pass:</p>
+<ul class="simple">
+<li><p>Pointer address</p></li>
+<li><p>Pointer address space</p></li>
+<li><p>Loaded value</p></li>
+<li><p>Value size</p></li>
+<li><p>Alignment</p></li>
+<li><p>Value type ID</p></li>
+<li><p>Atomicity ordering</p></li>
+<li><p>Synchronization scope</p></li>
+<li><p>Volatility flag</p></li>
+<li><p>Unique instrumentation ID</p></li>
+</ul>
+</section>
+<section id="value-replacement">
+<h3>Value Replacement<a class="headerlink" href="#value-replacement" title="Link to this heading">#</a></h3>
+<p>The Instrumentor supports <strong>replacing</strong> values returned from the runtime:</p>
+<ul class="simple">
+<li><p><strong>Load replacement</strong>: The runtime can provide a different value than what was loaded from memory</p></li>
+<li><p><strong>Store replacement</strong>: The runtime can modify the pointer or value being stored</p></li>
+<li><p><strong>Alloca replacement</strong>: The runtime can provide a different allocation size or replace the allocated address</p></li>
+<li><p><strong>Argument replacement</strong>: The runtime can modify the arguments passed to a function</p></li>
+</ul>
+<p>This enables use cases like:</p>
+<ul class="simple">
+<li><p>Value redirection for debugging</p></li>
+<li><p>Custom memory allocators</p></li>
+<li><p>Fault injection</p></li>
+<li><p>Taint tracking</p></li>
+</ul>
+</section>
+<section id="instrumentation-filtering">
+<h3>Instrumentation Filtering<a class="headerlink" href="#instrumentation-filtering" title="Link to this heading">#</a></h3>
+<p>The Instrumentor provides fine-grained control over what gets instrumented:</p>
+<ul class="simple">
+<li><p><strong>Target regex</strong>: Match against the target triple (e.g., <code class="docutils literal notranslate"><span class="pre">x86_64-.*-linux</span></code>)</p></li>
+<li><p><strong>Host/GPU toggle</strong>: Separately enable/disable CPU and GPU instrumentation</p></li>
+<li><p><strong>Function filtering</strong>: Exclude runtime functions from instrumentation via a regular expression</p></li>
+<li><p><strong>Property filters</strong>: Filter individual instrumentation points based on static properties (see Property Filtering below)</p></li>
+</ul>
+</section>
+<section id="property-filtering">
+<h3>Property Filtering<a class="headerlink" href="#property-filtering" title="Link to this heading">#</a></h3>
+<p>The Instrumentor supports fine-grained filtering of individual instrumentation
+opportunities based on their static properties. This allows you to instrument
+only specific operations that meet certain criteria, such as:</p>
+<ul class="simple">
+<li><p>Only atomic loads with specific orderings</p></li>
+<li><p>Only volatile memory accesses</p></li>
+<li><p>Functions with specific name patterns</p></li>
+<li><p>Allocations above a certain size threshold</p></li>
+</ul>
+<p>Property filters are specified using the <code class="docutils literal notranslate"><span class="pre">filter</span></code> field in the configuration JSON for each instrumentation opportunity.</p>
+<section id="filter-syntax">
+<h4>Filter Syntax<a class="headerlink" href="#filter-syntax" title="Link to this heading">#</a></h4>
+<p>The filter expression language supports:</p>
+<dl class="simple myst">
+<dt><strong>Integer comparisons:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">==</span></code> (equal)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">!=</span></code> (not equal)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;</span></code> (less than)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&gt;</span></code> (greater than)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;=</span></code> (less than or equal)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> (greater than or equal)</p></li>
+</ul>
+</dd>
+<dt><strong>String comparisons:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">==</span></code> (equal, with quoted string)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">!=</span></code> (not equal, with quoted string)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.startswith(&quot;prefix&quot;)</span></code> (prefix check, with quoted string)</p></li>
+</ul>
+</dd>
+<dt><strong>Pointer comparisons:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">==null</span></code> (null pointer check)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">!=null</span></code> (non-null pointer check)</p></li>
+</ul>
+</dd>
+<dt><strong>Logical operators:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> (logical AND)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">||</span></code> (logical OR)</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Important notes:</strong></p>
+<ul class="simple">
+<li><p>If a property value is dynamic (not a compile-time constant), the filter is assumed to pass</p></li>
+<li><p>Empty filters always pass</p></li>
+<li><p>String literals must be enclosed in double quotes (with proper escaping)</p></li>
+<li><p>Property names are specific to each instrumentation opportunity (see Available Properties below)</p></li>
+</ul>
+</section>
+<section id="filter-examples">
+<h4>Filter Examples<a class="headerlink" href="#filter-examples" title="Link to this heading">#</a></h4>
+<p><strong>Filter only atomic loads:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;instruction_post&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;load&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;filter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;atomicity_ordering&gt;0&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;pointer&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Filter volatile stores or acquire and release operations:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;instruction_post&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;store&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;filter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;is_volatile==1 || atomicity_ordering==6&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;pointer&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Filter functions by name prefix:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;function_pre&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;function&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;filter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;name.startswith(\&quot;test_\&quot;)&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Complex filter with multiple conditions:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;instruction_post&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;load&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;filter&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;(atomicity_ordering==4 || atomicity_ordering==7) &amp;&amp; sync_scope_id==0&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;pointer&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;atomicity_ordering&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="available-properties">
+<h4>Available Properties<a class="headerlink" href="#available-properties" title="Link to this heading">#</a></h4>
+<p>The properties available for filtering depend on the instrumentation
+opportunity type but generally include all values that can be passed to the
+runtime, filtered using their respective name.</p>
+<dl class="simple myst">
+<dt><strong>Load/Store instructions:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">atomicity_ordering</span></code> (integer): 0=non-atomic, 1=Unordered, 2=Monotonic, 4=Acquire, 5=Release, 6=AcquireRelease, 7=SequentiallyConsistent</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sync_scope_id</span></code> (integer): synchronization scope identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_volatile</span></code> (integer): 1 if volatile, 0 otherwise</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alignment</span></code> (integer): alignment in bytes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value_size</span></code> (integer): size of loaded value in bytes</p></li>
+</ul>
+</dd>
+<dt><strong>Function instrumentation:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> (string): function name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_arguments</span></code> (integer): number of function arguments</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_main</span></code> (integer): 1 if this is the main function, 0 otherwise</p></li>
+</ul>
+</dd>
+<dt><strong>Alloca instructions:</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> (integer): allocation size in bytes (if constant)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alignment</span></code> (integer): allocation alignment in bytes</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+</section>
+<section id="configuration-system">
+<h2>Configuration System<a class="headerlink" href="#configuration-system" title="Link to this heading">#</a></h2>
+<p>The Instrumentor uses a JSON-based configuration system that allows users to:</p>
+<ol class="arabic simple">
+<li><p>Generate a default configuration showing all available options</p></li>
+<li><p>Interactively customize the configuration using the wizard</p></li>
+<li><p>Load and modify existing configurations</p></li>
+<li><p>Generate runtime stub implementations</p></li>
+</ol>
+<section id="configuration-file-format">
+<h3>Configuration File Format<a class="headerlink" href="#configuration-file-format" title="Link to this heading">#</a></h3>
+<p>The configuration file is a JSON document with the following structure:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;configuration&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;runtime_prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;__instrumentor_&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;target_regex&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;host_enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;gpu_enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;function_pre&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;function&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;address&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;instruction_pre&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;load&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;pointer&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;pointer.replace&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;value_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;store&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;pointer&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;value_size&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;instruction_post&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;load&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;value.replace&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="configuration-sections">
+<h3>Configuration Sections<a class="headerlink" href="#configuration-sections" title="Link to this heading">#</a></h3>
+<dl class="simple myst">
+<dt><strong>configuration</strong></dt><dd><p>Global settings that apply to all instrumentation:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">runtime_prefix</span></code>: Prefix for all runtime function names (default: <code class="docutils literal notranslate"><span class="pre">__instrumentor_</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_regex</span></code>: Regular expression to filter targets (empty = all targets)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">host_enabled</span></code>: Enable instrumentation for CPU targets (default: true)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gpu_enabled</span></code>: Enable instrumentation for GPU targets (default: true)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">runtime_bitcode</span></code>: Links the provided runtime library in during instrumentation (default: empty)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inline_runtime</span></code>: Inline runtime calls if a runime is provided via <code class="docutils literal notranslate"><span class="pre">inline_runtime</span></code> (default: true)</p></li>
+</ul>
+</dd>
+<dt><strong>function_pre / function_post</strong></dt><dd><p>Function-level instrumentation configuration.</p>
+</dd>
+<dt><strong>instruction_pre / instruction_post</strong></dt><dd><p>Instruction-level instrumentation configuration, with subsections for each instruction type (<code class="docutils literal notranslate"><span class="pre">load</span></code>, <code class="docutils literal notranslate"><span class="pre">store</span></code>, <code class="docutils literal notranslate"><span class="pre">alloca</span></code>, etc.).</p>
+</dd>
+</dl>
+</section>
+<section id="argument-configuration">
+<h3>Argument Configuration<a class="headerlink" href="#argument-configuration" title="Link to this heading">#</a></h3>
+<p>For each instrumentation opportunity, arguments are configured with:</p>
+<ul class="simple">
+<li><p><strong>enabled</strong>: Boolean to enable/disable the entire opportunity</p></li>
+<li><p><strong>filter</strong>: Optional string expression to filter instrumentation based on static properties (see Property Filtering)</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">&lt;argument_name&gt;</span></code></strong>: Boolean to enable/disable passing this argument</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">&lt;argument_name&gt;.replace</span></code></strong>: Boolean to enable value replacement (only for replaceable arguments)</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">&lt;argument_name&gt;.description</span></code></strong>: Human-readable description of the argument</p></li>
+</ul>
+</section>
+</section>
+<section id="the-configuration-wizard">
+<h2>The Configuration Wizard<a class="headerlink" href="#the-configuration-wizard" title="Link to this heading">#</a></h2>
+<p>The Instrumentor includes an interactive configuration wizard that simplifies the process of creating and modifying configurations.</p>
+<section id="running-the-wizard">
+<h3>Running the Wizard<a class="headerlink" href="#running-the-wizard" title="Link to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run the wizard interactively</span>
+./llvm/utils/instrumentor-config-wizard.py
+
+<span class="c1"># Specify output location</span>
+./llvm/utils/instrumentor-config-wizard.py<span class="w"> </span>-o<span class="w"> </span>my_config.json
+
+<span class="c1"># Use specific opt binary</span>
+./llvm/utils/instrumentor-config-wizard.py<span class="w"> </span>--opt-path<span class="w"> </span>/path/to/opt
+
+<span class="c1"># Load and modify existing configuration</span>
+./llvm/utils/instrumentor-config-wizard.py<span class="w"> </span>--input<span class="w"> </span>existing.json<span class="w"> </span>-o<span class="w"> </span>modified.json
+</pre></div>
+</div>
+</section>
+<section id="wizard-workflow">
+<h3>Wizard Workflow<a class="headerlink" href="#wizard-workflow" title="Link to this heading">#</a></h3>
+<p>The wizard guides you through five steps:</p>
+<dl class="simple myst">
+<dt><strong>Step 1: Select Instrumentation Types</strong></dt><dd><p>Choose which types of operations to instrument (load, store, alloca, function, etc.). This is a high-level selection - you can configure individual arguments later.</p>
+</dd>
+<dt><strong>Step 2: PRE vs POST Configuration</strong></dt><dd><p>Decide whether PRE and POST instrumentation should use the same configuration or different configurations. This saves time when you want both positions to have identical settings.</p>
+</dd>
+<dt><strong>Step 3: Base Configuration</strong></dt><dd><p>Configure global settings:</p>
+<ul class="simple">
+<li><p>Runtime prefix for function names</p></li>
+<li><p>Target regex for filtering</p></li>
+<li><p>Enable/disable host (CPU) instrumentation</p></li>
+<li><p>Enable/disable GPU instrumentation</p></li>
+</ul>
+</dd>
+<dt><strong>Step 4: Configure Arguments</strong></dt><dd><p>For each enabled instrumentation type, select which arguments to pass to the runtime function. You can:</p>
+<ul class="simple">
+<li><p>Toggle individual arguments on/off</p></li>
+<li><p>Enable value replacement for replaceable arguments</p></li>
+<li><p>Enable all or disable all arguments</p></li>
+<li><p>Configure PRE and POST separately (if selected in Step 2)</p></li>
+</ul>
+</dd>
+<dt><strong>Step 5: Review and Save</strong></dt><dd><p>Review your configuration and optionally generate runtime stub implementations. The wizard displays a summary and provides commands for using the configuration with <code class="docutils literal notranslate"><span class="pre">opt</span></code> and <code class="docutils literal notranslate"><span class="pre">clang</span></code>.</p>
+</dd>
+</dl>
+</section>
+<section id="generating-runtime-stubs">
+<h3>Generating Runtime Stubs<a class="headerlink" href="#generating-runtime-stubs" title="Link to this heading">#</a></h3>
+<p>The wizard can automatically generate C stub implementations of your runtime functions:</p>
+<ol class="arabic simple">
+<li><p>In Step 5, select ‘g’ to generate stubs</p></li>
+<li><p>Specify the output file path (default: <code class="docutils literal notranslate"><span class="pre">&lt;config_name&gt;_stubs.c</span></code>)</p></li>
+<li><p>The wizard creates a C file with stub implementations that print their arguments</p></li>
+</ol>
+<p>The generated stubs are useful as:</p>
+<ul class="simple">
+<li><p>Starting templates for implementing your runtime</p></li>
+<li><p>Documentation of the expected function signatures</p></li>
+<li><p>Quick prototypes for testing instrumentation</p></li>
+</ul>
+<p>Example stub output:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">__instrumentor_pre_load</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">pointer</span><span class="p">,</span><span class="w"> </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">pointer_as</span><span class="p">,</span>
+<span class="w">                              </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">value_size</span><span class="p">,</span><span class="w"> </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;load pre -- pointer: %p, pointer_as: %i, &quot;</span>
+<span class="w">         </span><span class="s">&quot;value_size: %lu, id: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="n">pointer</span><span class="p">,</span><span class="w"> </span><span class="n">pointer_as</span><span class="p">,</span><span class="w"> </span><span class="n">value_size</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="usage-examples">
+<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading">#</a></h2>
+<section id="basic-usage-with-opt">
+<h3>Basic Usage with opt<a class="headerlink" href="#basic-usage-with-opt" title="Link to this heading">#</a></h3>
+<p><strong>Step 1: (Optional) Generate a default configuration</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>opt<span class="w"> </span>-passes<span class="o">=</span>instrumentor<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-instrumentor-write-config-file<span class="o">=</span>config.json<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-disable-output<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>input.ll
+</pre></div>
+</div>
+<p>This creates <code class="docutils literal notranslate"><span class="pre">config.json</span></code> with all available instrumentation opportunities and their arguments.</p>
+<p><strong>Step 2: Customize the configuration</strong></p>
+<p>Edit <code class="docutils literal notranslate"><span class="pre">config.json</span></code> manually or use the wizard (no input needed):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./llvm/utils/instrumentor-config-wizard.py<span class="w"> </span>--input<span class="w"> </span>config.json<span class="w"> </span>-o<span class="w"> </span>custom.json
+</pre></div>
+</div>
+<p><strong>Step 3: Apply instrumentation</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>opt<span class="w"> </span>-passes<span class="o">=</span>instrumentor<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-instrumentor-read-config-file<span class="o">=</span>custom.json<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>input.ll<span class="w"> </span>-S<span class="w"> </span>-o<span class="w"> </span>instrumented.ll
+</pre></div>
+</div>
+<p>The instrumented output contains calls to your runtime functions at the configured program points.</p>
+</section>
+<section id="using-with-clang">
+<h3>Using with Clang<a class="headerlink" href="#using-with-clang" title="Link to this heading">#</a></h3>
+<p>To instrument during compilation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>clang<span class="w"> </span>-mllvm<span class="w"> </span>-enable-instrumentor<span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>-mllvm<span class="w"> </span>-instrumentor-read-config-file<span class="o">=</span>config.json<span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>source.c<span class="w"> </span>-o<span class="w"> </span>program
+</pre></div>
+</div>
+</section>
+<section id="complete-workflow-example">
+<h3>Complete Workflow Example<a class="headerlink" href="#complete-workflow-example" title="Link to this heading">#</a></h3>
+<p>Here’s a complete example for creating a simple memory access profiler:</p>
+<p><strong>1. Create configuration with the wizard:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./llvm/utils/instrumentor-config-wizard.py<span class="w"> </span>-o<span class="w"> </span>memory_profiler.json
+
+<span class="c1"># In the wizard:</span>
+<span class="c1"># - Enable: load, store</span>
+<span class="c1"># - Use same config for PRE/POST: yes</span>
+<span class="c1"># - Base config: keep defaults</span>
+<span class="c1"># - For load/store: enable pointer, value_size, id</span>
+<span class="c1"># - Generate stubs: yes (memory_profiler_stubs.c)</span>
+</pre></div>
+</div>
+<p><strong>2. Implement the runtime:</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// memory_runtime.c</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdint.h&gt;</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">load_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">store_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">__instrumentor_pre_load</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">pointer</span><span class="p">,</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">value_size</span><span class="p">,</span>
+<span class="w">                               </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">load_count</span><span class="o">++</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Load from %p (size: %lu, id: %d)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="n">pointer</span><span class="p">,</span><span class="w"> </span><span class="n">value_size</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">__instrumentor_pre_store</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">pointer</span><span class="p">,</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">value_size</span><span class="p">,</span>
+<span class="w">                                </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">store_count</span><span class="o">++</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Store to %p (size: %lu, id: %d)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="n">pointer</span><span class="p">,</span><span class="w"> </span><span class="n">value_size</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">__attribute__</span><span class="p">((</span><span class="n">destructor</span><span class="p">))</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">print_stats</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Total loads: %lu</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">load_count</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Total stores: %lu</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">store_count</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>3. Instrument and compile:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instrument the program</span>
+clang<span class="w"> </span>-emit-llvm<span class="w"> </span>-S<span class="w"> </span>-o<span class="w"> </span>program.ll<span class="w"> </span>program.c
+opt<span class="w"> </span>-passes<span class="o">=</span>instrumentor<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-instrumentor-read-config-file<span class="o">=</span>memory_profiler.json<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>program.ll<span class="w"> </span>-S<span class="w"> </span>-o<span class="w"> </span>program_inst.ll
+
+<span class="c1"># Compile with runtime</span>
+clang<span class="w"> </span>program_inst.ll<span class="w"> </span>memory_runtime.c<span class="w"> </span>-o<span class="w"> </span>program
+</pre></div>
+</div>
+<p><strong>4. Run and observe:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./program
+<span class="c1"># Output includes:</span>
+<span class="c1"># Load from 0x7ffc12345678 (size: 4, id: 1)</span>
+<span class="c1"># Store to 0x7ffc12345680 (size: 8, id: 2)</span>
+<span class="c1"># ...</span>
+<span class="c1"># Total loads: 42</span>
+<span class="c1"># Total stores: 27</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-use-cases">
+<h2>Advanced Use Cases<a class="headerlink" href="#advanced-use-cases" title="Link to this heading">#</a></h2>
+<section id="stack-usage-profiling">
+<h3>Stack Usage Profiling<a class="headerlink" href="#stack-usage-profiling" title="Link to this heading">#</a></h3>
+<p>Configure alloca instrumentation to track stack allocations:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;instruction_pre&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;alloca&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;size&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;alignment&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;instruction_post&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;alloca&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;address&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;size&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Runtime implementation:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">total_stack_usage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">peak_stack_usage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">current_stack_usage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">__instrumentor_post_alloca</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">address</span><span class="p">,</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span>
+<span class="w">                                  </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">current_stack_usage</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">size</span><span class="p">;</span>
+<span class="w">  </span><span class="n">total_stack_usage</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">size</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">current_stack_usage</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">peak_stack_usage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">peak_stack_usage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">current_stack_usage</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="value-replacement-for-fault-injection">
+<h3>Value Replacement for Fault Injection<a class="headerlink" href="#value-replacement-for-fault-injection" title="Link to this heading">#</a></h3>
+<p>Use value replacement to inject faults:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;instruction_post&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;load&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;value.replace&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;pointer&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Runtime implementation:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// Replace every 1000th loaded value with zero</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">load_counter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="kt">uint64_t</span><span class="w"> </span><span class="nf">__instrumentor_post_load</span><span class="p">(</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">pointer</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">++</span><span class="n">load_counter</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">1000</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Injecting fault at %p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pointer</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">// Return fault value</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">value</span><span class="p">;</span><span class="w">  </span><span class="c1">// Return original value</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="function-level-tracing">
+<h3>Function-Level Tracing<a class="headerlink" href="#function-level-tracing" title="Link to this heading">#</a></h3>
+<p>Instrument function entry and exit:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;function_pre&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;function&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;address&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;num_arguments&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;function_post&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;function&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Runtime implementation:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">call_depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">__instrumentor_pre_function</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">address</span><span class="p">,</span>
+<span class="w">                                   </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">num_args</span><span class="p">,</span><span class="w"> </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%*sEntering %s (%p) with %d args</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="n">call_depth</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">address</span><span class="p">,</span><span class="w"> </span><span class="n">num_args</span><span class="p">);</span>
+<span class="w">  </span><span class="n">call_depth</span><span class="o">++</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">__instrumentor_post_function</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">call_depth</span><span class="o">--</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%*sExiting %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">call_depth</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="gpu-instrumentation">
+<h3>GPU Instrumentation<a class="headerlink" href="#gpu-instrumentation" title="Link to this heading">#</a></h3>
+<p>The Instrumentor supports GPU targets (AMDGPU and NVPTX). Configure GPU-specific instrumentation:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;configuration&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;runtime_prefix&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;__gpu_runtime_&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;target_regex&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;(amdgcn|nvptx).*&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;host_enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;gpu_enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;instruction_pre&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;load&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;pointer&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;pointer_as&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that GPU runtime functions must be implemented with appropriate device attributes.</p>
+</section>
+</section>
+<section id="implementation-details">
+<h2>Implementation Details<a class="headerlink" href="#implementation-details" title="Link to this heading">#</a></h2>
+<section id="generated-runtime-function-signatures">
+<h3>Generated Runtime Function Signatures<a class="headerlink" href="#generated-runtime-function-signatures" title="Link to this heading">#</a></h3>
+<p>The Instrumentor generates runtime function names following this pattern:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;runtime_prefix&gt;&lt;position&gt;_&lt;opportunity_name&gt;[_ind]
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;runtime_prefix&gt;</span></code>: Configurable prefix (default: <code class="docutils literal notranslate"><span class="pre">__instrumentor_</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;position&gt;</span></code>: Either <code class="docutils literal notranslate"><span class="pre">pre</span></code> or <code class="docutils literal notranslate"><span class="pre">post</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;opportunity_name&gt;</span></code>: Name of the instrumentation opportunity (<code class="docutils literal notranslate"><span class="pre">load</span></code>, <code class="docutils literal notranslate"><span class="pre">store</span></code>, <code class="docutils literal notranslate"><span class="pre">function</span></code>, etc.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_ind</span></code>: Optional suffix when indirection is used (see below)</p></li>
+</ul>
+<p>Examples:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">__instrumentor_pre_load</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__instrumentor_post_store</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__instrumentor_pre_function</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__instrumentor_pre_load_ind</span></code> (with indirection)</p></li>
+</ul>
+</section>
+<section id="direct-vs-indirect-arguments">
+<h3>Direct vs Indirect Arguments<a class="headerlink" href="#direct-vs-indirect-arguments" title="Link to this heading">#</a></h3>
+<p>The Instrumentor uses two modes for passing arguments:</p>
+<dl class="simple myst">
+<dt><strong>Direct mode</strong> (default):</dt><dd><p>Arguments are passed by value. This is efficient but requires that all arguments fit in registers or can be passed through the stack efficiently.</p>
+</dd>
+<dt><strong>Indirect mode</strong>:</dt><dd><p>Arguments are passed by pointer. This is used automatically when:</p>
+<ul class="simple">
+<li><p>Multiple replaceable arguments are enabled (requires indirection for all replaceable args)</p></li>
+<li><p>An argument’s value is too large (aggregate types, large values)</p></li>
+</ul>
+</dd>
+</dl>
+<p>When indirect mode is used, a separate function with the <code class="docutils literal notranslate"><span class="pre">_ind</span></code> suffix is generated:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// Direct mode</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">__instrumentor_pre_load</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">pointer</span><span class="p">,</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">value_size</span><span class="p">);</span>
+
+<span class="c1">// Indirect mode (automatically generated when needed)</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">__instrumentor_pre_load_ind</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">**</span><span class="n">pointer</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">pointer_size</span><span class="p">,</span>
+<span class="w">                                  </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">value_size</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">value_size_size</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Users typically don’t need to worry about this - the Instrumentor handles it automatically and the wizard-generated stubs show the correct signatures.</p>
+</section>
+<section id="unique-ids">
+<h3>Unique IDs<a class="headerlink" href="#unique-ids" title="Link to this heading">#</a></h3>
+<p>When the <code class="docutils literal notranslate"><span class="pre">id</span></code> argument is enabled, the Instrumentor assigns a unique 32-bit integer to each instrumentation call site:</p>
+<ul class="simple">
+<li><p>PRE positions get positive IDs (1, 2, 3, …)</p></li>
+<li><p>POST positions get negative IDs (-1, -2, -3, …)</p></li>
+<li><p>IDs are consistent across multiple runs</p></li>
+</ul>
+</section>
+<section id="caching">
+<h3>Caching<a class="headerlink" href="#caching" title="Link to this heading">#</a></h3>
+<p>The Instrumentor caches certain argument values between PRE and POST calls when possible:</p>
+<ul class="simple">
+<li><p>Values computed in PRE are reused in POST (e.g., pointer value)</p></li>
+<li><p>This reduces overhead and ensures consistency</p></li>
+</ul>
+</section>
+<section id="runtime-function-requirements">
+<h3>Runtime Function Requirements<a class="headerlink" href="#runtime-function-requirements" title="Link to this heading">#</a></h3>
+<p>Runtime functions must be:</p>
+<ul class="simple">
+<li><p>Defined with external linkage</p></li>
+<li><p>Fast and non-blocking (to minimize instrumentation overhead)</p></li>
+<li><p>Thread-safe if the program is multi-threaded</p></li>
+</ul>
+<p>Runtime functions <strong>must not</strong>:</p>
+<ul class="simple">
+<li><p>Call back into instrumented code (to avoid infinite recursion)</p></li>
+</ul>
+</section>
+</section>
+<section id="performance-considerations">
+<h2>Performance Considerations<a class="headerlink" href="#performance-considerations" title="Link to this heading">#</a></h2>
+<section id="overhead-factors">
+<h3>Overhead Factors<a class="headerlink" href="#overhead-factors" title="Link to this heading">#</a></h3>
+<p>Instrumentation overhead depends on:</p>
+<ol class="arabic simple">
+<li><p><strong>Number of instrumentation points</strong>: More instrumented operations = more overhead</p></li>
+<li><p><strong>Number of arguments passed</strong>: Each argument adds instructions and register pressure</p></li>
+<li><p><strong>Runtime function complexity</strong>: Complex runtime logic increases overhead</p></li>
+<li><p><strong>Frequency of instrumented operations</strong>: Instrumenting hot loops has high impact</p></li>
+</ol>
+</section>
+<section id="optimization-tips">
+<h3>Optimization Tips<a class="headerlink" href="#optimization-tips" title="Link to this heading">#</a></h3>
+<dl class="simple myst">
+<dt><strong>Minimize arguments:</strong></dt><dd><p>Only enable arguments you actually need. Passing fewer arguments reduces overhead.</p>
+</dd>
+<dt><strong>Use PRE or POST, not both:</strong></dt><dd><p>If you only need one position, disable the other.</p>
+</dd>
+<dt><strong>Target filtering:</strong></dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">target_regex</span></code> to instrument only specific targets or modules.</p>
+</dd>
+<dt><strong>Efficient runtime:</strong></dt><dd><p>Keep runtime functions simple and fast. Consider:</p>
+<ul class="simple">
+<li><p>Lock-free data structures</p></li>
+<li><p>Thread-local storage</p></li>
+<li><p>Batching outputs instead of per-call I/O</p></li>
+<li><p>Sampling (instrument 1 in N calls)</p></li>
+</ul>
+</dd>
+<dt><strong>Build with optimizations:</strong></dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">-O2</span></code> or <code class="docutils literal notranslate"><span class="pre">-O3</span></code> when compiling instrumented code. LLVM can optimize away some overhead.</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
+<section id="common-issues">
+<h3>Common Issues<a class="headerlink" href="#common-issues" title="Link to this heading">#</a></h3>
+<dl class="simple myst">
+<dt><strong>“Could not find ‘opt’ binary”</strong></dt><dd><p>The wizard can’t locate the opt binary.</p>
+<ul class="simple">
+<li><p>Specify the path: <code class="docutils literal notranslate"><span class="pre">--opt-path</span> <span class="pre">/path/to/opt</span></code></p></li>
+</ul>
+</dd>
+<dt><strong>“Indirection needed but not indicated”</strong></dt><dd><p>An argument value is too large for direct passing. The Instrumentor handles this automatically, but you might see this warning. It’s usually harmless - the indirect version of the function will be generated.</p>
+</dd>
+<dt><strong>Infinite recursion / stack overflow</strong></dt><dd><p>Your runtime function is calling back into instrumented code. Solutions:</p>
+<ul class="simple">
+<li><p>Ensure runtime functions don’t trigger more instrumentation</p></li>
+</ul>
+</dd>
+<dt><strong>Linking errors</strong></dt><dd><p>Runtime functions are undefined. You must:</p>
+<ul class="simple">
+<li><p>Implement all enabled runtime functions</p></li>
+<li><p>Link the runtime implementation with your program</p></li>
+<li><p>Use the exact function signatures (check generated stubs)</p></li>
+</ul>
+</dd>
+<dt><strong>Unexpected instrumentation</strong></dt><dd><p>More instrumentation than expected. Check:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">enabled</span></code> flag for each opportunity</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">host_enabled</span></code> / <code class="docutils literal notranslate"><span class="pre">gpu_enabled</span></code> settings</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_regex</span></code> matches your target</p></li>
+<li><p>Runtime functions aren’t being instrumented (they should be automatically excluded)</p></li>
+<li><p>Property filters (<code class="docutils literal notranslate"><span class="pre">filter</span></code> field) are correctly specified</p></li>
+</ul>
+</dd>
+<dt><strong>Less instrumentation than expected</strong></dt><dd><p>Property filters may be excluding instrumentation points:</p>
+<ul class="simple">
+<li><p>Check if the <code class="docutils literal notranslate"><span class="pre">filter</span></code> field is set for the instrumentation opportunity</p></li>
+<li><p>Remember that filters only apply to static (compile-time constant) properties</p></li>
+<li><p>Dynamic values always pass the filter</p></li>
+<li><p>Use empty filter (<code class="docutils literal notranslate"><span class="pre">&quot;filter&quot;:</span> <span class="pre">&quot;&quot;</span></code>) or remove the field to disable filtering</p></li>
+<li><p>Test your filter expression by examining the IR properties</p></li>
+</ul>
+</dd>
+<dt><strong>Filter syntax errors</strong></dt><dd><p>Invalid filter expressions will be reported as errors:</p>
+<ul class="simple">
+<li><p>Ensure string literals are quoted: <code class="docutils literal notranslate"><span class="pre">&quot;name==\&quot;foo\&quot;&quot;</span></code> not <code class="docutils literal notranslate"><span class="pre">&quot;name==foo&quot;</span></code></p></li>
+<li><p>Use correct operators: <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> for AND, <code class="docutils literal notranslate"><span class="pre">||</span></code> for OR</p></li>
+<li><p>Property names must match exactly</p></li>
+<li><p>Close all parentheses and quotes</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="debugging-instrumented-code">
+<h3>Debugging Instrumented Code<a class="headerlink" href="#debugging-instrumented-code" title="Link to this heading">#</a></h3>
+<p><strong>View instrumented IR:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>opt<span class="w"> </span>-passes<span class="o">=</span>instrumentor<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-instrumentor-read-config-file<span class="o">=</span>config.json<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>input.ll<span class="w"> </span>-S<span class="w"> </span>-o<span class="w"> </span>output.ll
+
+<span class="c1"># Examine output.ll to see inserted calls</span>
+</pre></div>
+</div>
+<p><strong>Print configuration:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>opt<span class="w"> </span>-passes<span class="o">=</span>instrumentor<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-instrumentor-write-config-file<span class="o">=</span>debug_config.json<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>input.ll<span class="w"> </span>-disable-output
+
+<span class="c1"># Examine debug_config.json to see all options</span>
+</pre></div>
+</div>
+<dl class="simple myst">
+<dt><strong>Verify IR:</strong></dt><dd><p>The Instrumentor automatically verifies the module after instrumentation. If verification fails, there’s a bug in the Instrumentor or the configuration is invalid.</p>
+</dd>
+<dt><strong>Use debug builds:</strong></dt><dd><p>Build LLVM with assertions enabled (<code class="docutils literal notranslate"><span class="pre">-DLLVM_ENABLE_ASSERTIONS=ON</span></code>) to catch issues early.</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="extending-the-instrumentor">
+<h2>Extending the Instrumentor<a class="headerlink" href="#extending-the-instrumentor" title="Link to this heading">#</a></h2>
+<p>The Instrumentor is designed to be extensible. To add new instrumentation opportunities:</p>
+<ol class="arabic simple">
+<li><p><strong>Define the opportunity class</strong> inheriting from <code class="docutils literal notranslate"><span class="pre">InstrumentationOpportunity</span></code></p></li>
+<li><p><strong>Implement getter/setter functions</strong> for the arguments</p></li>
+<li><p><strong>Add initialization</strong> to populate the opportunity with arguments</p></li>
+<li><p><strong>Register</strong> the opportunity in <code class="docutils literal notranslate"><span class="pre">InstrumentationConfig::populate()</span></code></p></li>
+<li><p><strong>Add tests</strong> in <code class="docutils literal notranslate"><span class="pre">llvm/test/Transforms/Instrumentor/</span></code></p></li>
+</ol>
+<p>See <code class="docutils literal notranslate"><span class="pre">llvm/lib/Transforms/IPO/Instrumentor.cpp</span></code> and <code class="docutils literal notranslate"><span class="pre">llvm/include/llvm/Transforms/IPO/Instrumentor.h</span></code> for examples (<code class="docutils literal notranslate"><span class="pre">LoadIO</span></code>, <code class="docutils literal notranslate"><span class="pre">StoreIO</span></code>).</p>
+<p>Future instrumentation opportunities being considered:</p>
+<ul class="simple">
+<li><p>Basic block entry/exit</p></li>
+<li><p>Branch instrumentation</p></li>
+<li><p>Call instructions</p></li>
+<li><p>Atomic operations</p></li>
+<li><p>Vector operations</p></li>
+<li><p>Exception handling</p></li>
+<li><p>Global variable access</p></li>
+</ul>
+</section>
+<section id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h2>
+<section id="command-line-options">
+<h3>Command-Line Options<a class="headerlink" href="#command-line-options" title="Link to this heading">#</a></h3>
+<dl class="simple myst">
+<dt><strong><code class="docutils literal notranslate"><span class="pre">-instrumentor-read-config-file=&lt;path&gt;</span></code></strong></dt><dd><p>Load instrumentation configuration from the specified JSON file.</p>
+</dd>
+<dt><strong><code class="docutils literal notranslate"><span class="pre">-instrumentor-write-config-file=&lt;path&gt;</span></code></strong></dt><dd><p>Write the default instrumentation configuration to the specified JSON file (useful for generating templates).</p>
+</dd>
+</dl>
+</section>
+<section id="related-passes">
+<h3>Related Passes<a class="headerlink" href="#related-passes" title="Link to this heading">#</a></h3>
+<p>The Instrumentor is more flexible but related to:</p>
+<ul class="simple">
+<li><p><strong>AddressSanitizer</strong>: Specialized memory error detector</p></li>
+<li><p><strong>ThreadSanitizer</strong>: Race condition detector</p></li>
+<li><p><strong>MemorySanitizer</strong>: Uninitialized memory detector</p></li>
+<li><p><strong>DataFlowSanitizer</strong>: Taint tracking</p></li>
+<li><p><strong>XRay</strong>: Function call tracing with low overhead</p></li>
+</ul>
+<p>The Instrumentor can implement similar functionality with custom runtime code, but specialized passes may have better performance for their specific use cases.</p>
+</section>
+<section id="further-reading">
+<h3>Further Reading<a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Source code: <code class="docutils literal notranslate"><span class="pre">llvm/lib/Transforms/IPO/Instrumentor.cpp</span></code></p></li>
+<li><p>Header: <code class="docutils literal notranslate"><span class="pre">llvm/include/llvm/Transforms/IPO/Instrumentor.h</span></code></p></li>
+<li><p>Configuration wizard: <code class="docutils literal notranslate"><span class="pre">llvm/utils/instrumentor-config-wizard.py</span></code></p></li>
+</ul>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="InstrRefDebugInfo.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Instruction referencing for debug info</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="HowToUpdateDebugInfo.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">How to Update Debug Info: A Guide for LLVM Pass Authors</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">The LLVM Instrumentor Pass</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#key-features">Key Features</a><ul>
+<li><a class="reference internal" href="#configurable-instrumentation-opportunities">Configurable Instrumentation Opportunities</a></li>
+<li><a class="reference internal" href="#pre-and-post-instrumentation">PRE and POST Instrumentation</a></li>
+<li><a class="reference internal" href="#selective-argument-passing">Selective Argument Passing</a></li>
+<li><a class="reference internal" href="#value-replacement">Value Replacement</a></li>
+<li><a class="reference internal" href="#instrumentation-filtering">Instrumentation Filtering</a></li>
+<li><a class="reference internal" href="#property-filtering">Property Filtering</a><ul>
+<li><a class="reference internal" href="#filter-syntax">Filter Syntax</a></li>
+<li><a class="reference internal" href="#filter-examples">Filter Examples</a></li>
+<li><a class="reference internal" href="#available-properties">Available Properties</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration-system">Configuration System</a><ul>
+<li><a class="reference internal" href="#configuration-file-format">Configuration File Format</a></li>
+<li><a class="reference internal" href="#configuration-sections">Configuration Sections</a></li>
+<li><a class="reference internal" href="#argument-configuration">Argument Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-configuration-wizard">The Configuration Wizard</a><ul>
+<li><a class="reference internal" href="#running-the-wizard">Running the Wizard</a></li>
+<li><a class="reference internal" href="#wizard-workflow">Wizard Workflow</a></li>
+<li><a class="reference internal" href="#generating-runtime-stubs">Generating Runtime Stubs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#usage-examples">Usage Examples</a><ul>
+<li><a class="reference internal" href="#basic-usage-with-opt">Basic Usage with opt</a></li>
+<li><a class="reference internal" href="#using-with-clang">Using with Clang</a></li>
+<li><a class="reference internal" href="#complete-workflow-example">Complete Workflow Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-use-cases">Advanced Use Cases</a><ul>
+<li><a class="reference internal" href="#stack-usage-profiling">Stack Usage Profiling</a></li>
+<li><a class="reference internal" href="#value-replacement-for-fault-injection">Value Replacement for Fault Injection</a></li>
+<li><a class="reference internal" href="#function-level-tracing">Function-Level Tracing</a></li>
+<li><a class="reference internal" href="#gpu-instrumentation">GPU Instrumentation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#implementation-details">Implementation Details</a><ul>
+<li><a class="reference internal" href="#generated-runtime-function-signatures">Generated Runtime Function Signatures</a></li>
+<li><a class="reference internal" href="#direct-vs-indirect-arguments">Direct vs Indirect Arguments</a></li>
+<li><a class="reference internal" href="#unique-ids">Unique IDs</a></li>
+<li><a class="reference internal" href="#caching">Caching</a></li>
+<li><a class="reference internal" href="#runtime-function-requirements">Runtime Function Requirements</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#performance-considerations">Performance Considerations</a><ul>
+<li><a class="reference internal" href="#overhead-factors">Overhead Factors</a></li>
+<li><a class="reference internal" href="#optimization-tips">Optimization Tips</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#common-issues">Common Issues</a></li>
+<li><a class="reference internal" href="#debugging-instrumented-code">Debugging Instrumented Code</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#extending-the-instrumentor">Extending the Instrumentor</a></li>
+<li><a class="reference internal" href="#reference">Reference</a><ul>
+<li><a class="reference internal" href="#command-line-options">Command-Line Options</a></li>
+<li><a class="reference internal" href="#related-passes">Related Passes</a></li>
+<li><a class="reference internal" href="#further-reading">Further Reading</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=ccd1e645"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

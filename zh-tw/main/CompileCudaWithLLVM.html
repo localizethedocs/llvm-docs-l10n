@@ -1,0 +1,1160 @@
+<!doctype html>
+<html class="no-js" lang="zh-TW" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜尋" href="search.html" /><link rel="next" title="User Guide for NVPTX Back-end" href="NVPTXUsage.html" /><link rel="prev" title="Support for AArch64 Scalable Matrix Extension in LLVM" href="AArch64SME.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/CompileCudaWithLLVM.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>Compiling CUDA with clang - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜尋" name="q" aria-label="搜尋">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">常見問題集（FAQ）</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">參考</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of 參考</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural 『diff』</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">簡介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM 語言參考手冊</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM 測試基礎設施指南</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM 測試基礎設施指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">使用者指南</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of 使用者指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">使用 CMake 建置 LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">進階建置組態</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen 概覽</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen 概覽</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU 指令語法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub 使用者指南</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse 遷移指南</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM 開發者方針</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/CompileCudaWithLLVM.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="compiling-cuda-with-clang">
+<h1>Compiling CUDA with clang<a class="headerlink" href="#compiling-cuda-with-clang" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>簡介<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>This document describes how to compile CUDA code with clang, and gives some
+details about LLVM and clang’s CUDA implementations.</p>
+<p>This document assumes a basic familiarity with CUDA. Information about CUDA
+programming can be found in the
+<a class="reference external" href="http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html">CUDA programming guide</a>.</p>
+</section>
+<section id="compiling-cuda-code">
+<h2>Compiling CUDA Code<a class="headerlink" href="#compiling-cuda-code" title="Link to this heading">#</a></h2>
+<section id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">#</a></h3>
+<p>CUDA has been supported since LLVM 3.9. Clang typically supports the recent
+major CUDA releases, though the support for the most recent versions may need
+Clang compiled from recent sources. If clang detects a newer CUDA version,
+it will issue a warning and will make a best-effort attempt to use detected
+CUDA SDK as if it were the most recent version supported by Clang.</p>
+<p>Before building CUDA code, you’ll need to have installed the CUDA SDK. See
+<a class="reference external" href="https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html">NVIDIA’s CUDA installation guide</a> for
+details. Note that clang <a class="reference external" href="https://bugs.llvm.org/show_bug.cgi?id=26966">may not support</a> the CUDA toolkit as installed by
+some Linux package managers. Clang does attempt to deal with specific details of
+CUDA installation on a handful of common Linux distributions, but in general the
+most reliable way to make it work is to install CUDA in a single directory from
+NVIDIA’s <code class="docutils literal notranslate"><span class="pre">.run</span></code> package and specify its location via <code class="docutils literal notranslate"><span class="pre">--cuda-path=...</span></code> argument.</p>
+<p>CUDA compilation is fully supported on Linux. Compilation on Windows should work, but your mileage may vary.
+Compilation on macOS is no longer supported as CUDA support has been dropped by NVIDIA.</p>
+</section>
+<section id="invoking-clang">
+<h3>Invoking clang<a class="headerlink" href="#invoking-clang" title="Link to this heading">#</a></h3>
+<p>Invoking clang for CUDA compilation works similarly to compiling regular C++.
+You just need to be aware of a few additional flags.</p>
+<p>You can use <a class="reference external" href="https://gist.github.com/855e277884eb6b388cd2f00d956c2fd4">this</a>
+program as a toy example. Save it as <code class="docutils literal notranslate"><span class="pre">axpy.cu</span></code>. (Clang detects that you’re
+compiling CUDA code by noticing that your filename ends with <code class="docutils literal notranslate"><span class="pre">.cu</span></code>.
+Alternatively, you can pass <code class="docutils literal notranslate"><span class="pre">-x</span> <span class="pre">cuda</span></code>.)</p>
+<p>To build and run, run the following commands, filling in the parts in angle
+brackets as described below:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>clang++<span class="w"> </span>axpy.cu<span class="w"> </span>-o<span class="w"> </span>axpy<span class="w"> </span>--offload-arch<span class="o">=</span>&lt;GPU<span class="w"> </span>arch&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-L&lt;CUDA<span class="w"> </span>install<span class="w"> </span>path&gt;/&lt;lib64<span class="w"> </span>or<span class="w"> </span>lib&gt;<span class="w">             </span><span class="se">\</span>
+<span class="w">    </span>-lcudart_static<span class="w"> </span>-ldl<span class="w"> </span>-lrt<span class="w"> </span>-pthread
+<span class="gp">$ </span>./axpy
+<span class="go">y[0] = 2</span>
+<span class="go">y[1] = 4</span>
+<span class="go">y[2] = 6</span>
+<span class="go">y[3] = 8</span>
+</pre></div>
+</div>
+<p>Note that it has to be <code class="docutils literal notranslate"><span class="pre">clang++</span></code> as CUDA headers rely on C++ features.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>macOS is no longer supported for CUDA compilation.</p>
+</div>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;CUDA</span> <span class="pre">install</span> <span class="pre">path&gt;</span></code> – the directory where you installed CUDA SDK.
+Typically, <code class="docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code>.</p>
+<p>Pass e.g. <code class="docutils literal notranslate"><span class="pre">-L/usr/local/cuda/lib64</span></code> if compiling in 64-bit mode; otherwise,
+pass e.g. <code class="docutils literal notranslate"><span class="pre">-L/usr/local/cuda/lib</span></code>. (In CUDA, the device code and host code
+always have the same pointer widths, so if you’re compiling 64-bit code for
+the host, you’re also compiling 64-bit code for the device.) Note that as of
+v10.0 CUDA SDK <a class="reference external" href="https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html#deprecated-features">no longer supports compilation of 32-bit
+applications</a>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;GPU</span> <span class="pre">arch&gt;</span></code> – the <a class="reference external" href="https://developer.nvidia.com/cuda-gpus">compute capability</a> of your GPU. For example, if you
+want to run your program on a GPU with compute capability of 8.0, specify
+<code class="docutils literal notranslate"><span class="pre">--offload-arch=sm_80</span></code>.</p>
+<p>Note: You cannot pass <code class="docutils literal notranslate"><span class="pre">compute_XX</span></code> as an argument to <code class="docutils literal notranslate"><span class="pre">--offload-arch</span></code>;
+only <code class="docutils literal notranslate"><span class="pre">sm_XX</span></code> is currently supported.</p>
+<p>CUDA compilation no longer includes PTX by default. If you want to enable it,
+use <code class="docutils literal notranslate"><span class="pre">--cuda-include-ptx=all|sm_*</span></code>. For example, a binary compiled with
+<code class="docutils literal notranslate"><span class="pre">--offload-arch=sm_80</span></code> would need <code class="docutils literal notranslate"><span class="pre">--cuda-include-ptx=sm_80</span></code> (or <code class="docutils literal notranslate"><span class="pre">all</span></code>)
+to be forwards-compatible with e.g. <code class="docutils literal notranslate"><span class="pre">sm_86</span></code> GPUs.</p>
+<p>You can pass <code class="docutils literal notranslate"><span class="pre">--offload-arch</span></code> multiple times to compile for multiple archs.</p>
+</li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">-L</span></code> and <code class="docutils literal notranslate"><span class="pre">-l</span></code> flags only need to be passed when linking. When compiling,
+you may also need to pass <code class="docutils literal notranslate"><span class="pre">--cuda-path=/path/to/cuda</span></code> if you didn’t install
+the CUDA SDK into <code class="docutils literal notranslate"><span class="pre">/usr/local/cuda</span></code> or <code class="docutils literal notranslate"><span class="pre">/usr/local/cuda-X.Y</span></code>.</p>
+</section>
+<section id="flags-that-control-numerical-code">
+<h3>Flags that control numerical code<a class="headerlink" href="#flags-that-control-numerical-code" title="Link to this heading">#</a></h3>
+<p>If you’re using GPUs, you probably care about making numerical code run fast.
+GPU hardware allows for more control over numerical operations than most CPUs,
+but this results in more compiler options for you to juggle.</p>
+<p>Flags you may wish to tweak include:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">-ffp-contract={on,off,fast}</span></code> (defaults to <code class="docutils literal notranslate"><span class="pre">fast</span></code> on host and device when
+compiling CUDA) Controls whether the compiler emits fused multiply-add
+operations.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">off</span></code>: never emit fma operations, and prevent ptxas from fusing multiply
+and add instructions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">on</span></code>: fuse multiplies and adds within a single statement, but never
+across statements (C11 semantics). Prevent ptxas from fusing other
+multiplies and adds.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fast</span></code>: fuse multiplies and adds wherever profitable, even across
+statements. Doesn’t prevent ptxas from fusing additional multiplies and
+adds.</p></li>
+</ul>
+<p>Fused multiply-add instructions can be much faster than the unfused
+equivalents, but because the intermediate result in an fma is not rounded,
+this flag can affect numerical code.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-fcuda-flush-denormals-to-zero</span></code> (default: off) When this is enabled,
+floating point operations may flush <a class="reference external" href="https://en.wikipedia.org/wiki/Denormal_number">denormal</a> inputs and/or outputs to 0.
+Operations on denormal numbers are often much slower than the same operations
+on normal numbers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-fcuda-approx-transcendentals</span></code> (default: off) When this is enabled, the
+compiler may emit calls to faster, approximate versions of transcendental
+functions, instead of using the slower, fully IEEE-compliant versions. For
+example, this flag allows clang to emit the ptx <code class="docutils literal notranslate"><span class="pre">sin.approx.f32</span></code>
+instruction.</p>
+<p>This is implied by <code class="docutils literal notranslate"><span class="pre">-ffast-math</span></code>.</p>
+</li>
+</ul>
+</section>
+</section>
+<section id="standard-library-support">
+<h2>Standard library support<a class="headerlink" href="#standard-library-support" title="Link to this heading">#</a></h2>
+<p>In clang and nvcc, most of the C++ standard library is not supported on the
+device side.</p>
+<section id="math-h-and-cmath">
+<h3><code class="docutils literal notranslate"><span class="pre">&lt;math.h&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;cmath&gt;</span></code><a class="headerlink" href="#math-h-and-cmath" title="Link to this heading">#</a></h3>
+<p>In clang, <code class="docutils literal notranslate"><span class="pre">math.h</span></code> and <code class="docutils literal notranslate"><span class="pre">cmath</span></code> are available and <a class="reference external" href="https://github.com/llvm/llvm-test-suite/blob/main/External/CUDA/math_h.cu">pass</a>
+<a class="reference external" href="https://github.com/llvm/llvm-test-suite/blob/main/External/CUDA/cmath.cu">tests</a>
+adapted from libc++』s test suite.</p>
+<p>In nvcc <code class="docutils literal notranslate"><span class="pre">math.h</span></code> and <code class="docutils literal notranslate"><span class="pre">cmath</span></code> are mostly available. Versions of <code class="docutils literal notranslate"><span class="pre">::foof</span></code>
+in namespace std (e.g. <code class="docutils literal notranslate"><span class="pre">std::sinf</span></code>) are not available, and where the standard
+calls for overloads that take integral arguments, these are usually not
+available.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;math.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cmath.h&gt;</span>
+
+<span class="c1">// clang is OK with everything in this function.</span>
+<span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">test</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">sin</span><span class="p">(</span><span class="mf">0.</span><span class="p">);</span><span class="w"> </span><span class="c1">// nvcc - ok</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">sin</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">  </span><span class="c1">// nvcc - error, because no std::sin(int) override is available.</span>
+<span class="w">  </span><span class="n">sin</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">       </span><span class="c1">// nvcc - same as above.</span>
+
+<span class="w">  </span><span class="n">sinf</span><span class="p">(</span><span class="mf">0.</span><span class="p">);</span><span class="w">       </span><span class="c1">// nvcc - ok</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">sinf</span><span class="p">(</span><span class="mf">0.</span><span class="p">);</span><span class="w">  </span><span class="c1">// nvcc - no such function</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="std-complex">
+<h3><code class="docutils literal notranslate"><span class="pre">&lt;std::complex&gt;</span></code><a class="headerlink" href="#std-complex" title="Link to this heading">#</a></h3>
+<p>nvcc does not officially support <code class="docutils literal notranslate"><span class="pre">std::complex</span></code>. It’s an error to use
+<code class="docutils literal notranslate"><span class="pre">std::complex</span></code> in <code class="docutils literal notranslate"><span class="pre">__device__</span></code> code, but it often works in <code class="docutils literal notranslate"><span class="pre">__host__</span> <span class="pre">__device__</span></code> code due to nvcc’s interpretation of the 「wrong-side rule」 (see
+below). However, we have heard from implementers that it’s possible to get
+into situations where nvcc will omit a call to an <code class="docutils literal notranslate"><span class="pre">std::complex</span></code> function,
+especially when compiling without optimizations. Using <code class="docutils literal notranslate"><span class="pre">--expt-relaxed-constexpr</span></code>
+may help.</p>
+<p>Clang supports <code class="docutils literal notranslate"><span class="pre">std::complex</span></code> without these caveats.</p>
+</section>
+<section id="algorithm">
+<h3><code class="docutils literal notranslate"><span class="pre">&lt;algorithm&gt;</span></code><a class="headerlink" href="#algorithm" title="Link to this heading">#</a></h3>
+<p>In C++14, many useful functions from <code class="docutils literal notranslate"><span class="pre">&lt;algorithm&gt;</span></code> (notably, <code class="docutils literal notranslate"><span class="pre">std::min</span></code> and
+<code class="docutils literal notranslate"><span class="pre">std::max</span></code>) become constexpr. You can therefore use these in device code,
+when compiling with clang.</p>
+</section>
+</section>
+<section id="detecting-clang-vs-nvcc-from-code">
+<h2>Detecting clang vs NVCC from code<a class="headerlink" href="#detecting-clang-vs-nvcc-from-code" title="Link to this heading">#</a></h2>
+<p>Although clang’s CUDA implementation is largely compatible with NVCC’s, you may
+still want to detect when you’re compiling CUDA code specifically with clang.</p>
+<p>This is tricky, because NVCC may invoke clang as part of its own compilation
+process! For example, NVCC uses the host compiler’s preprocessor when
+compiling for device code, and that host compiler may in fact be clang.</p>
+<p>When clang is actually compiling CUDA code – rather than being used as a
+subtool of NVCC’s – it defines the <code class="docutils literal notranslate"><span class="pre">__CUDA__</span></code> macro. <code class="docutils literal notranslate"><span class="pre">__CUDA_ARCH__</span></code> is
+defined only in device mode (but will be defined if NVCC is using clang as a
+preprocessor). So you can use the following incantations to detect clang CUDA
+compilation, in host and device modes:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#if defined(__clang__) &amp;&amp; defined(__CUDA__) &amp;&amp; !defined(__CUDA_ARCH__)</span>
+<span class="c1">// clang compiling CUDA code, host mode.</span>
+<span class="cp">#endif</span>
+
+<span class="cp">#if defined(__clang__) &amp;&amp; defined(__CUDA__) &amp;&amp; defined(__CUDA_ARCH__)</span>
+<span class="c1">// clang compiling CUDA code, device mode.</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p>Both clang and nvcc define <code class="docutils literal notranslate"><span class="pre">__CUDACC__</span></code> during CUDA compilation. You can
+detect NVCC specifically by looking for <code class="docutils literal notranslate"><span class="pre">__NVCC__</span></code>.</p>
+</section>
+<section id="dialect-differences-between-clang-and-nvcc">
+<h2>Dialect Differences Between clang and nvcc<a class="headerlink" href="#dialect-differences-between-clang-and-nvcc" title="Link to this heading">#</a></h2>
+<p>There is no formal CUDA spec, and clang and nvcc speak slightly different
+dialects of the language. Below, we describe some of the differences.</p>
+<p>This section is painful; hopefully you can skip this section and live your life
+blissfully unaware.</p>
+<section id="compilation-models">
+<h3>Compilation Models<a class="headerlink" href="#compilation-models" title="Link to this heading">#</a></h3>
+<p>Most of the differences between clang and nvcc stem from the different
+compilation models used by clang and nvcc. nvcc uses <em>split compilation</em>,
+which works roughly as follows:</p>
+<ul class="simple">
+<li><p>Run a preprocessor over the input <code class="docutils literal notranslate"><span class="pre">.cu</span></code> file to split it into two source
+files: <code class="docutils literal notranslate"><span class="pre">H</span></code>, containing source code for the host, and <code class="docutils literal notranslate"><span class="pre">D</span></code>, containing
+source code for the device.</p></li>
+<li><p>For each GPU architecture <code class="docutils literal notranslate"><span class="pre">arch</span></code> that we’re compiling for, do:</p>
+<ul>
+<li><p>Compile <code class="docutils literal notranslate"><span class="pre">D</span></code> using nvcc proper. The result of this is a <code class="docutils literal notranslate"><span class="pre">ptx</span></code> file for
+<code class="docutils literal notranslate"><span class="pre">P_arch</span></code>.</p></li>
+<li><p>Optionally, invoke <code class="docutils literal notranslate"><span class="pre">ptxas</span></code>, the PTX assembler, to generate a file,
+<code class="docutils literal notranslate"><span class="pre">S_arch</span></code>, containing GPU machine code (SASS) for <code class="docutils literal notranslate"><span class="pre">arch</span></code>.</p></li>
+</ul>
+</li>
+<li><p>Invoke <code class="docutils literal notranslate"><span class="pre">fatbin</span></code> to combine all <code class="docutils literal notranslate"><span class="pre">P_arch</span></code> and <code class="docutils literal notranslate"><span class="pre">S_arch</span></code> files into a
+single 「fat binary」 file, <code class="docutils literal notranslate"><span class="pre">F</span></code>.</p></li>
+<li><p>Compile <code class="docutils literal notranslate"><span class="pre">H</span></code> using an external host compiler (gcc, clang, or whatever you
+like). <code class="docutils literal notranslate"><span class="pre">F</span></code> is packaged up into a header file which is force-included into
+<code class="docutils literal notranslate"><span class="pre">H</span></code>; nvcc generates code that calls into this header to e.g. launch
+kernels.</p></li>
+</ul>
+<p>clang uses <em>merged parsing</em>. This is similar to split compilation, except all
+of the host and device code is present and must be semantically-correct in both
+compilation steps.</p>
+<ul>
+<li><p>For each GPU architecture <code class="docutils literal notranslate"><span class="pre">arch</span></code> that we’re compiling for, do:</p>
+<ul>
+<li><p>Compile the input <code class="docutils literal notranslate"><span class="pre">.cu</span></code> file for device, using clang. <code class="docutils literal notranslate"><span class="pre">__host__</span></code> code
+is parsed and must be semantically correct, even though we’re not
+generating code for the host at this time.</p>
+<p>The output of this step is a <code class="docutils literal notranslate"><span class="pre">ptx</span></code> file <code class="docutils literal notranslate"><span class="pre">P_arch</span></code>.</p>
+</li>
+<li><p>Invoke <code class="docutils literal notranslate"><span class="pre">ptxas</span></code> to generate a SASS file, <code class="docutils literal notranslate"><span class="pre">S_arch</span></code>. Note that, unlike
+nvcc, clang always generates SASS code.</p></li>
+</ul>
+</li>
+<li><p>Invoke <code class="docutils literal notranslate"><span class="pre">fatbin</span></code> to combine all <code class="docutils literal notranslate"><span class="pre">S_arch</span></code> files (and <code class="docutils literal notranslate"><span class="pre">P_arch</span></code> files if
+PTX inclusion was requested) into a single fat binary file, <code class="docutils literal notranslate"><span class="pre">F</span></code>.</p></li>
+<li><p>Compile <code class="docutils literal notranslate"><span class="pre">H</span></code> using clang. <code class="docutils literal notranslate"><span class="pre">__device__</span></code> code is parsed and must be
+semantically correct, even though we’re not generating code for the device
+at this time.</p>
+<p><code class="docutils literal notranslate"><span class="pre">F</span></code> is passed to this compilation, and clang includes it in a special ELF
+section, where it can be found by tools like <code class="docutils literal notranslate"><span class="pre">cuobjdump</span></code>.</p>
+</li>
+</ul>
+<p>(You may ask at this point, why does clang need to parse the input file
+multiple times? Why not parse it just once, and then use the AST to generate
+code for the host and each device architecture?</p>
+<p>Unfortunately this can’t work because we have to define different macros during
+host compilation and during device compilation for each GPU architecture.)</p>
+<p>clang’s approach allows it to be highly robust to C++ edge cases, as it doesn’t
+need to decide at an early stage which declarations to keep and which to throw
+away. But it has some consequences you should be aware of.</p>
+</section>
+<section id="overloading-based-on-host-and-device-attributes">
+<h3>Overloading Based on <code class="docutils literal notranslate"><span class="pre">__host__</span></code> and <code class="docutils literal notranslate"><span class="pre">__device__</span></code> Attributes<a class="headerlink" href="#overloading-based-on-host-and-device-attributes" title="Link to this heading">#</a></h3>
+<p>Let 「H」, 「D」, and 「HD」 stand for 「<code class="docutils literal notranslate"><span class="pre">__host__</span></code> functions」, 「<code class="docutils literal notranslate"><span class="pre">__device__</span></code>
+functions」, and 「<code class="docutils literal notranslate"><span class="pre">__host__</span> <span class="pre">__device__</span></code> functions」, respectively. Functions
+with no attributes behave the same as H.</p>
+<p>nvcc does not allow you to create H and D functions with the same signature:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// nvcc: error - function &quot;foo&quot; has already been defined</span>
+<span class="n">__host__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+</pre></div>
+</div>
+<p>However, nvcc allows you to 「overload」 H and D functions with different
+signatures:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// nvcc: no error</span>
+<span class="n">__host__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+</pre></div>
+</div>
+<p>In clang, the <code class="docutils literal notranslate"><span class="pre">__host__</span></code> and <code class="docutils literal notranslate"><span class="pre">__device__</span></code> attributes are part of a
+function’s signature, and so it’s legal to have H and D functions with
+(otherwise) the same signature:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// clang: no error</span>
+<span class="n">__host__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+</pre></div>
+</div>
+<p>HD functions cannot be overloaded by H or D functions with the same signature:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// nvcc: error - function &quot;foo&quot; has already been defined</span>
+<span class="c1">// clang: error - redefinition of &#39;foo&#39;</span>
+<span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+
+<span class="c1">// nvcc: no error</span>
+<span class="c1">// clang: no error</span>
+<span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">bar</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">bar</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+</pre></div>
+</div>
+<p>When resolving an overloaded function, clang considers the host/device
+attributes of the caller and callee. These are used as a tiebreaker during
+overload resolution. See <a class="reference external" href="https://clang.llvm.org/doxygen/SemaCUDA_8cpp.html">IdentifyCUDAPreference</a> for the full set of rules,
+but at a high level they are:</p>
+<ul>
+<li><p>D functions prefer to call other Ds. HDs are given lower priority.</p></li>
+<li><p>Similarly, H functions prefer to call other Hs, or <code class="docutils literal notranslate"><span class="pre">__global__</span></code> functions
+(with equal priority). HDs are given lower priority.</p></li>
+<li><p>HD functions prefer to call other HDs.</p>
+<p>When compiling for device, HDs will call Ds with lower priority than HD, and
+will call Hs with still lower priority. If it’s forced to call an H, the
+program is malformed if we emit code for this HD function. We call this the
+「wrong-side rule」, see example below.</p>
+<p>The rules are symmetrical when compiling for host.</p>
+</li>
+</ul>
+<p>Some examples:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">__host__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">();</span>
+<span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">();</span>
+
+<span class="n">__host__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span>
+<span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">bar</span><span class="p">();</span>
+
+<span class="n">__host__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">test_host</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">foo</span><span class="p">();</span><span class="w">  </span><span class="c1">// calls H overload</span>
+<span class="w">  </span><span class="n">bar</span><span class="p">();</span><span class="w">  </span><span class="c1">// calls H overload</span>
+<span class="p">}</span>
+
+<span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">test_device</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">foo</span><span class="p">();</span><span class="w">  </span><span class="c1">// calls D overload</span>
+<span class="w">  </span><span class="n">bar</span><span class="p">();</span><span class="w">  </span><span class="c1">// calls HD overload</span>
+<span class="p">}</span>
+
+<span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">test_hd</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">foo</span><span class="p">();</span><span class="w">  </span><span class="c1">// calls H overload when compiling for host, otherwise D overload</span>
+<span class="w">  </span><span class="n">bar</span><span class="p">();</span><span class="w">  </span><span class="c1">// always calls HD overload</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Wrong-side rule example:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">__host__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">host_only</span><span class="p">();</span>
+
+<span class="c1">// We don&#39;t codegen inline functions unless they&#39;re referenced by a</span>
+<span class="c1">// non-inline function.  inline_hd1() is called only from the host side, so</span>
+<span class="c1">// does not generate an error.  inline_hd2() is called from the device side,</span>
+<span class="c1">// so it generates an error.</span>
+<span class="kr">inline</span><span class="w"> </span><span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">inline_hd1</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">host_only</span><span class="p">();</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// no error</span>
+<span class="kr">inline</span><span class="w"> </span><span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">inline_hd2</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">host_only</span><span class="p">();</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// error</span>
+
+<span class="n">__host__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">host_fn</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">inline_hd1</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">device_fn</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">inline_hd2</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// This function is not inline, so it&#39;s always codegen&#39;ed on both the host</span>
+<span class="c1">// and the device.  Therefore, it generates an error.</span>
+<span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">not_inline_hd</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">host_only</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>For the purposes of the wrong-side rule, templated functions also behave like
+<code class="docutils literal notranslate"><span class="pre">inline</span></code> functions: They aren’t codegen’ed unless they’re instantiated
+(usually as part of the process of invoking them).</p>
+<p>clang’s behavior with respect to the wrong-side rule matches nvcc’s, except
+nvcc only emits a warning for <code class="docutils literal notranslate"><span class="pre">not_inline_hd</span></code>; device code is allowed to call
+<code class="docutils literal notranslate"><span class="pre">not_inline_hd</span></code>. In its generated code, nvcc may omit <code class="docutils literal notranslate"><span class="pre">not_inline_hd</span></code>’s
+call to <code class="docutils literal notranslate"><span class="pre">host_only</span></code> entirely, or it may try to generate code for
+<code class="docutils literal notranslate"><span class="pre">host_only</span></code> on the device. What you get seems to depend on whether or not
+the compiler chooses to inline <code class="docutils literal notranslate"><span class="pre">host_only</span></code>.</p>
+<p>Member functions, including constructors, may be overloaded using H and D
+attributes. However, destructors cannot be overloaded.</p>
+</section>
+<section id="clang-warnings-for-host-and-device-function-declarations">
+<h3>Clang Warnings for Host and Device Function Declarations<a class="headerlink" href="#clang-warnings-for-host-and-device-function-declarations" title="Link to this heading">#</a></h3>
+<p>Clang can emit warnings when it detects that host (H) and device (D) functions are declared or defined with the same signature. These warnings are not enabled by default.</p>
+<p>To enable these warnings, use the following compiler flag:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">-Wnvcc-compat</span>
+</pre></div>
+</div>
+</section>
+<section id="deferred-diagnostics">
+<h3>Deferred Diagnostics<a class="headerlink" href="#deferred-diagnostics" title="Link to this heading">#</a></h3>
+<p>In CUDA, a <code class="docutils literal notranslate"><span class="pre">__host__</span> <span class="pre">__device__</span></code> function can be called from both host and
+device code. When such a function contains operations not valid on one side
+(e.g., calling a host-only function from device code), clang defers the
+diagnostics and only emits them if the function is actually reachable from a
+caller where the operation cannot be emitted. This avoids false errors in
+<code class="docutils literal notranslate"><span class="pre">__host__</span> <span class="pre">__device__</span></code> functions that are only used on the other side.</p>
+<p>For a detailed description of deferred diagnostics, HD-promoted functions,
+and call chain notes, see the
+<a class="reference external" href="https://clang.llvm.org/docs/HIPSupport.html#deferred-diagnostics">HIP Support</a>
+documentation. The same mechanism applies to both CUDA and HIP.</p>
+</section>
+<section id="using-a-different-class-on-host-device">
+<h3>Using a Different Class on Host/Device<a class="headerlink" href="#using-a-different-class-on-host-device" title="Link to this heading">#</a></h3>
+<p>Occasionally you may want to have a class with different host/device versions.</p>
+<p>If all of the class’s members are the same on the host and device, you can just
+provide overloads for the class’s member functions.</p>
+<p>However, if you want your class to have different members on host/device, you
+won’t be able to provide working H and D overloads in both classes. In this
+case, clang is likely to be unhappy with you.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#ifdef __CUDA_ARCH__</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">S</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* use device_only */</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">device_only</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="cp">#else</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">S</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">__host__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* use host_only */</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">host_only</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">__device__</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">test</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">S</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="w">  </span><span class="c1">// clang generates an error here, because during host compilation, we</span>
+<span class="w">  </span><span class="c1">// have ifdef&#39;ed away the __device__ overload of S::foo().  The __device__</span>
+<span class="w">  </span><span class="c1">// overload must be present *even during host compilation*.</span>
+<span class="w">  </span><span class="n">S</span><span class="p">.</span><span class="n">foo</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p>We posit that you don’t really want to have classes with different members on H
+and D. For example, if you were to pass one of these as a parameter to a
+kernel, it would have a different layout on H and D, so would not work
+properly.</p>
+<p>To make code like this compatible with clang, we recommend you separate it out
+into two classes. If you need to write code that works on both host and
+device, consider writing an overloaded wrapper function that returns different
+types on host and device.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">HostS</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">};</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">DeviceS</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">};</span>
+
+<span class="n">__host__</span><span class="w"> </span><span class="n">HostS</span><span class="w"> </span><span class="n">MakeStruct</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">HostS</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="n">__device__</span><span class="w"> </span><span class="n">DeviceS</span><span class="w"> </span><span class="n">MakeStruct</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">DeviceS</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// Now host and device code can call MakeStruct().</span>
+</pre></div>
+</div>
+<p>Unfortunately, this idiom isn’t compatible with nvcc, because it doesn’t allow
+you to overload based on the H/D attributes. Here’s an idiom that works with
+both clang and nvcc:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">HostS</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">};</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">DeviceS</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">};</span>
+
+<span class="cp">#ifdef __NVCC__</span>
+<span class="w">  </span><span class="cp">#ifndef __CUDA_ARCH__</span>
+<span class="w">    </span><span class="n">__host__</span><span class="w"> </span><span class="n">HostS</span><span class="w"> </span><span class="n">MakeStruct</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">HostS</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="cp">#else</span>
+<span class="w">    </span><span class="n">__device__</span><span class="w"> </span><span class="n">DeviceS</span><span class="w"> </span><span class="n">MakeStruct</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">DeviceS</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="cp">#endif</span>
+<span class="cp">#else</span>
+<span class="w">  </span><span class="n">__host__</span><span class="w"> </span><span class="n">HostS</span><span class="w"> </span><span class="n">MakeStruct</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">HostS</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">__device__</span><span class="w"> </span><span class="n">DeviceS</span><span class="w"> </span><span class="n">MakeStruct</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">DeviceS</span><span class="p">();</span><span class="w"> </span><span class="p">}</span>
+<span class="cp">#endif</span>
+
+<span class="c1">// Now host and device code can call MakeStruct().</span>
+</pre></div>
+</div>
+<p>Hopefully you don’t have to do this sort of thing often.</p>
+</section>
+</section>
+<section id="optimizations">
+<h2>Optimizations<a class="headerlink" href="#optimizations" title="Link to this heading">#</a></h2>
+<p>Modern CPUs and GPUs are architecturally quite different, so code that’s fast
+on a CPU isn’t necessarily fast on a GPU. We’ve made a number of changes to
+LLVM to make it generate good GPU code. Among these changes are:</p>
+<ul>
+<li><p><a class="reference external" href="https://docs.google.com/document/d/1momWzKFf4D6h8H3YlfgKQ3qeZy5ayvMRh6yR-Xn2hUE">Straight-line scalar optimizations</a> – These
+reduce redundancy within straight-line code.</p></li>
+<li><p><a class="reference external" href="https://llvm.org/docs/doxygen/html/SpeculativeExecution_8cpp_source.html">Aggressive speculative execution</a>
+– This is mainly for promoting straight-line scalar optimizations, which are
+most effective on code along dominator paths.</p></li>
+<li><p><a class="reference external" href="https://llvm.org/doxygen/InferAddressSpaces_8cpp_source.html">Memory space inference</a> –
+In PTX, we can operate on pointers that are in a particular 「address space」
+(global, shared, constant, or local), or we can operate on pointers in the
+「generic」 address space, which can point to anything. Operations in a
+non-generic address space are faster, but pointers in CUDA are not explicitly
+annotated with their address space, so it’s up to LLVM to infer it where
+possible.</p></li>
+<li><p><a class="reference external" href="https://llvm.org/docs/doxygen/html/BypassSlowDivision_8cpp_source.html">Bypassing 64-bit divides</a> –
+This was an existing optimization that we enabled for the PTX backend.</p>
+<p>64-bit integer divides are much slower than 32-bit ones on NVIDIA GPUs.
+Many of the 64-bit divides in our benchmarks have a divisor and dividend
+which fit in 32-bits at runtime. This optimization provides a fast path for
+this common case.</p>
+</li>
+<li><p>Aggressive loop unrolling and function inlining – Loop unrolling and
+function inlining need to be more aggressive for GPUs than for CPUs because
+control flow transfer in GPU is more expensive. More aggressive unrolling and
+inlining also promote other optimizations, such as constant propagation and
+SROA, which sometimes speed up code by over 10x.</p>
+<p>(Programmers can force unrolling and inline using clang’s <a class="reference external" href="https://clang.llvm.org/docs/AttributeReference.html#pragma-unroll-pragma-nounroll">loop unrolling pragmas</a>
+and <code class="docutils literal notranslate"><span class="pre">__attribute__((always_inline))</span></code>.)</p>
+</li>
+</ul>
+</section>
+<section id="publication">
+<h2>Publication<a class="headerlink" href="#publication" title="Link to this heading">#</a></h2>
+<p>The team at Google published a paper in CGO 2016 detailing the optimizations
+they’d made to clang/LLVM. Note that 「gpucc」 is no longer a meaningful name:
+The relevant tools are now just vanilla clang/LLVM.</p>
+<p><a class="reference external" href="http://dl.acm.org/citation.cfm?id=2854041">gpucc: An Open-Source GPGPU Compiler</a></p>
+<p>Jingyue Wu, Artem Belevich, Eli Bendersky, Mark Heffernan, Chris Leary,
+Jacques Pienaar, Bjarke Roune, Rob Springer, Xuetian Weng, Robert Hundt</p>
+<p><em>Proceedings of the 2016 International Symposium on Code Generation and
+Optimization (CGO 2016)</em></p>
+<p><a class="reference external" href="http://wujingyue.github.io/docs/gpucc-talk.pdf">Slides from the CGO talk</a></p>
+<p><a class="reference external" href="http://wujingyue.github.io/docs/gpucc-tutorial.pdf">Tutorial given at CGO</a></p>
+</section>
+<section id="obtaining-help">
+<h2>Obtaining Help<a class="headerlink" href="#obtaining-help" title="Link to this heading">#</a></h2>
+<p>To obtain help on LLVM in general and its CUDA support, see <a class="reference external" href="https://llvm.org/docs/#mailing-lists">the LLVM
+community</a>.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="NVPTXUsage.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">User Guide for NVPTX Back-end</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="AArch64SME.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Support for AArch64 Scalable Matrix Extension in LLVM</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Compiling CUDA with clang</a><ul>
+<li><a class="reference internal" href="#introduction">簡介</a></li>
+<li><a class="reference internal" href="#compiling-cuda-code">Compiling CUDA Code</a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#invoking-clang">Invoking clang</a></li>
+<li><a class="reference internal" href="#flags-that-control-numerical-code">Flags that control numerical code</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#standard-library-support">Standard library support</a><ul>
+<li><a class="reference internal" href="#math-h-and-cmath"><code class="docutils literal notranslate"><span class="pre">&lt;math.h&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;cmath&gt;</span></code></a></li>
+<li><a class="reference internal" href="#std-complex"><code class="docutils literal notranslate"><span class="pre">&lt;std::complex&gt;</span></code></a></li>
+<li><a class="reference internal" href="#algorithm"><code class="docutils literal notranslate"><span class="pre">&lt;algorithm&gt;</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#detecting-clang-vs-nvcc-from-code">Detecting clang vs NVCC from code</a></li>
+<li><a class="reference internal" href="#dialect-differences-between-clang-and-nvcc">Dialect Differences Between clang and nvcc</a><ul>
+<li><a class="reference internal" href="#compilation-models">Compilation Models</a></li>
+<li><a class="reference internal" href="#overloading-based-on-host-and-device-attributes">Overloading Based on <code class="docutils literal notranslate"><span class="pre">__host__</span></code> and <code class="docutils literal notranslate"><span class="pre">__device__</span></code> Attributes</a></li>
+<li><a class="reference internal" href="#clang-warnings-for-host-and-device-function-declarations">Clang Warnings for Host and Device Function Declarations</a></li>
+<li><a class="reference internal" href="#deferred-diagnostics">Deferred Diagnostics</a></li>
+<li><a class="reference internal" href="#using-a-different-class-on-host-device">Using a Different Class on Host/Device</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#optimizations">Optimizations</a></li>
+<li><a class="reference internal" href="#publication">Publication</a></li>
+<li><a class="reference internal" href="#obtaining-help">Obtaining Help</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=0d9984b1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=d9a6981e"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

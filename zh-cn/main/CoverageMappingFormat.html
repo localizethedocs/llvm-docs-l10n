@@ -1,0 +1,1260 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜索" href="search.html" /><link rel="next" title="Control Flow Verification Tool Design Document" href="CFIVerify.html" /><link rel="prev" title="How to cross-compile Clang/LLVM using Clang/LLVM" href="HowToCrossCompileLLVM.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/CoverageMappingFormat.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>LLVM Code Coverage Mapping Format - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜索" name="q" aria-label="搜索">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/CoverageMappingFormat.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="llvm-code-coverage-mapping-format">
+<h1>LLVM Code Coverage Mapping Format<a class="headerlink" href="#llvm-code-coverage-mapping-format" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>LLVM’s code coverage mapping format is used to provide code coverage
+analysis using LLVM’s and Clang’s instrumentation based profiling
+(Clang’s <code class="docutils literal notranslate"><span class="pre">-fprofile-instr-generate</span></code> option).</p>
+<p>This document is aimed at those who would like to know how LLVM’s code coverage
+mapping works under the hood. A prior knowledge of how Clang’s profile guided
+optimization works is useful, but not required. For those interested in using
+LLVM to provide code coverage analysis for their own programs, see the <a class="reference external" href="https://clang.llvm.org/docs/SourceBasedCodeCoverage.html">Clang
+documentation</a>.</p>
+<p>We start by briefly describing LLVM’s code coverage mapping format and the
+way that Clang and LLVM’s code coverage tool work with this format. After
+the basics are down, more advanced features of the coverage mapping format
+are discussed - such as the data structures, LLVM IR representation and
+the binary encoding.</p>
+</section>
+<section id="high-level-overview">
+<h2>High Level Overview<a class="headerlink" href="#high-level-overview" title="Link to this heading">#</a></h2>
+<p>LLVM’s code coverage mapping format is designed to be a self contained
+data format that can be embedded into the LLVM IR and into object files.
+It’s described in this document as a <strong>mapping</strong> format because its goal is
+to store the data that is required for a code coverage tool to map between
+the specific source ranges in a file and the execution counts obtained
+after running the instrumented version of the program.</p>
+<p>The mapping data is used in two places in the code coverage process:</p>
+<ol class="arabic simple">
+<li><p>When clang compiles a source file with <code class="docutils literal notranslate"><span class="pre">-fcoverage-mapping</span></code>, it
+generates the mapping information that describes the mapping between the
+source ranges and the profiling instrumentation counters.
+This information gets embedded into the LLVM IR and conveniently
+ends up in the final executable file when the program is linked.</p></li>
+<li><p>It is also used by <em>llvm-cov</em> - the mapping information is extracted from an
+object file and is used to associate the execution counts (the values of the
+profile instrumentation counters), and the source ranges in a file.
+After that, the tool is able to generate various code coverage reports
+for the program.</p></li>
+</ol>
+<p>The coverage mapping format aims to be a “universal format” that would be
+suitable for usage by any frontend, and not just by Clang. It also aims to
+provide the frontend the possibility of generating the minimal coverage mapping
+data in order to reduce the size of the IR and object files - for example,
+instead of emitting mapping information for each statement in a function, the
+frontend is allowed to group the statements with the same execution count into
+regions of code, and emit the mapping information only for those regions.</p>
+</section>
+<section id="advanced-concepts">
+<h2>Advanced Concepts<a class="headerlink" href="#advanced-concepts" title="Link to this heading">#</a></h2>
+<p>The remainder of this guide is meant to give you insight into the way the
+coverage mapping format works.</p>
+<p>The coverage mapping format operates on a per-function level as the
+profile instrumentation counters are associated with a specific function.
+For each function that requires code coverage, the frontend has to create
+coverage mapping data that can map between the source code ranges and
+the profile instrumentation counters for that function.</p>
+<section id="mapping-region">
+<h3>Mapping Region<a class="headerlink" href="#mapping-region" title="Link to this heading">#</a></h3>
+<p>The function’s coverage mapping data contains an array of mapping regions.
+A mapping region stores the <a class="reference internal" href="#source-code-range"><span class="std std-ref">Source Range:</span></a> that is covered by this region,
+the <a class="reference internal" href="#coverage-file-id"><span class="std std-ref">file id</span></a>, the <a class="reference internal" href="#coverage-mapping-counter"><span class="std std-ref">Counter:</span></a> and
+the region’s kind.
+There are several kinds of mapping regions:</p>
+<ul>
+<li><p>Code regions associate portions of source code and <a class="reference internal" href="#coverage-mapping-counters"><span class="std std-ref">coverage mapping counters</span></a>.
+They make up the majority of the mapping regions. They are used
+by the code coverage tool to compute the execution counts for lines,
+highlight the regions of code that were never executed, and to obtain
+the various code coverage statistics for a function.
+For example:</p>
+<pre class='highlight' style='line-height:initial;'><span>int main(int argc, const char *argv[]) </span><span style='background-color:#4A789C'>{    </span> <span class='c1'>// Code Region from 1:40 to 9:2</span>
+<span style='background-color:#4A789C'>                                            </span>
+<span style='background-color:#4A789C'>  if (argc &gt; 1) </span><span style='background-color:#85C1F5'>{                         </span>   <span class='c1'>// Code Region from 3:17 to 5:4</span>
+<span style='background-color:#85C1F5'>    printf("%s\n", argv[1]);              </span>
+<span style='background-color:#85C1F5'>  }</span><span style='background-color:#4A789C'> else </span><span style='background-color:#F6D55D'>{                                </span>   <span class='c1'>// Code Region from 5:10 to 7:4</span>
+<span style='background-color:#F6D55D'>    printf("\n");                         </span>
+<span style='background-color:#F6D55D'>  }</span><span style='background-color:#4A789C'>                                         </span>
+<span style='background-color:#4A789C'>  return 0;                                 </span>
+<span style='background-color:#4A789C'>}</span>
+</pre>
+</li>
+<li><p>Skipped regions are used to represent source ranges that were skipped
+by Clang’s preprocessor. They don’t associate with
+<a class="reference internal" href="#coverage-mapping-counters"><span class="std std-ref">Counter:</span></a>, as the frontend knows that they are never
+executed. They are used by the code coverage tool to mark the skipped lines
+inside a function as non-code lines that don’t have execution counts.
+For example:</p>
+<pre class='highlight' style='line-height:initial;'><span>int main() </span><span style='background-color:#4A789C'>{               </span> <span class='c1'>// Code Region from 1:12 to 6:2</span>
+<span style='background-color:#85C1F5'>#ifdef DEBUG             </span>   <span class='c1'>// Skipped Region from 2:1 to 4:2</span>
+<span style='background-color:#85C1F5'>  printf("Hello world"); </span>
+<span style='background-color:#85C1F5'>#</span><span style='background-color:#4A789C'>endif                     </span>
+<span style='background-color:#4A789C'>  return 0;                </span>
+<span style='background-color:#4A789C'>}</span>
+</pre>
+</li>
+<li><p>Expansion regions are used to represent Clang’s macro expansions. They
+have an additional property - <em>expanded file id</em>. This property can be
+used by the code coverage tool to find the mapping regions that are created
+as a result of this macro expansion, by checking if their file id matches the
+expanded file id. They don’t associate with <a class="reference internal" href="#coverage-mapping-counters"><span class="std std-ref">Counter:</span></a>,
+as the code coverage tool can determine the execution count for this region
+by looking up the execution count of the first region with a corresponding
+file id.
+For example:</p>
+<pre class='highlight' style='line-height:initial;'><span>int func(int x) </span><span style='background-color:#4A789C'>{                             </span>
+<span style='background-color:#4A789C'>  #define MAX(x,y) </span><span style='background-color:#85C1F5'>((x) &gt; (y)? </span><span style='background-color:#F6D55D'>(x)</span><span style='background-color:#85C1F5'> : </span><span style='background-color:#F4BA70'>(y)</span><span style='background-color:#85C1F5'>)</span><span style='background-color:#4A789C'>     </span>
+<span style='background-color:#4A789C'>  return </span><span style='background-color:#7FCA9F'>MAX</span><span style='background-color:#4A789C'>(x, 42);                          </span> <span class='c1'>// Expansion Region from 3:10 to 3:13</span>
+<span style='background-color:#4A789C'>}</span>
+</pre>
+</li>
+<li><p>Branch regions associate instrumentable branch conditions in the source code
+with a <a class="reference internal" href="#coverage-mapping-counter"><span class="std std-ref">Counter:</span></a> to track how many times an individual
+condition evaluated to ‘true’ and another <a class="reference internal" href="#coverage-mapping-counter"><span class="std std-ref">Counter:</span></a> to
+track how many times that condition evaluated to false.  Instrumentable
+branch conditions may comprise larger boolean expressions using boolean
+logical operators.  The ‘true’ and ‘false’ cases reflect unique branch paths
+that can be traced back to the source code.
+For example:</p>
+<pre class='highlight' style='line-height:initial;'><span>int func(int x, int y) {
+<span>  if (<span style='background-color:#4A789C'>(x &gt; 1)</span> || <span style='background-color:#4A789C'>(y &gt; 3)</span>) {</span>  <span class='c1'>// Branch Region from 3:6 to 3:12</span>
+<span>                             </span><span class='c1'>// Branch Region from 3:17 to 3:23</span>
+<span>    printf("%d\n", x);              </span>
+<span>  } else {                                </span>
+<span>    printf("\n");                         </span>
+<span>  }</span>
+<span>  return 0;                                 </span>
+<span>}</span>
+</pre>
+</li>
+<li><p>Decision regions associate multiple branch regions with a boolean
+expression in the source code.  This information also includes the number of
+bitmap bits needed to represent the expression’s executed test vectors as
+well as the total number of instrumentable branch conditions that comprise
+the expression.  Decision regions are used to visualize Modified
+Condition/Decision Coverage (MC/DC) in <em>llvm-cov</em> for each boolean
+expression.  When decision regions are used, control flow IDs are assigned to
+each associated branch region. One ID represents the current branch
+condition, and two additional IDs represent the next branch condition in the
+control flow given a true or false evaluation, respectively.  This allows
+<em>llvm-cov</em> to reconstruct the control flow around the conditions in order to
+comprehend the full list of potential executable test vectors.</p></li>
+</ul>
+<section id="source-range">
+<span id="source-code-range"></span><h4>Source Range:<a class="headerlink" href="#source-range" title="Link to this heading">#</a></h4>
+<p>The source range record contains the starting and ending location of a certain
+mapping region. Both locations include the line and the column numbers.</p>
+</section>
+<section id="file-id">
+<span id="coverage-file-id"></span><h4>File ID:<a class="headerlink" href="#file-id" title="Link to this heading">#</a></h4>
+<p>The file id an integer value that tells us
+in which source file or macro expansion is this region located.
+It enables Clang to produce mapping information for the code
+defined inside macros, like this example demonstrates:</p>
+<pre class='highlight' style='line-height:initial;'><span>void func(const char *str) </span><span style='background-color:#4A789C'>{        </span> <span class='c1'>// Code Region from 1:28 to 6:2 with file id 0</span>
+<span style='background-color:#4A789C'>  #define PUT </span><span style='background-color:#85C1F5'>printf("%s\n", str)</span><span style='background-color:#4A789C'>   </span> <span class='c1'>// 2 Code Regions from 2:15 to 2:34 with file ids 1 and 2</span>
+<span style='background-color:#4A789C'>  if(*str)                          </span>
+<span style='background-color:#4A789C'>    </span><span style='background-color:#F6D55D'>PUT</span><span style='background-color:#4A789C'>;                            </span> <span class='c1'>// Expansion Region from 4:5 to 4:8 with file id 0 that expands a macro with file id 1</span>
+<span style='background-color:#4A789C'>  </span><span style='background-color:#F6D55D'>PUT</span><span style='background-color:#4A789C'>;                              </span> <span class='c1'>// Expansion Region from 5:3 to 5:6 with file id 0 that expands a macro with file id 2</span>
+<span style='background-color:#4A789C'>}</span>
+</pre>
+</section>
+<section id="counter">
+<span id="coverage-mapping-counters"></span><span id="coverage-mapping-counter"></span><h4>Counter:<a class="headerlink" href="#counter" title="Link to this heading">#</a></h4>
+<p>A coverage mapping counter can represent a reference to the profile
+instrumentation counter. The execution count for a region with such counter
+is determined by looking up the value of the corresponding profile
+instrumentation counter.</p>
+<p>It can also represent a binary arithmetical expression that operates on
+coverage mapping counters or other expressions.
+The execution count for a region with an expression counter is determined by
+evaluating the expression’s arguments and then adding them together or
+subtracting them from one another.
+In the example below, a subtraction expression is used to compute the execution
+count for the compound statement that follows the <em>else</em> keyword:</p>
+<pre class='highlight' style='line-height:initial;'><span>int main(int argc, const char *argv[]) </span><span style='background-color:#4A789C'>{   </span> <span class='c1'>// Region's counter is a reference to the profile counter #0</span>
+<span style='background-color:#4A789C'>                                           </span>
+<span style='background-color:#4A789C'>  if (argc &gt; 1) </span><span style='background-color:#85C1F5'>{                        </span>   <span class='c1'>// Region's counter is a reference to the profile counter #1</span>
+<span style='background-color:#85C1F5'>    printf("%s\n", argv[1]);             </span><span>   </span>
+<span style='background-color:#85C1F5'>  }</span><span style='background-color:#4A789C'> else </span><span style='background-color:#F6D55D'>{                               </span>   <span class='c1'>// Region's counter is an expression (reference to the profile counter #0 - reference to the profile counter #1)</span>
+<span style='background-color:#F6D55D'>    printf("\n");                        </span>
+<span style='background-color:#F6D55D'>  }</span><span style='background-color:#4A789C'>                                        </span>
+<span style='background-color:#4A789C'>  return 0;                                </span>
+<span style='background-color:#4A789C'>}</span>
+</pre>
+<p>Finally, a coverage mapping counter can also represent an execution count of
+of zero. The zero counter is used to provide coverage mapping for
+unreachable statements and expressions, like in the example below:</p>
+<pre class='highlight' style='line-height:initial;'><span>int main() </span><span style='background-color:#4A789C'>{                  </span>
+<span style='background-color:#4A789C'>  return 0;                   </span>
+<span style='background-color:#4A789C'>  </span><span style='background-color:#85C1F5'>printf("Hello world!\n")</span><span style='background-color:#4A789C'>;   </span> <span class='c1'>// Unreachable region's counter is zero</span>
+<span style='background-color:#4A789C'>}</span>
+</pre>
+<p>The zero counters allow the code coverage tool to display proper line execution
+counts for the unreachable lines and highlight the unreachable code.
+Without them, the tool would think that those lines and regions were still
+executed, as it doesn’t possess the frontend’s knowledge.</p>
+<p>Note that branch regions are created to track branch conditions in the source
+code and refer to two coverage mapping counters, one to track the number of
+times the branch condition evaluated to “true”, and one to track the number of
+times the branch condition evaluated to “false”.</p>
+</section>
+</section>
+</section>
+<section id="llvm-ir-representation">
+<h2>LLVM IR Representation<a class="headerlink" href="#llvm-ir-representation" title="Link to this heading">#</a></h2>
+<p>The coverage mapping data is stored in the LLVM IR using a global constant
+structure variable called <em>__llvm_coverage_mapping</em> with the <em>IPSK_covmap</em>
+section specifier (i.e. “.lcovmap$M” on Windows and “__llvm_covmap” elsewhere).</p>
+<p>For example, let’s consider a C file and how it gets compiled to LLVM:</p>
+<div class="highlight-c notranslate" id="coverage-mapping-sample"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">bar</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">13</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The coverage mapping variable generated by Clang has 2 fields:</p>
+<ul class="simple">
+<li><p>Coverage mapping header.</p></li>
+<li><p>An optionally compressed list of filenames present in the translation unit.</p></li>
+</ul>
+<p>The variable has 8-byte alignment because ld64 cannot always pack symbols from
+different object files tightly (the word-level alignment assumption is baked in
+too deeply).</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="vg">@__llvm_coverage_mapping</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">internal</span><span class="w"> </span><span class="k">constant</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">[</span><span class="m">32</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c">; Coverage map header</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w">  </span><span class="c">; Always 0. In prior versions, the number of affixed function records</span>
+<span class="w">    </span><span class="kt">i32</span><span class="w"> </span><span class="m">32</span><span class="p">,</span><span class="w"> </span><span class="c">; The length of the string that contains the encoded translation unit filenames</span>
+<span class="w">    </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w">  </span><span class="c">; Always 0. In prior versions, the length of the affixed string that contains the encoded coverage mapping data</span>
+<span class="w">    </span><span class="kt">i32</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w">  </span><span class="c">; Coverage mapping format version</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w"> </span><span class="p">[</span><span class="m">32</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">]</span><span class="w"> </span><span class="k">c</span><span class="s">&quot;...&quot;</span><span class="w"> </span><span class="c">; Encoded data (dissected later)</span>
+<span class="p">},</span><span class="w"> </span><span class="k">section</span><span class="w"> </span><span class="s">&quot;__llvm_covmap&quot;</span><span class="p">,</span><span class="w"> </span><span class="k">align</span><span class="w"> </span><span class="m">8</span>
+</pre></div>
+</div>
+<p>The current version of the format is version 6.</p>
+<p>There is one difference between versions 6 and 5:</p>
+<ul class="simple">
+<li><p>The first entry in the filename list is the compilation directory. When the
+filename is relative, the compilation directory is combined with the relative
+path to get an absolute path. This can reduce size by omitting the duplicate
+prefix in filenames.</p></li>
+</ul>
+<p>There is one difference between versions 5 and 4:</p>
+<ul class="simple">
+<li><p>The notion of branch region has been introduced along with a corresponding
+region kind.  Branch regions encode two counters, one to track how many
+times a “true” branch condition is taken, and one to track how many times a
+“false” branch condition is taken.</p></li>
+</ul>
+<p>There are two differences between versions 4 and 3:</p>
+<ul class="simple">
+<li><p>Function records are now named symbols, and are marked <em>linkonce_odr</em>. This
+allows linkers to merge duplicate function records. Merging of duplicate
+<em>dummy</em> records (emitted for functions included-but-not-used in a translation
+unit) reduces size bloat in the coverage mapping data. As part of this
+change, region mapping information for a function is now included within the
+function record, instead of being affixed to the coverage header.</p></li>
+<li><p>The filename list for a translation unit may optionally be zlib-compressed.</p></li>
+</ul>
+<p>The only difference between versions 3 and 2 is that a special encoding for
+column end locations was introduced to indicate gap regions.</p>
+<p>In version 1, the function record for <em>foo</em> was defined as follows:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="w">   </span><span class="p">{</span><span class="w"> </span><span class="kt">i8</span><span class="p">*,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">i8</span><span class="p">*</span><span class="w"> </span><span class="k">getelementptr</span><span class="w"> </span><span class="k">inbounds</span><span class="w"> </span><span class="p">([</span><span class="m">3</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">]*</span><span class="w"> </span><span class="vg">@__profn_foo</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="w"> </span><span class="m">0</span><span class="p">),</span><span class="w"> </span><span class="c">; Function&#39;s name</span>
+<span class="w">     </span><span class="kt">i32</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="c">; Function&#39;s name length</span>
+<span class="w">     </span><span class="kt">i32</span><span class="w"> </span><span class="m">9</span><span class="p">,</span><span class="w"> </span><span class="c">; Function&#39;s encoded coverage mapping data string length</span>
+<span class="w">     </span><span class="kt">i64</span><span class="w"> </span><span class="m">0</span><span class="w">  </span><span class="c">; Function&#39;s structural hash</span>
+<span class="w">   </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>In version 2, the function record for <em>foo</em> was defined as follows:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="w">   </span><span class="p">{</span><span class="w"> </span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="kt">i64</span><span class="w"> </span><span class="m">0x5cf8c24cdb18bdac</span><span class="p">,</span><span class="w"> </span><span class="c">; Function&#39;s name MD5</span>
+<span class="w">     </span><span class="kt">i32</span><span class="w"> </span><span class="m">9</span><span class="p">,</span><span class="w"> </span><span class="c">; Function&#39;s encoded coverage mapping data string length</span>
+<span class="w">     </span><span class="kt">i64</span><span class="w"> </span><span class="m">0</span><span class="w">  </span><span class="c">; Function&#39;s structural hash</span>
+</pre></div>
+</div>
+<section id="coverage-mapping-header">
+<h3>Coverage Mapping Header:<a class="headerlink" href="#coverage-mapping-header" title="Link to this heading">#</a></h3>
+<p>As shown above, the coverage mapping header has the following fields:</p>
+<ul class="simple">
+<li><p>The number of function records affixed to the coverage header. Always 0, but present for backwards compatibility.</p></li>
+<li><p>The length of the string in the third field of <em>__llvm_coverage_mapping</em> that contains the encoded translation unit filenames.</p></li>
+<li><p>The length of the string in the third field of <em>__llvm_coverage_mapping</em> that contains any encoded coverage mapping data affixed to the coverage header. Always 0, but present for backwards compatibility.</p></li>
+<li><p>The format version. The current version is 6 (encoded as a 5).</p></li>
+</ul>
+</section>
+<section id="function-record">
+<span id="function-records"></span><h3>Function record:<a class="headerlink" href="#function-record" title="Link to this heading">#</a></h3>
+<p>A function record is a structure of the following type:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"> </span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="kt">i64</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="err">?</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>It contains the function name’s MD5, the length of the encoded mapping data for
+that function, the function’s structural hash value, the hash of the filenames
+in the function’s translation unit, and the encoded mapping data.</p>
+<section id="dissecting-the-sample">
+<h4>Dissecting the sample:<a class="headerlink" href="#dissecting-the-sample" title="Link to this heading">#</a></h4>
+<p>Here’s an overview of the encoded data that was stored in the
+IR for the <a class="reference internal" href="#coverage-mapping-sample"><span class="std std-ref">coverage mapping sample</span></a> that was shown earlier:</p>
+<ul>
+<li><p>The IR contains the following string constant that represents the encoded
+coverage mapping data for the sample translation unit:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">c</span><span class="s">&quot;\01\15\1Dx\DA\13\D1\0F-N-*\D6/+\CE\D6/\C9-\D0O\CB\CF\D7K\06\00N+\07]&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p>The string contains values that are encoded in the LEB128 format, which is
+used throughout for storing integers. It also contains a compressed payload.</p></li>
+<li><p>The first three LEB128-encoded numbers in the sample specify the number of
+filenames, the length of the uncompressed filenames, and the length of the
+compressed payload (or 0 if compression is disabled). In this sample, there
+is 1 filename that is 21 bytes in length (uncompressed), and stored in 29
+bytes (compressed).</p></li>
+<li><p>The coverage mapping from the first function record is encoded in this string:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">c</span><span class="s">&quot;\01\00\00\01\01\01\0C\02\02&quot;</span>
+</pre></div>
+</div>
+<p>This string consists of the following bytes:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Byte</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0x01</span></code></p></td>
+<td><p>The number of file ids used by this function. There is only one file id used by the mapping data in this function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">0x00</span></code></p></td>
+<td><p>An index into the filenames array which corresponds to the file “/Users/alex/test.c”.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0x00</span></code></p></td>
+<td><p>The number of counter expressions used by this function. This function doesn’t use any expressions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">0x01</span></code></p></td>
+<td><p>The number of mapping regions that are stored in an array for the function’s file id #0.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0x01</span></code></p></td>
+<td><p>The coverage mapping counter for the first region in this function. The value of 1 tells us that it’s a coverage mapping counter that is a reference to the profile instrumentation counter with an index of 0.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">0x01</span></code></p></td>
+<td><p>The starting line of the first mapping region in this function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0x0C</span></code></p></td>
+<td><p>The starting column of the first mapping region in this function.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">0x02</span></code></p></td>
+<td><p>The ending line of the first mapping region in this function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0x02</span></code></p></td>
+<td><p>The ending column of the first mapping region in this function.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</li>
+<li><p>The length of the substring that contains the encoded coverage mapping data
+for the second function record is also 9. It’s structured like the mapping data
+for the first function record.</p></li>
+<li><p>The two trailing bytes are zeroes and are used to pad the coverage mapping
+data to give it the 8-byte alignment.</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="encoding">
+<h2>Encoding<a class="headerlink" href="#encoding" title="Link to this heading">#</a></h2>
+<p>The per-function coverage mapping data is encoded as a stream of bytes,
+with a simple structure. The structure consists of the encoding
+<a class="reference internal" href="#cvmtypes"><span class="std std-ref">types</span></a> like variable-length unsigned integers, that
+are used to encode <a class="reference internal" href="#file-id-mapping"><span class="std std-ref">File ID Mapping</span></a>, <a class="reference internal" href="#counter-expressions"><span class="std std-ref">Counter Expressions</span></a> and
+the <a class="reference internal" href="#mapping-regions"><span class="std std-ref">Mapping Regions</span></a>.</p>
+<p>The format of the structure follows:</p>
+<p><code class="docutils literal notranslate"><span class="pre">[file</span> <span class="pre">id</span> <span class="pre">mapping,</span> <span class="pre">counter</span> <span class="pre">expressions,</span> <span class="pre">mapping</span> <span class="pre">regions]</span></code></p>
+<p>The translation unit filenames are encoded using the same encoding
+<a class="reference internal" href="#cvmtypes"><span class="std std-ref">types</span></a> as the per-function coverage mapping data, with the
+following structure:</p>
+<p><code class="docutils literal notranslate"><span class="pre">[numFilenames</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">filename0</span> <span class="pre">:</span> <span class="pre">string,</span> <span class="pre">filename1</span> <span class="pre">:</span> <span class="pre">string,</span> <span class="pre">...]</span></code></p>
+<section id="types">
+<span id="cvmtypes"></span><h3>Types<a class="headerlink" href="#types" title="Link to this heading">#</a></h3>
+<p>This section describes the basic types that are used by the encoding format
+and can appear after <code class="docutils literal notranslate"><span class="pre">:</span></code> in the <code class="docutils literal notranslate"><span class="pre">[foo</span> <span class="pre">:</span> <span class="pre">type]</span></code> description.</p>
+<section id="leb128">
+<span id="id1"></span><h4>LEB128<a class="headerlink" href="#leb128" title="Link to this heading">#</a></h4>
+<p>LEB128 is an unsigned integer value that is encoded using DWARF’s LEB128
+encoding, optimizing for the case where values are small
+(1 byte for values less than 128).</p>
+</section>
+<section id="strings">
+<span id="coveragestrings"></span><h4>Strings<a class="headerlink" href="#strings" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">[length</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">characters...]</span></code></p>
+<p>String values are encoded with a <a class="reference internal" href="#leb128"><span class="std std-ref">LEB value</span></a> for the length
+of the string and a sequence of bytes for its characters.</p>
+</section>
+</section>
+<section id="file-id-mapping">
+<span id="id2"></span><h3>File ID Mapping<a class="headerlink" href="#file-id-mapping" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">[numIndices</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">filenameIndex0</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">filenameIndex1</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">...]</span></code></p>
+<p>File id mapping in a function’s coverage mapping stream
+contains the indices into the translation unit’s filenames array.</p>
+</section>
+<section id="id3">
+<h3>Counter<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">[value</span> <span class="pre">:</span> <span class="pre">LEB128]</span></code></p>
+<p>A <a class="reference internal" href="#coverage-mapping-counter"><span class="std std-ref">Counter:</span></a> is stored in a single <a class="reference internal" href="#leb128"><span class="std std-ref">LEB value</span></a>.
+It is composed of two things — the <a class="reference internal" href="#counter-tag"><span class="std std-ref">tag</span></a>
+which is stored in the lowest 2 bits, and the <a class="reference internal" href="#counter-data"><span class="std std-ref">Data:</span></a> which is stored
+in the remaining bits.</p>
+<section id="tag">
+<span id="counter-tag"></span><h4>Tag:<a class="headerlink" href="#tag" title="Link to this heading">#</a></h4>
+<p>The counter’s tag encodes the counter’s kind
+and, if the counter is an expression, the expression’s kind.
+The possible tag values are:</p>
+<ul class="simple">
+<li><p>0 - The counter is zero.</p></li>
+<li><p>1 - The counter is a reference to the profile instrumentation counter.</p></li>
+<li><p>2 - The counter is a subtraction expression.</p></li>
+<li><p>3 - The counter is an addition expression.</p></li>
+</ul>
+</section>
+<section id="data">
+<span id="counter-data"></span><h4>Data:<a class="headerlink" href="#data" title="Link to this heading">#</a></h4>
+<p>The counter’s data is interpreted in the following manner:</p>
+<ul class="simple">
+<li><p>When the counter is a reference to the profile instrumentation counter,
+then the counter’s data is the id of the profile counter.</p></li>
+<li><p>When the counter is an expression, then the counter’s data
+is the index into the array of counter expressions.</p></li>
+</ul>
+</section>
+</section>
+<section id="counter-expressions">
+<span id="id4"></span><h3>Counter Expressions<a class="headerlink" href="#counter-expressions" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">[numExpressions</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">expr0LHS</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">expr0RHS</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">expr1LHS</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">expr1RHS</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">...]</span></code></p>
+<p>Counter expressions consist of two counters as they
+represent binary arithmetic operations.
+The expression’s kind is determined from the <a class="reference internal" href="#counter-tag"><span class="std std-ref">tag</span></a> of the
+counter that references this expression.</p>
+</section>
+<section id="mapping-regions">
+<span id="id5"></span><h3>Mapping Regions<a class="headerlink" href="#mapping-regions" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">[numRegionArrays</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">regionsForFile0,</span> <span class="pre">regionsForFile1,</span> <span class="pre">...]</span></code></p>
+<p>The mapping regions are stored in an array of sub-arrays where every
+region in a particular sub-array has the same file id.</p>
+<p>The file id for a sub-array of regions is the index of that
+sub-array in the main array e.g. The first sub-array will have the file id
+of 0.</p>
+<section id="sub-array-of-regions">
+<h4>Sub-Array of Regions<a class="headerlink" href="#sub-array-of-regions" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">[numRegions</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">region0,</span> <span class="pre">region1,</span> <span class="pre">...]</span></code></p>
+<p>The mapping regions for a specific file id are stored in an array that is
+sorted in an ascending order by the region’s starting location.</p>
+</section>
+<section id="id6">
+<h4>Mapping Region<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">[header,</span> <span class="pre">source</span> <span class="pre">range]</span></code></p>
+<p>The mapping region record contains two sub-records —
+the <a class="reference internal" href="#header"><span class="std std-ref">Header</span></a>, which stores the counter and/or the region’s kind,
+and the <a class="reference internal" href="#id9"><span class="std std-ref">Source Range</span></a> that contains the starting and ending
+location of this region.</p>
+</section>
+<section id="header">
+<span id="id7"></span><h4>Header<a class="headerlink" href="#header" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">[counter]</span></code></p>
+<p>or</p>
+<p><code class="docutils literal notranslate"><span class="pre">[pseudo-counter]</span></code></p>
+<p>The header encodes the region’s counter and the region’s kind. A branch region
+will encode two counters.</p>
+<p>The value of the counter’s tag distinguishes between the counters and
+pseudo-counters — if the tag is zero, than this header contains a
+pseudo-counter, otherwise this header contains an ordinary counter.</p>
+<section id="id8">
+<h5>Counter:<a class="headerlink" href="#id8" title="Link to this heading">#</a></h5>
+<p>A mapping region whose header has a counter with a non-zero tag is
+a code region.</p>
+</section>
+<section id="pseudo-counter">
+<h5>Pseudo-Counter:<a class="headerlink" href="#pseudo-counter" title="Link to this heading">#</a></h5>
+<p><code class="docutils literal notranslate"><span class="pre">[value</span> <span class="pre">:</span> <span class="pre">LEB128]</span></code></p>
+<p>A pseudo-counter is stored in a single <a class="reference internal" href="#leb128"><span class="std std-ref">LEB value</span></a>, just like
+the ordinary counter. It has the following interpretation:</p>
+<ul>
+<li><p>bits 0-1: tag, which is always 0.</p></li>
+<li><p>bit 2: expansionRegionTag. If this bit is set, then this mapping region
+is an expansion region.</p></li>
+<li><p>remaining bits: data. If this region is an expansion region, then the data
+contains the expanded file id of that region.</p>
+<p>Otherwise, the data contains the region’s kind. The possible region
+kind values are:</p>
+<ul class="simple">
+<li><p>0 - This mapping region is a code region with a counter of zero.</p></li>
+<li><p>2 - This mapping region is a skipped region.</p></li>
+<li><p>4 - This mapping region is a branch region.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="id9">
+<span id="id10"></span><h4>Source Range<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">[deltaLineStart</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">columnStart</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">numLines</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">columnEnd</span> <span class="pre">:</span> <span class="pre">LEB128]</span></code></p>
+<p>The source range record contains the following fields:</p>
+<ul>
+<li><p><em>deltaLineStart</em>: The difference between the starting line of the
+current mapping region and the starting line of the previous mapping region.</p>
+<p>If the current mapping region is the first region in the current
+sub-array, then it stores the starting line of that region.</p>
+</li>
+<li><p><em>columnStart</em>: The starting column of the mapping region.</p></li>
+<li><p><em>numLines</em>: The difference between the ending line and the starting line
+of the current mapping region.</p></li>
+<li><p><em>columnEnd</em>: The ending column of the mapping region. If the high bit is set,
+the current mapping region is a gap area. A count for a gap area is only used
+as the line execution count if there are no other regions on a line.</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="testing-format">
+<h2>Testing Format<a class="headerlink" href="#testing-format" title="Link to this heading">#</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>This section is for the LLVM developers who are working on <code class="docutils literal notranslate"><span class="pre">llvm-cov</span></code> only.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">llvm-cov</span></code> uses a special file format (called <code class="docutils literal notranslate"><span class="pre">.covmapping</span></code> below) for
+testing purposes. This format is private and should have no use for general
+users. As a developer, you can get such files by the <code class="docutils literal notranslate"><span class="pre">convert-for-testing</span></code>
+subcommand of <code class="docutils literal notranslate"><span class="pre">llvm-cov</span></code>.</p>
+<p>The structure of the <code class="docutils literal notranslate"><span class="pre">.covmapping</span></code> files follows:</p>
+<p><code class="docutils literal notranslate"><span class="pre">[magicNumber</span> <span class="pre">:</span> <span class="pre">u64,</span> <span class="pre">version</span> <span class="pre">:</span> <span class="pre">u64,</span> <span class="pre">profileNames,</span> <span class="pre">coverageMapping,</span> <span class="pre">coverageRecords]</span></code></p>
+<section id="magic-number-and-version">
+<h3>Magic Number and Version<a class="headerlink" href="#magic-number-and-version" title="Link to this heading">#</a></h3>
+<p>The magic is <code class="docutils literal notranslate"><span class="pre">0x6d766f636d766c6c</span></code>, which is the ASCII string
+<code class="docutils literal notranslate"><span class="pre">llvmcovm</span></code> in little-endian.</p>
+<p>There are two versions for now:</p>
+<ul class="simple">
+<li><p>Version1, encoded as <code class="docutils literal notranslate"><span class="pre">0x6174616474736574</span></code> (ASCII string <code class="docutils literal notranslate"><span class="pre">testdata</span></code>).</p></li>
+<li><p>Version2, encoded as 1.</p></li>
+</ul>
+<p>The only difference between Version1 and Version2 is in the encoding of the
+<code class="docutils literal notranslate"><span class="pre">coverageMapping</span></code> fields, which is explained later.</p>
+</section>
+<section id="profile-names">
+<h3>Profile Names<a class="headerlink" href="#profile-names" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">profileNames</span></code>, <code class="docutils literal notranslate"><span class="pre">coverageMapping</span></code> and <code class="docutils literal notranslate"><span class="pre">coverageRecords</span></code> are 3 sections
+extracted from the original binary file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">profileNames</span></code> encodes the size, address and the raw data of the section:</p>
+<p><code class="docutils literal notranslate"><span class="pre">[profileNamesSize</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">profileNamesAddr</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">profileNamesData</span> <span class="pre">:</span> <span class="pre">bytes]</span></code></p>
+</section>
+<section id="coverage-mapping">
+<h3>Coverage Mapping<a class="headerlink" href="#coverage-mapping" title="Link to this heading">#</a></h3>
+<p>This field is padded with zero bytes to make it 8-byte aligned.</p>
+<p><code class="docutils literal notranslate"><span class="pre">coverageMapping</span></code> contains the records of the source files. In version 1,
+only one record is stored:</p>
+<p><code class="docutils literal notranslate"><span class="pre">[padding</span> <span class="pre">:</span> <span class="pre">bytes,</span> <span class="pre">coverageMappingData</span> <span class="pre">:</span> <span class="pre">bytes]</span></code></p>
+<p>Version 2 relaxes this restriction by encoding the size of
+<code class="docutils literal notranslate"><span class="pre">coverageMappingData</span></code> as a LEB128 number before the data:</p>
+<p><code class="docutils literal notranslate"><span class="pre">[coverageMappingSize</span> <span class="pre">:</span> <span class="pre">LEB128,</span> <span class="pre">padding</span> <span class="pre">:</span> <span class="pre">bytes,</span> <span class="pre">coverageMappingData</span> <span class="pre">:</span> <span class="pre">bytes]</span></code></p>
+<p>The current version is 2.</p>
+</section>
+<section id="coverage-records">
+<h3>Coverage Records<a class="headerlink" href="#coverage-records" title="Link to this heading">#</a></h3>
+<p>This field is padded with zero bytes to make it 8-byte aligned.</p>
+<p><code class="docutils literal notranslate"><span class="pre">coverageRecords</span></code> is encoded as:</p>
+<p><code class="docutils literal notranslate"><span class="pre">[padding</span> <span class="pre">:</span> <span class="pre">bytes,</span> <span class="pre">coverageRecordsData</span> <span class="pre">:</span> <span class="pre">bytes]</span></code></p>
+<p>The rest data in the file is considered as the <code class="docutils literal notranslate"><span class="pre">coverageRecordsData</span></code>.</p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="CFIVerify.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Control Flow Verification Tool Design Document</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="HowToCrossCompileLLVM.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">How to cross-compile Clang/LLVM using Clang/LLVM</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">LLVM Code Coverage Mapping Format</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#high-level-overview">High Level Overview</a></li>
+<li><a class="reference internal" href="#advanced-concepts">Advanced Concepts</a><ul>
+<li><a class="reference internal" href="#mapping-region">Mapping Region</a><ul>
+<li><a class="reference internal" href="#source-range">Source Range:</a></li>
+<li><a class="reference internal" href="#file-id">File ID:</a></li>
+<li><a class="reference internal" href="#counter">Counter:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#llvm-ir-representation">LLVM IR Representation</a><ul>
+<li><a class="reference internal" href="#coverage-mapping-header">Coverage Mapping Header:</a></li>
+<li><a class="reference internal" href="#function-record">Function record:</a><ul>
+<li><a class="reference internal" href="#dissecting-the-sample">Dissecting the sample:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#encoding">Encoding</a><ul>
+<li><a class="reference internal" href="#types">Types</a><ul>
+<li><a class="reference internal" href="#leb128">LEB128</a></li>
+<li><a class="reference internal" href="#strings">Strings</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#file-id-mapping">File ID Mapping</a></li>
+<li><a class="reference internal" href="#id3">Counter</a><ul>
+<li><a class="reference internal" href="#tag">Tag:</a></li>
+<li><a class="reference internal" href="#data">Data:</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#counter-expressions">Counter Expressions</a></li>
+<li><a class="reference internal" href="#mapping-regions">Mapping Regions</a><ul>
+<li><a class="reference internal" href="#sub-array-of-regions">Sub-Array of Regions</a></li>
+<li><a class="reference internal" href="#id6">Mapping Region</a></li>
+<li><a class="reference internal" href="#header">Header</a><ul>
+<li><a class="reference internal" href="#id8">Counter:</a></li>
+<li><a class="reference internal" href="#pseudo-counter">Pseudo-Counter:</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id9">Source Range</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#testing-format">Testing Format</a><ul>
+<li><a class="reference internal" href="#magic-number-and-version">Magic Number and Version</a></li>
+<li><a class="reference internal" href="#profile-names">Profile Names</a></li>
+<li><a class="reference internal" href="#coverage-mapping">Coverage Mapping</a></li>
+<li><a class="reference internal" href="#coverage-records">Coverage Records</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=7d86a446"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

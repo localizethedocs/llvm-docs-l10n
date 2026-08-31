@@ -1,0 +1,1271 @@
+<!doctype html>
+<html class="no-js" lang="zh-TW" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜尋" href="search.html" /><link rel="next" title="MemorySSA" href="MemorySSA.html" /><link rel="prev" title="MergeFunctions pass, how it works" href="MergeFunctions.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/AliasAnalysis.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>LLVM Alias Analysis Infrastructure - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜尋" name="q" aria-label="搜尋">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">常見問題集（FAQ）</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">參考</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of 參考</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural 『diff』</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">簡介</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM 語言參考手冊</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM 測試基礎設施指南</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM 測試基礎設施指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">使用者指南</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of 使用者指南</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">使用 CMake 建置 LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">進階建置組態</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstCombineContributorGuide.html">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen 概覽</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen 概覽</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU 指令語法</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub 使用者指南</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse 遷移指南</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM 開發者方針</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/AliasAnalysis.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="llvm-alias-analysis-infrastructure">
+<h1>LLVM Alias Analysis Infrastructure<a class="headerlink" href="#llvm-alias-analysis-infrastructure" title="Link to this heading">#</a></h1>
+<section id="introduction">
+<h2>簡介<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h2>
+<p>Alias Analysis (aka Pointer Analysis) is a class of techniques which attempt to
+determine whether or not two pointers ever can point to the same object in
+memory.  There are many different algorithms for alias analysis and many
+different ways of classifying them: flow-sensitive vs. flow-insensitive,
+context-sensitive vs. context-insensitive, field-sensitive
+vs. field-insensitive, unification-based vs. subset-based, etc.  Traditionally,
+alias analyses respond to a query with a <a class="reference internal" href="#must-may-or-no"><span class="std std-ref">Must, May, or No</span></a> alias response,
+indicating that two pointers always point to the same object, might point to the
+same object, or are known to never point to the same object.</p>
+<p>The LLVM <a class="reference external" href="https://llvm.org/doxygen/classllvm_1_1AliasAnalysis.html">AliasAnalysis</a> class is the
+primary interface used by clients and implementations of alias analyses in the
+LLVM system.  This class is the common interface between clients of alias
+analysis information and the implementations providing it, and is designed to
+support a wide range of implementations and clients (but currently all clients
+are assumed to be flow-insensitive).  In addition to simple alias analysis
+information, this class exposes Mod/Ref information from those implementations
+which can provide it, allowing for powerful analyses and transformations to work
+well together.</p>
+<p>This document contains information necessary to successfully implement this
+interface, use it, and to test both sides.  It also explains some of the finer
+points about what exactly results mean.</p>
+</section>
+<section id="aliasanalysis-class-overview">
+<h2><code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> Class Overview<a class="headerlink" href="#aliasanalysis-class-overview" title="Link to this heading">#</a></h2>
+<p>The <a class="reference external" href="https://llvm.org/doxygen/classllvm_1_1AliasAnalysis.html">AliasAnalysis</a>
+class defines the interface that the various alias analysis implementations
+should support.  This class exports two important enums: <code class="docutils literal notranslate"><span class="pre">AliasResult</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ModRefResult</span></code> which represent the result of an alias query or a mod/ref
+query, respectively.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interface exposes information about memory, represented in
+several different ways.  In particular, memory objects are represented as a
+starting address and size, and function calls are represented as the actual
+<code class="docutils literal notranslate"><span class="pre">call</span></code> or <code class="docutils literal notranslate"><span class="pre">invoke</span></code> instructions that perform the call.  The
+<code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interface also exposes some helper methods which allow you to
+get mod/ref information for arbitrary instructions.</p>
+<p>All <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interfaces require that in queries involving multiple
+values, values which are not <a class="reference internal" href="LangRef.html#constants"><span class="std std-ref">constants</span></a> are all
+defined within the same function.</p>
+<section id="representation-of-pointers">
+<h3>Representation of Pointers<a class="headerlink" href="#representation-of-pointers" title="Link to this heading">#</a></h3>
+<p>Most importantly, the <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> class provides several methods which are
+used to query whether or not two memory objects alias, whether function calls
+can modify or read a memory object, etc.  For all of these queries, memory
+objects are represented as a pair of their starting address (a symbolic LLVM
+<code class="docutils literal notranslate"><span class="pre">Value*</span></code>) and a static size.</p>
+<p>Representing memory objects as a starting address and a size is critically
+important for correct Alias Analyses.  For example, consider this (silly, but
+possible) C code:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">C</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+<span class="cm">/* ... */</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">C</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w">          </span><span class="cm">/* One byte store */</span>
+<span class="w">  </span><span class="n">C</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="mi">9</span><span class="o">-</span><span class="n">i</span><span class="p">];</span><span class="w">        </span><span class="cm">/* One byte store */</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In this case, the <code class="docutils literal notranslate"><span class="pre">basic-aa</span></code> pass will disambiguate the stores to <code class="docutils literal notranslate"><span class="pre">C[0]</span></code> and
+<code class="docutils literal notranslate"><span class="pre">C[1]</span></code> because they are accesses to two distinct locations one byte apart, and
+the accesses are each one byte.  In this case, the Loop Invariant Code Motion
+(LICM) pass can use store motion to remove the stores from the loop.  In
+contrast, the following code:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">C</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+<span class="cm">/* ... */</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">((</span><span class="kt">short</span><span class="o">*</span><span class="p">)</span><span class="n">C</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w">  </span><span class="cm">/* Two byte store! */</span>
+<span class="w">  </span><span class="n">C</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="mi">9</span><span class="o">-</span><span class="n">i</span><span class="p">];</span><span class="w">          </span><span class="cm">/* One byte store */</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In this case, the two stores to C do alias each other, because the access to the
+<code class="docutils literal notranslate"><span class="pre">&amp;C[0]</span></code> element is a two byte access.  If size information wasn’t available in
+the query, even the first case would have to conservatively assume that the
+accesses alias.</p>
+</section>
+<section id="the-alias-method">
+<span id="alias"></span><h3>The <code class="docutils literal notranslate"><span class="pre">alias</span></code> method<a class="headerlink" href="#the-alias-method" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">alias</span></code> method is the primary interface used to determine whether or not
+two memory objects alias each other.  It takes two memory objects as input and
+returns MustAlias, PartialAlias, MayAlias, or NoAlias as appropriate.</p>
+<p>Like all <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interfaces, the <code class="docutils literal notranslate"><span class="pre">alias</span></code> method requires that either
+the two pointer values be defined within the same function, or at least one of
+the values is a <a class="reference internal" href="LangRef.html#constants"><span class="std std-ref">constant</span></a>.</p>
+<section id="must-may-and-no-alias-responses">
+<span id="must-may-or-no"></span><h4>Must, May, and No Alias Responses<a class="headerlink" href="#must-may-and-no-alias-responses" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">NoAlias</span></code> response may be used when there is never an immediate dependence
+between any memory reference <em>based</em> on one pointer and any memory reference
+<em>based on</em> the other. The most obvious example is when the two pointers point to
+non-overlapping memory ranges. Another is when the two pointers are only ever
+used for reading memory. Another is when the memory is freed and reallocated
+between accesses through one pointer and accesses through the other — in this
+case, there is a dependence, but it’s mediated by the free and reallocation.</p>
+<p>An exception to this is with the <a class="reference internal" href="LangRef.html#noalias"><span class="std std-ref">noalias</span></a> keyword;
+the 「irrelevant」 dependencies are ignored.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">MayAlias</span></code> response is used whenever the two pointers might refer to the
+same object.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">PartialAlias</span></code> response is used when the two memory objects are known to
+be overlapping in some way, regardless of whether they start at the same address
+or not.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">MustAlias</span></code> response may only be returned if the two memory objects are
+guaranteed to always start at exactly the same location. A <code class="docutils literal notranslate"><span class="pre">MustAlias</span></code>
+response does not imply that the pointers compare equal.</p>
+</section>
+</section>
+<section id="the-getmodrefinfo-methods">
+<h3>The <code class="docutils literal notranslate"><span class="pre">getModRefInfo</span></code> methods<a class="headerlink" href="#the-getmodrefinfo-methods" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">getModRefInfo</span></code> methods return information about whether the execution of
+an instruction can read or modify a memory location.  Mod/Ref information is
+always conservative: if an instruction <strong>might</strong> read or write a location,
+<code class="docutils literal notranslate"><span class="pre">ModRef</span></code> is returned.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> class also provides a <code class="docutils literal notranslate"><span class="pre">getModRefInfo</span></code> method for testing
+dependencies between function calls.  This method takes two call sites (<code class="docutils literal notranslate"><span class="pre">CS1</span></code>
+&amp; <code class="docutils literal notranslate"><span class="pre">CS2</span></code>), returns <code class="docutils literal notranslate"><span class="pre">NoModRef</span></code> if neither call writes to memory read or
+written by the other, <code class="docutils literal notranslate"><span class="pre">Ref</span></code> if <code class="docutils literal notranslate"><span class="pre">CS1</span></code> reads memory written by <code class="docutils literal notranslate"><span class="pre">CS2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Mod</span></code> if <code class="docutils literal notranslate"><span class="pre">CS1</span></code> writes to memory read or written by <code class="docutils literal notranslate"><span class="pre">CS2</span></code>, or <code class="docutils literal notranslate"><span class="pre">ModRef</span></code> if
+<code class="docutils literal notranslate"><span class="pre">CS1</span></code> might read or write memory written to by <code class="docutils literal notranslate"><span class="pre">CS2</span></code>.  Note that this
+relation is not commutative.</p>
+</section>
+<section id="other-useful-aliasanalysis-methods">
+<h3>Other useful <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> methods<a class="headerlink" href="#other-useful-aliasanalysis-methods" title="Link to this heading">#</a></h3>
+<p>Several other tidbits of information are often collected by various alias
+analysis implementations and can be put to good use by various clients.</p>
+<section id="the-getmodrefinfomask-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">getModRefInfoMask</span></code> method<a class="headerlink" href="#the-getmodrefinfomask-method" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">getModRefInfoMask</span></code> method returns a bound on Mod/Ref information for
+the supplied pointer, based on knowledge about whether the pointer points to
+globally-constant memory (for which it returns <code class="docutils literal notranslate"><span class="pre">NoModRef</span></code>) or
+locally-invariant memory (for which it returns <code class="docutils literal notranslate"><span class="pre">Ref</span></code>). Globally-constant
+memory includes functions, constant global variables, and the null pointer.
+Locally-invariant memory is memory that we know is invariant for the lifetime
+of its SSA value, but not necessarily for the life of the program: for example,
+the memory pointed to by <code class="docutils literal notranslate"><span class="pre">readonly</span></code> <code class="docutils literal notranslate"><span class="pre">noalias</span></code> parameters is known-invariant
+for the duration of the corresponding function call. Given Mod/Ref information
+<code class="docutils literal notranslate"><span class="pre">MRI</span></code> for a memory location <code class="docutils literal notranslate"><span class="pre">Loc</span></code>, <code class="docutils literal notranslate"><span class="pre">MRI</span></code> can be refined with a statement
+like <code class="docutils literal notranslate"><span class="pre">MRI</span> <span class="pre">&amp;=</span> <span class="pre">AA.getModRefInfoMask(Loc);</span></code>. Another useful idiom is
+<code class="docutils literal notranslate"><span class="pre">isModSet(AA.getModRefInfoMask(Loc))</span></code>; this checks to see if the given
+location can be modified at all. For convenience, there is also a method
+<code class="docutils literal notranslate"><span class="pre">pointsToConstantMemory(Loc)</span></code>; this is synonymous with
+<code class="docutils literal notranslate"><span class="pre">isNoModRef(AA.getModRefInfoMask(Loc))</span></code>.</p>
+</section>
+<section id="the-doesnotaccessmemory-and-onlyreadsmemory-methods">
+<span id="never-access-memory-or-only-read-memory"></span><h4>The <code class="docutils literal notranslate"><span class="pre">doesNotAccessMemory</span></code> and  <code class="docutils literal notranslate"><span class="pre">onlyReadsMemory</span></code> methods<a class="headerlink" href="#the-doesnotaccessmemory-and-onlyreadsmemory-methods" title="Link to this heading">#</a></h4>
+<p>These methods are used to provide very simple mod/ref information for function
+calls.  The <code class="docutils literal notranslate"><span class="pre">doesNotAccessMemory</span></code> method returns true for a function if the
+analysis can prove that the function never reads or writes to memory, or if the
+function only reads from constant memory.  Functions with this property are
+side-effect free and only depend on their input arguments, allowing them to be
+eliminated if they form common subexpressions or be hoisted out of loops.  Many
+common functions behave this way (e.g., <code class="docutils literal notranslate"><span class="pre">sin</span></code> and <code class="docutils literal notranslate"><span class="pre">cos</span></code>) but many others do
+not (e.g., <code class="docutils literal notranslate"><span class="pre">acos</span></code>, which modifies the <code class="docutils literal notranslate"><span class="pre">errno</span></code> variable).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">onlyReadsMemory</span></code> method returns true for a function if analysis can prove
+that (at most) the function only reads from non-volatile memory.  Functions with
+this property are side-effect free, only depending on their input arguments and
+the state of memory when they are called.  This property allows calls to these
+functions to be eliminated and moved around, as long as there is no store
+instruction that changes the contents of memory.  Note that all functions that
+satisfy the <code class="docutils literal notranslate"><span class="pre">doesNotAccessMemory</span></code> method also satisfy <code class="docutils literal notranslate"><span class="pre">onlyReadsMemory</span></code>.</p>
+</section>
+</section>
+</section>
+<section id="writing-a-new-aliasanalysis-implementation">
+<h2>Writing a new <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> Implementation<a class="headerlink" href="#writing-a-new-aliasanalysis-implementation" title="Link to this heading">#</a></h2>
+<p>Writing a new alias analysis implementation for LLVM is quite straightforward.
+There are already several implementations that you can use for examples, and the
+following information should help fill in any details.  For example, take a
+look at the <a class="reference internal" href="#various-alias-analysis-implementations"><span class="std std-ref">Available AliasAnalysis implementations</span></a> included with LLVM.</p>
+<section id="different-pass-styles">
+<h3>Different Pass styles<a class="headerlink" href="#different-pass-styles" title="Link to this heading">#</a></h3>
+<p>The first step is to determine what type of <a class="reference internal" href="WritingAnLLVMPass.html"><span class="doc">LLVM pass</span></a>
+you need to use for your Alias Analysis.  As is the case with most other
+analyses and transformations, the answer should be fairly obvious from what type
+of problem you are trying to solve:</p>
+<ol class="arabic simple">
+<li><p>If you require interprocedural analysis, it should be a <code class="docutils literal notranslate"><span class="pre">Pass</span></code>.</p></li>
+<li><p>If you are a function-local analysis, subclass <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code>.</p></li>
+<li><p>If you don’t need to look at the program at all, subclass <code class="docutils literal notranslate"><span class="pre">ImmutablePass</span></code>.</p></li>
+</ol>
+<p>In addition to the pass that you subclass, you should also inherit from the
+<code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interface, of course, and use the <code class="docutils literal notranslate"><span class="pre">RegisterAnalysisGroup</span></code>
+template to register as an implementation of <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code>.</p>
+</section>
+<section id="required-initialization-calls">
+<h3>Required initialization calls<a class="headerlink" href="#required-initialization-calls" title="Link to this heading">#</a></h3>
+<p>Your subclass of <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> is required to invoke two methods on the
+<code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> base class: <code class="docutils literal notranslate"><span class="pre">getAnalysisUsage</span></code> and
+<code class="docutils literal notranslate"><span class="pre">InitializeAliasAnalysis</span></code>.  In particular, your implementation of
+<code class="docutils literal notranslate"><span class="pre">getAnalysisUsage</span></code> should explicitly call into the
+<code class="docutils literal notranslate"><span class="pre">AliasAnalysis::getAnalysisUsage</span></code> method in addition to declaring
+any pass dependencies your pass has.  Thus you should have something like this:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">getAnalysisUsage</span><span class="p">(</span><span class="n">AnalysisUsage</span><span class="w"> </span><span class="o">&amp;</span><span class="n">AU</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">AliasAnalysis</span><span class="o">::</span><span class="n">getAnalysisUsage</span><span class="p">(</span><span class="n">AU</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// declare your dependencies here.</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Additionally, you must invoke the <code class="docutils literal notranslate"><span class="pre">InitializeAliasAnalysis</span></code> method from your
+analysis run method (<code class="docutils literal notranslate"><span class="pre">run</span></code> for a <code class="docutils literal notranslate"><span class="pre">Pass</span></code>, <code class="docutils literal notranslate"><span class="pre">runOnFunction</span></code> for a
+<code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code>, or <code class="docutils literal notranslate"><span class="pre">InitializePass</span></code> for an <code class="docutils literal notranslate"><span class="pre">ImmutablePass</span></code>).  For example
+(as part of a <code class="docutils literal notranslate"><span class="pre">Pass</span></code>):</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">Module</span><span class="w"> </span><span class="o">&amp;</span><span class="n">M</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">InitializeAliasAnalysis</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// Perform analysis here...</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="interfaces-which-may-be-specified">
+<h3>Interfaces which may be specified<a class="headerlink" href="#interfaces-which-may-be-specified" title="Link to this heading">#</a></h3>
+<p>All of the <a class="reference external" href="https://llvm.org/doxygen/classllvm_1_1AliasAnalysis.html">AliasAnalysis</a> virtual methods
+default to providing <a class="reference internal" href="#aliasanalysis-chaining"><span class="std std-ref">chaining</span></a> to another alias
+analysis implementation, which ends up returning conservatively correct
+information (returning 「May」 Alias and 「Mod/Ref」 for alias and mod/ref queries
+respectively).  Depending on the capabilities of the analysis you are
+implementing, you just override the interfaces you can improve.</p>
+</section>
+<section id="aliasanalysis-chaining-behavior">
+<span id="aliasanalysis-chaining"></span><h3><code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> chaining behavior<a class="headerlink" href="#aliasanalysis-chaining-behavior" title="Link to this heading">#</a></h3>
+<p>Every alias analysis pass chains to another alias analysis implementation (for
+example, the user can specify 「<code class="docutils literal notranslate"><span class="pre">-basic-aa</span> <span class="pre">-ds-aa</span> <span class="pre">-licm</span></code>」 to get the maximum
+benefit from both alias analyses).  The alias analysis class automatically
+takes care of most of this for methods that you don’t override.  For methods
+that you do override, in code paths that return a conservative MayAlias or
+Mod/Ref result, simply return whatever the superclass computes.  For example:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">AliasResult</span><span class="w"> </span><span class="nf">alias</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Value</span><span class="w"> </span><span class="o">*</span><span class="n">V1</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">V1Size</span><span class="p">,</span>
+<span class="w">                  </span><span class="k">const</span><span class="w"> </span><span class="n">Value</span><span class="w"> </span><span class="o">*</span><span class="n">V2</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">V2Size</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(...)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">NoAlias</span><span class="p">;</span>
+<span class="w">  </span><span class="p">...</span>
+
+<span class="w">  </span><span class="c1">// Couldn&#39;t determine a must or no-alias result.</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">AliasAnalysis</span><span class="o">::</span><span class="n">alias</span><span class="p">(</span><span class="n">V1</span><span class="p">,</span><span class="w"> </span><span class="n">V1Size</span><span class="p">,</span><span class="w"> </span><span class="n">V2</span><span class="p">,</span><span class="w"> </span><span class="n">V2Size</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In addition to analysis queries, you must make sure to unconditionally pass LLVM
+<a class="reference internal" href="#update-notification"><span class="std std-ref">Updating analysis results for transformations</span></a> methods to the superclass as well if you override them,
+which allows all alias analyses in a change to be updated.</p>
+</section>
+<section id="updating-analysis-results-for-transformations">
+<span id="update-notification"></span><h3>Updating analysis results for transformations<a class="headerlink" href="#updating-analysis-results-for-transformations" title="Link to this heading">#</a></h3>
+<p>Alias analysis information is initially computed for a static snapshot of the
+program, but clients will use this information to make transformations to the
+code.  All but the most trivial forms of alias analysis will need to have their
+analysis results updated to reflect the changes made by these transformations.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interface exposes four methods which are used to
+communicate program changes from the clients to the analysis implementations.
+Various alias analysis implementations should use these methods to ensure that
+their internal data structures are kept up-to-date as the program changes (for
+example, when an instruction is deleted), and clients of alias analysis must be
+sure to call these interfaces appropriately.</p>
+<section id="the-deletevalue-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">deleteValue</span></code> method<a class="headerlink" href="#the-deletevalue-method" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">deleteValue</span></code> method is called by transformations when they remove an
+instruction or any other value from the program (including values that do not
+use pointers).  Typically alias analyses keep data structures that have entries
+for each value in the program.  When this method is called, they should remove
+any entries for the specified value, if they exist.</p>
+</section>
+<section id="the-copyvalue-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">copyValue</span></code> method<a class="headerlink" href="#the-copyvalue-method" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">copyValue</span></code> method is used when a new value is introduced into the
+program.  There is no way to introduce a value into the program that did not
+exist before (this doesn’t make sense for a safe compiler transformation), so
+this is the only way to introduce a new value.  This method indicates that the
+new value has exactly the same properties as the value being copied.</p>
+</section>
+<section id="the-replacewithnewvalue-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">replaceWithNewValue</span></code> method<a class="headerlink" href="#the-replacewithnewvalue-method" title="Link to this heading">#</a></h4>
+<p>This method is a simple helper method that is provided to make clients easier to
+use.  It is implemented by copying the old analysis information to the new
+value, then deleting the old value.  This method cannot be overridden by alias
+analysis implementations.</p>
+</section>
+<section id="the-addescapinguse-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">addEscapingUse</span></code> method<a class="headerlink" href="#the-addescapinguse-method" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">addEscapingUse</span></code> method is used when the uses of a pointer value have
+changed in ways that may invalidate precomputed analysis information.
+Implementations may either use this callback to provide conservative responses
+for points whose uses have changed since analysis time, or may recompute some or
+all of their internal state to continue providing accurate responses.</p>
+<p>In general, any new use of a pointer value is considered an escaping use, and
+must be reported through this callback, <em>except</em> for the uses below:</p>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">bitcast</span></code> or <code class="docutils literal notranslate"><span class="pre">getelementptr</span></code> of the pointer</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">store</span></code> through the pointer (but not a <code class="docutils literal notranslate"><span class="pre">store</span></code> <em>of</em> the pointer)</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">load</span></code> through the pointer</p></li>
+</ul>
+</section>
+</section>
+<section id="efficiency-issues">
+<h3>Efficiency Issues<a class="headerlink" href="#efficiency-issues" title="Link to this heading">#</a></h3>
+<p>From the LLVM perspective, the only thing you need to do to provide an efficient
+alias analysis is to make sure that alias analysis <strong>queries</strong> are serviced
+quickly.  The actual calculation of the alias analysis results (the 「run」
+method) is only performed once, but many (perhaps duplicate) queries may be
+performed.  Because of this, try to move as much computation to the run method
+as possible (within reason).</p>
+</section>
+<section id="limitations">
+<h3>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">#</a></h3>
+<p>The AliasAnalysis infrastructure has several limitations which make writing a
+new <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> implementation difficult.</p>
+<p>There is no way to override the default alias analysis. It would be very useful
+to be able to do something like 「<code class="docutils literal notranslate"><span class="pre">opt</span> <span class="pre">-my-aa</span> <span class="pre">-O2</span></code>」 and have it use <code class="docutils literal notranslate"><span class="pre">-my-aa</span></code>
+for all passes which need AliasAnalysis, but there is currently no support for
+that, short of changing the source code and recompiling. Similarly, there is
+also no way of setting a chain of analyses as the default.</p>
+<p>There is no way for transform passes to declare that they preserve
+<code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> implementations. The <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interface includes
+<code class="docutils literal notranslate"><span class="pre">deleteValue</span></code> and <code class="docutils literal notranslate"><span class="pre">copyValue</span></code> methods which are intended to allow a pass to
+keep an AliasAnalysis consistent; however, there’s no way for a pass to declare
+in its <code class="docutils literal notranslate"><span class="pre">getAnalysisUsage</span></code> that it does so. Some passes attempt to use
+<code class="docutils literal notranslate"><span class="pre">AU.addPreserved&lt;AliasAnalysis&gt;</span></code>; however, this doesn’t actually have any
+effect.</p>
+<p>Similarly, the <code class="docutils literal notranslate"><span class="pre">opt</span> <span class="pre">-p</span></code> option introduces <code class="docutils literal notranslate"><span class="pre">ModulePass</span></code> passes between each
+pass, which prevents the use of <code class="docutils literal notranslate"><span class="pre">FunctionPass</span></code> alias analysis passes.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> API does have functions for notifying implementations when
+values are deleted or copied; however, these aren’t sufficient. There are many
+other ways that LLVM IR can be modified which could be relevant to
+<code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> implementations which can not be expressed.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AliasAnalysisDebugger</span></code> utility seems to suggest that <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code>
+implementations can expect that they will be informed of any relevant <code class="docutils literal notranslate"><span class="pre">Value</span></code>
+before it appears in an alias query. However, popular clients such as <code class="docutils literal notranslate"><span class="pre">GVN</span></code>
+don’t support this, and are known to trigger errors when run with the
+<code class="docutils literal notranslate"><span class="pre">AliasAnalysisDebugger</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AliasSetTracker</span></code> class (which is used by <code class="docutils literal notranslate"><span class="pre">LICM</span></code>) makes a
+non-deterministic number of alias queries. This can cause debugging techniques
+involving pausing execution after a predetermined number of queries to be
+unreliable.</p>
+<p>Many alias queries can be reformulated in terms of other alias queries. When
+multiple <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> queries are chained together, it would make sense to
+start those queries from the beginning of the chain, with care taken to avoid
+infinite looping; however, currently an implementation which wants to do this can
+only start such queries from itself.</p>
+</section>
+</section>
+<section id="using-alias-analysis-results">
+<h2>Using alias analysis results<a class="headerlink" href="#using-alias-analysis-results" title="Link to this heading">#</a></h2>
+<p>There are several different ways to use alias analysis results.  In order of
+preference, these are:</p>
+<section id="using-the-memorydependenceanalysis-pass">
+<h3>Using the <code class="docutils literal notranslate"><span class="pre">MemoryDependenceAnalysis</span></code> Pass<a class="headerlink" href="#using-the-memorydependenceanalysis-pass" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">memdep</span></code> pass uses alias analysis to provide high-level dependence
+information about memory-using instructions.  This will tell you which store
+feeds into a load, for example.  It uses caching and other techniques to be
+efficient, and is used by Dead Store Elimination, GVN, and memcpy optimizations.</p>
+</section>
+<section id="using-the-aliassettracker-class">
+<span id="aliassettracker"></span><h3>Using the <code class="docutils literal notranslate"><span class="pre">AliasSetTracker</span></code> class<a class="headerlink" href="#using-the-aliassettracker-class" title="Link to this heading">#</a></h3>
+<p>Many transformations need information about alias <strong>sets</strong> that are active in
+some scope, rather than information about pairwise aliasing.  The
+<a class="reference external" href="https://llvm.org/doxygen/classllvm_1_1AliasSetTracker.html">AliasSetTracker</a>
+class is used to efficiently build these Alias Sets from the pairwise alias
+analysis information provided by the <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interface.</p>
+<p>First you initialize the AliasSetTracker by using the 「<code class="docutils literal notranslate"><span class="pre">add</span></code>」 methods to add
+information about various potentially aliasing instructions in the scope you are
+interested in.  Once all of the alias sets are completed, your pass should
+simply iterate through the constructed alias sets, using the <code class="docutils literal notranslate"><span class="pre">AliasSetTracker</span></code>
+<code class="docutils literal notranslate"><span class="pre">begin()</span></code>/<code class="docutils literal notranslate"><span class="pre">end()</span></code> methods.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AliasSet</span></code>s formed by the <code class="docutils literal notranslate"><span class="pre">AliasSetTracker</span></code> are guaranteed to be
+disjoint, calculate mod/ref information and volatility for the set, and keep
+track of whether or not all of the pointers in the set are Must aliases.  The
+AliasSetTracker also makes sure that sets are properly folded due to call
+instructions, and can provide a list of pointers in each set.</p>
+<p>As an example user of this, the <a class="reference external" href="https://llvm.org/doxygen/structLICM.html">Loop Invariant Code Motion</a>
+pass uses <code class="docutils literal notranslate"><span class="pre">AliasSetTracker</span></code>s to calculate alias
+sets for each loop nest.  If an <code class="docutils literal notranslate"><span class="pre">AliasSet</span></code> in a loop is not modified, then all
+load instructions from that set may be hoisted out of the loop.  If any alias
+sets are stored to <strong>and</strong> are must alias sets, then the stores may be sunk
+to outside of the loop, promoting the memory location to a register for the
+duration of the loop nest.  Both of these transformations only apply if the
+pointer argument is loop-invariant.</p>
+<section id="the-aliassettracker-implementation">
+<h4>The AliasSetTracker implementation<a class="headerlink" href="#the-aliassettracker-implementation" title="Link to this heading">#</a></h4>
+<p>The AliasSetTracker class is implemented to be as efficient as possible.  It
+uses the union-find algorithm to efficiently merge AliasSets when a pointer is
+inserted into the AliasSetTracker that aliases multiple sets.  The primary data
+structure is a hash table mapping pointers to the AliasSet they are in.</p>
+<p>The AliasSetTracker class must maintain a list of all of the LLVM <code class="docutils literal notranslate"><span class="pre">Value*</span></code>s
+that are in each AliasSet.  Since the hash table already has entries for each
+LLVM <code class="docutils literal notranslate"><span class="pre">Value*</span></code> of interest, the AliasesSets thread the linked list through
+these hash-table nodes to avoid having to allocate memory unnecessarily, and to
+make merging alias sets extremely efficient (the linked list merge is constant
+time).</p>
+<p>You shouldn’t need to understand these details if you are just a client of the
+AliasSetTracker, but if you look at the code, hopefully this brief description
+will help make sense of why things are designed the way they are.</p>
+</section>
+</section>
+<section id="using-the-aliasanalysis-interface-directly">
+<h3>Using the <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interface directly<a class="headerlink" href="#using-the-aliasanalysis-interface-directly" title="Link to this heading">#</a></h3>
+<p>If neither of these utility classes are what your pass needs, you should use the
+interfaces exposed by the <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> class directly.  Try to use the
+higher-level methods when possible (e.g., use mod/ref information instead of the
+<a class="reference internal" href="#alias"><span class="std std-ref">The alias method</span></a> method directly if possible) to get the best precision and efficiency.</p>
+</section>
+</section>
+<section id="existing-alias-analysis-implementations-and-clients">
+<h2>Existing alias analysis implementations and clients<a class="headerlink" href="#existing-alias-analysis-implementations-and-clients" title="Link to this heading">#</a></h2>
+<p>If you’re going to be working with the LLVM alias analysis infrastructure, you
+should know what clients and implementations of alias analysis are available.
+In particular, if you are implementing an alias analysis, you should be aware of
+<a class="reference internal" href="#the-clients"><span class="std std-ref">Clients for debugging and evaluation of implementations</span></a> that are useful for monitoring and evaluating different
+implementations.</p>
+<section id="available-aliasanalysis-implementations">
+<span id="various-alias-analysis-implementations"></span><h3>Available <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> implementations<a class="headerlink" href="#available-aliasanalysis-implementations" title="Link to this heading">#</a></h3>
+<p>This section lists the various implementations of the <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code>
+interface. All of these <a class="reference internal" href="#aliasanalysis-chaining"><span class="std std-ref">chain</span></a> to other
+alias analysis implementations.</p>
+<section id="the-basic-aa-pass">
+<h4>The <code class="docutils literal notranslate"><span class="pre">-basic-aa</span></code> pass<a class="headerlink" href="#the-basic-aa-pass" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">-basic-aa</span></code> pass is an aggressive local analysis that <em>knows</em> many
+important facts:</p>
+<ul class="simple">
+<li><p>Distinct globals, stack allocations, and heap allocations can never alias.</p></li>
+<li><p>Globals, stack allocations, and heap allocations never alias the null pointer.</p></li>
+<li><p>Different fields of a structure do not alias.</p></li>
+<li><p>Indexes into arrays with statically differing subscripts cannot alias.</p></li>
+<li><p>Many common standard C library functions <a class="reference internal" href="#never-access-memory-or-only-read-memory"><span class="std std-ref">never access memory or only read memory</span></a>.</p></li>
+<li><p>Pointers that obviously point to constant globals 「<code class="docutils literal notranslate"><span class="pre">pointToConstantMemory</span></code>」.</p></li>
+<li><p>Function calls cannot modify or reference stack allocations if they never
+escape from the function that allocates them (a common case for automatic
+arrays).</p></li>
+</ul>
+</section>
+<section id="the-globalsmodref-aa-pass">
+<h4>The <code class="docutils literal notranslate"><span class="pre">-globalsmodref-aa</span></code> pass<a class="headerlink" href="#the-globalsmodref-aa-pass" title="Link to this heading">#</a></h4>
+<p>This pass implements a simple context-sensitive mod/ref and alias analysis for
+internal global variables that don’t 「have their address taken」.  If a global
+does not have its address taken, the pass knows that no pointers alias the
+global.  This pass also keeps track of functions that it knows never access
+memory or never read memory.  This allows certain optimizations (e.g. GVN) to
+eliminate call instructions entirely.</p>
+<p>The real power of this pass is that it provides context-sensitive mod/ref
+information for call instructions.  This allows the optimizer to know that calls
+to a function do not clobber or read the value of the global, allowing loads and
+stores to be eliminated.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>This pass is somewhat limited in its scope (only support non-address taken
+globals), but is very quick analysis.</p>
+</div>
+</section>
+<section id="the-steens-aa-pass">
+<h4>The <code class="docutils literal notranslate"><span class="pre">-steens-aa</span></code> pass<a class="headerlink" href="#the-steens-aa-pass" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">-steens-aa</span></code> pass implements a variation on the well-known 「Steensgaard’s
+algorithm」 for interprocedural alias analysis.  Steensgaard’s algorithm is a
+unification-based, flow-insensitive, context-insensitive, and field-insensitive
+alias analysis that is also very scalable (effectively linear time).</p>
+<p>The LLVM <code class="docutils literal notranslate"><span class="pre">-steens-aa</span></code> pass implements a 「speculatively field-<strong>sensitive</strong>」
+version of Steensgaard’s algorithm using the Data Structure Analysis framework.
+This gives it substantially more precision than the standard algorithm while
+maintaining excellent analysis scalability.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p><code class="docutils literal notranslate"><span class="pre">-steens-aa</span></code> is available in the optional 「poolalloc」 module. It is not part
+of the LLVM core.</p>
+</div>
+</section>
+<section id="the-ds-aa-pass">
+<h4>The <code class="docutils literal notranslate"><span class="pre">-ds-aa</span></code> pass<a class="headerlink" href="#the-ds-aa-pass" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">-ds-aa</span></code> pass implements the full Data Structure Analysis algorithm.  Data
+Structure Analysis is a modular unification-based, flow-insensitive,
+context-<strong>sensitive</strong>, and speculatively field-<strong>sensitive</strong> alias
+analysis that is also quite scalable, usually at <code class="docutils literal notranslate"><span class="pre">O(n</span> <span class="pre">*</span> <span class="pre">log(n))</span></code>.</p>
+<p>This algorithm is capable of responding to a full variety of alias analysis
+queries, and can provide context-sensitive mod/ref information as well.  The
+only major facility not implemented so far is support for must-alias
+information.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p><code class="docutils literal notranslate"><span class="pre">-ds-aa</span></code> is available in the optional 「poolalloc」 module. It is not part of
+the LLVM core.</p>
+</div>
+</section>
+<section id="the-scev-aa-pass">
+<h4>The <code class="docutils literal notranslate"><span class="pre">-scev-aa</span></code> pass<a class="headerlink" href="#the-scev-aa-pass" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">-scev-aa</span></code> pass implements AliasAnalysis queries by translating them into
+ScalarEvolution queries. This gives it a more complete understanding of
+<code class="docutils literal notranslate"><span class="pre">getelementptr</span></code> instructions and loop induction variables than other alias
+analyses have.</p>
+</section>
+</section>
+<section id="alias-analysis-driven-transformations">
+<h3>Alias analysis driven transformations<a class="headerlink" href="#alias-analysis-driven-transformations" title="Link to this heading">#</a></h3>
+<p>LLVM includes several alias-analysis driven transformations which can be used
+with any of the implementations above.</p>
+<section id="the-adce-pass">
+<h4>The <code class="docutils literal notranslate"><span class="pre">-adce</span></code> pass<a class="headerlink" href="#the-adce-pass" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">-adce</span></code> pass, which implements Aggressive Dead Code Elimination, uses the
+<code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interface to delete calls to functions that do not have
+side-effects and are not used.</p>
+</section>
+<section id="the-licm-pass">
+<h4>The <code class="docutils literal notranslate"><span class="pre">-licm</span></code> pass<a class="headerlink" href="#the-licm-pass" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">-licm</span></code> pass implements various Loop Invariant Code Motion related
+transformations.  It uses the <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interface for several different
+transformations:</p>
+<ul class="simple">
+<li><p>It uses mod/ref information to hoist or sink load instructions out of loops if
+no instructions in the loop modify the memory loaded.</p></li>
+<li><p>It uses mod/ref information to hoist function calls out of loops that do not
+write to memory and are loop-invariant.</p></li>
+<li><p>It uses alias information to promote memory objects that are loaded and stored
+to in loops to live in a register instead.  It can do this if there are no may
+aliases to the loaded/stored memory location.</p></li>
+</ul>
+</section>
+<section id="the-argpromotion-pass">
+<h4>The <code class="docutils literal notranslate"><span class="pre">-argpromotion</span></code> pass<a class="headerlink" href="#the-argpromotion-pass" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">-argpromotion</span></code> pass promotes by-reference arguments to be passed in
+by-value instead.  In particular, if pointer arguments are only loaded from, it
+passes in the value loaded instead of the address to the function.  This pass
+uses alias information to make sure that the value loaded from the argument
+pointer is not modified between the entry of the function and any load of the
+pointer.</p>
+</section>
+<section id="the-gvn-memcpyopt-and-dse-passes">
+<h4>The <code class="docutils literal notranslate"><span class="pre">-gvn</span></code>, <code class="docutils literal notranslate"><span class="pre">-memcpyopt</span></code>, and <code class="docutils literal notranslate"><span class="pre">-dse</span></code> passes<a class="headerlink" href="#the-gvn-memcpyopt-and-dse-passes" title="Link to this heading">#</a></h4>
+<p>These passes use AliasAnalysis information to reason about loads and stores.</p>
+</section>
+</section>
+<section id="clients-for-debugging-and-evaluation-of-implementations">
+<span id="the-clients"></span><h3>Clients for debugging and evaluation of implementations<a class="headerlink" href="#clients-for-debugging-and-evaluation-of-implementations" title="Link to this heading">#</a></h3>
+<p>These passes are useful for evaluating the various alias analysis
+implementations.  You can use them with commands like:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">% </span>opt<span class="w"> </span>-ds-aa<span class="w"> </span>-aa-eval<span class="w"> </span>foo.bc<span class="w"> </span>-disable-output<span class="w"> </span>-stats
+</pre></div>
+</div>
+<section id="the-print-alias-sets-pass">
+<h4>The <code class="docutils literal notranslate"><span class="pre">print&lt;alias-sets&gt;</span></code> pass<a class="headerlink" href="#the-print-alias-sets-pass" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">print&lt;alias-sets&gt;</span></code> pass is exposed as part of the <code class="docutils literal notranslate"><span class="pre">opt</span></code> tool to print
+out the Alias Sets formed by the <a class="reference internal" href="#aliassettracker"><span class="std std-ref">Using the AliasSetTracker class</span></a> class.  This is useful if
+you’re using the <code class="docutils literal notranslate"><span class="pre">AliasSetTracker</span></code> class.  To use it, use something like:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">% </span>opt<span class="w"> </span>-passes<span class="o">=</span><span class="s1">&#39;print&lt;alias-sets&gt;&#39;</span><span class="w"> </span>-disable-output
+</pre></div>
+</div>
+</section>
+<section id="the-aa-eval-pass">
+<h4>The <code class="docutils literal notranslate"><span class="pre">-aa-eval</span></code> pass<a class="headerlink" href="#the-aa-eval-pass" title="Link to this heading">#</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">-aa-eval</span></code> pass simply iterates through all pairs of pointers in a
+function and asks an alias analysis whether or not the pointers alias.  This
+gives an indication of the precision of the alias analysis.  Statistics are
+printed indicating the percent of no/may/must aliases found (a more precise
+algorithm will have a lower number of may aliases).</p>
+</section>
+</section>
+</section>
+<section id="memory-dependence-analysis">
+<h2>Memory Dependence Analysis<a class="headerlink" href="#memory-dependence-analysis" title="Link to this heading">#</a></h2>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>We are currently in the process of migrating things from
+<code class="docutils literal notranslate"><span class="pre">MemoryDependenceAnalysis</span></code> to <a class="reference internal" href="MemorySSA.html"><span class="doc">MemorySSA</span></a>. Please try to use
+that instead.</p>
+</div>
+<p>If you’re just looking to be a client of alias analysis information, consider
+using the Memory Dependence Analysis interface instead.  MemDep is a lazy,
+caching layer on top of alias analysis that is able to answer the question of
+what preceding memory operations a given instruction depends on, either at an
+intra- or inter-block level.  Because of its laziness and caching policy, using
+MemDep can be a significant performance win over accessing alias analysis
+directly.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="MemorySSA.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">MemorySSA</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="MergeFunctions.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">MergeFunctions pass, how it works</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">LLVM Alias Analysis Infrastructure</a><ul>
+<li><a class="reference internal" href="#introduction">簡介</a></li>
+<li><a class="reference internal" href="#aliasanalysis-class-overview"><code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> Class Overview</a><ul>
+<li><a class="reference internal" href="#representation-of-pointers">Representation of Pointers</a></li>
+<li><a class="reference internal" href="#the-alias-method">The <code class="docutils literal notranslate"><span class="pre">alias</span></code> method</a><ul>
+<li><a class="reference internal" href="#must-may-and-no-alias-responses">Must, May, and No Alias Responses</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-getmodrefinfo-methods">The <code class="docutils literal notranslate"><span class="pre">getModRefInfo</span></code> methods</a></li>
+<li><a class="reference internal" href="#other-useful-aliasanalysis-methods">Other useful <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> methods</a><ul>
+<li><a class="reference internal" href="#the-getmodrefinfomask-method">The <code class="docutils literal notranslate"><span class="pre">getModRefInfoMask</span></code> method</a></li>
+<li><a class="reference internal" href="#the-doesnotaccessmemory-and-onlyreadsmemory-methods">The <code class="docutils literal notranslate"><span class="pre">doesNotAccessMemory</span></code> and  <code class="docutils literal notranslate"><span class="pre">onlyReadsMemory</span></code> methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writing-a-new-aliasanalysis-implementation">Writing a new <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> Implementation</a><ul>
+<li><a class="reference internal" href="#different-pass-styles">Different Pass styles</a></li>
+<li><a class="reference internal" href="#required-initialization-calls">Required initialization calls</a></li>
+<li><a class="reference internal" href="#interfaces-which-may-be-specified">Interfaces which may be specified</a></li>
+<li><a class="reference internal" href="#aliasanalysis-chaining-behavior"><code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> chaining behavior</a></li>
+<li><a class="reference internal" href="#updating-analysis-results-for-transformations">Updating analysis results for transformations</a><ul>
+<li><a class="reference internal" href="#the-deletevalue-method">The <code class="docutils literal notranslate"><span class="pre">deleteValue</span></code> method</a></li>
+<li><a class="reference internal" href="#the-copyvalue-method">The <code class="docutils literal notranslate"><span class="pre">copyValue</span></code> method</a></li>
+<li><a class="reference internal" href="#the-replacewithnewvalue-method">The <code class="docutils literal notranslate"><span class="pre">replaceWithNewValue</span></code> method</a></li>
+<li><a class="reference internal" href="#the-addescapinguse-method">The <code class="docutils literal notranslate"><span class="pre">addEscapingUse</span></code> method</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#efficiency-issues">Efficiency Issues</a></li>
+<li><a class="reference internal" href="#limitations">Limitations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-alias-analysis-results">Using alias analysis results</a><ul>
+<li><a class="reference internal" href="#using-the-memorydependenceanalysis-pass">Using the <code class="docutils literal notranslate"><span class="pre">MemoryDependenceAnalysis</span></code> Pass</a></li>
+<li><a class="reference internal" href="#using-the-aliassettracker-class">Using the <code class="docutils literal notranslate"><span class="pre">AliasSetTracker</span></code> class</a><ul>
+<li><a class="reference internal" href="#the-aliassettracker-implementation">The AliasSetTracker implementation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-the-aliasanalysis-interface-directly">Using the <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> interface directly</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#existing-alias-analysis-implementations-and-clients">Existing alias analysis implementations and clients</a><ul>
+<li><a class="reference internal" href="#available-aliasanalysis-implementations">Available <code class="docutils literal notranslate"><span class="pre">AliasAnalysis</span></code> implementations</a><ul>
+<li><a class="reference internal" href="#the-basic-aa-pass">The <code class="docutils literal notranslate"><span class="pre">-basic-aa</span></code> pass</a></li>
+<li><a class="reference internal" href="#the-globalsmodref-aa-pass">The <code class="docutils literal notranslate"><span class="pre">-globalsmodref-aa</span></code> pass</a></li>
+<li><a class="reference internal" href="#the-steens-aa-pass">The <code class="docutils literal notranslate"><span class="pre">-steens-aa</span></code> pass</a></li>
+<li><a class="reference internal" href="#the-ds-aa-pass">The <code class="docutils literal notranslate"><span class="pre">-ds-aa</span></code> pass</a></li>
+<li><a class="reference internal" href="#the-scev-aa-pass">The <code class="docutils literal notranslate"><span class="pre">-scev-aa</span></code> pass</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#alias-analysis-driven-transformations">Alias analysis driven transformations</a><ul>
+<li><a class="reference internal" href="#the-adce-pass">The <code class="docutils literal notranslate"><span class="pre">-adce</span></code> pass</a></li>
+<li><a class="reference internal" href="#the-licm-pass">The <code class="docutils literal notranslate"><span class="pre">-licm</span></code> pass</a></li>
+<li><a class="reference internal" href="#the-argpromotion-pass">The <code class="docutils literal notranslate"><span class="pre">-argpromotion</span></code> pass</a></li>
+<li><a class="reference internal" href="#the-gvn-memcpyopt-and-dse-passes">The <code class="docutils literal notranslate"><span class="pre">-gvn</span></code>, <code class="docutils literal notranslate"><span class="pre">-memcpyopt</span></code>, and <code class="docutils literal notranslate"><span class="pre">-dse</span></code> passes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#clients-for-debugging-and-evaluation-of-implementations">Clients for debugging and evaluation of implementations</a><ul>
+<li><a class="reference internal" href="#the-print-alias-sets-pass">The <code class="docutils literal notranslate"><span class="pre">print&lt;alias-sets&gt;</span></code> pass</a></li>
+<li><a class="reference internal" href="#the-aa-eval-pass">The <code class="docutils literal notranslate"><span class="pre">-aa-eval</span></code> pass</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#memory-dependence-analysis">Memory Dependence Analysis</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=0d9984b1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=d9a6981e"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>

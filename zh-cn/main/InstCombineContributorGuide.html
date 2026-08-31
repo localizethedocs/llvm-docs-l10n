@@ -1,0 +1,1234 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="索引" href="genindex.html" /><link rel="search" title="搜索" href="search.html" /><link rel="next" title="Writing an LLVM Backend" href="WritingAnLLVMBackend.html" /><link rel="prev" title="Instrumentation Profile Format" href="InstrProfileFormat.html" />
+        <link rel="canonical" href="https://projects.localizethedocs.org/llvm-docs-l10n/InstCombineContributorGuide.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+        <title>InstCombine contributor guide - LLVM</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=403646e9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=965a7037" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+<script type="text/javascript" src="ltd-provenance.js"></script>
+<script type="text/javascript" src="ltd-current.js"></script>
+<script type="text/javascript" src="../../ltd-config.js"></script>
+<script type="text/javascript" src="../../ltd-flyout.js"></script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">LLVM</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/LLVMWyvernSmall.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">LLVM</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="搜索" name="q" aria-label="搜索">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">Frequently Asked Questions (FAQ)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Lexicon.html">The LLVM Lexicon</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingStartedTutorials.html">Getting Started/Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Getting Started/Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="CompilerWriterInfo.html">Architecture &amp; Platform Information for Compiler Writers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Frontend/PerformanceTips.html">Performance Tips for Frontend Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStarted.html">Getting Started with the LLVM System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GettingStartedVS.html">Getting Started with the LLVM System using Microsoft Visual Studio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProgrammersManual.html">LLVM Programmer’s Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingLLVM.html">Debugging LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorial/index.html">LLVM Tutorial: Table of Contents</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LLVM Tutorial: Table of Contents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/index.html">My First Language Frontend with LLVM Tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl01.html">1. Kaleidoscope: Kaleidoscope Introduction and the Lexer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl02.html">2. Kaleidoscope: Implementing a Parser and AST</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl03.html">3. Kaleidoscope: Code generation to LLVM IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl04.html">4. Kaleidoscope: Adding JIT and Optimizer Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl05.html">5. Kaleidoscope: Extending the Language: Control Flow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl06.html">6. Kaleidoscope: Extending the Language: User-defined Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl07.html">7. Kaleidoscope: Extending the Language: Mutable Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl08.html">8. Kaleidoscope: Compiling to Object Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl09.html">9. Kaleidoscope: Adding Debug Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/MyFirstLanguageFrontend/LangImpl10.html">10. Kaleidoscope: Conclusion and other useful LLVM tidbits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT1.html">1. Building a JIT: Starting out with KaleidoscopeJIT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT2.html">2. Building a JIT: Adding Optimizations – An introduction to ORC Layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT3.html">3. Building a JIT: Per-function Lazy Compilation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial/BuildingAJIT4.html">4. Building a JIT: Extreme Laziness - Using LazyReexports to JIT from ASTs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MyFirstTypoFix.html">MyFirstTypoFix</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="Reference.html">Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToUseAttributes.html">How To Use Attributes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="CommandGuide/index.html">LLVM Command Guide</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of LLVM Command Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/FileCheck.html">FileCheck - Flexible pattern matching file verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/clang-tblgen.html">clang-tblgen - Description to C++ Code for Clang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/dsymutil.html">dsymutil - manipulate archived DWARF debug symbol files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lit.html">lit - LLVM Integrated Tester</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llc.html">llc - LLVM static compiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lldb-tblgen.html">lldb-tblgen - Description to C++ Code for LLDB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/lli.html">lli - directly execute programs from LLVM bitcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llubi.html">llubi - LLVM UB-aware Interpreter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-addr2line.html">llvm-addr2line - a drop-in replacement for addr2line</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ar.html">llvm-ar - LLVM archiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-as.html">llvm-as - LLVM assembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-bcanalyzer.html">llvm-bcanalyzer - LLVM bitcode analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-calc-occupancy.html">llvm-calc-occupancy - AMDGPU occupancy calculator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cgdata.html">llvm-cgdata - LLVM CodeGen Data Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-config.html">llvm-config - Print LLVM compilation options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cov.html">llvm-cov - emit coverage information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxfilt.html">llvm-cxxfilt - LLVM symbol name demangler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-cxxmap.html">llvm-cxxmap - Mangled name remapping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-debuginfo-analyzer.html">llvm-debuginfo-analyzer - Print a logical representation of low-level debug information.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-diff.html">llvm-diff - LLVM structural ‘diff’</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dis.html">llvm-dis - LLVM disassembler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfdump.html">llvm-dwarfdump - dump and verify DWARF debug information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-dwarfutil.html">llvm-dwarfutil - A tool to copy and manipulate debug info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-exegesis.html">llvm-exegesis - LLVM Machine Instruction Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract.html">llvm-extract - extract a function from an LLVM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-extract-bundle-entry.html">llvm-extract-bundle-entry - extract an offload bundle entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ifs.html">llvm-ifs - shared object stubbing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-install-name-tool.html">llvm-install-name-tool - LLVM tool for manipulating install-names and rpaths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ir2vec.html">llvm-ir2vec - IR2Vec and MIR2Vec Embedding Generation Tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lib.html">llvm-lib - LLVM lib.exe compatible library tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-libtool-darwin.html">llvm-libtool-darwin - LLVM tool for creating libraries for Darwin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-link.html">llvm-link - LLVM bitcode linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-lipo.html">llvm-lipo - LLVM tool for manipulating universal binaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-locstats.html">llvm-locstats - calculate statistics on DWARF debug location</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mc.html">llvm-mc - LLVM Machine Code Playground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-mca.html">llvm-mca - LLVM Machine Code Analyzer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-nm.html">llvm-nm - list LLVM bitcode and object file’s symbol table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objcopy.html">llvm-objcopy - object copying and editing tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-objdump.html">llvm-objdump - LLVM’s object file dumper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-offload-binary.html">llvm-offload-binary - LLVM Offload Binary Packager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-opt-report.html">llvm-opt-report - generate optimization report from YAML</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-otool.html">llvm-otool - Mach-O dumping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-pdbutil.html">llvm-pdbutil - PDB File forensics and diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profdata.html">llvm-profdata - Profile data tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-profgen.html">llvm-profgen - LLVM SPGO profile generation tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-ranlib.html">llvm-ranlib - generates an archive index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readelf.html">llvm-readelf - GNU-style LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-readobj.html">llvm-readobj - LLVM Object Reader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-reduce.html">llvm-reduce - LLVM automatic testcase reducer.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-remarkutil.html">llvm-remarkutil - Remark utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-size.html">llvm-size - print size information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-stress.html">llvm-stress - generate random .ll files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strings.html">llvm-strings - print strings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-strip.html">llvm-strip - object stripping tool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-symbolizer.html">llvm-symbolizer - convert addresses into source code locations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tblgen.html">llvm-tblgen - Target Description to C++ Code for LLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-test-mustache-spec.html">llvm-test-mustache-spec - LLVM tool to test Mustache library compliance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/llvm-tli-checker.html">llvm-tli-checker - TargetLibraryInfo vs library checker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/mlir-tblgen.html">mlir-tblgen - Description to C++ Code for MLIR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/opt.html">opt - LLVM optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CommandGuide/tblgen.html">tblgen - Description to C++ Code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OptBisect.html">Using -opt-bisect-limit to debug optimization errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SymbolizerMarkupFormat.html">Symbolizer Markup Format</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="PDB/index.html">The PDB File Format</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of The PDB File Format</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="PDB/MsfFile.html">The MSF File Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PdbStream.html">The PDB Info Stream (aka the PDB Stream)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/TpiStream.html">The PDB TPI and IPI Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/DbiStream.html">The PDB DBI (Debug Info) Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/ModiStream.html">The Module Information Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/PublicStream.html">The PDB Public Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/GlobalStream.html">The PDB Global Symbol Stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html">The PDB Serialized Hash Table Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#on-disk-format">On-Disk Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/HashTable.html#present-and-deleted-bit-vectors">Present and Deleted Bit Vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewSymbols.html">CodeView Symbol Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PDB/CodeViewTypes.html">CodeView Type Records</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GarbageCollection.html">Garbage Collection with LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statepoints.html">Garbage Collection Safepoints in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LibFuzzer.html">libFuzzer – a library for coverage-guided fuzz testing.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FuzzingLLVM.html">Fuzzing LLVM libraries and tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LangRef.html">LLVM Language Reference Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UndefinedBehavior.html">LLVM IR Undefined Behavior (UB) Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InAlloca.html">Design and Usage of the InAlloca Attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BitCodeFormat.html">LLVM Bitcode File Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MIRLangRef.html">Machine IR (MIR) Format Reference Manual</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="GlobalISel/index.html">Global Instruction Selection</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Global Instruction Selection</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GMIR.html">Generic Machine IR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/GenericOpcode.html">Generic Opcodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/MIRPatterns.html">MIR Patterns in TableGen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Pipeline.html">Core Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Porting.html">Porting GlobalISel to A New Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Resources.html">Resources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/IRTranslator.html">IRTranslator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/Legalizer.html">Legalizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/RegBankSelect.html">RegBankSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/InstructionSelect.html">InstructionSelect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="GlobalISel/KnownBits.html">Known Bits Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergentOperations.html">Convergent Operation Semantics</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TestingGuide.html">LLVM Testing Infrastructure Guide</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of LLVM Testing Infrastructure Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TestSuiteGuide.html">test-suite Guide</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GwpAsan.html">GWP-ASan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRay.html">XRay Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayExample.html">Debugging with XRay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FaultMaps.html">FaultMaps and implicit checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Atomics.html">LLVM Atomic Instructions and Concurrency Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExceptionHandling.html">Exception Handling in LLVM</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Extensions.html">LLVM Extensions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of LLVM Extensions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSetUpLLVMStyleRTTI.html">How to set up LLVM-style RTTI for your class hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BlockFrequencyTerminology.html">LLVM Block Frequency Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BranchWeightMetadata.html">LLVM Branch Weight Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GetElementPtr.html">The Often Misunderstood GEP Instruction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ScudoHardenedAllocator.html">Scudo Hardened Allocator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemoryModelRelaxationAnnotations.html">Memory Model Relaxation Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemTagSanitizer.html">MemTagSanitizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DependenceGraphs/index.html">Dependence Graphs in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpeculativeLoadHardening.html">Speculative Load Hardening</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SegmentedStacks.html">Segmented Stacks in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkedUpDisassembly.html">LLVM’s Optional Rich Disassembly Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="StackMaps.html">Stack maps and patch points in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Coroutines.html">Coroutines in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PointerAuth.html">Pointer Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="YamlIO.html">YAML I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ConvergenceAndUniformity.html">Convergence And Uniformity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MLGO.html">Machine Learning - Guided Optimization (MLGO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContentAddressableStorage.html">Content Addressable Storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CIBestPractices.html">LLVM CI Best Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitHubActionsRunners.html">LLVM GitHub Actions Runners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AIToolPolicy.html">LLVM AI Tool Use Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CallGraphSection.html">.llvm.callgraph Section Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InterfaceExportAnnotations.html">LLVM Interface Export Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PCSectionsMetadata.html">LLVM PC Sections Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="QualGroup.html">LLVM Qualification Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Security.html">LLVM Security Response Group</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SecurityTransparencyReports.html">LLVM Security Group Transparency Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SystemLibrary.html">System Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TransformMetadata.html">Code Transformation Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TypeMetadata.html">Type Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="XRayFDRFormat.html">XRay Flight Data Recorder Trace Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="UserGuides.html">User Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of User Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildOnARM.html">How To Build On ARM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWithPGO.html">How To Build Clang and LLVM with Profile-Guided Optimizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileLLVM.html">How to cross-compile Clang/LLVM using Clang/LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CoverageMappingFormat.html">LLVM Code Coverage Mapping Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFIVerify.html">Control Flow Verification Tool Design Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BuildingADistribution.html">Building a Distribution of LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMake.html">Building LLVM with CMake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Docker.html">A guide to Dockerfiles for building LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportLibrary.html">Support Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedBuilds.html">Advanced Build Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMNewPMPass.html">Writing an LLVM Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WritingAnLLVMPass.html">Writing an LLVM Pass (legacy PM version)</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Passes.html">LLVM’s Analysis and Transform Passes</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of LLVM’s Analysis and Transform Passes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="KernelInfo.html">KernelInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="LoopFusion.html">Loop Fusion in LLVM</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="StackSafetyAnalysis.html">Stack Safety Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MergeFunctions.html">MergeFunctions pass, how it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AliasAnalysis.html">LLVM Alias Analysis Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemorySSA.html">MemorySSA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MemProf.html">MemProf: Memory Profiling for LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LoopTerminology.html">LLVM Loop Terminology (and Canonical Forms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CycleTerminology.html">LLVM Cycle Terminology</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Vectorizers.html">Auto-Vectorization in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Auto-Vectorization in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorizationPlan.html">Vectorization Plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SandboxVectorizer.html">The Sandbox Vectorizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkTimeOptimization.html">LLVM Link Time Optimization: Design and Implementation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DTLTO.html">DTLTO</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of DTLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GoldPlugin.html">The LLVM gold plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Remarks.html">Remarks</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SourceLevelDebugging.html">Source Level Debugging with LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Source Level Debugging with LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AssignmentTracking.html">Debug Info Assignment Tracking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToUpdateDebugInfo.html">How to Update Debug Info: A Guide for LLVM Pass Authors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Instrumentor.html">The LLVM Instrumentor Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrRefDebugInfo.html">Instruction referencing for debug info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RemoveDIsDebugInfo.html">Debug info migration: From intrinsics to records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="KeyInstructionsDebugInfo.html">Key Instructions debug info in LLVM and Clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InstrProfileFormat.html">Instrumentation Profile Format</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">InstCombine contributor guide</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="WritingAnLLVMBackend.html">Writing an LLVM Backend</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Writing an LLVM Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToUseInstrMappings.html">How To Use Instruction Mappings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CodeGenerator.html">The LLVM Target-Independent Code Generator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="TableGen/index.html">TableGen Overview</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of TableGen Overview</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackEnds.html">TableGen BackEnds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/BackGuide.html"><span class="sectnum">1 </span>TableGen Backend Developer’s Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="TableGen/ProgRef.html"><span class="sectnum">1 </span>TableGen Programmer’s Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MCJITDesignAndImplementation.html">MCJIT Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ORCv2.html">ORC Design and Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="JITLink.html">JITLink and ORC’s ObjectLinkingLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DebuggingJITedCode.html">Debugging JIT-ed Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CommandLine.html">CommandLine 2.0 Library Manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExtendingLLVM.html">Extending LLVM: Adding instructions, intrinsics, types, etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AddingConstrainedIntrinsics.html">How To Add A Constrained Floating-Point Intrinsic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToBuildWindowsItaniumPrograms.html">How to build Windows Itanium applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToCrossCompileBuiltinsOnArm.html">How to Cross Compile Compiler-rt Builtins For Arm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BigEndianNEON.html">Using ARM NEON instructions in big-endian mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AArch64SME.html">Support for AArch64 Scalable Matrix Extension in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CompileCudaWithLLVM.html">Compiling CUDA with clang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NVPTXUsage.html">User Guide for NVPTX Back-end</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="AMDGPUUsage.html">User Guide for AMDGPU Backend</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of User Guide for AMDGPU Backend</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUModifierSyntax.html">Syntax of AMDGPU Instruction Modifiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUOperandSyntax.html">Syntax of AMDGPU Instruction Operands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionSyntax.html">AMDGPU Instruction Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUInstructionNotation.html">AMDGPU Instructions Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionsForHeterogeneousDebugging.html">DWARF Extensions For Heterogeneous Debugging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack/AMDGPUDwarfExtensionAllowLocationDescriptionOnTheDwarfExpressionStack.html">Allow Location Descriptions on the DWARF Expression Stack <!-- omit in toc --></a></li>
+<li class="toctree-l3"><a class="reference internal" href="AMDGPU/DeveloperGuideline.html">Developer Guideline for AMDGPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUAsyncOperations.html">AMDGPU Asynchronous Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUDMAOperations.html">AMDGPU DMA Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUExecutionSynchronization.html">AMDGPU Execution Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AMDGPUMemoryModel.html">AMDGPU Memory Model</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="SPIRVUsage.html">User Guide for SPIR-V Target</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of User Guide for SPIR-V Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="DirectXUsage.html">User Guide for the DirectX Target</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of User Guide for the DirectX Target</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXContainer.html">DirectX Container</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DirectX Container</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILArchitecture.html">Architecture and Design of DXIL Support in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Architecture and Design of DXIL Support in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/DXILOpTableGenDesign.html">Specification of DXIL Operations using TableGen Representation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/DXILResources.html">DXIL Resource Handling</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DXIL Resource Handling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="DirectX/RootSignatures.html">Root Signatures</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Root Signatures</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="DirectX/SemanticSignatures.html">Semantic Signatures</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RISCVUsage.html">User Guide for RISC-V Target</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVectorExtension.html">RISC-V Vector Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RISCV/RISCVVCIX.html">Scheduling Information for RISC-V VCIX Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SandboxIR.html">Sandbox IR: A transactional layer over LLVM IR</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="Telemetry.html">Telemetry framework in LLVM</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Telemetry framework in LLVM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LFI.html">Lightweight Fault Isolation (LFI) in LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdminTasks.html">LLVM Admin Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Benchmarking.html">Benchmarking tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CMakePrimer.html">CMake Primer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeOfConduct.html">LLVM Community Code of Conduct</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="FatLTO.html">FatLTO</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of FatLTO</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GitHub.html">LLVM GitHub User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MarkdownQuickstartTemplate.html">Markdown Quickstart Template</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="MisExpect.html">Misexpect</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Misexpect</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpaquePointers.html">Opaque Pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NewPassManager.html">Using the New Pass Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportingGuide.html">LLVM CoC Incident Reporting Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ResponseGuide.html">Response Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TableGenFundamentals.html">TableGen Fundamentals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml2obj.html">yaml2obj</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DiscourseMigrationGuide.html">Discourse Migration Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="GettingInvolved.html">Getting Involved</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Getting Involved</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="Contributing.html">Contributing to LLVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DeveloperPolicy.html">LLVM Developer Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodeReview.html">LLVM Code-Review Policy and Practices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SupportPolicy.html">LLVM Community Support Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SphinxQuickstartTemplate.html">Sphinx Quickstart Template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToSubmitABug.html">How to submit an LLVM bug report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BugLifeCycle.html">LLVM Bug Life Cycle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CodingStandards.html">LLVM Coding Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitBisecting.html">Bisecting LLVM code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GitRepositoryPolicy.html">Policies on git repositories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projects.html">Creating an LLVM Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToReleaseLLVM.html">How To Release LLVM To The Public</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseProcess.html">How To Validate a New Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToAddABuilder.html">How To Add Your Build Configuration To LLVM Buildbot Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReleaseNotes.html">LLVM  Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MeetupGuidelines.html">How to start LLVM Social in your town</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/GitHubMove.html">Moving LLVM Projects to GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/TestSuite.html">Test-Suite Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VariableNames.html">Variable Names Plan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Proposals/VectorPredication.html">Vector Predication Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RFCProcess.html">Request For Comment (RFC) process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ProjectGovernance.html">Project Governance</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/llvm/llvm-project/edit/main/llvm/docs/InstCombineContributorGuide.md" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="instcombine-contributor-guide">
+<h1>InstCombine contributor guide<a class="headerlink" href="#instcombine-contributor-guide" title="Link to this heading">#</a></h1>
+<p>This guide lays out a series of rules that contributions to InstCombine should
+follow. <strong>Following these rules will results in much faster PR approvals.</strong></p>
+<section id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Link to this heading">#</a></h2>
+<section id="precommit-tests">
+<h3>Precommit tests<a class="headerlink" href="#precommit-tests" title="Link to this heading">#</a></h3>
+<p>Tests for new optimizations or miscompilation fixes should be pre-committed.
+This means that you first commit the test with CHECK lines showing the behavior
+<em>without</em> your change. Your actual change will then only contain CHECK line
+diffs relative to that baseline.</p>
+<p>This means that pull requests should generally contain two commits: First,
+one commit adding new tests with baseline check lines. Second, a commit with
+functional changes and test diffs.</p>
+<p>If the second commit in your PR does not contain test diffs, you did something
+wrong. Either you made a mistake when generating CHECK lines, or your tests are
+not actually affected by your patch.</p>
+<p>Exceptions: When fixing assertion failures or infinite loops, do not pre-commit
+tests.</p>
+</section>
+<section id="use-update-test-checks-py">
+<h3>Use <code class="docutils literal notranslate"><span class="pre">update_test_checks.py</span></code><a class="headerlink" href="#use-update-test-checks-py" title="Link to this heading">#</a></h3>
+<p>CHECK lines should be generated using the <code class="docutils literal notranslate"><span class="pre">update_test_checks.py</span></code> script. Do
+<strong>not</strong> manually edit check lines after using it.</p>
+<p>Be sure to use the correct opt binary when using the script. For example, if
+your build directory is <code class="docutils literal notranslate"><span class="pre">build</span></code>, then you’ll want to run:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>llvm/utils/update_test_checks.py<span class="w"> </span>--opt-binary<span class="w"> </span>build/bin/opt<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>llvm/test/Transforms/InstCombine/the_test.ll
+</pre></div>
+</div>
+<p>Exceptions: Hand-written CHECK lines are allowed for debuginfo tests.</p>
+</section>
+<section id="general-testing-considerations">
+<h3>General testing considerations<a class="headerlink" href="#general-testing-considerations" title="Link to this heading">#</a></h3>
+<p>Place all tests relating to a transform into a single file. If you are adding
+a regression test for a crash/miscompile in an existing transform, find the
+file where the existing tests are located. A good way to do that is to comment
+out the transform and see which tests fail.</p>
+<p>Make tests minimal. Only test exactly the pattern being transformed. If your
+original motivating case is a larger pattern that your fold enables to
+optimize in some non-trivial way, you may add it as well – however, the bulk
+of the test coverage should be minimal.</p>
+<p>Give tests short, but meaningful names. Don’t call them <code class="docutils literal notranslate"><span class="pre">&#64;test1</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;test2</span></code> etc.
+For example, a test checking multi-use behavior of a fold involving the
+addition of two selects might be called <code class="docutils literal notranslate"><span class="pre">&#64;add_of_selects_multi_use</span></code>.</p>
+<p>Add representative tests for each test category (discussed below), but don’t
+test all combinations of everything. If you have multi-use tests, and you have
+commuted tests, you shouldn’t also add commuted multi-use tests.</p>
+<p>Prefer to keep bit-widths for tests low to improve performance of proof checking using alive2. Using <code class="docutils literal notranslate"><span class="pre">i8</span></code> is better than <code class="docutils literal notranslate"><span class="pre">i128</span></code> where possible.</p>
+</section>
+<section id="add-negative-tests">
+<h3>Add negative tests<a class="headerlink" href="#add-negative-tests" title="Link to this heading">#</a></h3>
+<p>Make sure to add tests for which your transform does <strong>not</strong> apply. Start with
+one of the test cases that succeeds and then create a sequence of negative
+tests, such that <strong>exactly one</strong> different pre-condition of your transform is
+not satisfied in each test.</p>
+</section>
+<section id="add-multi-use-tests">
+<h3>Add multi-use tests<a class="headerlink" href="#add-multi-use-tests" title="Link to this heading">#</a></h3>
+<p>Add multi-use tests that ensures your transform does not increase instruction
+count if some instructions have additional uses. The standard pattern is to
+introduce extra uses with function calls:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">declare</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@use</span><span class="p">(</span><span class="kt">i8</span><span class="p">)</span>
+
+<span class="k">define</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="vg">@add_mul_const_multi_use</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%add</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="m">1</span>
+<span class="w">  </span><span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@use</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%add</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">%mul</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">mul</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%add</span><span class="p">,</span><span class="w"> </span><span class="m">3</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%mul</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Exceptions: For transform that only produce one instruction, multi-use tests
+may be omitted.</p>
+</section>
+<section id="add-commuted-tests">
+<h3>Add commuted tests<a class="headerlink" href="#add-commuted-tests" title="Link to this heading">#</a></h3>
+<p>If the transform involves commutative operations, add tests with commuted
+(swapped) operands.</p>
+<p>As an exception, it is not necessary to test commutation if one of the operands
+is a constant: In this case, the constant operand is always canonicalized to
+the right.</p>
+</section>
+<section id="add-vector-tests">
+<h3>Add vector tests<a class="headerlink" href="#add-vector-tests" title="Link to this heading">#</a></h3>
+<p>When possible, it is recommended to add at least one test that uses vectors
+instead of scalars.</p>
+<p>For patterns that include constants, we distinguish three kinds of tests.
+The first are “splat” vectors, where all the vector elements are the same.
+These tests <em>should</em> usually fold without additional effort.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="vg">@add_mul_const_vec_splat</span><span class="p">(&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%add</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="p">&lt;</span><span class="kt">i8</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="m">1</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="nv">%mul</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">mul</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%add</span><span class="p">,</span><span class="w"> </span><span class="p">&lt;</span><span class="kt">i8</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="m">3</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%mul</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A minor variant is to replace some of the splat elements with poison. These
+will often also fold without additional effort.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="vg">@add_mul_const_vec_splat_poison</span><span class="p">(&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%add</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="p">&lt;</span><span class="kt">i8</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="k">poison</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="nv">%mul</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">mul</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%add</span><span class="p">,</span><span class="w"> </span><span class="p">&lt;</span><span class="kt">i8</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="k">poison</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%mul</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Finally, you can have non-splat vectors, where the vector elements are not
+the same:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="vg">@add_mul_const_vec_non_splat</span><span class="p">(&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%add</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="p">&lt;</span><span class="kt">i8</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="m">5</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="nv">%mul</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">mul</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%add</span><span class="p">,</span><span class="w"> </span><span class="p">&lt;</span><span class="kt">i8</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="m">6</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="p">&lt;</span><span class="m">2</span><span class="w"> </span><span class="k">x</span><span class="w"> </span><span class="kt">i8</span><span class="p">&gt;</span><span class="w"> </span><span class="nv">%mul</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Non-splat vectors will often not fold by default. You should <strong>not</strong> try to
+make them fold, unless doing so does not add <strong>any</strong> additional complexity.
+You should still add the test though, even if it does not fold.</p>
+</section>
+<section id="flag-tests">
+<h3>Flag tests<a class="headerlink" href="#flag-tests" title="Link to this heading">#</a></h3>
+<p>If your transform involves instructions that can have poison-generating flags,
+such as <code class="docutils literal notranslate"><span class="pre">nuw</span></code> and <code class="docutils literal notranslate"><span class="pre">nsw</span></code> on <code class="docutils literal notranslate"><span class="pre">add</span></code>, you should test how these interact with the
+transform.</p>
+<p>If your transform <em>requires</em> a certain flag for correctness, make sure to add
+negative tests missing the required flag.</p>
+<p>If your transform doesn’t require flags for correctness, you should have tests
+for preservation behavior. If the input instructions have certain flags, are
+they preserved in the output instructions, if it is valid to preserve them?
+(This depends on the transform. Check with alive2.)</p>
+<p>The same also applies to fast-math-flags (FMF). In that case, please always
+test specific flags like <code class="docutils literal notranslate"><span class="pre">nnan</span></code>, <code class="docutils literal notranslate"><span class="pre">nsz</span></code> or <code class="docutils literal notranslate"><span class="pre">reassoc</span></code>, rather than the umbrella
+<code class="docutils literal notranslate"><span class="pre">fast</span></code> flag.</p>
+</section>
+<section id="other-tests">
+<h3>Other tests<a class="headerlink" href="#other-tests" title="Link to this heading">#</a></h3>
+<p>The test categories mentioned above are non-exhaustive. There may be more tests
+to be added, depending on the instructions involved in the transform. Some
+examples:</p>
+<ul class="simple">
+<li><p>For folds involving memory accesses like load/store, check that scalable vectors and non-byte-size types (like i3) are handled correctly. Also check that volatile/atomic are handled.</p></li>
+<li><p>For folds that interact with the bitwidth in some non-trivial way, check an illegal type like i13. Also confirm that the transform is correct for i1.</p></li>
+<li><p>For folds that involve phis, you may want to check that the case of multiple incoming values from one block is handled correctly.</p></li>
+</ul>
+</section>
+</section>
+<section id="proofs">
+<h2>Proofs<a class="headerlink" href="#proofs" title="Link to this heading">#</a></h2>
+<p>Your pull request description should contain one or more
+<a class="reference external" href="https://alive2.llvm.org/ce/">alive2 proofs</a> for the correctness of the
+proposed transform.</p>
+<section id="basics">
+<h3>Basics<a class="headerlink" href="#basics" title="Link to this heading">#</a></h3>
+<p>Proofs are written using LLVM IR, by specifying a <code class="docutils literal notranslate"><span class="pre">&#64;src</span></code> and <code class="docutils literal notranslate"><span class="pre">&#64;tgt</span></code> function.
+It is possible to include multiple proofs in a single file by giving the src
+and tgt functions matching suffixes.</p>
+<p>For example, here is a pair of proofs that both <code class="docutils literal notranslate"><span class="pre">(x-y)+y</span></code> and <code class="docutils literal notranslate"><span class="pre">(x+y)-y</span></code> can
+be simplified to <code class="docutils literal notranslate"><span class="pre">x</span></code> (<a class="reference external" href="https://alive2.llvm.org/ce/z/MsPPGz">online</a>):</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="vg">@src_add_sub</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%add</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="nv">%y</span>
+<span class="w">  </span><span class="nv">%sub</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">sub</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%add</span><span class="p">,</span><span class="w"> </span><span class="nv">%y</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%sub</span>
+<span class="p">}</span>
+
+<span class="k">define</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="vg">@tgt_add_sub</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span>
+<span class="p">}</span>
+
+
+<span class="k">define</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="vg">@src_sub_add</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%sub</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">sub</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="nv">%y</span>
+<span class="w">  </span><span class="nv">%add</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">add</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%sub</span><span class="p">,</span><span class="w"> </span><span class="nv">%y</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%add</span>
+<span class="p">}</span>
+
+<span class="k">define</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="vg">@tgt_sub_add</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="use-generic-values-in-proofs">
+<h3>Use generic values in proofs<a class="headerlink" href="#use-generic-values-in-proofs" title="Link to this heading">#</a></h3>
+<p>Proofs should operate on generic values, rather than specific constants, to the degree that this is possible.</p>
+<p>For example, if we want to fold <code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">s/</span> <span class="pre">C</span> <span class="pre">s&lt;</span> <span class="pre">X</span></code> to <code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">s&gt;</span> <span class="pre">0</span></code>, the following would
+be a <em>bad</em> proof:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="c">; Don&#39;t do this!</span>
+<span class="k">define</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="vg">@src</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%div</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">sdiv</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="m">123</span>
+<span class="w">  </span><span class="nv">%cmp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">icmp</span><span class="w"> </span><span class="k">slt</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%div</span><span class="p">,</span><span class="w"> </span><span class="nv">%x</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="nv">%cmp</span>
+<span class="p">}</span>
+
+<span class="k">define</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="vg">@tgt</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%cmp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">icmp</span><span class="w"> </span><span class="k">sgt</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="nv">%cmp</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This is because it only proves that the transform is correct for the specific
+constant 123. Maybe there are some constants for which the transform is
+incorrect?</p>
+<p>The correct way to write this proof is as follows
+(<a class="reference external" href="https://alive2.llvm.org/ce/z/acjwb6">online</a>):</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="k">define</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="vg">@src</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%C</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%precond</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">icmp</span><span class="w"> </span><span class="k">ne</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%C</span><span class="p">,</span><span class="w"> </span><span class="m">1</span>
+<span class="w">  </span><span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@llvm.assume</span><span class="p">(</span><span class="kt">i1</span><span class="w"> </span><span class="nv">%precond</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">%div</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">sdiv</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="nv">%C</span>
+<span class="w">  </span><span class="nv">%cmp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">icmp</span><span class="w"> </span><span class="k">slt</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%div</span><span class="p">,</span><span class="w"> </span><span class="nv">%x</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="nv">%cmp</span>
+<span class="p">}</span>
+
+<span class="k">define</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="vg">@tgt</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%C</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">%cmp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">icmp</span><span class="w"> </span><span class="k">sgt</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>
+<span class="w">  </span><span class="k">ret</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="nv">%cmp</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">&#64;llvm.assume</span></code> intrinsic is used to specify pre-conditions for
+the transform. In this case, the proof will fail unless we specify <code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">!=</span> <span class="pre">1</span></code> as
+a pre-condition.</p>
+<p>It should be emphasized that there is, in general, no expectation that the
+IR in the proofs will be transformed by the implemented fold. In the above
+example, the transform would only apply if <code class="docutils literal notranslate"><span class="pre">%C</span></code> is actually a constant, but we
+need to use non-constants in the proof.</p>
+</section>
+<section id="common-pre-conditions">
+<h3>Common pre-conditions<a class="headerlink" href="#common-pre-conditions" title="Link to this heading">#</a></h3>
+<p>Here are some examples of common preconditions.</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="c">; %x is non-negative:</span>
+<span class="nv">%nonneg</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">icmp</span><span class="w"> </span><span class="k">sgt</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="m">-1</span>
+<span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@llvm.assume</span><span class="p">(</span><span class="kt">i1</span><span class="w"> </span><span class="nv">%nonneg</span><span class="p">)</span>
+
+<span class="c">; %x is a power of two:</span>
+<span class="nv">%ctpop</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="vg">@llvm.ctpop.i8</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">)</span>
+<span class="nv">%pow2</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">icmp</span><span class="w"> </span><span class="k">eq</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="m">1</span>
+<span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@llvm.assume</span><span class="p">(</span><span class="kt">i1</span><span class="w"> </span><span class="nv">%pow2</span><span class="p">)</span>
+
+<span class="c">; %x is a power of two or zero:</span>
+<span class="nv">%ctpop</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="vg">@llvm.ctpop.i8</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">)</span>
+<span class="nv">%pow2orzero</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">icmp</span><span class="w"> </span><span class="k">ult</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="m">2</span>
+<span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@llvm.assume</span><span class="p">(</span><span class="kt">i1</span><span class="w"> </span><span class="nv">%pow2orzero</span><span class="p">)</span>
+
+<span class="c">; Adding %x and %y does not overflow in a signed sense:</span>
+<span class="nv">%wo</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">call</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">i8</span><span class="p">,</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="vg">@llvm.sadd.with.overflow</span><span class="p">(</span><span class="kt">i8</span><span class="w"> </span><span class="nv">%x</span><span class="p">,</span><span class="w"> </span><span class="kt">i8</span><span class="w"> </span><span class="nv">%y</span><span class="p">)</span>
+<span class="nv">%ov</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">extractvalue</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">i8</span><span class="p">,</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="nv">%wo</span><span class="p">,</span><span class="w"> </span><span class="m">1</span>
+<span class="nv">%ov.not</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">xor</span><span class="w"> </span><span class="kt">i1</span><span class="w"> </span><span class="nv">%ov</span><span class="p">,</span><span class="w"> </span><span class="k">true</span>
+<span class="k">call</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="vg">@llvm.assume</span><span class="p">(</span><span class="kt">i1</span><span class="w"> </span><span class="nv">%ov.not</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="timeouts">
+<h3>Timeouts<a class="headerlink" href="#timeouts" title="Link to this heading">#</a></h3>
+<p>Alive2 proofs will sometimes produce a timeout with the following message:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Alive2</span> <span class="n">timed</span> <span class="n">out</span> <span class="k">while</span> <span class="n">processing</span> <span class="n">your</span> <span class="n">query</span><span class="o">.</span>
+<span class="n">There</span> <span class="n">are</span> <span class="n">a</span> <span class="n">few</span> <span class="n">things</span> <span class="n">you</span> <span class="n">can</span> <span class="k">try</span><span class="p">:</span>
+
+<span class="o">-</span> <span class="n">remove</span> <span class="n">extraneous</span> <span class="n">instructions</span><span class="p">,</span> <span class="k">if</span> <span class="nb">any</span>
+
+<span class="o">-</span> <span class="n">reduce</span> <span class="n">variable</span> <span class="n">widths</span><span class="p">,</span> <span class="k">for</span> <span class="n">example</span> <span class="n">to</span> <span class="n">i16</span><span class="p">,</span> <span class="n">i8</span><span class="p">,</span> <span class="ow">or</span> <span class="n">i4</span>
+
+<span class="o">-</span> <span class="n">add</span> <span class="n">the</span> <span class="o">--</span><span class="n">disable</span><span class="o">-</span><span class="n">undef</span><span class="o">-</span><span class="nb">input</span> <span class="n">command</span> <span class="n">line</span> <span class="n">flag</span><span class="p">,</span> <span class="n">which</span>
+  <span class="n">allows</span> <span class="n">Alive2</span> <span class="n">to</span> <span class="n">assume</span> <span class="n">that</span> <span class="n">arguments</span> <span class="n">to</span> <span class="n">your</span> <span class="n">IR</span> <span class="n">are</span> <span class="ow">not</span>
+  <span class="n">undef</span><span class="o">.</span> <span class="n">This</span> <span class="ow">is</span><span class="p">,</span> <span class="ow">in</span> <span class="n">general</span><span class="p">,</span> <span class="n">unsound</span><span class="p">:</span> <span class="n">it</span> <span class="n">can</span> <span class="n">cause</span> <span class="n">Alive2</span>
+  <span class="n">to</span> <span class="n">miss</span> <span class="n">bugs</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>This is good advice, follow it!</p>
+<p>Reducing the bitwidth usually helps. For floating point numbers, you can use
+the <code class="docutils literal notranslate"><span class="pre">half</span></code> type for bitwidth reduction purposes. For pointers, you can reduce
+the bitwidth by specifying a custom data layout:</p>
+<div class="highlight-llvm notranslate"><div class="highlight"><pre><span></span><span class="c">; For 16-bit pointers</span>
+<span class="k">target</span><span class="w"> </span><span class="k">datalayout</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;p:16:16&quot;</span>
+</pre></div>
+</div>
+<p>If reducing the bitwidth does not help, try <code class="docutils literal notranslate"><span class="pre">-disable-undef-input</span></code>. This will
+often significantly improve performance, but also implies that the correctness
+of the transform with <code class="docutils literal notranslate"><span class="pre">undef</span></code> values is no longer verified. This is usually
+fine if the transform does not increase the number of uses of any value.</p>
+<p>Finally, it’s possible to build alive2 locally and use <code class="docutils literal notranslate"><span class="pre">-smt-to=&lt;m&gt;</span></code> to verify
+the proof with a larger timeout. If you don’t want to do this (or it still
+does not work), please submit the proof you have despite the timeout.</p>
+</section>
+</section>
+<section id="implementation">
+<h2>Implementation<a class="headerlink" href="#implementation" title="Link to this heading">#</a></h2>
+<section id="real-world-usefulness">
+<h3>Real-world usefulness<a class="headerlink" href="#real-world-usefulness" title="Link to this heading">#</a></h3>
+<p>There is a very large number of transforms that <em>could</em> be implemented, but
+only a tiny fraction of them are useful for real-world code.</p>
+<p>Transforms that do not have real-world usefulness provide <em>negative</em> value to
+the LLVM project, by taking up valuable reviewer time, increasing code
+complexity and increasing compile-time overhead.</p>
+<p>We do not require explicit proof of real-world usefulness for every transform
+– in most cases the usefulness is fairly “obvious”. However, the question may
+come up for complex or unusual folds. Keep this in mind when choosing what you
+work on.</p>
+<p>In particular, fixes for fuzzer-generated missed optimization reports will
+likely be rejected if there is no evidence of real-world usefulness.</p>
+</section>
+<section id="pick-the-correct-optimization-pass">
+<h3>Pick the correct optimization pass<a class="headerlink" href="#pick-the-correct-optimization-pass" title="Link to this heading">#</a></h3>
+<p>There are a number of passes and utilities in the InstCombine family, and it
+is important to pick the right place when implementing a fold.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ConstantFolding</span></code>: For folding instructions with constant arguments to a constant. (Mainly relevant for intrinsics.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ValueTracking</span></code>: For analyzing instructions, e.g. for known bits, non-zero, etc. Tests should usually use <code class="docutils literal notranslate"><span class="pre">-passes=instsimplify</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">InstructionSimplify</span></code>: For folds that do not create new instructions (either fold to existing value or constant).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">InstCombine</span></code>: For folds that create or modify instructions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AggressiveInstCombine</span></code>: For folds that are expensive, or violate InstCombine requirements.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VectorCombine</span></code>: For folds of vector operations that require target-dependent cost-modelling.</p></li>
+</ul>
+<p>Sometimes, folds that logically belong in InstSimplify are placed in InstCombine instead, for example because they are too expensive, or because they are structurally simpler to implement in InstCombine.</p>
+<p>For example, if a fold produces new instructions in some cases but returns an existing value in others, it may be preferable to keep all cases in InstCombine, rather than trying to split them among InstCombine and InstSimplify.</p>
+</section>
+<section id="canonicalization-and-target-independence">
+<h3>Canonicalization and target-independence<a class="headerlink" href="#canonicalization-and-target-independence" title="Link to this heading">#</a></h3>
+<p>InstCombine is a target-independent canonicalization pass. This means that it
+tries to bring IR into a “canonical form” that other optimizations (both inside
+and outside of InstCombine) can rely on. For this reason, the chosen canonical
+form needs to be the same for all targets, and not depend on target-specific
+cost modelling.</p>
+<p>In many cases, “canonicalization” and “optimization” coincide. For example, if
+we convert <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">2</span></code> into <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">&lt;&lt;</span> <span class="pre">1</span></code>, this both makes the IR more canonical
+(because there is now only one way to express the same operation, rather than
+two) and faster (because shifts will usually have lower latency than
+multiplies).</p>
+<p>However, there are also canonicalizations that don’t serve any direct
+optimization purpose. For example, InstCombine will canonicalize non-strict
+predicates like <code class="docutils literal notranslate"><span class="pre">ule</span></code> to strict predicates like <code class="docutils literal notranslate"><span class="pre">ult</span></code>. <code class="docutils literal notranslate"><span class="pre">icmp</span> <span class="pre">ule</span> <span class="pre">i8</span> <span class="pre">%x,</span> <span class="pre">7</span></code>
+becomes <code class="docutils literal notranslate"><span class="pre">icmp</span> <span class="pre">ult</span> <span class="pre">i8</span> <span class="pre">%x,</span> <span class="pre">8</span></code>. This is not an optimization in any meaningful
+sense, but it does reduce the number of cases that other transforms need to
+handle.</p>
+<p>If some canonicalization is not profitable for a specific target, then a reverse
+transform needs to be added in the backend. Patches to disable specific
+InstCombine transforms on certain targets, or to drive them using
+target-specific cost-modelling, <strong>will not be accepted</strong>. The only permitted
+target-dependence is on DataLayout and TargetLibraryInfo.</p>
+<p>The use of TargetTransformInfo is only allowed for hooks for target-specific
+intrinsics, such as <code class="docutils literal notranslate"><span class="pre">TargetTransformInfo::instCombineIntrinsic()</span></code>. These are
+already inherently target-dependent anyway.</p>
+<p>If some canonicalization narrow/widen the integer width of expressions, please
+check <code class="docutils literal notranslate"><span class="pre">shouldChangeType()</span></code> first. Otherwise, we may evaluate the expression
+in illegal/inefficient types.</p>
+<p>For vector-specific transforms that require cost-modelling, the VectorCombine
+pass can be used instead. In very rare circumstances, if there are no other
+alternatives, target-dependent transforms may be accepted into
+AggressiveInstCombine.</p>
+<p>Generally, we prefer unsigned operations over signed operations in the middle-end, even
+if signed operations are more efficient on some targets. The following is an incomplete
+list of canonicalizations that are implemented in InstCombine:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Original Pattern</p></th>
+<th class="head"><p>Canonical Form</p></th>
+<th class="head"><p>Condition</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">icmp</span> <span class="pre">spred</span> <span class="pre">X,</span> <span class="pre">Y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">icmp</span> <span class="pre">samesign</span> <span class="pre">upred</span> <span class="pre">X,</span> <span class="pre">Y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sign(X)</span> <span class="pre">==</span> <span class="pre">sign(Y)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">smin/smax</span> <span class="pre">X,</span> <span class="pre">Y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">umin/umax</span> <span class="pre">X,</span> <span class="pre">Y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sign(X)</span> <span class="pre">==</span> <span class="pre">sign(Y)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sext</span> <span class="pre">X</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">zext</span> <span class="pre">nneg</span> <span class="pre">X</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">&gt;=s</span> <span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sitofp</span> <span class="pre">X</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">uitofp</span> <span class="pre">nneg</span> <span class="pre">X</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">&gt;=s</span> <span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ashr</span> <span class="pre">X,</span> <span class="pre">Y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lshr</span> <span class="pre">X,</span> <span class="pre">Y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">&gt;=s</span> <span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sdiv/srem</span> <span class="pre">X,</span> <span class="pre">Y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">udiv/urem</span> <span class="pre">X,</span> <span class="pre">Y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">&gt;=s</span> <span class="pre">0</span> <span class="pre">&amp;&amp;</span> <span class="pre">Y</span> <span class="pre">&gt;=s</span> <span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add</span> <span class="pre">X,</span> <span class="pre">Y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">or</span> <span class="pre">disjoint</span> <span class="pre">X,</span> <span class="pre">Y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(X</span> <span class="pre">&amp;</span> <span class="pre">Y)</span> <span class="pre">!=</span> <span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mul</span> <span class="pre">X,</span> <span class="pre">C</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">shl</span> <span class="pre">X,</span> <span class="pre">Log2(C)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">isPowerOf2(C)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">select</span> <span class="pre">Cond1,</span> <span class="pre">Cond2,</span> <span class="pre">false</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">and</span> <span class="pre">Cond1,</span> <span class="pre">Cond2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">impliesPoison(Cond2,</span> <span class="pre">Cond1)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">select</span> <span class="pre">Cond1,</span> <span class="pre">true,</span> <span class="pre">Cond2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">or</span> <span class="pre">Cond1,</span> <span class="pre">Cond2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">impliesPoison(Cond2,</span> <span class="pre">Cond1)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="patternmatch">
+<h3>PatternMatch<a class="headerlink" href="#patternmatch" title="Link to this heading">#</a></h3>
+<p>Many transforms make use of the matching infrastructure defined in
+<a class="reference external" href="https://github.com/llvm/llvm-project/blame/main/llvm/include/llvm/IR/PatternMatch.h">PatternMatch.h</a>.</p>
+<p>Here is a typical usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">//</span> <span class="n">Fold</span> <span class="p">(</span><span class="n">A</span> <span class="o">-</span> <span class="n">B</span><span class="p">)</span> <span class="o">+</span> <span class="n">B</span> <span class="ow">and</span> <span class="n">B</span> <span class="o">+</span> <span class="p">(</span><span class="n">A</span> <span class="o">-</span> <span class="n">B</span><span class="p">)</span> <span class="n">to</span> <span class="n">A</span><span class="o">.</span>
+<span class="n">Value</span> <span class="o">*</span><span class="n">A</span><span class="p">,</span> <span class="o">*</span><span class="n">B</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">match</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">m_c_Add</span><span class="p">(</span><span class="n">m_Sub</span><span class="p">(</span><span class="n">m_Value</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">m_Value</span><span class="p">(</span><span class="n">B</span><span class="p">)),</span> <span class="n">m_Deferred</span><span class="p">(</span><span class="n">B</span><span class="p">))))</span>
+  <span class="k">return</span> <span class="n">A</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>And another:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">//</span> <span class="n">Fold</span> <span class="n">A</span> <span class="o">+</span> <span class="n">C1</span> <span class="o">==</span> <span class="n">C2</span> <span class="n">to</span> <span class="n">A</span> <span class="o">==</span> <span class="n">C1</span><span class="o">+</span><span class="n">C2</span>
+<span class="n">Value</span> <span class="o">*</span><span class="n">A</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">match</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">m_ICmp</span><span class="p">(</span><span class="n">Pred</span><span class="p">,</span> <span class="n">m_Add</span><span class="p">(</span><span class="n">m_Value</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">m_APInt</span><span class="p">(</span><span class="n">C1</span><span class="p">)),</span> <span class="n">m_APInt</span><span class="p">(</span><span class="n">C2</span><span class="p">)))</span> <span class="o">&amp;&amp;</span>
+    <span class="n">ICmpInst</span><span class="p">::</span><span class="n">isEquality</span><span class="p">(</span><span class="n">Pred</span><span class="p">))</span>
+  <span class="k">return</span> <span class="n">Builder</span><span class="o">.</span><span class="n">CreateICmp</span><span class="p">(</span><span class="n">Pred</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span>
+                            <span class="n">ConstantInt</span><span class="p">::</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">-&gt;</span><span class="n">getType</span><span class="p">(),</span> <span class="o">*</span><span class="n">C1</span> <span class="o">+</span> <span class="o">*</span><span class="n">C2</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>Some common matchers are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">m_Value(A)</span></code>: Match any value and write it into <code class="docutils literal notranslate"><span class="pre">Value</span> <span class="pre">*A</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m_Specific(A)</span></code>: Check that the operand equals A. Use this if A is
+assigned <strong>outside</strong> the pattern.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m_Deferred(A)</span></code>: Check that the operand equals A. Use this if A is
+assigned <strong>inside</strong> the pattern, for example via <code class="docutils literal notranslate"><span class="pre">m_Value(A)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m_APInt(C)</span></code>: Match a scalar integer constant or splat vector constant into
+<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">APInt</span> <span class="pre">*C</span></code>. Does not permit undef/poison values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m_ImmConstant(C)</span></code>: Match any non-constant-expression constant into
+<code class="docutils literal notranslate"><span class="pre">Constant</span> <span class="pre">*C</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m_Constant(C)</span></code>: Match any constant into <code class="docutils literal notranslate"><span class="pre">Constant</span> <span class="pre">*C</span></code>. Don’t use this unless
+you know what you’re doing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m_Add(M1,</span> <span class="pre">M2)</span></code>, <code class="docutils literal notranslate"><span class="pre">m_Sub(M1,</span> <span class="pre">M2)</span></code>, etc: Match an add/sub/etc where the first
+operand matches M1 and the second M2.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m_c_Add(M1,</span> <span class="pre">M2)</span></code>, etc: Match an add commutatively. The operands must match
+either M1 and M2 or M2 and M1. Most instruction matchers have a commutative
+variant.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m_ICmp(Pred,</span> <span class="pre">M1,</span> <span class="pre">M2)</span></code> and <code class="docutils literal notranslate"><span class="pre">m_c_ICmp(Pred,</span> <span class="pre">M1,</span> <span class="pre">M2)</span></code>: Match an icmp, writing
+the predicate into <code class="docutils literal notranslate"><span class="pre">IcmpInst::Predicate</span> <span class="pre">Pred</span></code>. If the commutative version
+is used, and the operands match in order M2, M1, then <code class="docutils literal notranslate"><span class="pre">Pred</span></code> will be the
+swapped predicate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m_OneUse(M)</span></code>: Check that the value only has one use, and also matches M.
+For example <code class="docutils literal notranslate"><span class="pre">m_OneUse(m_Add(...))</span></code>. See the next section for more
+information.</p></li>
+</ul>
+<p>See the header for the full list of available matchers.</p>
+</section>
+<section id="instcombine-apis">
+<h3>InstCombine APIs<a class="headerlink" href="#instcombine-apis" title="Link to this heading">#</a></h3>
+<p>InstCombine transforms are handled by <code class="docutils literal notranslate"><span class="pre">visitXYZ()</span></code> methods, where XYZ
+corresponds to the root instruction of your transform. If the outermost
+instruction of the pattern you are matching is an icmp, the fold will be
+located somewhere inside <code class="docutils literal notranslate"><span class="pre">visitICmpInst()</span></code>.</p>
+<p>The return value of the visit method is an instruction. You can either return
+a new instruction, in which case it will be inserted before the old one, and
+uses of the old one will be replaced by it. Or you can return the original
+instruction to indicate that <em>some</em> kind of change has been made. Finally, a
+nullptr return value indicates that no change occurred.</p>
+<p>For example, if your transform produces a single new icmp instruction, you could
+write the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="o">...</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">new</span> <span class="n">ICmpInst</span><span class="p">(</span><span class="n">Pred</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In this case the main InstCombine loop takes care of inserting the instruction
+and replacing uses of the old instruction.</p>
+<p>Alternatively, you can also write it like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="o">...</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">replaceInstUsesWith</span><span class="p">(</span><span class="n">OrigI</span><span class="p">,</span> <span class="n">Builder</span><span class="o">.</span><span class="n">CreateICmp</span><span class="p">(</span><span class="n">Pred</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>In this case <code class="docutils literal notranslate"><span class="pre">IRBuilder</span></code> will insert the instruction and <code class="docutils literal notranslate"><span class="pre">replaceInstUsesWith()</span></code>
+will replace the uses of the old instruction, and return it to indicate that
+a change occurred.</p>
+<p>Both forms are equivalent, and you can use whichever is more convenient in
+context. For example, it’s common that folds are inside helper functions that
+return <code class="docutils literal notranslate"><span class="pre">Value</span> <span class="pre">*</span></code> and then <code class="docutils literal notranslate"><span class="pre">replaceInstUsesWith()</span></code> is invoked on the result of
+that helper.</p>
+<p>InstCombine makes use of a worklist, which needs to be correctly updated during
+transforms. This usually happens automatically, but there are some things to
+keep in mind:</p>
+<ul class="simple">
+<li><p>Don’t use the <code class="docutils literal notranslate"><span class="pre">Value::replaceAllUsesWith()</span></code> API. Use InstCombine’s
+<code class="docutils literal notranslate"><span class="pre">replaceInstUsesWith()</span></code> helper instead.</p></li>
+<li><p>Don’t use the <code class="docutils literal notranslate"><span class="pre">Instruction::eraseFromParent()</span></code> API. Use InstCombine’s
+<code class="docutils literal notranslate"><span class="pre">eraseInstFromFunction()</span></code> helper instead. (Explicitly erasing instruction
+is usually not necessary, as side-effect free instructions without users
+are automatically removed.)</p></li>
+<li><p>Apart from the “directly return an instruction” pattern above, use IRBUilder
+to create all instruction. Do not manually create and insert them.</p></li>
+<li><p>When replacing operands or uses of instructions, use <code class="docutils literal notranslate"><span class="pre">replaceOperand()</span></code>
+and <code class="docutils literal notranslate"><span class="pre">replaceUse()</span></code> instead of <code class="docutils literal notranslate"><span class="pre">setOperand()</span></code>.</p></li>
+</ul>
+</section>
+<section id="multi-use-handling">
+<h3>Multi-use handling<a class="headerlink" href="#multi-use-handling" title="Link to this heading">#</a></h3>
+<p>Transforms should usually not increase the total number of instructions. This
+is not a hard requirement: For example, it is usually worthwhile to replace a
+single division instruction with multiple other instructions.</p>
+<p>For example, if you have a transform that replaces two instructions, with two
+other instructions, this is (usually) only profitable if <em>both</em> the original
+instructions can be removed. To ensure that both instructions are removed, you
+need to add a one-use check for the inner instruction.</p>
+<p>One-use checks can be performed using the <code class="docutils literal notranslate"><span class="pre">m_OneUse()</span></code> matcher, or the
+<code class="docutils literal notranslate"><span class="pre">V-&gt;hasOneUse()</span></code> method.</p>
+</section>
+<section id="flag-handling">
+<h3>Flag handling<a class="headerlink" href="#flag-handling" title="Link to this heading">#</a></h3>
+<p>When possible, favour propagation of poison-generating flags like <code class="docutils literal notranslate"><span class="pre">nuw</span></code> and <code class="docutils literal notranslate"><span class="pre">nsw</span></code> since they may be
+hard to salvage later. Avoid doing so if it introduces additional complexity (e.g. requires querying <code class="docutils literal notranslate"><span class="pre">willNotOverflow</span></code>
+or KnownBits).</p>
+<p>Be careful with in-place operand/predicate changes, as poison-generating flags may not be valid for new
+operands. It is recommended to create a new instruction with careful handling of flags. If not
+applicable, call <code class="docutils literal notranslate"><span class="pre">Instruction::dropPoisonGeneratingFlags()</span></code> to clear flags in a conservative manner.</p>
+<p>Do not rely on fcmp’s <code class="docutils literal notranslate"><span class="pre">nsz</span></code> flag to perform optimizations. It is meaningless for fcmp so it should not affect
+the optimization.</p>
+</section>
+<section id="generalization">
+<h3>Generalization<a class="headerlink" href="#generalization" title="Link to this heading">#</a></h3>
+<p>Transforms can both be too specific (only handling some odd subset of patterns,
+leading to unexpected optimization cliffs) and too general (introducing
+complexity to handle cases with no real-world relevance). The right level of
+generality is quite subjective, so this section only provides some broad
+guidelines.</p>
+<ul class="simple">
+<li><p>Avoid transforms that are hardcoded to specific constants. Try to figure
+out what the general rule for arbitrary constants is.</p></li>
+<li><p>Add handling for conjugate patterns. For example, if you implement a fold
+for <code class="docutils literal notranslate"><span class="pre">icmp</span> <span class="pre">eq</span></code>, you almost certainly also want to support <code class="docutils literal notranslate"><span class="pre">icmp</span> <span class="pre">ne</span></code>, with the
+inverse result. Similarly, if you implement a pattern for <code class="docutils literal notranslate"><span class="pre">and</span></code> of <code class="docutils literal notranslate"><span class="pre">icmp</span></code>s,
+you should also handle the de-Morgan conjugate using <code class="docutils literal notranslate"><span class="pre">or</span></code>.</p></li>
+<li><p>Handle non-splat vector constants if doing so is free, but do not add
+handling for them if it adds any additional complexity to the code.</p></li>
+<li><p>Do not handle non-canonical patterns, unless there is a specific motivation
+to do so. For example, it may sometimes be worthwhile to handle a pattern
+that would normally be converted into a different canonical form, but can
+still occur in multi-use scenarios. This is fine to do if there is specific
+real-world motivation, but you should not go out of your way to do this
+otherwise.</p></li>
+<li><p>Sometimes the motivating pattern uses a constant value with certain
+properties, but the fold can be generalized to non-constant values by making
+use of ValueTracking queries. Whether this makes sense depends on the case,
+but it’s usually a good idea to only handle the constant pattern first, and
+then generalize later if it seems useful.</p></li>
+<li><p>When possible, handle more canonical patterns as well. It is encouraged to avoid
+potential phase-ordering issues. For example, if the motivating transform holds for
+<code class="docutils literal notranslate"><span class="pre">add</span></code>, it also holds for <code class="docutils literal notranslate"><span class="pre">or</span> <span class="pre">disjoint</span></code>. See the canonicalization list above for details.
+In most cases, it can be easily implemented with matchers like
+<code class="docutils literal notranslate"><span class="pre">m_AddLike/m_SExtLike/m_LogicalAnd/m_LogicalOr</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="guidelines-for-reviewers">
+<h2>Guidelines for reviewers<a class="headerlink" href="#guidelines-for-reviewers" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Do not ask new contributors to implement non-splat vector support in code
+reviews. If you think non-splat vector support for a fold is both
+worthwhile and policy-compliant (that is, the handling would not result in
+any appreciable increase in code complexity), implement it yourself in a
+follow-up patch.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="WritingAnLLVMBackend.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Writing an LLVM Backend</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="InstrProfileFormat.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Instrumentation Profile Format</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2003-2026, LLVM Project
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2026-08-31</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">InstCombine contributor guide</a><ul>
+<li><a class="reference internal" href="#tests">Tests</a><ul>
+<li><a class="reference internal" href="#precommit-tests">Precommit tests</a></li>
+<li><a class="reference internal" href="#use-update-test-checks-py">Use <code class="docutils literal notranslate"><span class="pre">update_test_checks.py</span></code></a></li>
+<li><a class="reference internal" href="#general-testing-considerations">General testing considerations</a></li>
+<li><a class="reference internal" href="#add-negative-tests">Add negative tests</a></li>
+<li><a class="reference internal" href="#add-multi-use-tests">Add multi-use tests</a></li>
+<li><a class="reference internal" href="#add-commuted-tests">Add commuted tests</a></li>
+<li><a class="reference internal" href="#add-vector-tests">Add vector tests</a></li>
+<li><a class="reference internal" href="#flag-tests">Flag tests</a></li>
+<li><a class="reference internal" href="#other-tests">Other tests</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#proofs">Proofs</a><ul>
+<li><a class="reference internal" href="#basics">Basics</a></li>
+<li><a class="reference internal" href="#use-generic-values-in-proofs">Use generic values in proofs</a></li>
+<li><a class="reference internal" href="#common-pre-conditions">Common pre-conditions</a></li>
+<li><a class="reference internal" href="#timeouts">Timeouts</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#implementation">Implementation</a><ul>
+<li><a class="reference internal" href="#real-world-usefulness">Real-world usefulness</a></li>
+<li><a class="reference internal" href="#pick-the-correct-optimization-pass">Pick the correct optimization pass</a></li>
+<li><a class="reference internal" href="#canonicalization-and-target-independence">Canonicalization and target-independence</a></li>
+<li><a class="reference internal" href="#patternmatch">PatternMatch</a></li>
+<li><a class="reference internal" href="#instcombine-apis">InstCombine APIs</a></li>
+<li><a class="reference internal" href="#multi-use-handling">Multi-use handling</a></li>
+<li><a class="reference internal" href="#flag-handling">Flag handling</a></li>
+<li><a class="reference internal" href="#generalization">Generalization</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#guidelines-for-reviewers">Guidelines for reviewers</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=7d86a446"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/translations.js?v=beaddf03"></script>
+    <script src="_static/copybutton.js?v=487adb72"></script>
+    </body>
+</html>
