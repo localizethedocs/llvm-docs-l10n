@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 11:32+0000\n"
+"POT-Creation-Date: 2026-09-07 14:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -294,39 +294,37 @@ msgstr ""
 
 #: ../../../MemProf.md:132
 msgid ""
-"`-Wl,-z,keep-data-section-prefix`: Informs the LLD linker that `.data.rel.ro."
-"hot` and `.data.rel.ro.unlikely` as relro sections. LLD requires all relro "
-"sections to be contiguous and this flag allows us to interleave the hotness-"
-"suffixed `.data.rel.ro` sections with other relro sections."
+"`-Wl,-z,keep-data-section-prefix`: This flag is currently only supported in "
+"LLD. It informs the linker that `.data.rel.ro.hot` and `.data.rel.ro."
+"unlikely` are relro sections (rather than only recognizing `.data.rel.ro`). "
+"LLD allows multiple relro segments, but not all loaders (particularly glibc) "
+"properly support multiple relro segments. This flag ensures a single relro "
+"segment to ensure maximum compatibility. Additionally, it makes LLD keep the "
+"data section suffixes (hot/unlikely) as otherwise they will get merged "
+"together into the standard data sections."
 msgstr ""
 
-#: ../../../MemProf.md:133
-msgid ""
-"`-Wl,-script=<linker_script>`: Group hot and/or cold data sections, and "
-"order the data sections."
-msgstr ""
-
-#: ../../../MemProf.md:139
+#: ../../../MemProf.md:138
 msgid ""
 "The optimized layout clusters hot static data, improving dTLB and cache "
 "efficiency."
 msgstr ""
 
-#: ../../../MemProf.md:142
+#: ../../../MemProf.md:141
 msgid ""
 "When both PGO profiles and memory profiles are provided (using `-fprofile-"
 "use` and `-fmemory-profile-use`), global variable hotness are inferred from "
 "a combination of PGO profile and data access profile:"
 msgstr ""
 
-#: ../../../MemProf.md:146
+#: ../../../MemProf.md:145
 msgid ""
 "For data covered by both profiles (e.g., module-internal data with symbols "
 "in the executable), the hotness is the max of PGO profile hotness and data "
 "access profile hotness."
 msgstr ""
 
-#: ../../../MemProf.md:149
+#: ../../../MemProf.md:148
 msgid ""
 "For data covered by only one profile, the hotness is inferred from that "
 "profile. Most notably, symbolizable data with external linkage is only "
@@ -334,25 +332,25 @@ msgid ""
 "only covered by PGO profile."
 msgstr ""
 
-#: ../../../MemProf.md:155
+#: ../../../MemProf.md:154
 msgid "Developer Manual"
 msgstr ""
 
-#: ../../../MemProf.md:157
+#: ../../../MemProf.md:156
 msgid ""
 "This section provides an overview of the MemProf architecture and "
 "implementation for contributors."
 msgstr ""
 
-#: ../../../MemProf.md:159
+#: ../../../MemProf.md:158
 msgid "Architecture Overview"
 msgstr ""
 
-#: ../../../MemProf.md:161
+#: ../../../MemProf.md:160
 msgid "MemProf consists of three main components:"
 msgstr ""
 
-#: ../../../MemProf.md:163
+#: ../../../MemProf.md:162
 msgid ""
 "**Instrumentation Pass (Compile-time):** Memory accesses are instrumented to "
 "increment the access count held in a shadow memory location, or "
@@ -360,28 +358,28 @@ msgid ""
 "by the runtime library."
 msgstr ""
 
-#: ../../../MemProf.md:164
+#: ../../../MemProf.md:163
 msgid ""
 "**Runtime Library (Link-time/Run-time):** Manages shadow memory and tracks "
 "allocation contexts and access statistics."
 msgstr ""
 
-#: ../../../MemProf.md:165
+#: ../../../MemProf.md:164
 msgid ""
 "**Profile Analysis (Post-processing/Compile-time):** Tools and passes that "
 "read the profile, annotate the IR using metadata, and perform context "
 "disambiguation if necessary when LTO is enabled."
 msgstr ""
 
-#: ../../../MemProf.md:167
+#: ../../../MemProf.md:166
 msgid "Detailed Workflow (LTO)"
 msgstr ""
 
-#: ../../../MemProf.md:169
+#: ../../../MemProf.md:168
 msgid "The optimization process, using LTO, involves several steps:"
 msgstr ""
 
-#: ../../../MemProf.md:171
+#: ../../../MemProf.md:170
 msgid ""
 "**Matching (MemProfUse Pass):** The memprof profile is mapped onto "
 "allocation calls and callsites which are part of the allocation context "
@@ -390,7 +388,7 @@ msgid ""
 "(or hot) an attribute is added directly which guides the transformation."
 msgstr ""
 
-#: ../../../MemProf.md:172
+#: ../../../MemProf.md:171
 msgid ""
 "**Metadata Serialization:** For ThinLTO, during the summary analysis step, "
 "MemProf metadata (`!memprof` and `!callsite`) is serialized into the module "
@@ -398,7 +396,7 @@ msgid ""
 "cpp`."
 msgstr ""
 
-#: ../../../MemProf.md:173
+#: ../../../MemProf.md:172
 msgid ""
 "**Whole Program Graph Construction:** During the LTO step, the compiler "
 "constructs a whole-program `CallsiteContextGraph` to analyze and "
@@ -407,14 +405,14 @@ msgid ""
 "resides in `llvm/lib/Transforms/IPO/MemProfContextDisambiguation.cpp`."
 msgstr ""
 
-#: ../../../MemProf.md:174
+#: ../../../MemProf.md:173
 msgid ""
 "**Cloning Decisions:** The analysis identifies which functions and callsites "
 "need to be cloned to isolate cold allocation paths from hot ones using the "
 "`CallsiteContextGraph`."
 msgstr ""
 
-#: ../../../MemProf.md:175
+#: ../../../MemProf.md:174
 msgid ""
 "**LTO Backend:** The actual cloning of functions happens in the "
 "`MemProfContextDisambiguation` pass. The replacement of allocation calls (e."
@@ -423,80 +421,80 @@ msgid ""
 "guided by the decisions made during the LTO step."
 msgstr ""
 
-#: ../../../MemProf.md:177
+#: ../../../MemProf.md:176
 msgid "Source Structure"
 msgstr ""
 
-#: ../../../MemProf.md:179
+#: ../../../MemProf.md:178
 msgid "**Runtime:** `compiler-rt/lib/memprof`"
 msgstr ""
 
-#: ../../../MemProf.md:181
+#: ../../../MemProf.md:180
 msgid ""
 "Contains the runtime implementation, including shadow memory mapping, "
 "interceptors (malloc, free, etc.), and the thread-local storage for "
 "recording stats."
 msgstr ""
 
-#: ../../../MemProf.md:183
+#: ../../../MemProf.md:182
 msgid ""
 "**Instrumentation:** `llvm/lib/Transforms/Instrumentation/"
 "MemProfInstrumentation.cpp`"
 msgstr ""
 
-#: ../../../MemProf.md:185
+#: ../../../MemProf.md:184
 msgid "Implements the LLVM IR pass that adds instrumentation calls."
 msgstr ""
 
-#: ../../../MemProf.md:187
+#: ../../../MemProf.md:186
 msgid ""
 "**Profile Data:** `llvm/include/llvm/ProfileData/MemProf.h` and `MemProfData."
 "inc`"
 msgstr ""
 
-#: ../../../MemProf.md:189
+#: ../../../MemProf.md:188
 msgid ""
 "Defines the profile format, data structures (like `MemInfoBlock`), and "
 "serialization logic."
 msgstr ""
 
-#: ../../../MemProf.md:191
+#: ../../../MemProf.md:190
 msgid "**Use Pass:** `llvm/lib/Transforms/Instrumentation/MemProfUse.cpp`"
 msgstr ""
 
-#: ../../../MemProf.md:193
+#: ../../../MemProf.md:192
 msgid "Reads the profile and annotates the IR with metadata."
 msgstr ""
 
-#: ../../../MemProf.md:195
+#: ../../../MemProf.md:194
 msgid ""
 "**Context Disambiguation:** `llvm/lib/Transforms/IPO/"
 "MemProfContextDisambiguation.cpp`"
 msgstr ""
 
-#: ../../../MemProf.md:197
+#: ../../../MemProf.md:196
 msgid ""
 "Implements the analysis and transformations (e.g., cloning) for resolving "
 "ambiguous allocation contexts using LTO."
 msgstr ""
 
-#: ../../../MemProf.md:199
+#: ../../../MemProf.md:198
 msgid "**Transformation:** `llvm/lib/Transforms/Utils/SimplifyLibCalls.cpp`"
 msgstr ""
 
-#: ../../../MemProf.md:201
+#: ../../../MemProf.md:200
 msgid ""
 "Implements the rewriting of allocation calls based on the hot/cold hints."
 msgstr ""
 
-#: ../../../MemProf.md:203
+#: ../../../MemProf.md:202
 msgid ""
 "**Static Data Partitioning:** `llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp`, "
 "`llvm/lib/CodeGen/StaticDataSplitter.cpp`, and `llvm/lib/CodeGen/"
 "StaticDataAnnotator.cpp`"
 msgstr ""
 
-#: ../../../MemProf.md:205
+#: ../../../MemProf.md:204
 msgid ""
 "Implements the splitting of static data (Jump tables, Module-internal global "
 "variables, and Constant pools) into hot and cold sections using branch "
@@ -505,69 +503,69 @@ msgid ""
 "`StaticDataSplitter`."
 msgstr ""
 
-#: ../../../MemProf.md:207
+#: ../../../MemProf.md:206
 msgid "Runtime Implementation"
 msgstr ""
 
-#: ../../../MemProf.md:209
+#: ../../../MemProf.md:208
 msgid ""
 "The runtime uses a **shadow memory** scheme similar to AddressSanitizer "
 "(ASan) but optimized for profiling."
 msgstr ""
 
-#: ../../../MemProf.md:211
+#: ../../../MemProf.md:210
 msgid "**Shadow Mapping:** Application memory is mapped to shadow memory."
 msgstr ""
 
-#: ../../../MemProf.md:212
+#: ../../../MemProf.md:211
 msgid ""
 "**Granularity:** The default granularity is 64 bytes. One byte of shadow "
 "memory tracks the access state of 64 bytes of application memory."
 msgstr ""
 
-#: ../../../MemProf.md:213
+#: ../../../MemProf.md:212
 msgid ""
 "**MemInfoBlock (MIB):** A key data structure that stores statistics for an "
 "allocation context, including: `AllocCount`, `TotalAccessCount`, "
 "`TotalLifetime`, and `Min/MaxAccessDensity`."
 msgstr ""
 
-#: ../../../MemProf.md:215
+#: ../../../MemProf.md:214
 msgid "Profile Format"
 msgstr ""
 
-#: ../../../MemProf.md:217
+#: ../../../MemProf.md:216
 msgid ""
 "The MemProf profile is a schema-based binary format designed for "
 "extensibility. Key structures include:"
 msgstr ""
 
-#: ../../../MemProf.md:219
+#: ../../../MemProf.md:218
 msgid ""
 "**Frame:** Represents a function in the call stack (Function GUID, Line, "
 "Column)."
 msgstr ""
 
-#: ../../../MemProf.md:220
+#: ../../../MemProf.md:219
 msgid ""
 "**CallStack:** A sequence of Frames identifying the context of an allocation."
 msgstr ""
 
-#: ../../../MemProf.md:221
+#: ../../../MemProf.md:220
 msgid "**MemInfoBlock:** The statistics gathered for a specific CallStack."
 msgstr ""
 
-#: ../../../MemProf.md:223
+#: ../../../MemProf.md:222
 msgid ""
 "The format supports versioning to allow adding new fields to the MIB without "
 "breaking backward compatibility."
 msgstr ""
 
-#: ../../../MemProf.md:225
+#: ../../../MemProf.md:224
 msgid "Static Data Profile"
 msgstr ""
 
-#: ../../../MemProf.md:227
+#: ../../../MemProf.md:226
 msgid ""
 "To support static data partitioning, the profile format includes a payload "
 "for symbolized data access profiles. This maps data addresses to canonical "
@@ -575,102 +573,102 @@ msgid ""
 "counts. This enables the compiler to identify which global variables are hot."
 msgstr ""
 
-#: ../../../MemProf.md:229
+#: ../../../MemProf.md:228
 msgid "Testing"
 msgstr ""
 
-#: ../../../MemProf.md:233
+#: ../../../MemProf.md:232
 msgid ""
 "When making changes to MemProf, verify your changes using the following test "
 "suites:"
 msgstr ""
 
-#: ../../../MemProf.md:235
+#: ../../../MemProf.md:234
 msgid "**Runtime Tests:**"
 msgstr ""
 
-#: ../../../MemProf.md:237
+#: ../../../MemProf.md:236
 msgid "Location: `compiler-rt/test/memprof`"
 msgstr ""
 
-#: ../../../MemProf.md:238
+#: ../../../MemProf.md:237
 msgid ""
 "Purpose: Verify the runtime instrumentation, shadow memory behavior, and "
 "profile generation."
 msgstr ""
 
-#: ../../../MemProf.md:240
+#: ../../../MemProf.md:239
 msgid "**Profile Manipulation Tests:**"
 msgstr ""
 
-#: ../../../MemProf.md:242
+#: ../../../MemProf.md:241
 msgid "Location: `llvm/test/tools/llvm-profdata`"
 msgstr ""
 
-#: ../../../MemProf.md:243
+#: ../../../MemProf.md:242
 msgid ""
 "Purpose: Verify that `llvm-profdata` can correctly merge, show, and handle "
 "MemProf profiles."
 msgstr ""
 
-#: ../../../MemProf.md:245
+#: ../../../MemProf.md:244
 msgid "**Instrumentation & Optimization Tests:**"
 msgstr ""
 
-#: ../../../MemProf.md:247
+#: ../../../MemProf.md:246
 msgid "Location: `llvm/test/Transforms/PGOProfile`"
 msgstr ""
 
-#: ../../../MemProf.md:248
+#: ../../../MemProf.md:247
 msgid ""
 "Purpose: Verify the correctness of the `MemProfUse` pass, metadata "
 "annotation, and IR transformations."
 msgstr ""
 
-#: ../../../MemProf.md:250
+#: ../../../MemProf.md:249
 msgid "**ThinLTO & Context Disambiguation Tests:**"
 msgstr ""
 
-#: ../../../MemProf.md:252
+#: ../../../MemProf.md:251
 msgid ""
 "Location: `llvm/test/ThinLTO/X86/memprof*` and `llvm/test/Transforms/"
 "MemProfContextDisambiguation`"
 msgstr ""
 
-#: ../../../MemProf.md:253
+#: ../../../MemProf.md:252
 msgid ""
 "Purpose: Verify context disambiguation, cloning, and summary analysis during "
 "ThinLTO and LTO."
 msgstr ""
 
-#: ../../../MemProf.md:255
+#: ../../../MemProf.md:254
 msgid "Testing with YAML Profiles"
 msgstr ""
 
-#: ../../../MemProf.md:257
+#: ../../../MemProf.md:256
 msgid ""
 "You can create MemProf profiles in YAML format for testing purposes. This is "
 "useful for creating small, self-contained test cases without needing to run "
 "a binary."
 msgstr ""
 
-#: ../../../MemProf.md:259
+#: ../../../MemProf.md:258
 msgid ""
 "**Create a YAML Profile:** You can start by dumping a real profile to YAML "
 "(see {ref}`Processing Profiles <processing-profiles>` above) or writing one "
 "from scratch."
 msgstr ""
 
-#: ../../../MemProf.md:261
+#: ../../../MemProf.md:260
 msgid ""
 "**Convert to Indexed Format:** Use `llvm-profdata` to convert the YAML to "
 "the indexed MemProf format."
 msgstr ""
 
-#: ../../../MemProf.md:267
+#: ../../../MemProf.md:266
 msgid "**Run the Compiler:** Use the indexed profile with `opt` or `clang`."
 msgstr ""
 
-#: ../../../MemProf.md:273
+#: ../../../MemProf.md:272
 msgid "**Example YAML Profile:**"
 msgstr ""
