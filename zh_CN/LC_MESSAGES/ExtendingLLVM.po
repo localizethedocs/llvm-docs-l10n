@@ -1,0 +1,497 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../ExtendingLLVM.md:1
+msgid "Extending LLVM: Adding instructions, intrinsics, types, etc."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:3
+msgid "Introduction and Warning"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:5
+msgid ""
+"During the course of using LLVM, you may wish to customize it for your "
+"research project or for experimentation. At this point, you may realize that "
+"you need to add something to LLVM, whether it be a new fundamental type, a "
+"new intrinsic function, or a whole new instruction."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:10
+msgid ""
+"When you come to this realization, stop and think. Do you really need to "
+"extend LLVM? Is it a new fundamental capability that LLVM does not support "
+"at its current incarnation or can it be synthesized from existing LLVM "
+"elements? If you are not sure, ask on the [LLVM forums](https://discourse."
+"llvm.org). The reason is that extending LLVM will get involved as you need "
+"to update all the different passes that you intend to use with your "
+"extension, and there are `many` LLVM analyses and transformations, so it may "
+"be quite a bit of work."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:18
+msgid ""
+"Adding an {ref}`intrinsic function <intrinsic-function>` is far easier than "
+"adding an instruction, and is transparent to optimization passes. If your "
+"added functionality can be expressed as a function call, an intrinsic "
+"function is the method of choice for LLVM extension."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:23
+msgid ""
+"Before you invest a significant amount of effort into a non-trivial "
+"extension, **ask on the list** if what you are looking to do can be done "
+"with existing infrastructure, or if maybe someone else is already working on "
+"it. You will save yourself a lot of time and effort by doing so."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:30
+msgid "Adding a new intrinsic function"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:32
+msgid ""
+"Adding a new intrinsic function to LLVM is much easier than adding a new "
+"instruction. Almost all extensions to LLVM should start as an intrinsic "
+"function and then be turned into an instruction if warranted."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:36
+msgid "`llvm/docs/LangRef.html`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:38
+msgid ""
+"Document the intrinsic. Decide whether it is code generator specific and "
+"what the restrictions are. Talk to other people about it so that you are "
+"sure it's a good idea."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:42
+msgid "`llvm/include/llvm/IR/Intrinsics*.td`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:44
+msgid ""
+"Add an entry for your intrinsic. Describe its memory access characteristics "
+"for optimization (this controls whether it will be DCE'd, CSE'd, etc). If "
+"any arguments need to be immediates, these must be indicated with the ImmArg "
+"property. Note that any intrinsic using one of the `llvm_any*_ty` types for "
+"an argument or return type will be deemed by `tblgen` as overloaded and the "
+"corresponding suffix will be required on the intrinsic's name."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:52
+msgid "`llvm/lib/Analysis/ConstantFolding.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:54
+msgid ""
+"If it is possible to constant fold your intrinsic, add support for it in the "
+"`canConstantFoldCallTo` and `ConstantFoldCall` functions."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:57 ../../../ExtendingLLVM.md:218
+msgid "`llvm/test/*`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:59
+msgid "Add test cases for your intrinsic to the test suite"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:61
+msgid ""
+"Once the intrinsic has been added to the system, you must add code generator "
+"support for it. Generally you must do the following steps:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:64
+msgid ""
+"Add support to the .td file for the target(s) of your choice in `lib/Target/"
+"*/*.td`."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:67
+msgid ""
+"This is usually a matter of adding a pattern to the .td file that matches "
+"the intrinsic, though it may obviously require adding the instructions you "
+"want to generate as well. There are lots of examples in the PowerPC and X86 "
+"backends to follow."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:72
+msgid "Adding a new SelectionDAG node"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:74
+msgid ""
+"As with intrinsics, adding a new SelectionDAG node to LLVM is much easier "
+"than adding a new instruction. New nodes are often added to help represent "
+"instructions common to many targets. These nodes often map to an LLVM "
+"instruction (add, sub) or intrinsic (byteswap, population count). In other "
+"cases, new nodes have been added to allow many targets to perform a common "
+"task (converting between floating point and integer representation) or "
+"capture more complicated behavior in a single node (rotate)."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:82
+msgid "`include/llvm/CodeGen/ISDOpcodes.h`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:84
+msgid "Add an enum value for the new SelectionDAG node."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:86
+msgid "`lib/CodeGen/SelectionDAG/SelectionDAGDumper.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:88
+msgid ""
+"Add code to print the node to `getOperationName`. If your new node can be "
+"evaluated at compile time when given constant arguments (such as an add of a "
+"constant with another constant), find the `getNode` method that takes the "
+"appropriate number of arguments, and add a case for your node to the switch "
+"statement that performs constant folding for nodes that take the same number "
+"of arguments as your new node."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:95 ../../../ExtendingLLVM.md:108
+#: ../../../ExtendingLLVM.md:118
+msgid "`lib/CodeGen/SelectionDAG/LegalizeDAG.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:97
+msgid ""
+"Add code to [legalize, promote, and expand](project:CodeGenerator."
+"md#selectiondag-legalize-phase) the node as necessary. At a minimum, you "
+"will need to add a case statement for your node in `LegalizeOp` which calls "
+"LegalizeOp on the node's operands, and returns a new node if any of the "
+"operands changed as a result of being legalized. It is likely that not all "
+"targets supported by the SelectionDAG framework will natively support the "
+"new node. In this case, you must also add code in your node's case statement "
+"in `LegalizeOp` to Expand your node into simpler, legal operations. The case "
+"for `ISD::UREM` for expanding a remainder into a divide, multiply, and a "
+"subtract is a good example."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:110
+msgid ""
+"If targets may support the new node being added only at certain sizes, you "
+"will also need to add code to your node's case statement in `LegalizeOp` to "
+"Promote your node's operands to a larger size, and perform the correct "
+"operation. You will also need to add code to `PromoteOp` to do this as well. "
+"For a good example, see `ISD::BSWAP`, which promotes its operand to a wider "
+"size, performs the byteswap, and then shifts the correct bytes right to "
+"emulate the narrower byteswap in the wider type."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:120
+msgid ""
+"Add a case for your node in `ExpandOp` to teach the legalizer how to perform "
+"the action represented by the new node on a value that has been split into "
+"high and low halves. This case will be used to support your node with a 64-"
+"bit operand on a 32-bit target."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:125
+msgid "`lib/CodeGen/SelectionDAG/DAGCombiner.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:127
+msgid ""
+"If your node can be combined with itself, or other existing nodes in a "
+"peephole-like fashion, add a visit function for it, and call that function "
+"from. There are several good examples for simple combines you can do; "
+"`visitFABS` and `visitSRL` are good starting places."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:132
+msgid "`lib/Target/PowerPC/PPCISelLowering.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:134
+msgid ""
+"Each target has an implementation of the `TargetLowering` class, usually in "
+"its own file (although some targets include it in the same file as the "
+"DAGToDAGISel). The default behavior for a target is to assume that your new "
+"node is legal for all types that are legal for that target. If this target "
+"does not natively support your node, then tell the target to either Promote "
+"it (if it is supported at a larger type) or Expand it. This will cause the "
+"code you wrote in `LegalizeOp` above to decompose your new node into other "
+"legal nodes for this target."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:143
+msgid "`include/llvm/Target/TargetSelectionDAG.td`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:145
+msgid ""
+"Most current targets supported by LLVM generate code using the DAGToDAG "
+"method, where SelectionDAG nodes are pattern matched to target-specific "
+"nodes, which represent individual instructions. In order for the targets to "
+"match an instruction to your new node, you must add a def for that node to "
+"the list in this file, with the appropriate type constraints. Look at `add`, "
+"`bswap`, and `fadd` for examples."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:152
+msgid "`lib/Target/PowerPC/PPCInstrInfo.td`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:154
+msgid ""
+"Each target has a tablegen file that describes the target's instruction set. "
+"For targets that use the DAGToDAG instruction selection framework, add a "
+"pattern for your new node that uses one or more target nodes. Documentation "
+"for this is a bit sparse right now, but there are several decent examples. "
+"See the patterns for `rotl` in `PPCInstrInfo.td`."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:160
+msgid "TODO: document complex patterns."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:162
+msgid "`llvm/test/CodeGen/*`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:164
+msgid ""
+"Add test cases for your new node to the test suite. `llvm/test/CodeGen/X86/"
+"bswap.ll` is a good example."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:167
+msgid "Adding a new instruction"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:170
+msgid ""
+"Adding instructions changes the bitcode format, and it will take some effort "
+"to maintain compatibility with the previous version. Only add an instruction "
+"if it is absolutely necessary."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:175
+msgid "`llvm/include/llvm/IR/Instruction.def`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:177
+msgid "add a number for your instruction and an enum name"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:179
+msgid "`llvm/include/llvm/IR/Instructions.h`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:181
+msgid "add a definition for the class that will represent your instruction"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:183
+msgid "`llvm/include/llvm/IR/InstVisitor.h`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:185
+msgid "add a prototype for a visitor to your new instruction type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:187 ../../../ExtendingLLVM.md:248
+#: ../../../ExtendingLLVM.md:288
+msgid "`llvm/lib/AsmParser/LLLexer.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:189
+msgid "add a new token to parse your instruction from an assembly text file"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:191 ../../../ExtendingLLVM.md:252
+msgid "`llvm/lib/AsmParser/LLParser.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:193
+msgid ""
+"add the grammar on how your instruction can be read and what it will "
+"construct as a result"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:196 ../../../ExtendingLLVM.md:260
+#: ../../../ExtendingLLVM.md:297
+msgid "`llvm/lib/Bitcode/Reader/BitcodeReader.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:198
+msgid "add a case for your instruction and how it will be parsed from bitcode"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:200 ../../../ExtendingLLVM.md:256
+#: ../../../ExtendingLLVM.md:293
+msgid "`llvm/lib/Bitcode/Writer/BitcodeWriter.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:202
+msgid "add a case for your instruction and how it will be written to bitcode"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:204
+msgid "`llvm/lib/IR/Instruction.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:206
+msgid "add a case for how your instruction will be printed out to assembly"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:208
+msgid "`llvm/lib/IR/Instructions.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:210
+msgid "implement the class you defined in `llvm/include/llvm/Instructions.h`"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:212
+msgid "Test your instruction"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:214
+msgid "`llvm/lib/Target/*`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:216
+msgid ""
+"add support for your instruction to code generators, or add a lowering pass."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:220
+msgid "add your test cases to the test suite."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:222
+msgid ""
+"Also, you need to implement (or modify) any analyses or passes that you want "
+"to understand this new instruction."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:225
+msgid "Adding a new type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:228
+msgid ""
+"Adding new types changes the bitcode format, and will break compatibility "
+"with existing LLVM installations. Only add new types if it is absolutely "
+"necessary."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:233
+msgid "Adding a fundamental type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:235 ../../../ExtendingLLVM.md:270
+msgid "`llvm/include/llvm/IR/Type.h`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:237
+msgid "add enum for the new type; add static `Type*` for this type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:239 ../../../ExtendingLLVM.md:279
+msgid "`llvm/lib/IR/Type.cpp` and `llvm/lib/CodeGen/ValueTypes.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:241
+msgid "add mapping from `TypeID` => `Type*`; initialize the static `Type*`"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:243 ../../../ExtendingLLVM.md:283
+msgid "`llvm/include/llvm-c/Core.h` and `llvm/lib/IR/Core.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:245 ../../../ExtendingLLVM.md:285
+msgid ""
+"add enum `LLVMTypeKind` and modify `LLVMTypeKind LLVMGetTypeKind(LLVMTypeRef "
+"Ty)` for the new type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:250
+msgid "add ability to parse in the type from text assembly"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:254
+msgid "add a token for that type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:258 ../../../ExtendingLLVM.md:295
+msgid ""
+"modify `void ModuleBitcodeWriter::writeTypeTable()` to serialize your type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:262 ../../../ExtendingLLVM.md:299
+msgid ""
+"modify `Error BitcodeReader::parseTypeTableBody()` to read your data type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:264 ../../../ExtendingLLVM.md:301
+msgid "`include/llvm/Bitcode/LLVMBitCodes.h`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:266 ../../../ExtendingLLVM.md:303
+msgid "add enum `TypeCodes` for the new type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:268
+msgid "Adding a derived type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:272
+msgid "add enum for the new type; add a forward declaration of the type also"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:274
+msgid "`llvm/include/llvm/IR/DerivedTypes.h`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:276
+msgid ""
+"add a new class to represent the new class in the hierarchy; add forward "
+"declaration to the TypeMap value type"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:281
+msgid ""
+"add support for derived type, notably `enum TypeID` and `is`, `get` methods."
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:290
+msgid ""
+"modify `lltok::Kind LLLexer::LexIdentifier()` to add ability to parse in the "
+"type from text assembly"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:305
+msgid "`llvm/lib/IR/AsmWriter.cpp`:"
+msgstr ""
+
+#: ../../../ExtendingLLVM.md:307
+msgid ""
+"modify `void TypePrinting::print(Type *Ty, raw_ostream &OS)` to output the "
+"new derived type"
+msgstr ""
