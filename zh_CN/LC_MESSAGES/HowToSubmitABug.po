@@ -1,0 +1,363 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-30 09:23+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../HowToSubmitABug.rst:3
+msgid "How to submit an LLVM bug report"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:6
+msgid "Introduction - Got bugs?"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:9
+msgid ""
+"If you're working with LLVM and encounter a bug, we definitely want to know "
+"about it.  This document describes what you can do to increase the odds of "
+"getting it fixed quickly."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:13
+msgid ""
+"🔒 If you believe that the bug is security related, please follow :ref:"
+"`report-security-issue`. 🔒"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:15
+msgid ""
+"Basically, you have to do two things at a minimum. First, decide whether the "
+"bug `crashes the compiler`_ or if the compiler is `miscompiling`_ the "
+"program (i.e., the compiler successfully produces an executable, but it "
+"doesn't run right). Based on what type of bug it is, follow the instructions "
+"in the linked section to narrow down the bug so that the person who fixes it "
+"will be able to find the problem more easily."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:22
+msgid ""
+"Once you have a reduced test case, go to `the LLVM Bug Tracking System "
+"<https://github.com/llvm/llvm-project/issues>`_ and fill out the form with "
+"the necessary details (note that you don't need to pick a label, just use if "
+"you're not sure).  The bug description should contain the following "
+"information:"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:27
+msgid "All information necessary to reproduce the problem."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:28
+msgid "The reduced test case that triggers the bug."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:29
+msgid "The location where you obtained LLVM (if not from our Git repository)."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:32
+msgid "Thanks for helping us make LLVM better!"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:37
+msgid "Crashing Bugs"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:39
+msgid ""
+"More often than not, bugs in the compiler cause it to crash---often due to "
+"an assertion failure of some sort. The most important piece of the puzzle is "
+"to figure out if it is crashing in the Clang front-end or if it is one of "
+"the LLVM libraries (e.g., the optimizer or code generator) that has problems."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:45
+msgid ""
+"To identify the crashing component (the front-end, middle-end optimizer, or "
+"backend code generator), run the ``clang`` command line as you were when the "
+"crash occurred, but with the following extra command line options:"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:50
+msgid ""
+"``-emit-llvm -Xclang -disable-llvm-passes``: If ``clang`` still crashes when "
+"passed these options (which disable the optimizer and code generator), then "
+"the crash is in the front-end. Jump ahead to :ref:`front-end bugs <frontend-"
+"crash>`."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:55
+msgid ""
+"``-emit-llvm``: If ``clang`` crashes with this option (which disables the "
+"code generator), you've found a middle-end optimizer bug. Jump ahead to :ref:"
+"`middle-end bugs <middleend-crash>`."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:59
+msgid ""
+"Otherwise, you have a backend code generator crash. Jump ahead to :ref:`code "
+"generator bugs <backend-crash>`."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:65
+msgid "Front-end bugs"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:67
+msgid ""
+"On a ``clang`` crash, the compiler will dump a preprocessed file and a "
+"script to replay the ``clang`` command. For example, you should see "
+"something like"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:77
+msgid ""
+"The `creduce <https://github.com/csmith-project/creduce>`_ tool helps to "
+"reduce the preprocessed file down to the smallest amount of code that still "
+"replicates the problem. You're encouraged to use creduce to reduce the code "
+"to make the developers' lives easier. The ``clang/utils/creduce-clang-crash."
+"py`` script can be used on the files that clang dumps to help with "
+"automating creating a test to check for the compiler crash."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:85
+msgid ""
+"`cvise <https://github.com/marxin/cvise>`_ is an alternative to ``creduce``."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:90
+msgid "Middle-end optimization bugs"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:92
+msgid ""
+"If you find that a bug crashes in the optimizer, compile your test-case to a "
+"``.bc`` file by passing \"``-emit-llvm -O1 -Xclang -disable-llvm-passes -c -"
+"o foo.bc``\". The ``-O1`` is important because ``-O0`` adds the ``optnone`` "
+"function attribute to all functions and many passes don't run on ``optnone`` "
+"functions. Then run:"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:102
+msgid ""
+"If this doesn't crash, please follow the instructions for a :ref:`front-end "
+"bug <frontend-crash>`."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:105
+msgid ""
+"If this does crash, then you can debug this with the :doc:`llvm-reduce "
+"<CommandGuide/llvm-reduce>` tool. Create a script that reproduces the crash "
+"and run:"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:113
+msgid "which should produce reduced IR that reproduces the crash."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:116
+msgid ""
+"``llvm-reduce -j $NUM_THREADS`` is multi-threaded and can therefore "
+"potentially be much faster."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:120
+msgid ""
+"Reduction is fastest and most effective the simpler the reproduction script "
+"is. Ideally, this will be running `opt` with a single pass. The most "
+"effective way to extract the IR before a specific point is a two step "
+"process. First, run the testcase with the ``-print-pass-numbers`` flag. This "
+"will print the name of a pass and an integer ID. You can then use the last "
+"ID printed before the crash and add 3 flags, ``-print-before-pass-"
+"number=<integer-id> -print-module-scope -ir-dump-directory=/my/debug/path``. "
+"This will place failing IR files in the given directory. ``-print-before-"
+"pass-number`` is the minimum required flag, but will not produce an output "
+"directly consumable by a tool. It will print to stderr, and will be "
+"incomplete in most situations without ``-print-module-scope``."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:134
+msgid ""
+"A more brute force approach is to use the ``--print-before-all --print-"
+"module-scope`` flags to dump the IR before every pass. Be warned that this "
+"is very verbose."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:141
+msgid "Backend code generator bugs"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:143
+msgid ""
+"If you find a bug that crashes clang in the code generator, compile your "
+"source file to a ``.bc`` file by passing \"``-emit-llvm -c -o foo.bc``\" to "
+"clang (in addition to the options you already pass).  Once you have ``foo."
+"bc``, one of the following commands should fail:"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:148
+msgid "``llc foo.bc``"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:149
+msgid "``llc foo.bc -relocation-model=pic``"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:150
+msgid "``llc foo.bc -relocation-model=static``"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:152
+msgid ""
+"If none of these crash, please follow the instructions for a :ref:`front-end "
+"bug<frontend-crash>`. If one of these crashes, you should be able to reduce "
+"this with :doc:`llvm-reduce <CommandGuide/llvm-reduce>`, similar to middle "
+"end bugs. In this case, your test script should use :doc:`llc <CommandGuide/"
+"llc>` instead of `opt`."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:159
+msgid ""
+"Please run this, then file a bug with the instructions and reduced ``.bc`` "
+"file that `llvm-reduce` emits.  If something goes wrong with `llvm-reduce`, "
+"please submit the ``foo.bc`` file and the option that `llc` crashes with."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:165
+msgid "LTO bugs"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:167
+msgid ""
+"If you encounter a bug that leads to crashes in the LLVM LTO phase when "
+"using the ``-flto`` option, follow these steps to diagnose and report the "
+"issue:"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:170
+msgid ""
+"Compile your source file to a ``.bc`` (Bitcode) file with the following "
+"options, in addition to your existing compilation options:"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:177
+msgid ""
+"These options enable LTO and save temporary files generated during "
+"compilation for later analysis."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:180
+msgid ""
+"On Windows, use lld-link as the linker. Adjust your compilation flags as "
+"follows: * Add ``/lldsavetemps`` to the linker flags. * When linking from "
+"the compiler driver, add ``/link /lldsavetemps`` in order to forward that "
+"flag to the linker."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:185
+msgid ""
+"Using the specified flags will generate four intermediate bytecode files:"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:187
+msgid ""
+"a.out.0.0.preopt.bc (Before any link-time optimizations (LTO) are applied)"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:188
+msgid "a.out.0.2.internalize.bc (After initial optimizations are applied)"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:189
+msgid "a.out.0.4.opt.bc (After an extensive set of optimizations)"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:190
+msgid ""
+"a.out.0.5.precodegen.bc (After LTO but before translating into machine code)"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:192
+msgid ""
+"Execute one of the following commands to identify the source of the problem:"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:194
+msgid "``opt \"-passes=lto<O3>\" a.out.0.2.internalize.bc``"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:195
+msgid "``llc a.out.0.5.precodegen.bc``"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:197
+msgid ""
+"If one of these do crash, you should be able to reduce this with :program:"
+"`llvm-reduce` command line (use the bc file corresponding to the command "
+"above that failed):"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:205
+msgid "Example of ``reduce.sh`` script"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:215
+msgid "Here we have grepped for the failed assert message."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:217
+msgid ""
+"Please run this, then file a bug with the instructions and reduced ``.bc`` "
+"file that llvm-reduce emits."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:223
+msgid "Miscompilations"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:225
+msgid ""
+"If clang successfully produces an executable, but that executable doesn't "
+"run right, this is either a bug in the code or a bug in the compiler. The "
+"first thing to check is to make sure it is not using undefined behavior (e."
+"g., reading a variable before it is defined). In particular, check to see if "
+"the program is clean under various `sanitizers <https://github.com/google/"
+"sanitizers>`_ (e.g., ``clang -fsanitize=undefined,address``) and `valgrind "
+"<http://valgrind.org/>`_. Many \"LLVM bugs\" that we have chased down ended "
+"up being bugs in the program being compiled, not LLVM."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:235
+msgid ""
+"Once you determine that the program itself is not buggy, you should choose "
+"which code generator you wish to compile the program with (e.g., LLC or the "
+"JIT) and optionally a series of LLVM passes to run.  For example:"
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:243
+msgid ""
+"bugpoint will try to narrow down your list of passes to the one pass that "
+"causes an error, and simplify the bitcode file as much as it can to assist "
+"you. It will print a message letting you know how to reproduce the resulting "
+"error."
+msgstr ""
+
+#: ../../../HowToSubmitABug.rst:248
+msgid ""
+"The :doc:`OptBisect <OptBisect>` page shows an alternative method for "
+"finding incorrect optimization passes."
+msgstr ""

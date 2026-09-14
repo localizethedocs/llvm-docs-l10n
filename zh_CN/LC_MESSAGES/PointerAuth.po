@@ -1,0 +1,557 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-13 08:36+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../PointerAuth.md:1
+msgid "Pointer Authentication"
+msgstr ""
+
+#: ../../../PointerAuth.md:3
+msgid "Introduction"
+msgstr ""
+
+#: ../../../PointerAuth.md:5
+msgid ""
+"Pointer Authentication is a mechanism by which certain pointers are signed. "
+"When a pointer gets signed, a cryptographic hash of its value and other "
+"values (pepper and salt) is stored in unused bits of that pointer."
+msgstr ""
+
+#: ../../../PointerAuth.md:9
+msgid ""
+"Before the pointer is used, it needs to be authenticated, i.e., have its "
+"signature checked.  This prevents pointer values of unknown origin from "
+"being used to replace the signed pointer value."
+msgstr ""
+
+#: ../../../PointerAuth.md:13
+msgid ""
+"For more details, see the clang documentation page for [Pointer "
+"Authentication](https://clang.llvm.org/docs/PointerAuthentication.html)."
+msgstr ""
+
+#: ../../../PointerAuth.md:16
+msgid "At the IR level, it is represented using:"
+msgstr ""
+
+#: ../../../PointerAuth.md:18
+msgid "a [set of intrinsics](#intrinsics) (to sign/authenticate pointers)"
+msgstr ""
+
+#: ../../../PointerAuth.md:19
+msgid "a [signed pointer constant](#constant) (to sign globals)"
+msgstr ""
+
+#: ../../../PointerAuth.md:20
+msgid ""
+"a [call operand bundle](#operand-bundle) (to authenticate called pointers)"
+msgstr ""
+
+#: ../../../PointerAuth.md:21
+msgid ""
+"a [set of function attributes](#function-attributes) (to describe what "
+"pointers are signed and how, to control implicit codegen in the backend, as "
+"well as preserve invariants in the mid-level optimizer)"
+msgstr ""
+
+#: ../../../PointerAuth.md:25
+msgid ""
+"The current implementation leverages the [Armv8.3-A PAuth/Pointer "
+"Authentication Code](#armv8-3-a-pauth-pointer-authentication-code) "
+"instructions in the [AArch64 backend](#aarch64-support). This support is "
+"used to implement the Darwin arm64e ABI, as well as the [PAuth ABI Extension "
+"to ELF](https://github.com/ARM-software/abi-aa/blob/main/pauthabielf64/"
+"pauthabielf64.rst)."
+msgstr ""
+
+#: ../../../PointerAuth.md:32
+msgid "LLVM IR Representation"
+msgstr ""
+
+#: ../../../PointerAuth.md:34
+msgid "Intrinsics"
+msgstr ""
+
+#: ../../../PointerAuth.md:36
+msgid ""
+"These intrinsics are provided by LLVM to expose pointer authentication "
+"operations."
+msgstr ""
+
+#: ../../../PointerAuth.md:40
+msgid "'`llvm.ptrauth.sign`'"
+msgstr ""
+
+#: ../../../PointerAuth.md:42 ../../../PointerAuth.md:74
+#: ../../../PointerAuth.md:102 ../../../PointerAuth.md:142
+#: ../../../PointerAuth.md:177 ../../../PointerAuth.md:208
+msgid "Syntax:"
+msgstr ""
+
+#: ../../../PointerAuth.md:48 ../../../PointerAuth.md:80
+#: ../../../PointerAuth.md:108 ../../../PointerAuth.md:150
+#: ../../../PointerAuth.md:183 ../../../PointerAuth.md:214
+msgid "Overview:"
+msgstr ""
+
+#: ../../../PointerAuth.md:50
+msgid "The '`llvm.ptrauth.sign`' intrinsic signs a raw pointer."
+msgstr ""
+
+#: ../../../PointerAuth.md:53 ../../../PointerAuth.md:84
+#: ../../../PointerAuth.md:114 ../../../PointerAuth.md:155
+#: ../../../PointerAuth.md:188 ../../../PointerAuth.md:219
+msgid "Arguments:"
+msgstr ""
+
+#: ../../../PointerAuth.md:55
+msgid ""
+"The `value` argument is the raw pointer value to be signed. The `key` "
+"argument is the identifier of the key to be used to generate the signed "
+"value. The `discriminator` argument is the additional diversity data to be "
+"used as a discriminator (an integer, an address, or a blend of the two)."
+msgstr ""
+
+#: ../../../PointerAuth.md:61 ../../../PointerAuth.md:92
+#: ../../../PointerAuth.md:120 ../../../PointerAuth.md:167
+#: ../../../PointerAuth.md:194 ../../../PointerAuth.md:225
+msgid "Semantics:"
+msgstr ""
+
+#: ../../../PointerAuth.md:63
+msgid ""
+"The '`llvm.ptrauth.sign`' intrinsic implements the `sign`_ operation. It "
+"returns a signed value."
+msgstr ""
+
+#: ../../../PointerAuth.md:66
+msgid "If `value` is already a signed value, the behavior is undefined."
+msgstr ""
+
+#: ../../../PointerAuth.md:68
+msgid ""
+"If `value` is not a pointer value for which `key` is appropriate, the "
+"behavior is undefined."
+msgstr ""
+
+#: ../../../PointerAuth.md:72
+msgid "'`llvm.ptrauth.auth`'"
+msgstr ""
+
+#: ../../../PointerAuth.md:82
+msgid "The '`llvm.ptrauth.auth`' intrinsic authenticates a signed pointer."
+msgstr ""
+
+#: ../../../PointerAuth.md:86
+msgid ""
+"The `value` argument is the signed pointer value to be authenticated. The "
+"`key` argument is the identifier of the key that was used to generate the "
+"signed value. The `discriminator` argument is the additional diversity data "
+"to be used as a discriminator."
+msgstr ""
+
+#: ../../../PointerAuth.md:94
+msgid ""
+"The '`llvm.ptrauth.auth`' intrinsic implements the `auth`_ operation. It "
+"returns a raw pointer value. If `value` does not have a correct signature "
+"for `key` and `discriminator`, the intrinsic traps in a target-specific way."
+msgstr ""
+
+#: ../../../PointerAuth.md:100
+msgid "'`llvm.ptrauth.strip`'"
+msgstr ""
+
+#: ../../../PointerAuth.md:110
+msgid ""
+"The '`llvm.ptrauth.strip`' intrinsic strips the embedded signature out of a "
+"possibly-signed pointer."
+msgstr ""
+
+#: ../../../PointerAuth.md:116
+msgid ""
+"The `value` argument is the signed pointer value to be stripped. The `key` "
+"argument is the identifier of the key that was used to generate the signed "
+"value."
+msgstr ""
+
+#: ../../../PointerAuth.md:122
+msgid ""
+"The '`llvm.ptrauth.strip`' intrinsic implements the `strip`_ operation. It "
+"returns a raw pointer value.  It does **not** check that the signature is "
+"valid."
+msgstr ""
+
+#: ../../../PointerAuth.md:126
+msgid ""
+"`key` should identify a key that is appropriate for `value`, as defined by "
+"the target-specific [keys](#keys))."
+msgstr ""
+
+#: ../../../PointerAuth.md:129
+msgid ""
+"If `value` is a raw pointer value, it is returned as-is (provided the `key` "
+"is appropriate for the pointer)."
+msgstr ""
+
+#: ../../../PointerAuth.md:132
+msgid ""
+"If `value` is not a pointer value for which `key` is appropriate, the "
+"behavior is target-specific."
+msgstr ""
+
+#: ../../../PointerAuth.md:135
+msgid ""
+"If `value` is a signed pointer value, but `key` does not identify the same "
+"key that was used to generate `value`, the behavior is target-specific."
+msgstr ""
+
+#: ../../../PointerAuth.md:140
+msgid "'`llvm.ptrauth.resign`'"
+msgstr ""
+
+#: ../../../PointerAuth.md:152
+msgid ""
+"The '`llvm.ptrauth.resign`' intrinsic re-signs a signed pointer using a "
+"different key and diversity data."
+msgstr ""
+
+#: ../../../PointerAuth.md:157
+msgid ""
+"The `value` argument is the signed pointer value to be authenticated. The "
+"`old key` argument is the identifier of the key that was used to generate "
+"the signed value. The `old discriminator` argument is the additional "
+"diversity data to be used as a discriminator in the auth operation. The `new "
+"key` argument is the identifier of the key to use to generate the resigned "
+"value. The `new discriminator` argument is the additional diversity data to "
+"be used as a discriminator in the sign operation."
+msgstr ""
+
+#: ../../../PointerAuth.md:169
+msgid ""
+"The '`llvm.ptrauth.resign`' intrinsic performs a combined `auth`_ and "
+"`sign`_ operation, without exposing the intermediate raw pointer. It returns "
+"a signed pointer value. If `value` does not have a correct signature for "
+"`old key` and `old discriminator`, the intrinsic traps in a target-specific "
+"way."
+msgstr ""
+
+#: ../../../PointerAuth.md:175
+msgid "'`llvm.ptrauth.sign_generic`'"
+msgstr ""
+
+#: ../../../PointerAuth.md:185
+msgid ""
+"The '`llvm.ptrauth.sign_generic`' intrinsic computes a generic signature of "
+"arbitrary data."
+msgstr ""
+
+#: ../../../PointerAuth.md:190
+msgid ""
+"The `value` argument is the arbitrary data value to be signed. The "
+"`discriminator` argument is the additional diversity data to be used as a "
+"discriminator."
+msgstr ""
+
+#: ../../../PointerAuth.md:196
+msgid ""
+"The '`llvm.ptrauth.sign_generic`' intrinsic computes the signature of a "
+"given combination of value and additional diversity data."
+msgstr ""
+
+#: ../../../PointerAuth.md:199
+msgid ""
+"It returns a full signature value (as opposed to a signed pointer value, "
+"with an embedded partial signature)."
+msgstr ""
+
+#: ../../../PointerAuth.md:202
+msgid ""
+"As opposed to [`llvm.ptrauth.sign`](#llvm-ptrauth-sign), it does not "
+"interpret `value` as a pointer value.  Instead, it is an arbitrary data "
+"value."
+msgstr ""
+
+#: ../../../PointerAuth.md:206
+msgid "'`llvm.ptrauth.blend`'"
+msgstr ""
+
+#: ../../../PointerAuth.md:216
+msgid ""
+"The '`llvm.ptrauth.blend`' intrinsic blends a pointer address discriminator "
+"with a small integer discriminator to produce a new \"blended\" "
+"discriminator."
+msgstr ""
+
+#: ../../../PointerAuth.md:221
+msgid ""
+"The `address discriminator` argument is a pointer value. The `integer "
+"discriminator` argument is a small integer, as specified by the target."
+msgstr ""
+
+#: ../../../PointerAuth.md:227
+msgid ""
+"The '`llvm.ptrauth.blend`' intrinsic combines a small integer discriminator "
+"with a pointer address discriminator, in a way that is specified by the "
+"target implementation."
+msgstr ""
+
+#: ../../../PointerAuth.md:232
+msgid "Constant"
+msgstr ""
+
+#: ../../../PointerAuth.md:234
+msgid ""
+"[Intrinsics](#intrinsics) can be used to produce signed pointers "
+"dynamically, in code, but not for signed pointers referenced by constants, "
+"in, e.g., global initializers."
+msgstr ""
+
+#: ../../../PointerAuth.md:238
+msgid ""
+"The latter are represented using a [``ptrauth`` constant](https://llvm.org/"
+"docs/LangRef.html#ptrauth-constant), which describes an authenticated "
+"relocation producing a signed pointer."
+msgstr ""
+
+#: ../../../PointerAuth.md:246
+msgid "is equivalent to:"
+msgstr ""
+
+#: ../../../PointerAuth.md:253
+msgid "Operand Bundle"
+msgstr ""
+
+#: ../../../PointerAuth.md:255
+msgid ""
+"Function pointers used as indirect call targets can be signed when "
+"materialized, and authenticated before calls.  This can be accomplished with "
+"the [`llvm.ptrauth.auth`](#llvm-ptrauth-auth) intrinsic, feeding its result "
+"to an indirect call."
+msgstr ""
+
+#: ../../../PointerAuth.md:260
+msgid ""
+"However, that exposes the intermediate, unauthenticated pointer, e.g., if it "
+"gets spilled to the stack.  An attacker can then overwrite the pointer in "
+"memory, negating the security benefit provided by pointer authentication. To "
+"prevent that, the `ptrauth` operand bundle may be used: it guarantees that "
+"the intermediate call target is kept in a register and never stored to "
+"memory. This hardening benefit is similar to that provided by [`llvm.ptrauth."
+"resign`](#llvm-ptrauth-resign))."
+msgstr ""
+
+#: ../../../PointerAuth.md:268
+msgid "Concretely:"
+msgstr ""
+
+#: ../../../PointerAuth.md:277
+msgid "is functionally equivalent to:"
+msgstr ""
+
+#: ../../../PointerAuth.md:289
+msgid ""
+"but with the added guarantee that `%fp_i`, `%fp_auth`, and `%fp_auth_p` are "
+"not stored to (and reloaded from) memory."
+msgstr ""
+
+#: ../../../PointerAuth.md:293
+msgid "Function Attributes"
+msgstr ""
+
+#: ../../../PointerAuth.md:295
+msgid ""
+"Some function attributes are used to describe other pointer authentication "
+"operations that are not otherwise explicitly expressed in IR."
+msgstr ""
+
+#: ../../../PointerAuth.md:298
+msgid "``ptrauth-indirect-gotos``"
+msgstr ""
+
+#: ../../../PointerAuth.md:300
+msgid ""
+"``ptrauth-indirect-gotos`` specifies that indirect gotos in this function "
+"should authenticate their target.  At the IR level, no other change is "
+"needed. When lowering [``blockaddress`` constants](https://llvm.org/docs/"
+"LangRef.html#blockaddress), and [``indirectbr`` instructions](https://llvm."
+"org/docs/LangRef.html#i-indirectbr), this tells the backend to respectively "
+"sign and authenticate the pointers."
+msgstr ""
+
+#: ../../../PointerAuth.md:306
+msgid ""
+"The specific scheme isn't ABI-visible.  Currently, the AArch64 backend signs "
+"blockaddresses using the `ASIA` key, with an integer discriminator derived "
+"from the parent function's name, using the SipHash stable discriminator:"
+msgstr ""
+
+#: ../../../PointerAuth.md:314
+msgid "AArch64 Support"
+msgstr ""
+
+#: ../../../PointerAuth.md:316
+msgid ""
+"AArch64 is currently the only architecture with full support of the pointer "
+"authentication primitives, based on Armv8.3-A instructions."
+msgstr ""
+
+#: ../../../PointerAuth.md:319
+msgid "Armv8.3-A PAuth Pointer Authentication Code"
+msgstr ""
+
+#: ../../../PointerAuth.md:321
+msgid ""
+"The Armv8.3-A architecture extension defines the PAuth feature, which "
+"provides support for instructions that manipulate Pointer Authentication "
+"Codes (PAC)."
+msgstr ""
+
+#: ../../../PointerAuth.md:324
+msgid "Keys"
+msgstr ""
+
+#: ../../../PointerAuth.md:326
+msgid "5 keys are supported by the PAuth feature."
+msgstr ""
+
+#: ../../../PointerAuth.md:328
+msgid ""
+"Of those, 4 keys are interchangeably usable to specify the key used in IR "
+"constructs:"
+msgstr ""
+
+#: ../../../PointerAuth.md:330
+msgid "`ASIA`/`ASIB` are instruction keys (encoded as respectively 0 and 1)."
+msgstr ""
+
+#: ../../../PointerAuth.md:331
+msgid "`ASDA`/`ASDB` are data keys (encoded as respectively 2 and 3)."
+msgstr ""
+
+#: ../../../PointerAuth.md:333
+msgid ""
+"`ASGA` is a special key that cannot be explicitly specified, and is only "
+"ever used implicitly, to implement the [`llvm.ptrauth.sign_generic`](#llvm-"
+"ptrauth-sign-generic) intrinsic."
+msgstr ""
+
+#: ../../../PointerAuth.md:337
+msgid "Instructions"
+msgstr ""
+
+#: ../../../PointerAuth.md:339
+msgid ""
+"The IR [Intrinsics](#intrinsics) described above map onto these instructions "
+"as such:"
+msgstr ""
+
+#: ../../../PointerAuth.md:341
+msgid "[`llvm.ptrauth.sign`](#llvm-ptrauth-sign): `PAC{I,D}{A,B}{Z,SP,}`"
+msgstr ""
+
+#: ../../../PointerAuth.md:342
+msgid "[`llvm.ptrauth.auth`](#llvm-ptrauth-auth): `AUT{I,D}{A,B}{Z,SP,}`"
+msgstr ""
+
+#: ../../../PointerAuth.md:343
+msgid "[`llvm.ptrauth.strip`](#llvm-ptrauth-strip): `XPAC{I,D}`"
+msgstr ""
+
+#: ../../../PointerAuth.md:344
+msgid ""
+"[`llvm.ptrauth.blend`](#llvm-ptrauth-blend): The semantics of the blend "
+"operation are specified by the ABI.  In both the ELF PAuth ABI Extension and "
+"arm64e, it's a `MOVK` into the high 16 bits.  Consequently, this limits the "
+"width of the integer discriminator used in blends to 16 bits."
+msgstr ""
+
+#: ../../../PointerAuth.md:348
+msgid "[`llvm.ptrauth.sign_generic`](#llvm-ptrauth-sign-generic): `PACGA`"
+msgstr ""
+
+#: ../../../PointerAuth.md:349
+msgid ""
+"[`llvm.ptrauth.resign`](#llvm-ptrauth-resign): `AUT*+PAC*`.  These are "
+"represented as a single pseudo-instruction in the backend to guarantee that "
+"the intermediate raw pointer value is not spilled and attackable."
+msgstr ""
+
+#: ../../../PointerAuth.md:353
+msgid "Assembly Representation"
+msgstr ""
+
+#: ../../../PointerAuth.md:355
+msgid ""
+"At the assembly level, authenticated relocations are represented using the "
+"`@AUTH` modifier:"
+msgstr ""
+
+#: ../../../PointerAuth.md:362
+msgid "where:"
+msgstr ""
+
+#: ../../../PointerAuth.md:363
+msgid "`key` is the Armv8.3-A key identifier (`ia`, `ib`, `da`, `db`)"
+msgstr ""
+
+#: ../../../PointerAuth.md:364
+msgid "`discriminator` is the 16-bit unsigned discriminator value"
+msgstr ""
+
+#: ../../../PointerAuth.md:365
+msgid ""
+"`addr` signifies that the authenticated pointer is address-discriminated "
+"(that is, that the relocation's target address is to be blended into the "
+"`discriminator` before it is used in the sign operation."
+msgstr ""
+
+#: ../../../PointerAuth.md:369
+msgid "For example:"
+msgstr ""
+
+#: ../../../PointerAuth.md:377
+msgid "MachO Object File Representation"
+msgstr ""
+
+#: ../../../PointerAuth.md:379
+msgid ""
+"At the object file level, authenticated relocations are represented using "
+"the ``ARM64_RELOC_AUTHENTICATED_POINTER`` relocation kind (with value "
+"``11``)."
+msgstr ""
+
+#: ../../../PointerAuth.md:382
+msgid ""
+"The pointer authentication information is encoded into the addend as follows:"
+msgstr ""
+
+#: ../../../PointerAuth.md:390
+msgid "ELF Object File Representation"
+msgstr ""
+
+#: ../../../PointerAuth.md:392
+msgid ""
+"At the object file level, authenticated relocations are represented using "
+"the `R_AARCH64_AUTH_ABS64` relocation kind (with value `0xE100`)."
+msgstr ""
+
+#: ../../../PointerAuth.md:395
+msgid ""
+"The signing schema is encoded in the place of relocation to be applied as "
+"follows:"
+msgstr ""
