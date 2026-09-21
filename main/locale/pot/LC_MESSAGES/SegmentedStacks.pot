@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 11:32+0000\n"
+"POT-Creation-Date: 2026-09-21 15:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,15 +17,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../../../SegmentedStacks.rst:3
+#: ../../../SegmentedStacks.md:1
 msgid "Segmented Stacks in LLVM"
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:7
+#: ../../../SegmentedStacks.md:3
 msgid "Introduction"
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:9
+#: ../../../SegmentedStacks.md:5
 msgid ""
 "Segmented stack allows stack space to be allocated incrementally than as a "
 "monolithic chunk (of some worst case size) at thread initialization. This is "
@@ -33,79 +33,79 @@ msgid ""
 "them into a doubly linked list. The function prologue is responsible for "
 "checking if the current stacklet has enough space for the function to "
 "execute; and if not, call into the libgcc runtime to allocate more stack "
-"space. Segmented stacks are enabled with the ``\"split-stack\"`` attribute "
-"on LLVM functions."
+"space. Segmented stacks are enabled with the `\"split-stack\"` attribute on "
+"LLVM functions."
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:17
+#: ../../../SegmentedStacks.md:13
 msgid ""
-"The runtime functionality is `already there in libgcc <http://gcc.gnu.org/"
-"wiki/SplitStacks>`_."
+"The runtime functionality is [already there in libgcc](http://gcc.gnu.org/"
+"wiki/SplitStacks)."
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:21
+#: ../../../SegmentedStacks.md:15
 msgid "Implementation Details"
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:26
+#: ../../../SegmentedStacks.md:19
 msgid "Allocating Stacklets"
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:28
+#: ../../../SegmentedStacks.md:21
 msgid ""
 "As mentioned above, the function prologue checks if the current stacklet has "
 "enough space. The current approach is to use a slot in the TCB to store the "
 "current stack limit (minus the amount of space needed to allocate a new "
-"block) - this slot's offset is again dictated by ``libgcc``. The generated "
+"block) - this slot's offset is again dictated by `libgcc`. The generated "
 "assembly looks like this on x86-64:"
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:48
+#: ../../../SegmentedStacks.md:41
 msgid ""
 "The size of function arguments on the stack needs to be passed to "
-"``__morestack`` (this function is implemented in ``libgcc``) since that "
-"number of bytes has to be copied from the previous stacklet to the current "
-"one. This is so that SP (and FP) relative addressing of function arguments "
-"work as expected."
+"`__morestack` (this function is implemented in `libgcc`) since that number "
+"of bytes has to be copied from the previous stacklet to the current one. "
+"This is so that SP (and FP) relative addressing of function arguments work "
+"as expected."
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:53
+#: ../../../SegmentedStacks.md:46
 msgid ""
-"The unusual ``ret`` is needed to have the function which made a call to "
-"``__morestack`` return correctly. ``__morestack``, instead of returning, "
-"calls into ``.LBB0_2``. This is possible since both, the size of the ``ret`` "
-"instruction and the PC of call to ``__morestack`` are known. When the "
-"function body returns, control is transferred back to ``__morestack``. "
-"``__morestack`` then de-allocates the new stacklet, restores the correct SP "
-"value, and does a second return, which returns control to the correct caller."
+"The unusual `ret` is needed to have the function which made a call to "
+"`__morestack` return correctly. `__morestack`, instead of returning, calls "
+"into `.LBB0_2`. This is possible since both, the size of the `ret` "
+"instruction and the PC of call to `__morestack` are known. When the function "
+"body returns, control is transferred back to `__morestack`. `__morestack` "
+"then de-allocates the new stacklet, restores the correct SP value, and does "
+"a second return, which returns control to the correct caller."
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:62
+#: ../../../SegmentedStacks.md:54
 msgid "Variable Sized Allocas"
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:64
+#: ../../../SegmentedStacks.md:56
 msgid ""
-"The section on `allocating stacklets`_ automatically assumes that every "
-"stack frame will be of fixed size. However, LLVM allows the use of the "
-"``llvm.alloca`` intrinsic to allocate dynamically sized blocks of memory on "
-"the stack. When faced with such a variable-sized alloca, code is generated "
-"to:"
+"The section on {ref}`allocating stacklets <allocating stacklets>` "
+"automatically assumes that every stack frame will be of fixed size. However, "
+"LLVM allows the use of the `llvm.alloca` intrinsic to allocate dynamically "
+"sized blocks of memory on the stack. When faced with such a variable-sized "
+"alloca, code is generated to:"
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:69
+#: ../../../SegmentedStacks.md:61
 msgid ""
 "Check if the current stacklet has enough space. If yes, just bump the SP, "
 "like in the normal case."
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:71
+#: ../../../SegmentedStacks.md:63
 msgid ""
-"If not, generate a call to ``libgcc``, which allocates the memory from the "
+"If not, generate a call to `libgcc`, which allocates the memory from the "
 "heap."
 msgstr ""
 
-#: ../../../SegmentedStacks.rst:74
+#: ../../../SegmentedStacks.md:66
 msgid ""
 "The memory allocated from the heap is linked into a list in the current "
 "stacklet, and freed along with the same. This prevents a memory leak."
