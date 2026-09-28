@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 11:32+0000\n"
+"POT-Creation-Date: 2026-09-28 16:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -778,10 +778,102 @@ msgid ""
 msgstr ""
 
 #: ../../../ORCv2.md:774
-msgid "How to Add Process and Library Symbols to JITDylibs"
+msgid "How to call functions in the executor"
 msgstr ""
 
 #: ../../../ORCv2.md:776
+msgid ""
+"JIT'd code runs in an *executor* process, which may or may not be the same "
+"process as the JIT itself (the *controller*). The controller calls into the "
+"executor through *wrapper functions*: executor-side functions that take a "
+"serialized argument buffer and return a serialized result. ORC provides "
+"three pieces for making these calls:"
+msgstr ""
+
+#: ../../../ORCv2.md:782
+msgid ""
+"A **controller-interface (CI) descriptor** is the contract between the two "
+"sides. It is a struct naming the wrapper function (a `SymbolNameSpec`, which "
+"records the name's mangling kind so that ORC can mangle it for the target) "
+"and giving its Simple Packed Serialization (SPS) wire signature. The "
+"descriptors for ORC's own services live in `llvm/ExecutionEngine/Orc/Shared/"
+"SPSCI/`."
+msgstr ""
+
+#: ../../../ORCv2.md:788
+msgid ""
+"A **`Proxy<RetT(ArgTs...)>`** (`Proxy.h`) is a typed, protocol-agnostic "
+"handle to one executor-side operation: a callee address plus a dispatch "
+"function. Its call operator takes an `ExecutionSession` and the C++ "
+"arguments. Dispatch failures and the callee's own errors are reported on a "
+"single channel: callees returning `void` or `Error` yield an `Error`, and "
+"callees returning `T` or `Expected<T>` yield an `Expected<T>`."
+msgstr ""
+
+#: ../../../ORCv2.md:794
+msgid ""
+"An **`sps::ProxySpec<ProxyT, CI>`** (`SPSProxySpec.h`) binds a proxy type to "
+"a CI descriptor. Its `dispatch` function serializes the arguments using `CI::"
+"SPSSig`, calls the wrapper, and deserializes the result."
+msgstr ""
+
+#: ../../../ORCv2.md:798
+msgid "For example, given an executor-side wrapper named `my_add_wrapper`:"
+msgstr ""
+
+#: ../../../ORCv2.md:812
+msgid ""
+"Proxies are usually resolved with `lookupAndApply` (`LookupAndApply.h`) and "
+"`recordProxy` (`RecordProxy.h`), which look up the spec's name (mangled for "
+"the target) and construct the proxy over the resulting address:"
+msgstr ""
+
+#: ../../../ORCv2.md:822
+msgid ""
+"All of the entries in a `lookupAndApply` list are resolved by a single "
+"lookup, so a service's proxies can be bound together with any data symbols "
+"it needs (use `recordAddr` for those). Passing `SymbolLookupFlags::"
+"WeaklyReferencedSymbol` leaves the proxy null (see `Proxy::operator bool`) "
+"if the symbol is absent, and passing a name as the second argument to "
+"`recordProxy` binds the same spec to a different implementation. If you "
+"already have the wrapper's address, construct the proxy directly: `AddProxy "
+"Add(AddProxySpec::dispatch, AddAddr);`."
+msgstr ""
+
+#: ../../../ORCv2.md:831
+msgid "Proxies can be called synchronously or asynchronously:"
+msgstr ""
+
+#: ../../../ORCv2.md:841
+msgid ""
+"A blocking call blocks a controller thread, so prefer the asynchronous form "
+"where possible."
+msgstr ""
+
+#: ../../../ORCv2.md:844
+msgid ""
+"`Proxy` supersedes the `callSPSWrapper` and `callSPSWrapperAsync` methods of "
+"`ExecutionSession` and `ExecutorProcessControl`. To migrate a call such as:"
+msgstr ""
+
+#: ../../../ORCv2.md:853
+msgid "define a CI descriptor and proxy as above, then write:"
+msgstr ""
+
+#: ../../../ORCv2.md:860
+msgid ""
+"Asynchronous callbacks that took a serialization `Error` and the callee's "
+"result as separate arguments now take the single `Error` or `Expected<T>` "
+"described above. `CallProxies.h` and `CallProxiesSPS.h` are small in-tree "
+"examples of named proxies and their specs, and `SimpleMemoryMap.h` and "
+"`SimpleMemoryMapSPS.h` show how to bundle a service's proxies into a handle."
+msgstr ""
+
+#: ../../../ORCv2.md:868
+msgid "How to Add Process and Library Symbols to JITDylibs"
+msgstr ""
+
+#: ../../../ORCv2.md:870
 msgid ""
 "JIT'd code may need to access symbols in the host program or in supporting "
 "libraries. The best way to enable this is to reflect these symbols into your "
@@ -790,13 +882,13 @@ msgid ""
 "lookup`, and so visible to the JIT linker during linking)."
 msgstr ""
 
-#: ../../../ORCv2.md:782
+#: ../../../ORCv2.md:876
 msgid ""
 "One way to reflect external symbols is to add them manually using the "
 "absoluteSymbols function:"
 msgstr ""
 
-#: ../../../ORCv2.md:798
+#: ../../../ORCv2.md:892
 msgid ""
 "Using absoluteSymbols is reasonable if the set of symbols to be reflected is "
 "small and fixed. On the other hand, if the set of symbols is large or "
@@ -808,21 +900,21 @@ msgid ""
 "lookup proceeds."
 msgstr ""
 
-#: ../../../ORCv2.md:806
+#: ../../../ORCv2.md:900
 msgid ""
 "ORC provides the `DynamicLibrarySearchGenerator` utility for reflecting "
 "symbols from the process (or a specific dynamic library) for you. For "
 "example, to reflect the whole interface of a runtime library:"
 msgstr ""
 
-#: ../../../ORCv2.md:826
+#: ../../../ORCv2.md:920
 msgid ""
 "The `DynamicLibrarySearchGenerator` utility can also be constructed with a "
 "filter function to restrict the set of symbols that may be reflected. For "
 "example, to expose an allowed set of symbols from the main process:"
 msgstr ""
 
-#: ../../../ORCv2.md:852
+#: ../../../ORCv2.md:946
 msgid ""
 "On Windows/COFF targets, calls to dllimport functions are emitted as "
 "indirect calls through an ``__imp_`` *import address table* (IAT) slot, and "
@@ -836,11 +928,11 @@ msgid ""
 "corresponding import library would."
 msgstr ""
 
-#: ../../../ORCv2.md:862
+#: ../../../ORCv2.md:956
 msgid ".. code-block:: c++"
 msgstr ""
 
-#: ../../../ORCv2.md:877
+#: ../../../ORCv2.md:971
 msgid ""
 "For each exported function ``X`` that is referenced, the generator "
 "synthesizes an ``__imp_X`` IAT slot holding ``X``'s address in the library "
@@ -859,7 +951,7 @@ msgid ""
 "``DLLImportDefinitionGenerator``."
 msgstr ""
 
-#: ../../../ORCv2.md:891
+#: ../../../ORCv2.md:985
 msgid ""
 "References to process or library symbols could also be hardcoded into your "
 "IR or object files using the symbols' raw addresses, however symbolic "
@@ -868,27 +960,27 @@ msgid ""
 "addresses are difficult to read, and usually only good for one session."
 msgstr ""
 
-#: ../../../ORCv2.md:897
+#: ../../../ORCv2.md:991
 msgid "Roadmap"
 msgstr ""
 
-#: ../../../ORCv2.md:899
+#: ../../../ORCv2.md:993
 msgid ""
 "ORC is still undergoing active development. Some current and future works "
 "are listed below."
 msgstr ""
 
-#: ../../../ORCv2.md:902
+#: ../../../ORCv2.md:996
 msgid "Current Work"
 msgstr ""
 
-#: ../../../ORCv2.md:904
+#: ../../../ORCv2.md:998
 msgid ""
 "**TargetProcessControl: Improvements to in-tree support for out-of-process "
 "execution**"
 msgstr ""
 
-#: ../../../ORCv2.md:907
+#: ../../../ORCv2.md:1001
 msgid ""
 "The `TargetProcessControl` API provides various operations on the JIT target "
 "process (the one which will execute the JIT'd code), including memory "
@@ -897,22 +989,22 @@ msgid ""
 "which will work equally well for in-process and out-of-process JITing."
 msgstr ""
 
-#: ../../../ORCv2.md:914
+#: ../../../ORCv2.md:1008
 msgid "**ORC RPC based TargetProcessControl implementation**"
 msgstr ""
 
-#: ../../../ORCv2.md:916
+#: ../../../ORCv2.md:1010
 msgid ""
 "An ORC RPC based implementation of the `TargetProcessControl` API is "
 "currently under development to enable easy out-of-process JITing via file "
 "descriptors / sockets."
 msgstr ""
 
-#: ../../../ORCv2.md:920
+#: ../../../ORCv2.md:1014
 msgid "**Core State Machine Cleanup**"
 msgstr ""
 
-#: ../../../ORCv2.md:922
+#: ../../../ORCv2.md:1016
 msgid ""
 "The core ORC state machine is currently implemented between JITDylib and "
 "ExecutionSession. Methods are slowly being moved to `ExecutionSession`. This "
@@ -922,15 +1014,15 @@ msgid ""
 "all references to it have been released)."
 msgstr ""
 
-#: ../../../ORCv2.md:929
+#: ../../../ORCv2.md:1023
 msgid "Near Future Work"
 msgstr ""
 
-#: ../../../ORCv2.md:931
+#: ../../../ORCv2.md:1025
 msgid "**ORC JIT Runtime Libraries**"
 msgstr ""
 
-#: ../../../ORCv2.md:933
+#: ../../../ORCv2.md:1027
 msgid ""
 "We need a runtime library for JIT'd code. This would include things like TLS "
 "registration, reentry functions, registration code for language runtimes (e."
@@ -938,11 +1030,11 @@ msgid ""
 "be built in a similar manner to compiler-rt (possibly even as part of it)."
 msgstr ""
 
-#: ../../../ORCv2.md:938
+#: ../../../ORCv2.md:1032
 msgid "**Remote jit_dlopen / jit_dlclose**"
 msgstr ""
 
-#: ../../../ORCv2.md:940
+#: ../../../ORCv2.md:1034
 msgid ""
 "To more fully mimic the environment that static programs operate in we would "
 "like JIT'd code to be able to \"dlopen\" and \"dlclose\" JITDylibs, running "
@@ -950,26 +1042,26 @@ msgid ""
 "require support from the runtime library described above."
 msgstr ""
 
-#: ../../../ORCv2.md:945
+#: ../../../ORCv2.md:1039
 msgid "**Debugging support**"
 msgstr ""
 
-#: ../../../ORCv2.md:947
+#: ../../../ORCv2.md:1041
 msgid ""
 "ORC currently supports the GDBRegistrationListener API when using "
 "RuntimeDyld as the underlying JIT linker. We will need a new solution for "
 "JITLink based platforms."
 msgstr ""
 
-#: ../../../ORCv2.md:951
+#: ../../../ORCv2.md:1045
 msgid "Further Future Work"
 msgstr ""
 
-#: ../../../ORCv2.md:953
+#: ../../../ORCv2.md:1047
 msgid "**Speculative Compilation**"
 msgstr ""
 
-#: ../../../ORCv2.md:955
+#: ../../../ORCv2.md:1049
 msgid ""
 "ORC's support for concurrent compilation allows us to easily enable "
 "*speculative* JIT compilation: compilation of code that is not needed yet, "
@@ -982,13 +1074,13 @@ msgid ""
 "tools to simplify use of speculative compilation."
 msgstr ""
 
-#: ../../../ORCv2.md:965
+#: ../../../ORCv2.md:1059
 msgid ""
 "Formats/architectures vary in terms of supported features. MachO and ELF "
 "tend to have better support than COFF. Patches very welcome!"
 msgstr ""
 
-#: ../../../ORCv2.md:968
+#: ../../../ORCv2.md:1062
 msgid ""
 "The `LazyEmittingLayer`, `RemoteObjectClientLayer` and "
 "`RemoteObjectServerLayer` do not have counterparts in the new system. In the "
@@ -999,7 +1091,7 @@ msgid ""
 "functionality appears not to have been used."
 msgstr ""
 
-#: ../../../ORCv2.md:976
+#: ../../../ORCv2.md:1070
 msgid ""
 "Weak definitions are currently handled correctly within dylibs, but if "
 "multiple dylibs provide a weak definition of a symbol then each will end up "
