@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 11:32+0000\n"
+"POT-Creation-Date: 2026-09-28 16:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,15 +17,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../../../LoopFusion.rst:3
+#: ../../../LoopFusion.md:1
 msgid "Loop Fusion in LLVM"
 msgstr ""
 
-#: ../../../LoopFusion.rst:6
+#: ../../../LoopFusion.md:3
 msgid "1. Introduction"
 msgstr ""
 
-#: ../../../LoopFusion.rst:8
+#: ../../../LoopFusion.md:5
 msgid ""
 "Loop fusion (also called loop jamming) is a compiler optimization that "
 "merges two adjacent loops into a single loop, provided the transformation "
@@ -38,9 +38,9 @@ msgid ""
 "instruction scheduling and register allocation."
 msgstr ""
 
-#: ../../../LoopFusion.rst:19
+#: ../../../LoopFusion.md:16
 msgid ""
-"LLVM's implementation resides in ``llvm/lib/Transforms/Scalar/LoopFuse.cpp`` "
+"LLVM's implementation resides in `llvm/lib/Transforms/Scalar/LoopFuse.cpp` "
 "and is based on Christopher Barton's MSc thesis, *\"Code Transformations to "
 "Augment the Scope of Loop Fusion in a Production Compiler\"*. The pass "
 "operates on LLVM IR, leveraging several core analysis frameworks -- Scalar "
@@ -49,11 +49,11 @@ msgid ""
 "loops into one."
 msgstr ""
 
-#: ../../../LoopFusion.rst:29
+#: ../../../LoopFusion.md:25
 msgid "2. Prerequisite Concepts"
 msgstr ""
 
-#: ../../../LoopFusion.rst:31
+#: ../../../LoopFusion.md:27
 msgid ""
 "The fusion pass relies on several standard LLVM loop concepts that are "
 "documented elsewhere: simplified loop form, rotated loop form, loop guard "
@@ -63,89 +63,88 @@ msgid ""
 "sections refer directly to its dependence kinds and direction vectors."
 msgstr ""
 
-#: ../../../LoopFusion.rst:39
+#: ../../../LoopFusion.md:35
 msgid ""
 "DA determines the dependence relation between pairs of memory accesses. A "
 "dependence from instruction S1 to S2 is characterized by:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:42
+#: ../../../LoopFusion.md:38
 msgid ""
 "**Flow (true) dependence**: S1 writes, S2 reads the same location (read-"
 "after-write)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:44
+#: ../../../LoopFusion.md:40
 msgid "**Anti dependence**: S1 reads, S2 writes (write-after-read)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:45
+#: ../../../LoopFusion.md:41
 msgid "**Output dependence**: Both S1 and S2 write (write-after-write)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:47
+#: ../../../LoopFusion.md:43
 msgid ""
 "Each dependence carries a *direction vector* at each loop nesting level, "
-"indicating whether the source iteration is less than (``<``), equal to "
-"(``=``), or greater than (``>``) the sink iteration at that level. A "
-"dependence with a ``>`` component at the current loop level represents a "
-"*backward loop-carried dependence* (also called a negative-distance "
-"dependence). Such dependences are the critical hazard that loop fusion must "
-"respect."
+"indicating whether the source iteration is less than (`<`), equal to (`=`), "
+"or greater than (`>`) the sink iteration at that level. A dependence with a "
+"`>` component at the current loop level represents a *backward loop-carried "
+"dependence* (also called a negative-distance dependence). Such dependences "
+"are the critical hazard that loop fusion must respect."
 msgstr ""
 
-#: ../../../LoopFusion.rst:57
+#: ../../../LoopFusion.md:51
 msgid "3. High-Level Algorithm"
 msgstr ""
 
-#: ../../../LoopFusion.rst:59
+#: ../../../LoopFusion.md:53
 msgid ""
 "The pass operates in a top-down, level-by-level fashion over the loop nest "
 "tree. At each nesting depth, it:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:62
+#: ../../../LoopFusion.md:56
 msgid ""
 "**Collects fusion candidates**: Identifies each eligible loop and partitions "
 "the eligible loops into ordered chains of *control-flow equivalent, strictly "
 "adjacent* loops sorted in dominance order."
 msgstr ""
 
-#: ../../../LoopFusion.rst:66
+#: ../../../LoopFusion.md:60
 msgid ""
 "**Attempts pairwise fusion**: Walks each chain linearly, testing every "
-"consecutive pair ``(FC0, FC1)`` against the four legality conditions. If all "
+"consecutive pair `(FC0, FC1)` against the four legality conditions. If all "
 "conditions hold, the pair is fused and replaced by the fused loop in the "
 "chain, which is then considered for further fusion with its successor."
 msgstr ""
 
-#: ../../../LoopFusion.rst:71
+#: ../../../LoopFusion.md:65
 msgid ""
 "**Descends to inner loops**: After processing all sibling groups at the "
 "current depth, the pass descends one level and repeats."
 msgstr ""
 
-#: ../../../LoopFusion.rst:74
+#: ../../../LoopFusion.md:68
 msgid ""
 "This strategy means outermost loops are fused first. Fusing inner loops is "
 "handled in subsequent iterations of the outer while-loop."
 msgstr ""
 
-#: ../../../LoopFusion.rst:79
+#: ../../../LoopFusion.md:71
 msgid "4. Phase 1: Candidate Collection"
 msgstr ""
 
-#: ../../../LoopFusion.rst:81
+#: ../../../LoopFusion.md:73
 msgid ""
 "For each group of sibling loops (loops sharing a parent) at the current "
 "depth, the pass gathers the loops that are eligible for fusion."
 msgstr ""
 
-#: ../../../LoopFusion.rst:86
+#: ../../../LoopFusion.md:77
 msgid "4.1 Eligibility Check"
 msgstr ""
 
-#: ../../../LoopFusion.rst:88
+#: ../../../LoopFusion.md:79
 msgid ""
 "Each loop is first scanned for disqualifying properties. A loop is rejected "
 "immediately if any of its blocks has its address taken, if any instruction "
@@ -155,63 +154,63 @@ msgid ""
 "blockers."
 msgstr ""
 
-#: ../../../LoopFusion.rst:95
+#: ../../../LoopFusion.md:86
 msgid "Surviving loops must additionally satisfy four structural requirements:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:98
+#: ../../../LoopFusion.md:89
 msgid ""
 "**Structural validity**: preheader, header, exiting block, exit block, and "
 "latch all exist. This implicitly requires simplified form."
 msgstr ""
 
-#: ../../../LoopFusion.rst:101
+#: ../../../LoopFusion.md:92
 msgid ""
 "**Computable trip count**: SCEV must be able to compute a loop-invariant "
 "backedge-taken count. If not, the pass cannot compare trip counts."
 msgstr ""
 
-#: ../../../LoopFusion.rst:104
+#: ../../../LoopFusion.md:95
 msgid ""
 "**Simplified form**: the loop must be in simplified form (single preheader, "
 "dedicated exit blocks, single latch)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:106
+#: ../../../LoopFusion.md:97
 msgid ""
 "**Rotated form**: the loop must be in rotated form (do-while shape, with the "
 "exit test at the latch). The exiting block must be the latch."
 msgstr ""
 
-#: ../../../LoopFusion.rst:110
+#: ../../../LoopFusion.md:101
 msgid ""
 "If any check fails, the loop is discarded and an optimization remark is "
 "emitted explaining why."
 msgstr ""
 
-#: ../../../LoopFusion.rst:114
+#: ../../../LoopFusion.md:104
 msgid "4.2 Grouping by Adjacency"
 msgstr ""
 
-#: ../../../LoopFusion.rst:116
+#: ../../../LoopFusion.md:106
 msgid ""
 "Eligible loops are partitioned into ordered chains based on *strict "
 "adjacency*. Two loops FC0 and FC1 are strictly adjacent if:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:119
+#: ../../../LoopFusion.md:109
 msgid ""
 "**Unguarded loops**: FC0's exit block is exactly FC1's preheader (i.e., "
 "there is no intervening code between the two loops)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:121
+#: ../../../LoopFusion.md:111
 msgid ""
 "**Guarded loops**: FC0's entry block dominates FC1's entry block, and FC0's "
 "exit block has a unique successor that is FC1's entry block."
 msgstr ""
 
-#: ../../../LoopFusion.rst:125
+#: ../../../LoopFusion.md:115
 msgid ""
 "The algorithm appends each new loop to the first existing chain whose last "
 "element is strictly adjacent to it. If no such chain exists, a new chain is "
@@ -220,68 +219,68 @@ msgid ""
 "maximal chains of adjacent loops."
 msgstr ""
 
-#: ../../../LoopFusion.rst:133
+#: ../../../LoopFusion.md:121
 msgid "5. Phase 2: Pairwise Fusion Attempts"
 msgstr ""
 
-#: ../../../LoopFusion.rst:135
+#: ../../../LoopFusion.md:123
 msgid ""
 "The pass iterates over each chain and attempts to fuse consecutive pairs "
-"``(FC0, FC1)``. The following legality conditions are checked in order, with "
+"`(FC0, FC1)`. The following legality conditions are checked in order, with "
 "early exit on failure."
 msgstr ""
 
-#: ../../../LoopFusion.rst:140
+#: ../../../LoopFusion.md:127
 msgid "5.1 Condition 1: Identical Trip Counts (Conformance)"
 msgstr ""
 
-#: ../../../LoopFusion.rst:142
+#: ../../../LoopFusion.md:129
 msgid ""
 "The conformance check uses SCEV to retrieve the backedge-taken count of both "
 "loops. If the SCEV expressions are identical (pointer equality after "
 "canonicalization), the loops are conforming."
 msgstr ""
 
-#: ../../../LoopFusion.rst:146
+#: ../../../LoopFusion.md:133
 msgid ""
 "If they differ but both are small constants, the pass computes the "
 "arithmetic difference. If the first loop has more iterations than the "
-"second, and the difference does not exceed the command-line limit ``-loop-"
-"fusion-peel-max-count`` (default 0), the pass marks the pair as eligible for "
+"second, and the difference does not exceed the command-line limit `-loop-"
+"fusion-peel-max-count` (default 0), the pass marks the pair as eligible for "
 "peeling. Peeling the first loop by the difference will equalize the trip "
 "counts."
 msgstr ""
 
-#: ../../../LoopFusion.rst:153
+#: ../../../LoopFusion.md:140
 msgid ""
 "The current implementation does not support the case where the second loop "
 "has more iterations than the first."
 msgstr ""
 
-#: ../../../LoopFusion.rst:157
+#: ../../../LoopFusion.md:143
 msgid "5.2 Condition 2: Compatible Guard Structure"
 msgstr ""
 
-#: ../../../LoopFusion.rst:159
+#: ../../../LoopFusion.md:145
 msgid ""
 "Both loops must be either both guarded or both unguarded. If one is guarded "
 "and the other is not, fusion is rejected. When both are guarded, the guard-"
 "comparison check ensures that:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:163
+#: ../../../LoopFusion.md:149
 msgid ""
 "The guard condition instructions are structurally identical (same opcode, "
 "same operands)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:165
+#: ../../../LoopFusion.md:151
 msgid ""
 "The true/false successors have the same polarity relative to the loop (i.e., "
 "both guards branch to the preheader on the same condition outcome)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:169
+#: ../../../LoopFusion.md:155
 msgid ""
 "Additionally, for guarded loops, the pass verifies that instructions in "
 "FC0's exit block can be safely moved before FC1's exit block, and that FC1's "
@@ -289,29 +288,29 @@ msgid ""
 "terminator. These moves reuse LLVM's generic code-motion safety helpers."
 msgstr ""
 
-#: ../../../LoopFusion.rst:176
+#: ../../../LoopFusion.md:161
 msgid "5.3 Condition 3: No Negative-Distance Dependencies"
 msgstr ""
 
-#: ../../../LoopFusion.rst:178
+#: ../../../LoopFusion.md:163
 msgid ""
 "The dependence check is the most involved legality analysis. It examines all "
 "pairs of memory accesses where at least one is a write:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:181
+#: ../../../LoopFusion.md:166
 msgid "(FC0 writes) x (FC1 writes) -- output dependences"
 msgstr ""
 
-#: ../../../LoopFusion.rst:182
+#: ../../../LoopFusion.md:167
 msgid "(FC0 writes) x (FC1 reads) -- flow dependences"
 msgstr ""
 
-#: ../../../LoopFusion.rst:183
+#: ../../../LoopFusion.md:168
 msgid "(FC1 writes) x (FC0 reads) -- anti dependences"
 msgstr ""
 
-#: ../../../LoopFusion.rst:185
+#: ../../../LoopFusion.md:170
 msgid ""
 "Additionally, it checks for *cross-loop def-use chains*: if any instruction "
 "in FC1 uses a value defined inside FC0, fusion is rejected outright. This is "
@@ -320,16 +319,15 @@ msgid ""
 "interleaved execution order may not preserve this."
 msgstr ""
 
-#: ../../../LoopFusion.rst:192
+#: ../../../LoopFusion.md:177
 msgid ""
 "For each memory pair, the pass invokes one of three dependence analysis "
-"strategies, selectable via ``--loop-fusion-dependence-analysis``. The "
-"default is DA-based analysis (``da``); the SCEV-based and combined modes are "
-"retained as opt-ins. The SCEV-based path is expected to be removed in a "
-"future change."
+"strategies, selectable via `--loop-fusion-dependence-analysis`. The default "
+"is DA-based analysis (`da`); the SCEV-based and combined modes are retained "
+"as opt-ins. The SCEV-based path is expected to be removed in a future change."
 msgstr ""
 
-#: ../../../LoopFusion.rst:199
+#: ../../../LoopFusion.md:184
 msgid ""
 "**SCEV-based analysis**: Rewrites the access function of FC0's instruction "
 "into FC1's loop iteration space by substituting FC0's loop with FC1's loop "
@@ -338,45 +336,45 @@ msgid ""
 "negative difference means no backward dependence."
 msgstr ""
 
-#: ../../../LoopFusion.rst:206
+#: ../../../LoopFusion.md:191
 msgid ""
 "**DA-based analysis**: Queries LLVM's dependence analysis on the pair. If no "
 "dependence exists, fusion is safe. If a dependence exists, the pass examines "
 "its direction vector:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:211
+#: ../../../LoopFusion.md:196
 msgid ""
 "At outer loop levels (levels above the current fusion level): if any level "
-"has a direction that excludes equality (``EQ``), the outer indices differ "
-"and the dependence does not constrain fusion at the current level."
+"has a direction that excludes equality (`EQ`), the outer indices differ and "
+"the dependence does not constrain fusion at the current level."
 msgstr ""
 
-#: ../../../LoopFusion.rst:215
+#: ../../../LoopFusion.md:200
 msgid ""
-"At the current level: if the direction excludes ``GT`` (greater-than), there "
+"At the current level: if the direction excludes `GT` (greater-than), there "
 "is no backward loop-carried dependence, and fusion is safe. For example, a "
-"pure ``LT`` direction indicates a forward dependence like ``A[i] = ...; ... "
-"= A[i-1]``, which remains valid after fusion."
+"pure `LT` direction indicates a forward dependence like `A[i] = ...; ... = "
+"A[i-1]`, which remains valid after fusion."
 msgstr ""
 
-#: ../../../LoopFusion.rst:220
+#: ../../../LoopFusion.md:205
 msgid ""
 "Loop-invariant (scalar) non-anti dependences at the current level are also "
 "safe."
 msgstr ""
 
-#: ../../../LoopFusion.rst:223
+#: ../../../LoopFusion.md:208
 msgid ""
 "**Combined analysis**: Accepts the pair if either SCEV-based or DA-based "
 "analysis approves it."
 msgstr ""
 
-#: ../../../LoopFusion.rst:228
+#: ../../../LoopFusion.md:212
 msgid "5.4 Condition 4: Empty or Movable Preheader"
 msgstr ""
 
-#: ../../../LoopFusion.rst:230
+#: ../../../LoopFusion.md:214
 msgid ""
 "FC1's preheader must be empty (containing only the terminator branch) or all "
 "its instructions must be safely movable. The preheader-motion check "
@@ -384,7 +382,7 @@ msgid ""
 "preheader) or sinkable (into FC1's body after the fused loop):"
 msgstr ""
 
-#: ../../../LoopFusion.rst:235
+#: ../../../LoopFusion.md:219
 msgid ""
 "**Hoisting**: An instruction can be hoisted if all its operands either "
 "dominate FC0's preheader target or have already been classified as "
@@ -393,28 +391,28 @@ msgid ""
 "preheader instructions or with FC0's memory accesses."
 msgstr ""
 
-#: ../../../LoopFusion.rst:241
+#: ../../../LoopFusion.md:225
 msgid ""
 "**Sinking**: An instruction can be sunk if none of its users are inside "
 "FC1's loop body, and it has no flow or output dependences with FC1's memory "
 "accesses."
 msgstr ""
 
-#: ../../../LoopFusion.rst:244
+#: ../../../LoopFusion.md:228
 msgid "Atomic and volatile instructions cannot be moved."
 msgstr ""
 
-#: ../../../LoopFusion.rst:246
+#: ../../../LoopFusion.md:230
 msgid ""
 "If any instruction is neither hoistable nor sinkable, fusion is abandoned "
 "for this pair."
 msgstr ""
 
-#: ../../../LoopFusion.rst:250
+#: ../../../LoopFusion.md:233
 msgid "5.5 Profitability"
 msgstr ""
 
-#: ../../../LoopFusion.rst:252
+#: ../../../LoopFusion.md:235
 msgid ""
 "The profitability check currently always reports that fusion is beneficial. "
 "This is intentional for testing coverage and is expected to evolve to "
@@ -422,189 +420,189 @@ msgid ""
 "footprint analysis) in the future."
 msgstr ""
 
-#: ../../../LoopFusion.rst:259
+#: ../../../LoopFusion.md:240
 msgid "6. Phase 3: The Fusion Transformation"
 msgstr ""
 
-#: ../../../LoopFusion.rst:261
+#: ../../../LoopFusion.md:242
 msgid ""
 "Once all legality checks pass, the transformation proceeds in two stages: an "
 "optional peeling step and the actual CFG rewiring."
 msgstr ""
 
-#: ../../../LoopFusion.rst:265
+#: ../../../LoopFusion.md:245
 msgid "6.1 Loop Peeling (Optional)"
 msgstr ""
 
-#: ../../../LoopFusion.rst:267
+#: ../../../LoopFusion.md:247
 msgid ""
-"If the trip counts differ by a constant ``d``, the pass peels ``d`` "
-"iterations from FC0. This extracts the first ``d`` iterations as straight-"
-"line code before the loop, so the remaining loop has the same trip count as "
-"FC1. After peeling:"
+"If the trip counts differ by a constant `d`, the pass peels `d` iterations "
+"from FC0. This extracts the first `d` iterations as straight-line code "
+"before the loop, so the remaining loop has the same trip count as FC1. After "
+"peeling:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:272
+#: ../../../LoopFusion.md:252
 msgid "The post-dominator tree is recalculated."
 msgstr ""
 
-#: ../../../LoopFusion.rst:273
+#: ../../../LoopFusion.md:253
 msgid "FC0's cached block pointers are refreshed."
 msgstr ""
 
-#: ../../../LoopFusion.rst:274
+#: ../../../LoopFusion.md:254
 msgid ""
 "The peeled iteration blocks' branches are rewritten to remove edges to FC1's "
 "preheader, ensuring FC0's entry block still dominates FC1's entry block."
 msgstr ""
 
-#: ../../../LoopFusion.rst:279
+#: ../../../LoopFusion.md:258
 msgid "6.2 CFG Rewiring (Non-Guarded Loops)"
 msgstr ""
 
-#: ../../../LoopFusion.rst:281
+#: ../../../LoopFusion.md:260
 msgid "For non-guarded loops, the CFG transformation performs these steps:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:283
+#: ../../../LoopFusion.md:262
 msgid ""
 "**Merge preheaders**: Move all instructions from FC1's preheader into FC0's "
 "preheader (before the terminator)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:286
+#: ../../../LoopFusion.md:265
 msgid ""
 "**Rewire FC0's exiting block**: Instead of branching to FC1's preheader "
 "(which is about to be deleted), the exiting block now targets FC1's header "
 "directly."
 msgstr ""
 
-#: ../../../LoopFusion.rst:290
+#: ../../../LoopFusion.md:269
 msgid ""
 "**Delete FC1's preheader**: It has no predecessors left; replace its "
-"terminator with ``unreachable``."
+"terminator with `unreachable`."
 msgstr ""
 
-#: ../../../LoopFusion.rst:293
+#: ../../../LoopFusion.md:272
 msgid ""
 "**Move PHI nodes**: All PHI nodes from FC1's header are moved to FC0's "
 "header. If a PHI has no uses, it is deleted."
 msgstr ""
 
-#: ../../../LoopFusion.rst:296
+#: ../../../LoopFusion.md:275
 msgid ""
 "**Introduce intermediate PHI nodes**: If FC0's exiting block is not the "
 "latch (a rare case given the rotated form requirement), new PHI nodes are "
 "inserted in FC1's header. These select the loop-carried value from FC0 when "
-"arriving via FC0's latch, or ``poison`` when arriving via FC0's exiting "
-"block (which means the loop is exiting and the value is dead)."
+"arriving via FC0's latch, or `poison` when arriving via FC0's exiting block "
+"(which means the loop is exiting and the value is dead)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:303
+#: ../../../LoopFusion.md:282
 msgid "**Reconnect latches**:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:305
+#: ../../../LoopFusion.md:284
 msgid ""
 "FC0's latch, which previously branched back to FC0's header, now branches to "
 "FC1's header."
 msgstr ""
 
-#: ../../../LoopFusion.rst:307
+#: ../../../LoopFusion.md:286
 msgid ""
 "FC1's latch, which previously branched back to FC1's header, now branches to "
 "FC0's header."
 msgstr ""
 
-#: ../../../LoopFusion.rst:309
+#: ../../../LoopFusion.md:288
 msgid ""
 "FC0's latch branch is simplified to unconditional (both targets are now "
 "FC1's header)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:312
+#: ../../../LoopFusion.md:291
 msgid ""
 "**Transfer loop blocks**: All basic blocks belonging to FC1 are moved into "
 "FC0. All child loops of FC1 are re-parented under FC0."
 msgstr ""
 
-#: ../../../LoopFusion.rst:315
+#: ../../../LoopFusion.md:294
 msgid ""
 "**Merge latches**: Instructions from FC0's old latch are moved to FC1's "
 "latch (which is now the single latch of the fused loop). If FC0's latch has "
 "a unique successor, the blocks are merged."
 msgstr ""
 
-#: ../../../LoopFusion.rst:319
+#: ../../../LoopFusion.md:298
 msgid ""
 "**Cleanup**: FC1 is erased from the function's loop information. SCEV caches "
 "for both loops are invalidated, and the dominator and post-dominator trees "
 "are updated in a single batched transaction."
 msgstr ""
 
-#: ../../../LoopFusion.rst:323
+#: ../../../LoopFusion.md:302
 msgid "The resulting fused loop has:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:325
+#: ../../../LoopFusion.md:304
 msgid "FC0's preheader as its preheader."
 msgstr ""
 
-#: ../../../LoopFusion.rst:326
+#: ../../../LoopFusion.md:305
 msgid "FC0's header as its header."
 msgstr ""
 
-#: ../../../LoopFusion.rst:327
+#: ../../../LoopFusion.md:306
 msgid "A body containing blocks from both FC0 and FC1."
 msgstr ""
 
-#: ../../../LoopFusion.rst:328
+#: ../../../LoopFusion.md:307
 msgid "FC1's latch as its latch."
 msgstr ""
 
-#: ../../../LoopFusion.rst:329
+#: ../../../LoopFusion.md:308
 msgid "FC1's exit block as its exit block."
 msgstr ""
 
-#: ../../../LoopFusion.rst:332
+#: ../../../LoopFusion.md:310
 msgid "6.3 CFG Rewiring (Guarded Loops)"
 msgstr ""
 
-#: ../../../LoopFusion.rst:334
+#: ../../../LoopFusion.md:312
 msgid ""
 "The guarded-loop fusion path handles the additional complexity of guard "
 "branches and exit blocks:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:337
+#: ../../../LoopFusion.md:315
 msgid ""
 "FC0's guard is updated to use FC1's non-loop block as its bypass target, "
 "effectively making FC0's guard protect both loops."
 msgstr ""
 
-#: ../../../LoopFusion.rst:339
+#: ../../../LoopFusion.md:317
 msgid "FC0's exit block instructions are moved to FC1's exit block."
 msgstr ""
 
-#: ../../../LoopFusion.rst:340
+#: ../../../LoopFusion.md:318
 msgid "FC1's guard block is disconnected and deleted."
 msgstr ""
 
-#: ../../../LoopFusion.rst:341
+#: ../../../LoopFusion.md:319
 msgid "FC0's exit block is disconnected and deleted."
 msgstr ""
 
-#: ../../../LoopFusion.rst:342
+#: ../../../LoopFusion.md:320
 msgid ""
 "The latch rewiring and block transfer proceed identically to the non-guarded "
 "case."
 msgstr ""
 
-#: ../../../LoopFusion.rst:346
+#: ../../../LoopFusion.md:323
 msgid "6.4 Post-Fusion Bookkeeping"
 msgstr ""
 
-#: ../../../LoopFusion.rst:348
+#: ../../../LoopFusion.md:325
 msgid ""
 "After fusion, the fused loop replaces the original pair in the chain and "
 "becomes the new left operand for the next pairwise attempt. This enables "
@@ -612,17 +610,17 @@ msgid ""
 "fused first, then (A+B)+C is attempted."
 msgstr ""
 
-#: ../../../LoopFusion.rst:353
+#: ../../../LoopFusion.md:330
 msgid ""
 "FC1's loop is also recorded as removed so that it is skipped when the pass "
 "descends to inner nesting levels."
 msgstr ""
 
-#: ../../../LoopFusion.rst:358
+#: ../../../LoopFusion.md:333
 msgid "7. Limitations"
 msgstr ""
 
-#: ../../../LoopFusion.rst:360
+#: ../../../LoopFusion.md:335
 msgid ""
 "The current implementation is purely opportunistic: it fuses only loop pairs "
 "that already satisfy the four legality conditions. It does not reshape the "
@@ -630,11 +628,11 @@ msgid ""
 "checks are intentionally conservative."
 msgstr ""
 
-#: ../../../LoopFusion.rst:366
+#: ../../../LoopFusion.md:340
 msgid "7.1 Algorithmic Scope"
 msgstr ""
 
-#: ../../../LoopFusion.rst:368
+#: ../../../LoopFusion.md:342
 msgid ""
 "**No loop reshaping to enable fusion.** The pass does not insert guards, "
 "rotate loops, run loop-simplify, or otherwise modify loops that miss a "
@@ -642,7 +640,7 @@ msgid ""
 "with a computable trip count are discarded as ineligible."
 msgstr ""
 
-#: ../../../LoopFusion.rst:373
+#: ../../../LoopFusion.md:347
 msgid ""
 "**No profitability cost model.** The profitability check unconditionally "
 "reports every legal pair as beneficial. Fusion proceeds regardless of cache "
@@ -650,7 +648,7 @@ msgid ""
 "vectorization."
 msgstr ""
 
-#: ../../../LoopFusion.rst:377
+#: ../../../LoopFusion.md:351
 msgid ""
 "**Cross-loop def-use chains are always rejected.** If any instruction in FC1 "
 "uses a value produced inside FC0, the pair is rejected outright. Patterns "
@@ -658,44 +656,44 @@ msgid ""
 "even when the producing value is loop-invariant and could legally be hoisted."
 msgstr ""
 
-#: ../../../LoopFusion.rst:384
+#: ../../../LoopFusion.md:357
 msgid "7.2 Trip-Count Equalization"
 msgstr ""
 
-#: ../../../LoopFusion.rst:386
+#: ../../../LoopFusion.md:359
 msgid ""
 "**Peeling is disabled by default.** The maximum number of iterations the "
-"pass may peel is controlled by the command-line option ``-loop-fusion-peel-"
-"max-count``, which defaults to ``0``. Peeling therefore never fires unless "
-"the user opts in explicitly."
+"pass may peel is controlled by the command-line option `-loop-fusion-peel-"
+"max-count`, which defaults to `0`. Peeling therefore never fires unless the "
+"user opts in explicitly."
 msgstr ""
 
-#: ../../../LoopFusion.rst:390
+#: ../../../LoopFusion.md:363
 msgid ""
 "**Peeling shrinks only the first loop.** If the second loop has more "
 "iterations than the first, fusion is rejected. There is no attempt to peel "
 "the second loop or extend the first."
 msgstr ""
 
-#: ../../../LoopFusion.rst:393
+#: ../../../LoopFusion.md:366
 msgid ""
 "**Peeling requires constant trip counts with a single exit.** Both loops "
 "must have a small constant trip count for the peel distance to be computed. "
 "Symbolic trip-count differences are not handled."
 msgstr ""
 
-#: ../../../LoopFusion.rst:399
+#: ../../../LoopFusion.md:370
 msgid "7.4 Preheader and Block Handling"
 msgstr ""
 
-#: ../../../LoopFusion.rst:401
+#: ../../../LoopFusion.md:372
 msgid ""
 "**Volatile or atomic preheader instructions block fusion.** Such "
 "instructions cannot be moved, so a non-empty preheader that contains them "
 "prevents fusion."
 msgstr ""
 
-#: ../../../LoopFusion.rst:404
+#: ../../../LoopFusion.md:375
 msgid ""
 "**Memory-reading preheader instructions are handled conservatively.** The "
 "pass does try to move memory-reading preheader instructions, but only when "
@@ -703,7 +701,7 @@ msgid ""
 "filtering can still reject fusible-looking cases."
 msgstr ""
 
-#: ../../../LoopFusion.rst:409
+#: ../../../LoopFusion.md:380
 msgid ""
 "**FC1's preheader must reduce to a single terminator.** After hoisting and "
 "sinking, the simple (non-guarded) fusion path requires FC1's preheader to "
@@ -712,7 +710,7 @@ msgid ""
 "by block merging."
 msgstr ""
 
-#: ../../../LoopFusion.rst:414
+#: ../../../LoopFusion.md:385
 msgid ""
 "**Blocks are rewired, not merged.** Preheaders, latches, and exit blocks are "
 "reconnected to new successors during fusion, but never merged with their "
@@ -720,50 +718,50 @@ msgid ""
 "blocks than strictly necessary."
 msgstr ""
 
-#: ../../../LoopFusion.rst:420
+#: ../../../LoopFusion.md:390
 msgid "7.5 Eligibility Blockers"
 msgstr ""
 
-#: ../../../LoopFusion.rst:422
+#: ../../../LoopFusion.md:392
 msgid ""
 "A loop is rejected during candidate construction if any of the following "
 "properties holds:"
 msgstr ""
 
-#: ../../../LoopFusion.rst:425
+#: ../../../LoopFusion.md:395
 msgid ""
 "A block in the loop has its address taken (for example, used as a "
-"``blockaddress`` operand)."
+"`blockaddress` operand)."
 msgstr ""
 
-#: ../../../LoopFusion.rst:427
+#: ../../../LoopFusion.md:397
 msgid "Any instruction in the loop may throw."
 msgstr ""
 
-#: ../../../LoopFusion.rst:428
+#: ../../../LoopFusion.md:398
 msgid "The loop contains a volatile memory access."
 msgstr ""
 
-#: ../../../LoopFusion.rst:429
+#: ../../../LoopFusion.md:399
 msgid "The loop contains an atomic memory access."
 msgstr ""
 
-#: ../../../LoopFusion.rst:431
+#: ../../../LoopFusion.md:401
 msgid ""
 "These conditions are hard blockers, not soft preferences: the pass never "
 "attempts to work around them."
 msgstr ""
 
-#: ../../../LoopFusion.rst:434
+#: ../../../LoopFusion.md:404
 msgid ""
 "**Atomic accesses are rejected conservatively.** Any atomic instruction -- "
-"atomic ``load`` and ``store``, ``atomicrmw``, ``cmpxchg``, and ``fence`` -- "
+"atomic `load` and `store`, `atomicrmw`, `cmpxchg`, and `fence` -- "
 "disqualifies the loop, mirroring the volatile blocker. The underlying "
 "dependence analysis reasons about address-based data dependence rather than "
 "inter-thread synchronization (the synchronizes-with / fence semantics of the "
 "memory model), so fusing two loops interleaves their bodies and could "
 "reorder atomics in ways that change observable multi-threaded behavior even "
 "when the dependence check reports no conflict. The rejection covers the "
-"``unordered`` ordering and higher, so even ``unordered`` atomics (which "
-"carry no cross-thread ordering) are rejected."
+"`unordered` ordering and higher, so even `unordered` atomics (which carry no "
+"cross-thread ordering) are rejected."
 msgstr ""
