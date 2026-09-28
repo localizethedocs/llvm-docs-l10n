@@ -1,0 +1,699 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-03 11:32+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../HowToUpdateDebugInfo.md:1
+msgid "How to Update Debug Info: A Guide for LLVM Pass Authors"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:4
+msgid "Introduction"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:6
+msgid ""
+"Certain kinds of code transformations can inadvertently result in a loss of "
+"debug info, or worse, make debug info misrepresent the state of a program. "
+"Debug info availability is also essential for SamplePGO."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:10
+msgid ""
+"This document specifies how to correctly update debug info in various kinds "
+"of code transformations, and offers suggestions for how to create targeted "
+"debug info tests for arbitrary transformations."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:14
+msgid ""
+"For more on the philosophy behind LLVM debugging information, see {doc}"
+"`SourceLevelDebugging`."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:17
+msgid "Rules for updating debug locations"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:21
+msgid "When to preserve an instruction location"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:23
+msgid ""
+"A transformation should preserve the debug location of an instruction if the "
+"instruction either remains in its basic block, or if its basic block is "
+"folded into a predecessor that branches unconditionally. The APIs to use are "
+"`IRBuilder`, or `Instruction::setDebugLoc`."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:28
+msgid ""
+"The purpose of this rule is to ensure that common block-local optimizations "
+"preserve the ability to set breakpoints on source locations corresponding to "
+"the instructions they touch. Debugging, crash logs, and SamplePGO accuracy "
+"would be severely impacted if that ability were lost."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:33 ../../../HowToUpdateDebugInfo.md:58
+#: ../../../HowToUpdateDebugInfo.md:91
+msgid "Examples of transformations that should follow this rule include:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:35
+msgid ""
+"Instruction scheduling. Block-local instruction reordering should not drop "
+"source locations, even though this may lead to jumpy single-stepping "
+"behavior."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:38
+msgid ""
+"Simple jump threading. For example, if block `B1` unconditionally jumps to "
+"`B2`, *and* is its unique predecessor, instructions from `B2` can be hoisted "
+"into `B1`. Source locations from `B2` should be preserved."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:41
+msgid ""
+"Peephole optimizations that replace or expand an instruction, like `(add X "
+"X) => (shl X 1)`. The location of the `shl` instruction should be the same "
+"as the location of the `add` instruction."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:44
+msgid ""
+"Tail duplication. For example, if blocks `B1` and `B2` both unconditionally "
+"branch to `B3` and `B3` can be folded into its predecessors, source "
+"locations from `B3` should be preserved."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:48 ../../../HowToUpdateDebugInfo.md:111
+msgid ""
+"Examples of transformations for which this rule *does not* apply include:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:50
+msgid ""
+"LICM. E.g., if an instruction is moved from the loop body to the preheader, "
+"the rule for {ref}`dropping locations <WhenToDropLocation>` applies."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:53
+msgid ""
+"In addition to the rule above, a transformation should also preserve the "
+"debug location of an instruction that is moved between basic blocks, if the "
+"destination block already contains an instruction with an identical debug "
+"location."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:60
+msgid ""
+"Moving instructions between basic blocks. For example, if instruction `I1` "
+"in `BB1` is moved before `I2` in `BB2`, the source location of `I1` can be "
+"preserved if it has the same source location as `I2`."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:66
+msgid "When to merge instruction locations"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:68
+msgid ""
+"A transformation should merge instruction locations if it replaces multiple "
+"instructions with one or more new instructions, *and* the new instruction(s) "
+"produce the output of more than one of the original instructions. The API to "
+"use is `Instruction::applyMergedLocation`. For each new instruction I, its "
+"new location should be a merge of the locations of all instructions whose "
+"output is produced by I. Typically, this includes any instruction being "
+"RAUWed by a new instruction, and excludes any instruction that only produces "
+"an intermediate value used by the RAUWed instruction."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:77
+msgid ""
+"The purpose of this rule is to ensure that a) the single merged instruction "
+"has a location with an accurate scope attached, and b) to prevent misleading "
+"single-stepping (or breakpoint) behavior. Often, merged instructions are "
+"memory accesses which can trap: having an accurate scope attached greatly "
+"assists in crash triage by identifying the (possibly inlined) function where "
+"the bad memory access occurred."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:84
+msgid ""
+"To maintain distinct source locations for SamplePGO, it is often beneficial "
+"to retain an arbitrary but deterministic location instead of discarding line "
+"and column information as part of merging. In particular, loss of location "
+"information for calls inhibits optimizations such as indirect call "
+"promotion. This behavior can be optionally enabled until support for "
+"accurately representing merged instructions in the line table is implemented."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:93
+msgid ""
+"Hoisting identical instructions from all successors of a conditional branch "
+"or sinking those from all paths to a postdominating block. For example, "
+"merging identical loads/stores which occur on both sides of a CFG diamond "
+"(see the `MergedLoadStoreMotion` pass). For each group of identical "
+"instructions being hoisted/sunk, the merge of all their locations should be "
+"applied to the merged instruction."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:99
+msgid ""
+"Merging identical loop-invariant stores (see the LICM utility `llvm::"
+"promoteLoopAccessesToScalars`)."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:101
+msgid ""
+"Scalar instructions being combined into a vector instruction, like `(add A1, "
+"B1), (add A2, B2) => (add (A1, A2), (B1, B2))`. As the new vector `add` "
+"computes the result of both original `add` instructions simultaneously, it "
+"should use a merge of the two locations. Similarly, if prior optimizations "
+"have already produced vectors `(A1, A2)` and `(B2, B1)`, then we might "
+"create a `(shufflevector (1, 0), (B2, B1))` instruction to produce `(B1, "
+"B2)` for the vector `add`; in this case we've created two instructions to "
+"replace the original `adds`, so both new instructions should use the merged "
+"location."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:113
+msgid ""
+"Block-local peepholes which delete redundant instructions, like `(sext (zext "
+"i8 %x to i16) to i32) => (zext i8 %x to i32)`. The inner `zext` is modified "
+"but remains in its block, so the rule for {ref}`preserving locations "
+"<WhenToPreserveLocation>` should apply."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:117
+msgid ""
+"Peephole optimizations which combine multiple instructions together, like "
+"`(add (mul A B) C) => llvm.fma.f32(A, B, C)`. Note that the result of the "
+"`mul` no longer appears in the program, while the result of the `add` is now "
+"produced by the `fma`, so the `add`'s location should be used."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:121
+msgid ""
+"Converting an if-then-else CFG diamond into a `select`. Preserving the debug "
+"locations of speculated instructions can make it seem like a condition is "
+"true when it's not (or vice versa), which leads to a confusing single-"
+"stepping experience. The rule for {ref}`dropping locations "
+"<WhenToDropLocation>` should apply here."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:126
+msgid ""
+"Hoisting/sinking that would make a location reachable when it previously "
+"wasn't. Consider hoisting two identical instructions with the same location "
+"from first two cases of a switch that has three cases. Merging their "
+"locations would make the location from the first two cases reachable when "
+"the third case is taken. The rule for {ref}`dropping locations "
+"<WhenToDropLocation>` applies."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:135
+msgid "When to drop an instruction location"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:137
+msgid ""
+"A transformation should drop debug locations if the rules for {ref}"
+"`preserving <WhenToPreserveLocation>` and {ref}`merging "
+"<WhenToMergeLocation>` debug locations do not apply. The API to use is "
+"`Instruction::dropLocation()`."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:142
+msgid ""
+"The purpose of this rule is to prevent erratic or misleading single-stepping "
+"behavior in situations in which an instruction has no clear, unambiguous "
+"relationship to a source location."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:146
+msgid ""
+"To handle an instruction without a location, the DWARF generator defaults to "
+"allowing the last-set location after a label to cascade forward, or to "
+"setting a line 0 location with viable scope information if no previous "
+"location is available."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:151
+msgid ""
+"See the discussion in the section about {ref}`merging locations "
+"<WhenToMergeLocation>` for examples of when the rule for dropping locations "
+"applies."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:155
+msgid "When to remap a debug location"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:157
+msgid ""
+"When code paths are duplicated, during passes such as loop unrolling or jump "
+"threading, `DILocation` attachments need to be remapped using "
+"`mapAtomInstance` and `RemapSourceAtom`. This is to support the Key "
+"Instructions debug info feature. See {doc}`KeyInstructionsDebugInfo` for "
+"information."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:164
+msgid "Setting locations for new instructions"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:166
+msgid ""
+"Whenever a new instruction is created and there is no suitable location for "
+"that instruction, that instruction should be annotated accordingly. There "
+"are a set of special `DebugLoc` values that can be set on an instruction to "
+"annotate the reason that it does not have a valid location. These are as "
+"follows:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:171
+msgid ""
+"`DebugLoc::getCompilerGenerated()`: This indicates that the instruction is a "
+"compiler-generated instruction, i.e. it is not associated with any user "
+"source code."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:174
+msgid ""
+"`DebugLoc::getDropped()`: This indicates that the instruction has "
+"intentionally had its source location removed, according to the rules for "
+"{ref}`dropping locations <WhenToDropLocation>`; this is set automatically by "
+"`Instruction::dropLocation()`."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:178
+msgid ""
+"`DebugLoc::getUnknown()`: This indicates that the instruction does not have "
+"a known or currently knowable source location, e.g. that it is infeasible to "
+"determine the correct source location, or that the source location is "
+"ambiguous in a way that LLVM cannot currently represent."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:182
+msgid ""
+"`DebugLoc::getTemporary()`: This is used for instructions that we don't "
+"expect to be emitted (e.g. `UnreachableInst`), and so should not need a "
+"valid location; if we ever try to emit a temporary location into an object/"
+"asm file, this indicates that something has gone wrong."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:187
+msgid ""
+"Where applicable, these should be used instead of leaving an instruction "
+"without an assigned location or explicitly setting the location as "
+"`DebugLoc()`. Ordinarily these special locations are identical to an absent "
+"location, but LLVM built with coverage-tracking (`-"
+"DLLVM_ENABLE_DEBUGLOC_COVERAGE_TRACKING=\"COVERAGE\"`) will keep track of "
+"these special locations in order to detect unintentionally-missing "
+"locations; for this reason, the most important rule is to *not* apply any of "
+"these if it isn't clear which, if any, is appropriate - an absent location "
+"can be detected and fixed, while an incorrectly annotated instruction is "
+"much harder to detect. On the other hand, if any of these clearly apply, "
+"then they should be used to prevent false positives from being flagged up."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:199
+msgid "Rules for updating debug values"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:201
+msgid "Deleting an IR-level Instruction"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:203
+msgid ""
+"When an `Instruction` is deleted, its debug uses change to `undef`. This is "
+"a loss of debug info: the value of one or more source variables becomes "
+"unavailable, starting with the `#dbg_value(undef, ...)`. When there is no "
+"way to reconstitute the value of the lost instruction, this is the best "
+"possible outcome. However, it's often possible to do better:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:209
+msgid ""
+"If the dying instruction can be RAUW'd, do so. The `Value::"
+"replaceAllUsesWith` API transparently updates debug uses of the dying "
+"instruction to point to the replacement value."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:212
+msgid ""
+"If the dying instruction cannot be RAUW'd, call `llvm::salvageDebugInfo` on "
+"it. This makes a best-effort attempt to rewrite debug uses of the dying "
+"instruction by describing its effect as a `DIExpression`."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:215
+msgid ""
+"If one of the **operands** of a dying instruction would become trivially "
+"dead, use `llvm::replaceAllDbgUsesWith` to rewrite the debug uses of that "
+"operand. Consider the following example function:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:229
+msgid ""
+"Now, here's what happens after the unnecessary truncation instruction `%d` "
+"is replaced with a simplified instruction:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:240
+msgid ""
+"Note that after deleting `%d`, all uses of its operand `%c` become trivially "
+"dead. The debug use which used to point to `%c` is now `undef`, and debug "
+"info is needlessly lost."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:244
+msgid "To solve this problem, do:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:250
+msgid ""
+"This results in better debug info because the debug use of `%c` is preserved:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:260
+msgid ""
+"You may have noticed that `%simplified` is narrower than `%c`: this is not a "
+"problem, because `llvm::replaceAllDbgUsesWith` takes care of inserting the "
+"necessary conversion operations into the DIExpressions of updated debug uses."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:264
+msgid "Deleting a MIR-level MachineInstr"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:266 ../../../HowToUpdateDebugInfo.md:597
+msgid "TODO"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:268
+msgid "Rules for updating `DIAssignID` Attachments"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:270
+msgid ""
+"`DIAssignID` metadata attachments are used by Assignment Tracking, which is "
+"currently an experimental debug mode."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:273
+msgid ""
+"See {doc}`AssignmentTracking` for how to update them and for more info on "
+"Assignment Tracking."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:276
+msgid "How to automatically convert tests into debug info tests"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:280
+msgid "Mutation testing for IR-level transformations"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:282
+msgid ""
+"An IR test case for a transformation can, in many cases, be automatically "
+"mutated to test debug info handling within that transformation. This is a "
+"simple way to test for proper debug info handling."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:286
+msgid "The `debugify` utility pass"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:288
+msgid ""
+"The `debugify` testing utility is just a pair of passes: `debugify` and "
+"`check-debugify`."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:291
+msgid ""
+"The first applies synthetic debug information to every instruction of the "
+"module, and the second checks that this DI is still available after an "
+"optimization has occurred, reporting any errors/warnings while doing so."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:295
+msgid ""
+"The instructions are assigned sequentially increasing line locations, and "
+"are immediately used by debug value records everywhere possible."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:298
+msgid "For example, here is a module before:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:311
+msgid "and after running `opt -debugify`:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:348
+msgid "Using `debugify`"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:350
+msgid "A simple way to use `debugify` is as follows:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:356
+msgid ""
+"This will inject synthetic DI to `sample.ll` run the `pass-to-test` and then "
+"check for missing DI. The `-check-debugify` step can of course be omitted in "
+"favor of more customizable FileCheck directives."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:360
+msgid "Some other ways to run debugify are available:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:374
+msgid ""
+"In order for `check-debugify` to work, the DI must be coming from "
+"`debugify`. Thus, modules with existing DI will be skipped."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:377
+msgid "`debugify` can be used to test a backend, e.g:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:383
+msgid ""
+"There is also a MIR-level debugify pass that can be run before each backend "
+"pass, see: {ref}`Mutation testing for MIR-level transformations "
+"<MIRDebugify>`."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:387
+msgid "`debugify` in regression tests"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:389
+msgid ""
+"The output of the `debugify` pass must be stable enough to use in regression "
+"tests. Changes to this pass are not allowed to break existing tests."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:393
+msgid ""
+"Regression tests must be robust. Avoid hardcoding line/variable numbers in "
+"check lines. In cases where this can't be avoided (say, if a test wouldn't "
+"be precise enough), moving the test to its own file is preferred."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:398
+msgid "Using Coverage Tracking to remove false positives"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:400
+msgid ""
+"As described {ref}`above <WhenToDropLocation>`, there are valid reasons for "
+"instructions to not have source locations. Therefore, when detecting missing "
+"source locations, it may be preferable to avoid detecting cases where the "
+"missing source location is intentional. For this, you can use the \"coverage "
+"tracking\" feature in LLVM to prevent these from appearing in the `debugify` "
+"output. This is enabled in a build of LLVM by setting the CMake flag `-"
+"DLLVM_ENABLE_DEBUGLOC_COVERAGE_TRACKING=COVERAGE`. When this has been set, "
+"LLVM will enable runtime tracking of {ref}`DebugLoc annotations "
+"<NewInstLocations>`, allowing `debugify` to ignore instructions that have an "
+"explicitly recorded reason given for not having a source location."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:412
+msgid ""
+"For triaging source location bugs detected with `debugify`, you may find it "
+"helpful to instead set the CMake flag to enable \"origin tracking\", `-"
+"DLLVM_ENABLE_DEBUGLOC_COVERAGE_TRACKING=COVERAGE_AND_ORIGIN`. This flag "
+"allows more detail to be added to `debugify`'s output, by including one or "
+"more stacktraces with every missing source location, capturing the point at "
+"which the empty source location was created, and every point at which it was "
+"copied to an instruction, making it trivial in most cases to find the origin "
+"of the underlying bug. When origin tracking is enabled, the `--enable-origin-"
+"stacktraces` flag must be passed to actually trigger the collecting of "
+"stacktraces; this flag can be passed as-is to collect stacktraces all the "
+"time, or it can be passed with a comma-separated list of pass names (in "
+"their internal PascalCase form) to enable collecting stacktraces during only "
+"those passes."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:426
+msgid ""
+"If using origin tracking, it is recommended to also build LLVM with debug "
+"info enabled, so that the stacktrace can be accurately symbolized."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:430
+msgid ""
+"The coverage tracking feature has been designed primarily for use with the "
+"{ref}`original debug info preservation <OriginalDI>` mode of `debugify`, and "
+"so may not be reliable in other settings. When using this mode, the "
+"stacktraces produced by the `COVERAGE_AND_ORIGIN` setting will be printed in "
+"an easy-to-read format as part of the reports generated by the `llvm-"
+"original-di-preservation.py` script."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:440
+msgid "Test original debug info preservation in optimizations"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:442
+msgid ""
+"In addition to automatically generating debug info, the checks provided by "
+"the `debugify` utility pass can also be used to test the preservation of pre-"
+"existing debug info metadata. It could be run as follows:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:454
+msgid "Limit number of observed functions to speed up the analysis:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:461
+msgid ""
+"Please do note that running `-verify-each-debuginfo-preserve` on big "
+"projects could be heavily time consuming. Therefore, we suggest using `-"
+"debugify-func-limit` with a suitable limit number to prevent extremely long "
+"builds."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:466
+msgid ""
+"Furthermore, there is a way to export the issues that have been found into a "
+"JSON file as follows:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:473
+msgid ""
+"and then use the `llvm/utils/llvm-original-di-preservation.py` script to "
+"generate an HTML page with the issues reported in a more human-readable form "
+"as follows:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:481
+msgid ""
+"Testing of original debug info preservation can be invoked from front-end "
+"level as follows:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:492
+msgid ""
+"Please do note that there are some known false positives, for source "
+"locations and debug record checking, so that will be addressed as a future "
+"work."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:497
+msgid "Mutation testing for MIR-level transformations"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:499
+msgid ""
+"A variant of the `debugify` utility described in {ref}`Mutation testing for "
+"IR-level transformations <IRDebugify>` can be used for MIR-level "
+"transformations as well: much like the IR-level pass, `mir-debugify` inserts "
+"sequentially increasing line locations to each `MachineInstr` in a `Module`. "
+"And the MIR-level `mir-check-debugify` is similar to IR-level `check-"
+"debugify` pass."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:506
+msgid "For example, here is a snippet before:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:519
+msgid "and after running `llc -run-pass=mir-debugify`:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:537
+msgid ""
+"By default, `mir-debugify` inserts `DBG_VALUE` instructions **everywhere** "
+"it is legal to do so. In particular, every (non-PHI) machine instruction "
+"that defines a register must be followed by a `DBG_VALUE` use of that def. "
+"If an instruction does not define a register, but can be followed by a debug "
+"inst, MIRDebugify inserts a `DBG_VALUE` that references a constant. "
+"Insertion of `DBG_VALUE`'s can be disabled by setting `-debugify-"
+"level=locations`."
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:544
+msgid ""
+"To run MIRDebugify once, simply insert `mir-debugify` into your `llc` "
+"invocation, like:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:555
+msgid ""
+"To run MIRDebugify before each pass in a pipeline, use `-debugify-and-strip-"
+"all-safe`. This can be combined with `-start-before` and `-start-after`. For "
+"example:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:564
+msgid ""
+"If you want to check it after each pass in a pipeline, use `-debugify-check-"
+"and-strip-all-safe`. This can also be combined with `-start-before` and `-"
+"start-after`. For example:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:573
+msgid "To check all debug info from a test, use `mir-check-debugify`, like:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:579
+msgid "To strip out all debug info from a test, use `mir-strip-debug`, like:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:585
+msgid ""
+"It can be useful to combine `mir-debugify`, `mir-check-debugify` and/or `mir-"
+"strip-debug` to identify backend transformations which break in the presence "
+"of debug info. For example, to run the AArch64 backend tests with all normal "
+"passes \"sandwiched\" in between MIRDebugify and MIRStripDebugify mutation "
+"passes, run:"
+msgstr ""
+
+#: ../../../HowToUpdateDebugInfo.md:595
+msgid "Using LostDebugLocObserver"
+msgstr ""
