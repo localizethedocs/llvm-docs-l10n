@@ -232,15 +232,15 @@ restore_cmake_message_indent()
 
 message(STATUS "Running 'pip install' command to install the requirements...")
 if (CMAKE_HOST_LINUX)
-    set(ENV_PATH                "${PROJ_VENV_DIR}/bin:$ENV{PATH}")
-    set(ENV_LD_LIBRARY_PATH     "${PROJ_VENV_DIR}/lib:$ENV{LD_LIBRARY_PATH}")
+    set(ENV_PATH                "${PROJ_CONDA_DIR}/bin:$ENV{PATH}")
+    set(ENV_LD_LIBRARY_PATH     "${PROJ_CONDA_DIR}/lib:$ENV{LD_LIBRARY_PATH}")
     set(ENV_VARS_OF_SYSTEM      PATH=${ENV_PATH}
                                 LD_LIBRARY_PATH=${ENV_LD_LIBRARY_PATH})
 elseif (CMAKE_HOST_WIN32)
-    set(ENV_PATH                "${PROJ_VENV_DIR}/bin"
-                                "${PROJ_VENV_DIR}/Scripts"
-                                "${PROJ_VENV_DIR}/Library/bin"
-                                "${PROJ_VENV_DIR}"
+    set(ENV_PATH                "${PROJ_CONDA_DIR}/bin"
+                                "${PROJ_CONDA_DIR}/Scripts"
+                                "${PROJ_CONDA_DIR}/Library/bin"
+                                "${PROJ_CONDA_DIR}"
                                 "$ENV{PATH}")
     string(REPLACE ";" "\\\\;"  ENV_PATH "${ENV_PATH}")
     set(ENV_VARS_OF_SYSTEM      PATH=${ENV_PATH})
