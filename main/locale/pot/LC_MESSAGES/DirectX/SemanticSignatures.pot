@@ -8,10 +8,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 11:32+0000\n"
+"POT-Creation-Date: 2026-10-25 19:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -158,7 +159,7 @@ msgid ""
 msgstr ""
 
 #: ../../../DirectX/SemanticSignatures.md:0
-#: ../../../DirectX/SemanticSignatures.md:119
+#: ../../../DirectX/SemanticSignatures.md:122
 msgid "Semantic Indices"
 msgstr ""
 
@@ -220,8 +221,8 @@ msgstr ""
 
 #: ../../../DirectX/SemanticSignatures.md:0
 msgid ""
-"4-bit bitmask of components that are always read (input) or may be written "
-"(output)."
+"4-bit register-relative mask of components read (input) or written (output), "
+"including conditional accesses."
 msgstr ""
 
 #: ../../../DirectX/SemanticSignatures.md:0
@@ -229,7 +230,7 @@ msgid "Dynamic Index Mask"
 msgstr ""
 
 #: ../../../DirectX/SemanticSignatures.md:0
-msgid "4-bit bitmask of components that are dynamically indexed"
+msgid "4-bit element-relative mask of components that are dynamically indexed"
 msgstr ""
 
 #: ../../../DirectX/SemanticSignatures.md:0
@@ -261,16 +262,244 @@ msgstr ""
 #: ../../../DirectX/SemanticSignatures.md:115
 msgid ""
 "**AlwaysReads / NeverWrites**: `UsageMask` is written to `AlwaysReads` for "
-"inputs; for outputs `NeverWrites = ~UsageMask & DeclaredMask`."
+"inputs (including conditional reads, following DXC); for outputs "
+"`NeverWrites = ~UsageMask & 0xF`. The output mask includes components "
+"outside the declared mask. These conventions apply to validator version 1.5 "
+"onward."
 msgstr ""
 
-#: ../../../DirectX/SemanticSignatures.md:117
+#: ../../../DirectX/SemanticSignatures.md:119
 msgid ""
-"**MinPrecision**: from `CompType` plus the `UseMinPrecision` module flag."
+"**MinPrecision**: from `CompType` when native low-precision mode is "
+"disabled; otherwise `Default`. The backend reads native mode from `dx."
+"nativelowprec`."
 msgstr ""
 
-#: ../../../DirectX/SemanticSignatures.md:126
+#: ../../../DirectX/SemanticSignatures.md:129
 msgid ""
 "A metadata node of one or more semantic indices. Its length must equal the "
 "`Rows` field of the containing signature element."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:132
+msgid "Signature Packing"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:134
+msgid ""
+"Before a semantic signature is serialized, each element that participates in "
+"packing is assigned a location in a fixed register space of 32 rows and 4 "
+"columns. An element occupies a rectangle of `Rows` consecutive registers and "
+"`Cols` consecutive components. Its allocated location is recorded in "
+"`StartRow` and `StartCol`."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:140
+msgid ""
+"The packing helper classifies each element from its semantic kind, shader "
+"stage, and I/O type. Elements with the `NotAllocated` interpretation are "
+"accessed by dedicated intrinsics and do not appear in input/output signature "
+"metadata. Elements with the `NotPacked` interpretation, remain in the "
+"signature and use ordinary `llvm.dx.load.input` accesses, but retain the "
+"unallocated row and column sentinels. Neither interpretation reserves "
+"registers. The remaining interpretations accepted by a packing algorithm are "
+"assigned locations according to that algorithm's rules. If an eligible "
+"element cannot be placed, packing returns a `SignaturePackingError` "
+"identifying the element that failed."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:150
+msgid ""
+"The packing APIs are declared in [SemanticSignaturePacking.h], and the in-"
+"memory element representation they operate on is declared in "
+"[SemanticSignatures.h]."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:156
+msgid "Selecting a Packing Mode"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:158
+msgid ""
+"Clang packs semantic signatures before emitting `dx.semantic.signatures` "
+"metadata. For signatures connecting programmable shader stages, the default "
+"is prefix-stable packing. Use `-fdx-semantic-signature-packing-mode=prefix-"
+"stable` or `-fdx-semantic-signature-packing-mode=optimized` to select the "
+"mode explicitly. In DXC driver mode, the corresponding flags are `-pack-"
+"prefix-stable` and `-pack-optimized`. These options do not affect vertex "
+"shader inputs, which always use stacked packing, or pixel shader outputs, "
+"which always use indexed packing."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:166
+msgid "Prefix-Stable Packing"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:168
+msgid ""
+"Prefix-stable packing is used for signatures that connect programmable "
+"shader stages or carry patch constant data. Elements are visited in "
+"declaration order and placed at the first compatible location in the 32-row "
+"by 4-column register space. Once an element is placed it is never moved, so "
+"appending elements to a signature does not change the locations assigned to "
+"its existing prefix."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:174
+msgid ""
+"Elements can share unused components in a row when all applicable packing "
+"constraints are satisfied:"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:177
+msgid "Every element in a row must have a compatible interpolation mode."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:178
+msgid ""
+"When native 16-bit types are enabled, every element in a row must have the "
+"same component width. Without native 16-bit types, min-precision values "
+"occupy 32-bit components."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:181
+msgid ""
+"Within each row, elements are ordered by category: arbitrary values first, "
+"followed by system values, and then system-generated values. For example, a "
+"system value can never be packed to the left of an arbitrary value. Indexed "
+"tessellation factors follow these categories in the component ordering. Clip/"
+"cull values occupy dedicated rows as described below."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:186
+msgid ""
+"A system value or system generated value cannot be placed in a dynamically "
+"indexed row. A dynamically indexed row is a row within the range covered by "
+"a multi-row element, where the row is selected using a dynamic index."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:190
+msgid "Some semantic interpretations require additional handling:"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:192
+msgid ""
+"`SV_ClipDistance` and `SV_CullDistance` are packed only with each other in "
+"dedicated rows. Together they may occupy at most eight components across at "
+"most two rows. The rows must be adjacent when a clip or cull element spans "
+"multiple rows. Otherwise, clip and cull rows do not need to be adjacent."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:196
+msgid ""
+"A multi-row tessellation factor is searched for only in the last column. "
+"Arbitrary values may fill the columns to its left, even when declared after "
+"the factor. A single-row tessellation factor is ordered and packed as a "
+"system value instead."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:200
+msgid "Geometry shader output streams are packed independently."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:202
+#: ../../../DirectX/SemanticSignatures.md:257
+#: ../../../DirectX/SemanticSignatures.md:284
+msgid "For example:"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:213
+msgid ""
+"Assuming `B` has column-major matrix orientation, the signature is allocated "
+"as:"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:223
+msgid "Optimized Packing"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:225
+msgid ""
+"Optimized packing partitions eligible elements into groups and packs the "
+"groups in this order:"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:228
+msgid "Arbitrary and system-value elements that occupy a full register."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:229
+msgid ""
+"Multi-row tessellation factors, which are restricted to the last column."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:230
+msgid "Arbitrary elements."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:231
+msgid "System-value elements, including single-row tessellation factors."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:232
+msgid "`SV_ClipDistance` and `SV_CullDistance` elements."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:233
+msgid "System-generated-value elements."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:235
+msgid ""
+"Within each group, elements are ordered first by the numeric value of their "
+"interpolation mode, then by decreasing row count, then by decreasing column "
+"count, and finally by increasing signature ID."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:239
+msgid ""
+"Unlike prefix-stable packing, optimized packing does not reserve whole rows "
+"for clip/cull values. They may share compatible rows with other values "
+"following the same constraints."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:243
+msgid ""
+"This is a greedy optimized ordering rather than an exhaustive search for a "
+"minimum-row layout. Reordering can reduce the number of rows occupied, but "
+"means that appending an element may change locations assigned to existing "
+"elements."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:248
+msgid "Stacked Packing"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:250
+msgid ""
+"Stacked packing is used for a vertex shader input signature. Eligible "
+"elements are visited in declaration order. Each starts at column zero of the "
+"first row after the preceding element, and a multi-row element occupies "
+"consecutive rows. Elements are never co-packed into the unused columns of "
+"another element, and interpolation mode, component type, and semantic "
+"interpretation do not otherwise affect placement."
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:267
+#: ../../../DirectX/SemanticSignatures.md:294
+msgid "The signature is allocated as:"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:276
+msgid "Indexed Packing"
+msgstr ""
+
+#: ../../../DirectX/SemanticSignatures.md:278
+msgid ""
+"Indexed packing is used for a pixel shader output signature. Each eligible "
+"`SV_Target` element occupies one row and starts at column zero. Its semantic "
+"index directly selects that row, so declaration order does not affect "
+"placement and rows without a corresponding semantic index remain unused. "
+"Elements that do not contribute to the target register space remain "
+"unallocated."
 msgstr ""
