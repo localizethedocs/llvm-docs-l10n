@@ -1,5 +1,5 @@
 <div align="center">
-<h1 id="localization-of-the-llvm-documentation">Localization of The LLVM Documentation</h1>
+<h1 id="localization-of-the-llvm-documentation">LLVM 文件的在地化</h1>
 </div>
 
 <details><summary><strong>切換語言</strong></summary>
@@ -349,7 +349,7 @@ The goal of this project is to translate The LLVM Documentation into multiple la
 
 <h2 id="preview-translations"><a href="#table-of-contents">預覽翻譯</a></h2>
 
-You can preview translations in <a href="https://projects.localizethedocs.org/llvm-docs-l10n">GitHub Pages</a>:
+您可以在 <a href="https://projects.localizethedocs.org/llvm-docs-l10n">GitHub Pages</a> 中預覽翻譯：
 
 <div align="center">
 <table>
