@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 19:47+0000\n"
+"POT-Creation-Date: 2026-11-23 20:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -628,10 +628,58 @@ msgid ""
 msgstr ""
 
 #: ../../../CodeGenerator.md:464
-msgid "The `MachineBasicBlock` class"
+msgid "Undefined values, poison, and freeze"
 msgstr ""
 
 #: ../../../CodeGenerator.md:466
+msgid ""
+"After instruction selection, machine code has no exact equivalent of LLVM "
+"IR's `undef` or `poison`."
+msgstr ""
+
+#: ../../../CodeGenerator.md:469
+msgid ""
+"`IMPLICIT_DEF` defines a register without assigning a value. Currently, both "
+"`undef` and `poison` select to it in SelectionDAG and GlobalISel. Before "
+"register allocation, `ProcessImplicitDefs` deletes most `IMPLICIT_DEF`s of "
+"virtual registers and sets the `undef` flag on their uses. The `undef` flag "
+"marks a register use as having a value that doesn't matter. Different "
+"instructions with `undef` uses of the same register may observe different "
+"values."
+msgstr ""
+
+#: ../../../CodeGenerator.md:477
+msgid ""
+"`FREEZE` gives undefined bits an arbitrary, but fixed value, so every use of "
+"its result observes the same value. It isn't generally treated as copy-like, "
+"so `ProcessImplicitDefs` and the register coalescer don't look through it. "
+"After register allocation, a `FREEZE` of a defined value becomes a `COPY`, "
+"and a `FREEZE` of an undefined value stays until code emission, where it "
+"emits no code."
+msgstr ""
+
+#: ../../../CodeGenerator.md:484
+msgid ""
+"Selectors still lower `freeze` to a `COPY`. If the copied value is "
+"undefined, different uses can observe different values, which violates the "
+"IR semantics of `freeze`."
+msgstr ""
+
+#: ../../../CodeGenerator.md:488
+msgid ""
+"Machine instructions may also have any of the following poison-generating "
+"flags: `nuw`, `nsw`, `exact`, `disjoint`, `nneg`, `nusw`, `inbounds`, "
+"`samesign`, `nnan`, and `ninf`. These have the same definitions as the IR "
+"versions. A transformation must drop a flag if the new instruction could "
+"violate the flag's condition for inputs where the original instruction did "
+"not."
+msgstr ""
+
+#: ../../../CodeGenerator.md:496
+msgid "The `MachineBasicBlock` class"
+msgstr ""
+
+#: ../../../CodeGenerator.md:498
 msgid ""
 "The `MachineBasicBlock` class contains a list of machine instructions ( {ref}"
 "`MachineInstr <MachineInstr>`  instances).  It roughly corresponds to the "
@@ -641,11 +689,11 @@ msgid ""
 "which returns the LLVM basic block that it comes from."
 msgstr ""
 
-#: ../../../CodeGenerator.md:475
+#: ../../../CodeGenerator.md:507
 msgid "The `MachineFunction` class"
 msgstr ""
 
-#: ../../../CodeGenerator.md:477
+#: ../../../CodeGenerator.md:509
 msgid ""
 "The `MachineFunction` class contains a list of machine basic blocks ( {ref}"
 "`MachineBasicBlock <MachineBasicBlock>`  instances).  It corresponds one-to-"
@@ -656,11 +704,11 @@ msgid ""
 "more information."
 msgstr ""
 
-#: ../../../CodeGenerator.md:485
+#: ../../../CodeGenerator.md:517
 msgid "`MachineInstr Bundles`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:487
+#: ../../../CodeGenerator.md:519
 msgid ""
 "LLVM code generator can model sequences of instructions as MachineInstr "
 "bundles. A MI bundle can model a VLIW group / pack which contains an "
@@ -669,12 +717,12 @@ msgid ""
 "cannot be legally separated (e.g., ARM Thumb2 IT blocks)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:493
+#: ../../../CodeGenerator.md:525
 msgid ""
 "Conceptually a MI bundle is a MI with a number of other MIs nested within:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:531
+#: ../../../CodeGenerator.md:563
 msgid ""
 "MI bundle support does not change the physical representations of "
 "MachineBasicBlock and MachineInstr. All the MIs (including top level and "
@@ -684,7 +732,7 @@ msgid ""
 "MIs with individual MIs that are not inside bundles nor represent bundles."
 msgstr ""
 
-#: ../../../CodeGenerator.md:538
+#: ../../../CodeGenerator.md:570
 msgid ""
 "MachineInstr passes should operate on a MI bundle as a single unit. Member "
 "methods have been taught to correctly handle bundles and MIs inside bundles. "
@@ -697,7 +745,7 @@ msgid ""
 "inputs and outputs of the bundled MIs."
 msgstr ""
 
-#: ../../../CodeGenerator.md:548
+#: ../../../CodeGenerator.md:580
 msgid ""
 "Packing / bundling of MachineInstrs for VLIW architectures should generally "
 "be done as part of the register allocation super-pass. More specifically, "
@@ -712,11 +760,11 @@ msgid ""
 "appropriate for all use cases."
 msgstr ""
 
-#: ../../../CodeGenerator.md:563
+#: ../../../CodeGenerator.md:595
 msgid "The \"MC\" Layer"
 msgstr ""
 
-#: ../../../CodeGenerator.md:565
+#: ../../../CodeGenerator.md:597
 msgid ""
 "The MC Layer is used to represent and process code at the raw machine code "
 "level, devoid of \"high level\" information like \"constant pools\", \"jump "
@@ -728,18 +776,18 @@ msgid ""
 "machine code assemblers and disassemblers."
 msgstr ""
 
-#: ../../../CodeGenerator.md:573
+#: ../../../CodeGenerator.md:605
 msgid ""
 "This section describes some of the important classes.  There are also a "
 "number of important subsystems that interact at this layer, they are "
 "described later in this manual."
 msgstr ""
 
-#: ../../../CodeGenerator.md:579
+#: ../../../CodeGenerator.md:611
 msgid "The `MCStreamer` API"
 msgstr ""
 
-#: ../../../CodeGenerator.md:581
+#: ../../../CodeGenerator.md:613
 msgid ""
 "MCStreamer is best thought of as an assembler API.  It is an abstract API "
 "which is *implemented* in different ways (e.g., to output a `.s` file, "
@@ -750,7 +798,7 @@ msgid ""
 "EmitInstruction method, which is used to output an MCInst to the streamer."
 msgstr ""
 
-#: ../../../CodeGenerator.md:589
+#: ../../../CodeGenerator.md:621
 msgid ""
 "This API is most important for two clients: the llvm-mc stand-alone "
 "assembler is effectively a parser that parses a line, then invokes a method "
@@ -760,7 +808,7 @@ msgid ""
 "MCStreamer."
 msgstr ""
 
-#: ../../../CodeGenerator.md:595
+#: ../../../CodeGenerator.md:627
 msgid ""
 "On the implementation side of MCStreamer, there are two major "
 "implementations: one for writing out a `.s` file (MCAsmStreamer), and one "
@@ -770,30 +818,30 @@ msgid ""
 "assembler."
 msgstr ""
 
-#: ../../../CodeGenerator.md:601
+#: ../../../CodeGenerator.md:633
 msgid ""
 "For target-specific directives, the MCStreamer has a MCTargetStreamer "
 "instance. Each target that needs it defines a class that inherits from it "
 "and is a lot like MCStreamer itself: It has one method per directive and two "
 "classes that inherit from it, a target object streamer and a target asm "
-"streamer. The target asm streamer just prints it (`emitFnStart -> ."
-"fnstart`), and the object streamer implements the assembler logic for it."
+"streamer. The target asm streamer just prints it (`emitFnStart "
+"-> .fnstart`), and the object streamer implements the assembler logic for it."
 msgstr ""
 
-#: ../../../CodeGenerator.md:608
+#: ../../../CodeGenerator.md:640
 msgid ""
 "To make llvm use these classes, the target initialization must call "
-"TargetRegistry::RegisterAsmStreamer and TargetRegistry::"
-"RegisterMCObjectStreamer passing callbacks that allocate the corresponding "
-"target streamer and pass it to createAsmStreamer or to the appropriate "
-"object streamer constructor."
+"TargetRegistry::RegisterAsmStreamer and "
+"TargetRegistry::RegisterMCObjectStreamer passing callbacks that allocate the "
+"corresponding target streamer and pass it to createAsmStreamer or to the "
+"appropriate object streamer constructor."
 msgstr ""
 
-#: ../../../CodeGenerator.md:613
+#: ../../../CodeGenerator.md:645
 msgid "The `MCContext` class"
 msgstr ""
 
-#: ../../../CodeGenerator.md:615
+#: ../../../CodeGenerator.md:647
 msgid ""
 "The MCContext class is the owner of a variety of uniqued data structures at "
 "the MC layer, including symbols, sections, etc.  As such, this is the class "
@@ -801,11 +849,11 @@ msgid ""
 "be subclassed."
 msgstr ""
 
-#: ../../../CodeGenerator.md:619
+#: ../../../CodeGenerator.md:651
 msgid "The `MCSymbol` class"
 msgstr ""
 
-#: ../../../CodeGenerator.md:621
+#: ../../../CodeGenerator.md:653
 msgid ""
 "The MCSymbol class represents a symbol (aka label) in the assembly file.  "
 "There are two interesting kinds of symbols: assembler temporary symbols, and "
@@ -815,7 +863,7 @@ msgid ""
 "example \"L\" labels are assembler temporary labels in MachO."
 msgstr ""
 
-#: ../../../CodeGenerator.md:628
+#: ../../../CodeGenerator.md:660
 msgid ""
 "MCSymbols are created by MCContext and uniqued there.  This means that "
 "MCSymbols can be compared for pointer equivalence to find out if they are "
@@ -824,15 +872,15 @@ msgid ""
 "something like this to the `.s` file:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:640
+#: ../../../CodeGenerator.md:672
 msgid "In this case, both the foo and bar symbols will have the same address."
 msgstr ""
 
-#: ../../../CodeGenerator.md:642
+#: ../../../CodeGenerator.md:674
 msgid "The `MCSection` class"
 msgstr ""
 
-#: ../../../CodeGenerator.md:644
+#: ../../../CodeGenerator.md:676
 msgid ""
 "The `MCSection` class represents an object-file specific section. It is "
 "subclassed by object file specific implementations (e.g., `MCSectionMachO`, "
@@ -842,11 +890,11 @@ msgid ""
 "directive in a `.s` file)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:653
+#: ../../../CodeGenerator.md:685
 msgid "The `MCInst` class"
 msgstr ""
 
-#: ../../../CodeGenerator.md:655
+#: ../../../CodeGenerator.md:687
 msgid ""
 "The `MCInst` class is a target-independent representation of an instruction. "
 "It is a simple class (much more so than {ref}`MachineInstr <MachineInstr>`) "
@@ -856,18 +904,18 @@ msgid ""
 "Lbar+42`\") as an MCExpr."
 msgstr ""
 
-#: ../../../CodeGenerator.md:661
+#: ../../../CodeGenerator.md:693
 msgid ""
 "MCInst is the common currency used to represent machine instructions at the "
 "MC layer.  It is the type used by the instruction encoder, the instruction "
 "printer, and the type generated by the assembly parser and disassembler."
 msgstr ""
 
-#: ../../../CodeGenerator.md:667
+#: ../../../CodeGenerator.md:699
 msgid "Object File Format"
 msgstr ""
 
-#: ../../../CodeGenerator.md:669
+#: ../../../CodeGenerator.md:701
 msgid ""
 "The MC layer's object writers support a variety of object formats. Because "
 "of target-specific aspects of object formats each target only supports a "
@@ -879,30 +927,30 @@ msgid ""
 "formats (i.e., DirectX, SPIR-V and WebAssembly)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:678
+#: ../../../CodeGenerator.md:710
 msgid "The table below captures a snapshot of object file support in LLVM:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:680
+#: ../../../CodeGenerator.md:712
 msgid "Object File Formats"
 msgstr ""
 
-#: ../../../CodeGenerator.md:695
+#: ../../../CodeGenerator.md:727
 msgid "Target-independent code generation algorithms"
 msgstr ""
 
-#: ../../../CodeGenerator.md:697
+#: ../../../CodeGenerator.md:729
 msgid ""
 "This section documents the phases described in the {ref}`high-level design "
 "of the code generator <high-level design of the code generator>`. It "
 "explains how they work and some of the rationale behind their design."
 msgstr ""
 
-#: ../../../CodeGenerator.md:704
+#: ../../../CodeGenerator.md:736
 msgid "Instruction Selection"
 msgstr ""
 
-#: ../../../CodeGenerator.md:706
+#: ../../../CodeGenerator.md:738
 msgid ""
 "Instruction Selection is the process of translating LLVM code presented to "
 "the code generator into target-specific machine instructions.  There are "
@@ -910,7 +958,7 @@ msgid ""
 "SelectionDAG based instruction selector."
 msgstr ""
 
-#: ../../../CodeGenerator.md:711
+#: ../../../CodeGenerator.md:743
 msgid ""
 "Portions of the DAG instruction selector are generated from the target "
 "description (`*.td`) files.  Our goal is for the entire instruction selector "
@@ -918,16 +966,16 @@ msgid ""
 "things that require custom C++ code."
 msgstr ""
 
-#: ../../../CodeGenerator.md:716
+#: ../../../CodeGenerator.md:748
 msgid ""
 "[GlobalISel](GlobalISel/index.md) is another instruction selection framework."
 msgstr ""
 
-#: ../../../CodeGenerator.md:721
+#: ../../../CodeGenerator.md:753
 msgid "Introduction to SelectionDAGs"
 msgstr ""
 
-#: ../../../CodeGenerator.md:723
+#: ../../../CodeGenerator.md:755
 msgid ""
 "The SelectionDAG provides an abstraction for code representation in a way "
 "that is amenable to instruction selection using automatic techniques (e.g., "
@@ -941,7 +989,7 @@ msgid ""
 "target."
 msgstr ""
 
-#: ../../../CodeGenerator.md:733
+#: ../../../CodeGenerator.md:765
 msgid ""
 "The SelectionDAG is a Directed-Acyclic-Graph whose nodes are instances of "
 "the `SDNode` class.  The primary payload of the `SDNode` is its operation "
@@ -950,7 +998,7 @@ msgid ""
 "at the top of the `include/llvm/CodeGen/ISDOpcodes.h` file."
 msgstr ""
 
-#: ../../../CodeGenerator.md:739
+#: ../../../CodeGenerator.md:771
 msgid ""
 "Although most operations define a single value, each node in the graph may "
 "define multiple values.  For example, a combined div/rem operation will "
@@ -964,7 +1012,7 @@ msgid ""
 "is."
 msgstr ""
 
-#: ../../../CodeGenerator.md:749
+#: ../../../CodeGenerator.md:781
 msgid ""
 "SelectionDAGs contain two different kinds of values: those that represent "
 "data flow and those that represent control flow dependencies.  Data values "
@@ -979,7 +1027,7 @@ msgid ""
 "operands, and may be followed by glue nodes."
 msgstr ""
 
-#: ../../../CodeGenerator.md:761
+#: ../../../CodeGenerator.md:793
 msgid ""
 "A SelectionDAG has designated \"Entry\" and \"Root\" nodes.  The Entry node "
 "is always a marker node with an Opcode of `ISD::EntryToken`.  The Root node "
@@ -987,7 +1035,7 @@ msgid ""
 "single basic block function it would be the return node."
 msgstr ""
 
-#: ../../../CodeGenerator.md:766
+#: ../../../CodeGenerator.md:798
 msgid ""
 "One important concept for SelectionDAGs is the notion of a \"legal\" vs. "
 "\"illegal\" DAG.  A legal DAG for a target is one that only uses supported "
@@ -998,22 +1046,22 @@ msgid ""
 "responsible for turning an illegal DAG into a legal DAG."
 msgstr ""
 
-#: ../../../CodeGenerator.md:775
+#: ../../../CodeGenerator.md:807
 msgid "SelectionDAG Instruction Selection Process"
 msgstr ""
 
-#: ../../../CodeGenerator.md:777
+#: ../../../CodeGenerator.md:809
 msgid ""
 "SelectionDAG-based instruction selection consists of the following steps:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:779
+#: ../../../CodeGenerator.md:811
 msgid ""
 "{ref}`Build initial DAG <Build initial DAG>` --- This stage performs a "
 "simple translation from the input LLVM code to an illegal SelectionDAG."
 msgstr ""
 
-#: ../../../CodeGenerator.md:782
+#: ../../../CodeGenerator.md:814
 msgid ""
 "{ref}`Optimize SelectionDAG <Optimize SelectionDAG>` --- This stage performs "
 "simple optimizations on the SelectionDAG to simplify it, and recognize meta "
@@ -1023,34 +1071,34 @@ msgid ""
 "(below) simpler."
 msgstr ""
 
-#: ../../../CodeGenerator.md:789
+#: ../../../CodeGenerator.md:821
 msgid ""
 "{ref}`Legalize SelectionDAG Types <Legalize SelectionDAG Types>` --- This "
 "stage transforms SelectionDAG nodes to eliminate any types that are "
 "unsupported on the target."
 msgstr ""
 
-#: ../../../CodeGenerator.md:792
+#: ../../../CodeGenerator.md:824
 msgid ""
 "{ref}`Optimize SelectionDAG <Optimize SelectionDAG>` --- The SelectionDAG "
 "optimizer is run to clean up redundancies exposed by type legalization."
 msgstr ""
 
-#: ../../../CodeGenerator.md:795
+#: ../../../CodeGenerator.md:827
 msgid ""
 "{ref}`Legalize SelectionDAG Ops <Legalize SelectionDAG Ops>` --- This stage "
 "transforms SelectionDAG nodes to eliminate any operations that are "
 "unsupported on the target."
 msgstr ""
 
-#: ../../../CodeGenerator.md:798
+#: ../../../CodeGenerator.md:830
 msgid ""
 "{ref}`Optimize SelectionDAG <Optimize SelectionDAG>` --- The SelectionDAG "
 "optimizer is run to eliminate inefficiencies introduced by operation "
 "legalization."
 msgstr ""
 
-#: ../../../CodeGenerator.md:801
+#: ../../../CodeGenerator.md:833
 msgid ""
 "{ref}`Select instructions from DAG <Select instructions from DAG>` --- "
 "Finally, the target instruction selector matches the DAG operations to "
@@ -1058,7 +1106,7 @@ msgid ""
 "DAG into another DAG of target instructions."
 msgstr ""
 
-#: ../../../CodeGenerator.md:805
+#: ../../../CodeGenerator.md:837
 msgid ""
 "{ref}`SelectionDAG Scheduling and Formation <SelectionDAG Scheduling and "
 "Formation>` --- The last phase assigns a linear order to the instructions in "
@@ -1066,13 +1114,13 @@ msgid ""
 "compiled.  This step uses traditional prepass scheduling techniques."
 msgstr ""
 
-#: ../../../CodeGenerator.md:810
+#: ../../../CodeGenerator.md:842
 msgid ""
 "After all of these steps are complete, the SelectionDAG is destroyed and the "
 "rest of the code generation passes are run."
 msgstr ""
 
-#: ../../../CodeGenerator.md:813
+#: ../../../CodeGenerator.md:845
 msgid ""
 "One of the most common ways to debug these steps is using `-debug-"
 "only=isel`, which prints out the DAG, along with other information like "
@@ -1081,7 +1129,7 @@ msgid ""
 "names using `-filter-print-funcs=<function names>`."
 msgstr ""
 
-#: ../../../CodeGenerator.md:819
+#: ../../../CodeGenerator.md:851
 msgid ""
 "One great way to visualize what is going on here is to take advantage of a "
 "few LLC command line options.  The following options pop up a window "
@@ -1090,31 +1138,31 @@ msgid ""
 "configure your system <ViewGraph>` to add support for it)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:825
+#: ../../../CodeGenerator.md:857
 msgid ""
 "`-view-dag-combine1-dags` displays the DAG after being built, before the "
 "first optimization pass."
 msgstr ""
 
-#: ../../../CodeGenerator.md:828
+#: ../../../CodeGenerator.md:860
 msgid "`-view-legalize-dags` displays the DAG before Legalization."
 msgstr ""
 
-#: ../../../CodeGenerator.md:830
+#: ../../../CodeGenerator.md:862
 msgid ""
 "`-view-dag-combine2-dags` displays the DAG before the second optimization "
 "pass."
 msgstr ""
 
-#: ../../../CodeGenerator.md:833
+#: ../../../CodeGenerator.md:865
 msgid "`-view-isel-dags` displays the DAG before the Select phase."
 msgstr ""
 
-#: ../../../CodeGenerator.md:835
+#: ../../../CodeGenerator.md:867
 msgid "`-view-sched-dags` displays the DAG before Scheduling."
 msgstr ""
 
-#: ../../../CodeGenerator.md:837
+#: ../../../CodeGenerator.md:869
 msgid ""
 "The `-view-sunit-dags` displays the Scheduler's dependency graph.  This "
 "graph is based on the final SelectionDAG, with nodes that must be scheduled "
@@ -1122,18 +1170,18 @@ msgid ""
 "operands and other nodes that aren't relevant for scheduling omitted."
 msgstr ""
 
-#: ../../../CodeGenerator.md:842
+#: ../../../CodeGenerator.md:874
 msgid ""
 "The option `-filter-view-dags` allows to select the name of the basic block "
 "that you are interested in visualizing and filters all the previous `view-*-"
 "dags` options."
 msgstr ""
 
-#: ../../../CodeGenerator.md:848
+#: ../../../CodeGenerator.md:880
 msgid "Initial SelectionDAG Construction"
 msgstr ""
 
-#: ../../../CodeGenerator.md:850
+#: ../../../CodeGenerator.md:882
 msgid ""
 "The initial SelectionDAG is na&iuml;vely peephole expanded from the LLVM "
 "input by the `SelectionDAGBuilder` class.  The intent of this pass is to "
@@ -1145,17 +1193,17 @@ msgid ""
 "<TargetLowering>`  interface is used."
 msgstr ""
 
-#: ../../../CodeGenerator.md:863
+#: ../../../CodeGenerator.md:895
 msgid "SelectionDAG LegalizeTypes Phase"
 msgstr ""
 
-#: ../../../CodeGenerator.md:865
+#: ../../../CodeGenerator.md:897
 msgid ""
 "The Legalize phase is in charge of converting a DAG to only use the types "
 "that are natively supported by the target."
 msgstr ""
 
-#: ../../../CodeGenerator.md:868
+#: ../../../CodeGenerator.md:900
 msgid ""
 "There are two main ways of converting values of unsupported scalar types to "
 "values of supported types: converting small types to larger types "
@@ -1167,7 +1215,7 @@ msgid ""
 "sure that the final code has the same behavior as the input."
 msgstr ""
 
-#: ../../../CodeGenerator.md:877
+#: ../../../CodeGenerator.md:909
 msgid ""
 "There are two main ways of converting values of unsupported vector types to "
 "value of supported types: splitting vector types, multiple times if "
@@ -1178,24 +1226,24 @@ msgid ""
 "(\"scalarizing\")."
 msgstr ""
 
-#: ../../../CodeGenerator.md:884
+#: ../../../CodeGenerator.md:916
 msgid ""
 "A target implementation tells the legalizer which types are supported (and "
 "which register class to use for them) by calling the `addRegisterClass` "
 "method in its `TargetLowering` constructor."
 msgstr ""
 
-#: ../../../CodeGenerator.md:891
+#: ../../../CodeGenerator.md:923
 msgid "SelectionDAG Legalize Phase"
 msgstr ""
 
-#: ../../../CodeGenerator.md:893
+#: ../../../CodeGenerator.md:925
 msgid ""
 "The Legalize phase is in charge of converting a DAG to only use the "
 "operations that are natively supported by the target."
 msgstr ""
 
-#: ../../../CodeGenerator.md:896
+#: ../../../CodeGenerator.md:928
 msgid ""
 "Targets often have weird constraints, such as not supporting every operation "
 "on every supported data type (e.g., X86 does not support byte conditional "
@@ -1206,14 +1254,14 @@ msgid ""
 "target-specific hook to implement the legalization (\"custom\")."
 msgstr ""
 
-#: ../../../CodeGenerator.md:904
+#: ../../../CodeGenerator.md:936
 msgid ""
 "A target implementation tells the legalizer which operations are not "
 "supported (and which of the above three actions to take) by calling the "
 "`setOperationAction` method in its `TargetLowering` constructor."
 msgstr ""
 
-#: ../../../CodeGenerator.md:908
+#: ../../../CodeGenerator.md:940
 msgid ""
 "If a target has legal vector types, it is expected to produce efficient "
 "machine code for common forms of the shufflevector IR instruction using "
@@ -1222,7 +1270,7 @@ msgid ""
 "forms that should be handled include:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:914
+#: ../../../CodeGenerator.md:946
 msgid ""
 "Vector select --- Each element of the vector is chosen from either of the "
 "corresponding elements of the 2 input vectors. This operation may also be "
@@ -1230,21 +1278,21 @@ msgid ""
 "shuffle maps directly to the `shuffle_vector` SelectionDAG node."
 msgstr ""
 
-#: ../../../CodeGenerator.md:919
+#: ../../../CodeGenerator.md:951
 msgid ""
 "Insert subvector --- A vector is placed into a longer vector type starting "
 "at index 0. This type of shuffle maps directly to the `insert_subvector` "
 "SelectionDAG node with the `index` operand set to 0."
 msgstr ""
 
-#: ../../../CodeGenerator.md:923
+#: ../../../CodeGenerator.md:955
 msgid ""
 "Extract subvector --- A vector is pulled from a longer vector type starting "
 "at index 0. This type of shuffle maps directly to the `extract_subvector` "
 "SelectionDAG node with the `index` operand set to 0."
 msgstr ""
 
-#: ../../../CodeGenerator.md:927
+#: ../../../CodeGenerator.md:959
 msgid ""
 "Splat --- All elements of the vector have identical scalar elements. This "
 "operation may also be known as a \"broadcast\" or \"duplicate\" in target "
@@ -1254,7 +1302,7 @@ msgid ""
 "`extract_subvector`."
 msgstr ""
 
-#: ../../../CodeGenerator.md:933
+#: ../../../CodeGenerator.md:965
 msgid ""
 "Prior to the existence of the Legalize passes, we required that every target "
 "{ref}`selector <selector>` supported and handled every operator and type "
@@ -1264,11 +1312,11 @@ msgid ""
 "it is still in the form of a DAG."
 msgstr ""
 
-#: ../../../CodeGenerator.md:943
+#: ../../../CodeGenerator.md:975
 msgid "SelectionDAG Optimization Phase: the DAG Combiner"
 msgstr ""
 
-#: ../../../CodeGenerator.md:945
+#: ../../../CodeGenerator.md:977
 msgid ""
 "The SelectionDAG optimization phase is run multiple times for code "
 "generation, immediately after the DAG is built and once after each "
@@ -1280,7 +1328,7 @@ msgid ""
 "generating *good* and legal code)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:953
+#: ../../../CodeGenerator.md:985
 msgid ""
 "One important class of optimizations performed is optimizing inserted sign "
 "and zero extension instructions.  We currently use ad-hoc techniques, but "
@@ -1288,22 +1336,22 @@ msgid ""
 "papers on the subject:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:958
+#: ../../../CodeGenerator.md:990
 msgid ""
 "\"[Widening integer arithmetic](http://www.eecs.harvard.edu/~nr/pubs/widen-"
 "abstract.html)\" Kevin Redwine and Norman Ramsey International Conference on "
 "Compiler Construction (CC) 2004"
 msgstr ""
 
-#: ../../../CodeGenerator.md:680
+#: ../../../CodeGenerator.md:712
 msgid "<br />\n"
 msgstr ""
 
-#: ../../../CodeGenerator.md:680
+#: ../../../CodeGenerator.md:712
 msgid "\\\\\n"
 msgstr ""
 
-#: ../../../CodeGenerator.md:962
+#: ../../../CodeGenerator.md:994
 msgid ""
 "\"[Effective sign extension elimination](http://portal.acm.org/citation.cfm?"
 "doid=512529.512552)\" Motohiro Kawahito, Hideaki Komatsu, and Toshio "
@@ -1311,11 +1359,11 @@ msgid ""
 "Language Design and Implementation."
 msgstr ""
 
-#: ../../../CodeGenerator.md:969
+#: ../../../CodeGenerator.md:1001
 msgid "SelectionDAG Select Phase"
 msgstr ""
 
-#: ../../../CodeGenerator.md:971
+#: ../../../CodeGenerator.md:1003
 msgid ""
 "The Select phase is the bulk of the target-specific code for instruction "
 "selection.  This phase takes a legal SelectionDAG as input, pattern matches "
@@ -1323,19 +1371,19 @@ msgid ""
 "of target code.  For example, consider the following LLVM fragment:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:981
+#: ../../../CodeGenerator.md:1013
 msgid ""
 "This LLVM code corresponds to a SelectionDAG that looks basically like this:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:986
+#: ../../../CodeGenerator.md:1018
 msgid ""
 "If a target supports floating point multiply-and-add (FMA) operations, one "
 "of the adds can be merged with the multiply.  On the PowerPC, for example, "
 "the output of the instruction selector might look like this DAG:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:994
+#: ../../../CodeGenerator.md:1026
 msgid ""
 "The `FMADDS` instruction is a ternary instruction that multiplies its first "
 "two operands and adds the third (as single-precision floating-point "
@@ -1344,7 +1392,7 @@ msgid ""
 "following instruction definitions:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1013
+#: ../../../CodeGenerator.md:1045
 msgid ""
 "The highlighted portion of the instruction definitions indicates the pattern "
 "used to match the instructions. The DAG operators (like `fmul`/`fadd`) are "
@@ -1352,20 +1400,20 @@ msgid ""
 "is the register class of the input and result values."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1018
+#: ../../../CodeGenerator.md:1050
 msgid ""
 "The TableGen DAG instruction selector generator reads the instruction "
 "patterns in the `.td` file and automatically builds parts of the pattern "
 "matching code for your target.  It has the following strengths:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1022
+#: ../../../CodeGenerator.md:1054
 msgid ""
 "At compiler-compile time, it analyzes your instruction patterns and tells "
 "you if your patterns make sense or not."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1025
+#: ../../../CodeGenerator.md:1057
 msgid ""
 "It can handle arbitrary constraints on operands for the pattern match.  In "
 "particular, it is straightforward to say things like \"match any immediate "
@@ -1373,7 +1421,7 @@ msgid ""
 "and related `tblgen` classes in the PowerPC backend."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1030
+#: ../../../CodeGenerator.md:1062
 msgid ""
 "It knows several important identities for the patterns defined.  For "
 "example, it knows that addition is commutative, so it allows the `FMADDS` "
@@ -1381,7 +1429,7 @@ msgid ""
 "X, Y), Z)`\", without the target author having to specially handle this case."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1036
+#: ../../../CodeGenerator.md:1068
 msgid ""
 "It has a full-featured type-inferencing system.  In particular, you should "
 "rarely have to explicitly tell the system what type parts of your patterns "
@@ -1390,7 +1438,7 @@ msgid ""
 "propagate this knowledge from the fact that `F4RC` has type 'f32'."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1042
+#: ../../../CodeGenerator.md:1074
 msgid ""
 "Targets can define their own (and rely on built-in) \"pattern fragments\". "
 "Pattern fragments are chunks of reusable patterns that get inlined into your "
@@ -1401,7 +1449,7 @@ msgid ""
 "fit. See the definition of '`not`' and '`ineg`' for examples."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1050
+#: ../../../CodeGenerator.md:1082
 msgid ""
 "In addition to instructions, targets can specify arbitrary patterns that map "
 "to one or more instructions using the 'Pat' class.  For example, the PowerPC "
@@ -1409,7 +1457,7 @@ msgid ""
 "instruction. To tell tblgen how to do this, it defines:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1061
+#: ../../../CodeGenerator.md:1093
 msgid ""
 "If none of the single-instruction patterns for loading an immediate into a "
 "register match, this will be used.  This rule says \"match an arbitrary i32 "
@@ -1420,7 +1468,7 @@ msgid ""
 "take the high or low 16-bits of the immediate)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1069
+#: ../../../CodeGenerator.md:1101
 msgid ""
 "When using the 'Pat' class to map a pattern to an instruction that has one "
 "or more complex operands (like e.g., {ref}`X86 addressing mode <X86 "
@@ -1430,25 +1478,25 @@ msgid ""
 "instructions by the PowerPC back end:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1084
+#: ../../../CodeGenerator.md:1116
 msgid ""
 "Here, the pair of `ptroff` and `ptrreg` operands is matched onto the complex "
 "operand `dst` of class `memri` in the `STWU` instruction."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1087
+#: ../../../CodeGenerator.md:1119
 msgid ""
 "While the system does automate a lot, it still allows you to write custom C+"
 "+ code to match special cases if there is something that is hard to express."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1091
+#: ../../../CodeGenerator.md:1123
 msgid ""
 "While it has many strengths, the system currently has some limitations, "
 "primarily because it is a work in progress and is not yet finished:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1094
+#: ../../../CodeGenerator.md:1126
 msgid ""
 "Overall, there is no way to define or match SelectionDAG nodes that define "
 "multiple values (e.g., `SMUL_LOHI`, `LOAD`, `CALL`, etc).  This is the "
@@ -1456,7 +1504,7 @@ msgid ""
 "your instruction selector."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1099
+#: ../../../CodeGenerator.md:1131
 msgid ""
 "There is no great way to support matching complex addressing modes yet.  In "
 "the future, we will extend pattern fragments to allow them to define "
@@ -1466,21 +1514,21 @@ msgid ""
 "different patterns."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1105
+#: ../../../CodeGenerator.md:1137
 msgid "We don't automatically infer flags like `isStore`/`isLoad` yet."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1107
+#: ../../../CodeGenerator.md:1139
 msgid ""
 "We don't automatically generate the set of supported registers and "
 "operations for the {ref}`Legalizer <Legalizer>` yet."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1110
+#: ../../../CodeGenerator.md:1142
 msgid "We don't have a way of tying in custom legalized nodes yet."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1112
+#: ../../../CodeGenerator.md:1144
 msgid ""
 "Despite these limitations, the instruction selector generator is still quite "
 "useful for most of the binary and logical operations in typical instruction "
@@ -1488,11 +1536,11 @@ msgid ""
 "please let Chris know!"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1120
+#: ../../../CodeGenerator.md:1152
 msgid "SelectionDAG Scheduling and Formation Phase"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1122
+#: ../../../CodeGenerator.md:1154
 msgid ""
 "The scheduling phase takes the DAG of target instructions from the selection "
 "phase and assigns an order.  The scheduler can pick an order depending on "
@@ -1502,40 +1550,40 @@ msgid ""
 "<MachineInstr>`s  and the SelectionDAG is destroyed."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1129
+#: ../../../CodeGenerator.md:1161
 msgid ""
 "Note that this phase is logically separate from the instruction selection "
 "phase, but is tied to it closely in the code because it operates on "
 "SelectionDAGs."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1132
+#: ../../../CodeGenerator.md:1164
 msgid "Future directions for the SelectionDAG"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1134
+#: ../../../CodeGenerator.md:1166
 msgid "Optional function-at-a-time selection."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1136
+#: ../../../CodeGenerator.md:1168
 msgid "Auto-generate entire selector from `.td` file."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1140
+#: ../../../CodeGenerator.md:1172
 msgid "SSA-based Machine Code Optimizations"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1142 ../../../CodeGenerator.md:1452
-#: ../../../CodeGenerator.md:1526 ../../../CodeGenerator.md:1649
-#: ../../../CodeGenerator.md:1754
+#: ../../../CodeGenerator.md:1174 ../../../CodeGenerator.md:1484
+#: ../../../CodeGenerator.md:1558 ../../../CodeGenerator.md:1681
+#: ../../../CodeGenerator.md:1786
 msgid "To Be Written"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1144
+#: ../../../CodeGenerator.md:1176
 msgid "Live Intervals"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1146
+#: ../../../CodeGenerator.md:1178
 msgid ""
 "Live Intervals are the ranges (intervals) where a variable is *live*.  They "
 "are used by some {ref}`register allocator <register allocator>` passes to "
@@ -1544,11 +1592,11 @@ msgid ""
 "When this situation occurs, one virtual register must be *spilled*."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1152
+#: ../../../CodeGenerator.md:1184
 msgid "Live Variable Analysis"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1154
+#: ../../../CodeGenerator.md:1186
 msgid ""
 "The first step in determining the live intervals of variables is to "
 "calculate the set of registers that are immediately dead after the "
@@ -1567,7 +1615,7 @@ msgid ""
 "tracked."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1169
+#: ../../../CodeGenerator.md:1201
 msgid ""
 "Physical registers may be live in to or out of a function. Live in values "
 "are typically arguments in registers. Live out values are typically return "
@@ -1577,7 +1625,7 @@ msgid ""
 "out values in the function."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1176
+#: ../../../CodeGenerator.md:1208
 msgid ""
 "`PHI` nodes need to be handled specially, because the calculation of the "
 "live variable information from a depth first traversal of the CFG of the "
@@ -1587,7 +1635,7 @@ msgid ""
 "blocks."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1182
+#: ../../../CodeGenerator.md:1214
 msgid ""
 "For each `PHI` node of the current basic block, we simulate an assignment at "
 "the end of the current basic block and traverse the successor basic blocks. "
@@ -1597,11 +1645,11 @@ msgid ""
 "blocks, until the basic block with the defining instruction is encountered."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1189
+#: ../../../CodeGenerator.md:1221
 msgid "Live Intervals Analysis"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1191
+#: ../../../CodeGenerator.md:1223
 msgid ""
 "We now have the information available to perform the live intervals analysis "
 "and build the live intervals themselves.  We start off by numbering the "
@@ -1613,15 +1661,15 @@ msgid ""
 "for which a variable is live."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1200
+#: ../../../CodeGenerator.md:1232
 msgid "More to come..."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1205
+#: ../../../CodeGenerator.md:1237
 msgid "Register Allocation"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1207
+#: ../../../CodeGenerator.md:1239
 msgid ""
 "The *Register Allocation problem* consists in mapping a program P{sub}`v`, "
 "that can use an unbounded number of virtual registers, to a program P{sub}"
@@ -1632,21 +1680,21 @@ msgid ""
 "virtuals are called *spilled virtuals*."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1215
+#: ../../../CodeGenerator.md:1247
 msgid "How registers are represented in LLVM"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1217
+#: ../../../CodeGenerator.md:1249
 msgid ""
 "In LLVM, physical registers are denoted by integer numbers that normally "
 "range from 1 to 1023. To see how this numbering is defined for a particular "
 "architecture, you can read the `GenRegisterNames.inc` file for that "
-"architecture. For instance, by inspecting `lib/Target/X86/X86GenRegisterInfo."
-"inc` we see that the 32-bit register `EAX` is denoted by 43, and the MMX "
-"register `MM0` is mapped to 65."
+"architecture. For instance, by inspecting `lib/Target/X86/"
+"X86GenRegisterInfo.inc` we see that the 32-bit register `EAX` is denoted by "
+"43, and the MMX register `MM0` is mapped to 65."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1224
+#: ../../../CodeGenerator.md:1256
 msgid ""
 "Some architectures contain registers that share the same physical location. "
 "A notable example is the X86 platform. For instance, in the X86 "
@@ -1657,7 +1705,7 @@ msgid ""
 "all the physical registers aliased to a register."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1232
+#: ../../../CodeGenerator.md:1264
 msgid ""
 "Physical registers, in LLVM, are grouped in *Register Classes*.  Elements in "
 "the same register class are functionally equivalent, and can be "
@@ -1668,7 +1716,7 @@ msgid ""
 "register is compatible with a given physical, this code can be used:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1250
+#: ../../../CodeGenerator.md:1282
 msgid ""
 "Sometimes, mostly for debugging purposes, it is useful to change the number "
 "of physical registers available in the target architecture. This must be "
@@ -1680,7 +1728,7 @@ msgid ""
 "X86RegisterInfo.td` for an example of this."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1259
+#: ../../../CodeGenerator.md:1291
 msgid ""
 "Virtual registers are also denoted by integer numbers. Contrary to physical "
 "registers, different virtual registers never share the same number. Whereas "
@@ -1690,11 +1738,11 @@ msgid ""
 "method `MachineRegisterInfo::createVirtualRegister()`. This method will "
 "return a new virtual register. Use an `IndexedMap<Foo, "
 "VirtReg2IndexFunctor>` to hold information per virtual register. If you need "
-"to enumerate all virtual registers, use the function `TargetRegisterInfo::"
-"index2VirtReg()` to find the virtual register numbers:"
+"to enumerate all virtual registers, use the function "
+"`TargetRegisterInfo::index2VirtReg()` to find the virtual register numbers:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1276
+#: ../../../CodeGenerator.md:1308
 msgid ""
 "Before register allocation, the operands of an instruction are mostly "
 "virtual registers, although physical registers may also be used. In order to "
@@ -1708,7 +1756,7 @@ msgid ""
 "is being defined."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1287
+#: ../../../CodeGenerator.md:1319
 msgid ""
 "We will call physical registers present in the LLVM bitcode before register "
 "allocation *pre-colored registers*. Pre-colored registers are used in many "
@@ -1724,18 +1772,18 @@ msgid ""
 "each instruction, whereas the former may vary depending on the program being "
 "compiled. For example, an instruction that represents a function call will "
 "always implicitly define or use the same set of physical registers. To read "
-"the registers implicitly used by an instruction, use `TargetInstrInfo::"
-"get(opcode)::ImplicitUses`. Pre-colored registers impose constraints on any "
-"register allocation algorithm. The register allocator must make sure that "
-"none of them are overwritten by the values of virtual registers while still "
-"alive."
+"the registers implicitly used by an instruction, use "
+"`TargetInstrInfo::get(opcode)::ImplicitUses`. Pre-colored registers impose "
+"constraints on any register allocation algorithm. The register allocator "
+"must make sure that none of them are overwritten by the values of virtual "
+"registers while still alive."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1307
+#: ../../../CodeGenerator.md:1339
 msgid "Mapping virtual registers to physical registers"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1309
+#: ../../../CodeGenerator.md:1341
 msgid ""
 "There are two ways to map virtual registers to physical registers (or to "
 "memory slots). The first way, that we will call *direct mapping*, is based "
@@ -1745,7 +1793,7 @@ msgid ""
 "and getting values to and from memory."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1316
+#: ../../../CodeGenerator.md:1348
 msgid ""
 "The direct mapping provides more flexibility to the developer of the "
 "register allocator; however, it is more error prone, and demands more "
@@ -1758,23 +1806,23 @@ msgid ""
 "instruction, use `TargetInstrInfo::loadRegFromStackSlot`."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1325
+#: ../../../CodeGenerator.md:1357
 msgid ""
 "The indirect mapping shields the application developer from the complexities "
 "of inserting load and store instructions. In order to map a virtual register "
 "to a physical one, use `VirtRegMap::assignVirt2Phys(vreg, preg)`.  In order "
-"to map a certain virtual register to memory, use `VirtRegMap::"
-"assignVirt2StackSlot(vreg)`. This method will return the stack slot where "
-"`vreg`'s value will be located.  If it is necessary to map another virtual "
-"register to the same stack slot, use `VirtRegMap::assignVirt2StackSlot(vreg, "
-"stack_location)`. One important point to consider when using the indirect "
-"mapping, is that even if a virtual register is mapped to memory, it still "
-"needs to be mapped to a physical register. This physical register is the "
-"location where the virtual register is supposed to be found before being "
-"stored or after being reloaded."
+"to map a certain virtual register to memory, use "
+"`VirtRegMap::assignVirt2StackSlot(vreg)`. This method will return the stack "
+"slot where `vreg`'s value will be located.  If it is necessary to map "
+"another virtual register to the same stack slot, use "
+"`VirtRegMap::assignVirt2StackSlot(vreg, stack_location)`. One important "
+"point to consider when using the indirect mapping, is that even if a virtual "
+"register is mapped to memory, it still needs to be mapped to a physical "
+"register. This physical register is the location where the virtual register "
+"is supposed to be found before being stored or after being reloaded."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1338
+#: ../../../CodeGenerator.md:1370
 msgid ""
 "If the indirect strategy is used, after all the virtual registers have been "
 "mapped to physical registers or stack slots, it is necessary to use a "
@@ -1787,11 +1835,11 @@ msgid ""
 "RegAllocLinearScan.cpp`."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1347
+#: ../../../CodeGenerator.md:1379
 msgid "Handling two address instructions"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1349
+#: ../../../CodeGenerator.md:1381
 msgid ""
 "With very rare exceptions (e.g., function calls), the LLVM machine code "
 "instructions are three address instructions. That is, each instruction is "
@@ -1802,7 +1850,7 @@ msgid ""
 "= %EAX + %EBX`."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1357
+#: ../../../CodeGenerator.md:1389
 msgid ""
 "In order to produce correct code, LLVM must convert three address "
 "instructions that represent two address instructions into true two address "
@@ -1813,18 +1861,18 @@ msgid ""
 "%b %c` is converted to two instructions such as:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1370
+#: ../../../CodeGenerator.md:1402
 msgid ""
 "Notice that, internally, the second instruction is represented as `ADD "
 "%a[def/use] %c`. I.e., the register operand `%a` is both used and defined by "
 "the instruction."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1374
+#: ../../../CodeGenerator.md:1406
 msgid "The SSA deconstruction phase"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1376
+#: ../../../CodeGenerator.md:1408
 msgid ""
 "An important transformation that happens during register allocation is "
 "called the *SSA Deconstruction Phase*. The SSA form simplifies many analyses "
@@ -1834,7 +1882,7 @@ msgid ""
 "with other instructions that preserve their semantics."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1383
+#: ../../../CodeGenerator.md:1415
 msgid ""
 "There are many ways in which PHI instructions can safely be removed from the "
 "target code. The most traditional PHI deconstruction algorithm replaces PHI "
@@ -1845,48 +1893,48 @@ msgid ""
 "allocator."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1391
+#: ../../../CodeGenerator.md:1423
 msgid "Instruction folding"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1393
+#: ../../../CodeGenerator.md:1425
 msgid ""
 "*Instruction folding* is an optimization performed during register "
 "allocation that removes unnecessary copy instructions. For instance, a "
 "sequence of instructions such as:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1402
+#: ../../../CodeGenerator.md:1434
 msgid "can be safely substituted by the single instruction:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1408
+#: ../../../CodeGenerator.md:1440
 msgid ""
-"Instructions can be folded with the `TargetRegisterInfo::"
-"foldMemoryOperand(...)` method. Care must be taken when folding "
-"instructions; a folded instruction can be quite different from the original "
-"instruction. See `LiveIntervals::addIntervalsForSpills` in `lib/CodeGen/"
-"LiveIntervalAnalysis.cpp` for an example of its use."
+"Instructions can be folded with the "
+"`TargetRegisterInfo::foldMemoryOperand(...)` method. Care must be taken when "
+"folding instructions; a folded instruction can be quite different from the "
+"original instruction. See `LiveIntervals::addIntervalsForSpills` in `lib/"
+"CodeGen/LiveIntervalAnalysis.cpp` for an example of its use."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1414
+#: ../../../CodeGenerator.md:1446
 msgid "Built in register allocators"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1416
+#: ../../../CodeGenerator.md:1448
 msgid ""
 "The LLVM infrastructure provides the application developer with three "
 "different register allocators:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1419
+#: ../../../CodeGenerator.md:1451
 msgid ""
 "*Fast* --- This register allocator is the default for debug builds. It "
 "allocates registers on a basic block level, attempting to keep values in "
 "registers and reusing registers as appropriate."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1423
+#: ../../../CodeGenerator.md:1455
 msgid ""
 "*Basic* --- This is an incremental approach to register allocation. Live "
 "ranges are assigned to registers one at a time in an order that is driven by "
@@ -1896,14 +1944,14 @@ msgid ""
 "alone mode for triaging bugs and as a performance baseline."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1430
+#: ../../../CodeGenerator.md:1462
 msgid ""
 "*Greedy* --- *The default allocator*. This is a highly tuned implementation "
 "of the *Basic* allocator that incorporates global live range splitting. This "
 "allocator works hard to minimize the cost of spill code."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1434
+#: ../../../CodeGenerator.md:1466
 msgid ""
 "*PBQP* --- A Partitioned Boolean Quadratic Programming (PBQP) based register "
 "allocator. This allocator works by constructing a PBQP problem representing "
@@ -1911,21 +1959,21 @@ msgid ""
 "PBQP solver, and mapping the solution back to a register assignment."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1439
+#: ../../../CodeGenerator.md:1471
 msgid ""
 "The type of register allocator used in `llc` can be chosen with the command "
 "line option `-regalloc=...`:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1449
+#: ../../../CodeGenerator.md:1481
 msgid "Prolog/Epilog Code Insertion"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1454
+#: ../../../CodeGenerator.md:1486
 msgid "Compact Unwind"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1456
+#: ../../../CodeGenerator.md:1488
 msgid ""
 "Throwing an exception requires *unwinding* out of a function. The "
 "information on how to unwind a given function is traditionally expressed in "
@@ -1936,7 +1984,7 @@ msgid ""
 "encoding is called *compact unwind* and requires just 4-bytes per function."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1464
+#: ../../../CodeGenerator.md:1496
 msgid ""
 "The compact unwind encoding is a 32-bit value, which is encoded in an "
 "architecture-specific way. It specifies which registers to restore and from "
@@ -1950,15 +1998,15 @@ msgid ""
 "final linked image."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1474
+#: ../../../CodeGenerator.md:1506
 msgid "For X86, there are three modes for the compact unwind encoding:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1476
+#: ../../../CodeGenerator.md:1508
 msgid "*Function with a Frame Pointer (`EBP` or `RBP`)*"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1478
+#: ../../../CodeGenerator.md:1510
 msgid ""
 "`EBP/RBP`-based frame, where `EBP/RBP` is pushed onto the stack immediately "
 "after the return address, then `ESP/RSP` is moved to `EBP/RBP`. Thus to "
@@ -1972,97 +2020,97 @@ msgid ""
 "`0x00007FFF`) as five 3-bit entries from the following table:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "Compact Number"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "i386 Register"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "x86-64 Register"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "1"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`EBX`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`RBX`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "2"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`ECX`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`R12`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "3"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`EDX`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`R13`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451 ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1483 ../../../CodeGenerator.md:1785
 msgid "4"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`EDI`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`R14`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "5"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`ESI`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`R15`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "6"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`EBP`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1451
+#: ../../../CodeGenerator.md:1483
 msgid "`RBP`"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1499
+#: ../../../CodeGenerator.md:1531
 msgid ""
 "*Frameless with a Small Constant Stack Size (`EBP` or `RBP` is not used as a "
 "frame pointer)*"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1501
+#: ../../../CodeGenerator.md:1533
 msgid ""
 "To return, a constant (encoded in the compact unwind encoding) is added to "
 "the `ESP/RSP`.  Then the return is done by popping the stack into the PC. "
@@ -2077,13 +2125,13 @@ msgid ""
 "X86FrameLowering.cpp` for the encoding algorithm.)"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1513
+#: ../../../CodeGenerator.md:1545
 msgid ""
 "*Frameless with a Large Constant Stack Size (`EBP` or `RBP` is not used as a "
 "frame pointer)*"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1515
+#: ../../../CodeGenerator.md:1547
 msgid ""
 "This case is like the \"Frameless with a Small Constant Stack Size\" case, "
 "but the stack size is too large to encode in the compact unwind encoding. "
@@ -2092,15 +2140,15 @@ msgid ""
 "in the function in bits 9-12 (mask: `0x00001C00`)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1523
+#: ../../../CodeGenerator.md:1555
 msgid "Late Machine Code Optimizations"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1530
+#: ../../../CodeGenerator.md:1562
 msgid "Code Emission"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1532
+#: ../../../CodeGenerator.md:1564
 msgid ""
 "The code emission step of code generation is responsible for lowering from "
 "the code generator abstractions (like {ref}`MachineFunction "
@@ -2112,7 +2160,7 @@ msgid ""
 "TargetLoweringObjectFile class."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1539
+#: ../../../CodeGenerator.md:1571
 msgid ""
 "Since the MC layer works at the level of abstraction of object files, it "
 "doesn't have a notion of functions, global variables etc.  Instead, it "
@@ -2124,13 +2172,13 @@ msgid ""
 "which directly correspond to assembly level directives."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1548
+#: ../../../CodeGenerator.md:1580
 msgid ""
 "If you are interested in implementing a code generator for a target, there "
 "are three important things that you have to implement for your target:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1551
+#: ../../../CodeGenerator.md:1583
 msgid ""
 "First, you need a subclass of AsmPrinter for your target.  This class "
 "implements the general lowering process converting MachineFunction's into MC "
@@ -2141,7 +2189,7 @@ msgid ""
 "TargetLoweringObjectFile class implements much of the common logic."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1559
+#: ../../../CodeGenerator.md:1591
 msgid ""
 "Second, you need to implement an instruction printer for your target.  The "
 "instruction printer takes an {ref}`MCInst <MCInst>` and renders it to a "
@@ -2150,19 +2198,20 @@ msgid ""
 "instructions), but you need to implement routines to print operands."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1565
+#: ../../../CodeGenerator.md:1597
 msgid ""
 "Third, you need to implement code that lowers a {ref}`MachineInstr "
-"<MachineInstr>` to an MCInst, usually implemented in `<target>MCInstLower."
-"cpp`.  This lowering process is often target specific, and is responsible "
-"for turning jump table entries, constant pool indices, global variable "
-"addresses, etc into MCLabels as appropriate.  This translation layer is also "
-"responsible for expanding pseudo ops used by the code generator into the "
-"actual machine instructions they correspond to. The MCInsts that are "
-"generated by this are fed into the instruction printer or the encoder."
+"<MachineInstr>` to an MCInst, usually implemented in "
+"`<target>MCInstLower.cpp`.  This lowering process is often target specific, "
+"and is responsible for turning jump table entries, constant pool indices, "
+"global variable addresses, etc into MCLabels as appropriate.  This "
+"translation layer is also responsible for expanding pseudo ops used by the "
+"code generator into the actual machine instructions they correspond to. The "
+"MCInsts that are generated by this are fed into the instruction printer or "
+"the encoder."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1574
+#: ../../../CodeGenerator.md:1606
 msgid ""
 "Finally, at your choosing, you can also implement a subclass of "
 "MCCodeEmitter which lowers MCInst's into machine code bytes and "
@@ -2170,11 +2219,11 @@ msgid ""
 "emission, or would like to implement an assembler for your target."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1579
+#: ../../../CodeGenerator.md:1611
 msgid "Emitting function stack size information"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1581
+#: ../../../CodeGenerator.md:1613
 msgid ""
 "A section containing metadata on function stack sizes will be emitted when "
 "`TargetLoweringObjectFile::StackSizesSection` is not null, and "
@@ -2185,22 +2234,22 @@ msgid ""
 "allocations are not included."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1589
+#: ../../../CodeGenerator.md:1621
 msgid "Emitting function call graph information"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1591
+#: ../../../CodeGenerator.md:1623
 msgid ""
 "A section containing metadata on function call graph will be emitted when "
 "`TargetOptions::EmitCallGraphSection` is set (--call-graph-section). Layout "
 "of this section is documented in detail at {doc}`CallGraphSection`."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1595
+#: ../../../CodeGenerator.md:1627
 msgid "VLIW Packetizer"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1597
+#: ../../../CodeGenerator.md:1629
 msgid ""
 "In a Very Long Instruction Word (VLIW) architecture, the compiler is "
 "responsible for mapping instructions to functional-units available on the "
@@ -2209,11 +2258,11 @@ msgid ""
 "independent mechanism to enable the packetization of machine instructions."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1603
+#: ../../../CodeGenerator.md:1635
 msgid "Mapping from instructions to functional units"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1605
+#: ../../../CodeGenerator.md:1637
 msgid ""
 "Instructions in a VLIW target can typically be mapped to multiple functional "
 "units. During the process of packetizing, the compiler must be able to "
@@ -2226,11 +2275,11 @@ msgid ""
 "instruction can be accommodated in a packet."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1615
+#: ../../../CodeGenerator.md:1647
 msgid "How the packetization tables are generated and used"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1617
+#: ../../../CodeGenerator.md:1649
 msgid ""
 "The packetizer reads instruction classes from a target's itineraries and "
 "creates a deterministic finite automaton (DFA) to represent the state of a "
@@ -2245,23 +2294,23 @@ msgid ""
 "that the instruction cannot be added to the packet."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1628
+#: ../../../CodeGenerator.md:1660
 msgid ""
 "To generate tables for a VLIW target, add *Target*GenDFAPacketizer.inc as a "
 "target to the Makefile in the target directory. The exported API provides "
-"three functions: `DFAPacketizer::clearResources()`, `DFAPacketizer::"
-"reserveResources(MachineInstr *MI)`, and `DFAPacketizer::"
-"canReserveResources(MachineInstr *MI)`. These functions allow a target "
-"packetizer to add an instruction to an existing packet and to check whether "
-"an instruction can be added to a packet. See `llvm/CodeGen/DFAPacketizer.h` "
-"for more information."
+"three functions: `DFAPacketizer::clearResources()`, "
+"`DFAPacketizer::reserveResources(MachineInstr *MI)`, and "
+"`DFAPacketizer::canReserveResources(MachineInstr *MI)`. These functions "
+"allow a target packetizer to add an instruction to an existing packet and to "
+"check whether an instruction can be added to a packet. See `llvm/CodeGen/"
+"DFAPacketizer.h` for more information."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1637
+#: ../../../CodeGenerator.md:1669
 msgid "Implementing a Native Assembler"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1639
+#: ../../../CodeGenerator.md:1671
 msgid ""
 "Though you're probably reading this because you want to write or maintain a "
 "compiler backend, LLVM also fully supports building a native assembler. "
@@ -2271,22 +2320,22 @@ msgid ""
 "shared with the compiler."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1646
+#: ../../../CodeGenerator.md:1678
 msgid "Instruction Parsing"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1651
+#: ../../../CodeGenerator.md:1683
 msgid "Instruction Alias Processing"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1653
+#: ../../../CodeGenerator.md:1685
 msgid ""
 "Once the instruction is parsed, it enters the MatchInstructionImpl function. "
 "The MatchInstructionImpl function performs alias processing and then "
 "performs actual matching."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1657
+#: ../../../CodeGenerator.md:1689
 msgid ""
 "Alias processing is the phase that canonicalizes different lexical forms of "
 "the same instructions down to one representation.  There are several "
@@ -2297,11 +2346,11 @@ msgid ""
 "allow a more concise description."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1665
+#: ../../../CodeGenerator.md:1697
 msgid "Mnemonic Aliases"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1667
+#: ../../../CodeGenerator.md:1699
 msgid ""
 "The first phase of alias processing is simple instruction mnemonic remapping "
 "for classes of instructions which are allowed with two different mnemonics.  "
@@ -2311,7 +2360,7 @@ msgid ""
 "mnemonic. Mnemonic aliases are defined simply, for example X86 has:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1682
+#: ../../../CodeGenerator.md:1714
 msgid ""
 "... and many others.  With a MnemonicAlias definition, the mnemonic is "
 "remapped simply and directly.  Though MnemonicAlias's can't look at any "
@@ -2319,17 +2368,17 @@ msgid ""
 "modes (the same ones supported by the matcher), through a Requires clause:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1692
+#: ../../../CodeGenerator.md:1724
 msgid ""
 "In this example, the mnemonic gets mapped into a different one depending on "
 "the current instruction set."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1695
+#: ../../../CodeGenerator.md:1727
 msgid "Instruction Aliases"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1697
+#: ../../../CodeGenerator.md:1729
 msgid ""
 "The most general phase of alias processing occurs while matching is "
 "happening: it provides new forms for the matcher to match along with a "
@@ -2337,7 +2386,7 @@ msgid ""
 "string to match and the instruction to generate.  For example:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1712
+#: ../../../CodeGenerator.md:1744
 msgid ""
 "This shows a powerful example of the instruction aliases, matching the same "
 "mnemonic in multiple different ways depending on what operands are present "
@@ -2346,7 +2395,7 @@ msgid ""
 "multiple times, for example:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1725
+#: ../../../CodeGenerator.md:1757
 msgid ""
 "This example also shows that tied operands are only listed once.  In the X86 "
 "backend, XOR8rr has two input GR8's and one output GR8 (where an input is "
@@ -2356,13 +2405,13 @@ msgid ""
 "immediate operands in the result, for example:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1743
+#: ../../../CodeGenerator.md:1775
 msgid ""
 "Instruction aliases can also have a Requires clause to make them subtarget "
 "specific."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1746
+#: ../../../CodeGenerator.md:1778
 msgid ""
 "If the back-end supports it, the instruction printer can automatically emit "
 "the alias rather than what's being aliased. It typically leads to better, "
@@ -2370,115 +2419,115 @@ msgid ""
 "pass a '0' as the third parameter to the InstAlias definition."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1751
+#: ../../../CodeGenerator.md:1783
 msgid "Instruction Matching"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1759
+#: ../../../CodeGenerator.md:1791
 msgid "Target-specific Implementation Notes"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1761
+#: ../../../CodeGenerator.md:1793
 msgid ""
 "This section of the document explains features or design decisions that are "
 "specific to the code generator for a particular target."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1766
+#: ../../../CodeGenerator.md:1798
 msgid "Tail call optimization"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1768
+#: ../../../CodeGenerator.md:1800
 msgid ""
 "Tail call optimization, callee reusing the stack of the caller, is currently "
 "supported on x86/x86-64, PowerPC, AArch64, and WebAssembly. It is performed "
 "on x86/x86-64, PowerPC, and AArch64 if:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1772
+#: ../../../CodeGenerator.md:1804
 msgid ""
 "Caller and callee have the calling convention `fastcc`, `cc 10` (GHC calling "
 "convention), `cc 11` (HiPE calling convention), `tailcc`, or `swifttailcc`."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1776 ../../../CodeGenerator.md:1846
+#: ../../../CodeGenerator.md:1808 ../../../CodeGenerator.md:1878
 msgid ""
 "The call is a tail call - in tail position (ret immediately follows call and "
 "ret uses value of call or is void)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1779
+#: ../../../CodeGenerator.md:1811
 msgid "Option `-tailcallopt` is enabled or the calling convention is `tailcc`."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1781
+#: ../../../CodeGenerator.md:1813
 msgid "Platform-specific constraints are met."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1783
+#: ../../../CodeGenerator.md:1815
 msgid "x86/x86-64 constraints:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1785 ../../../CodeGenerator.md:1792
-#: ../../../CodeGenerator.md:1810
+#: ../../../CodeGenerator.md:1817 ../../../CodeGenerator.md:1824
+#: ../../../CodeGenerator.md:1842
 msgid "No variable argument lists are used."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1787
+#: ../../../CodeGenerator.md:1819
 msgid ""
 "On x86-64 when generating GOT/PIC code only module-local calls (visibility = "
 "hidden or protected) are supported."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1790
+#: ../../../CodeGenerator.md:1822
 msgid "PowerPC constraints:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1794
+#: ../../../CodeGenerator.md:1826
 msgid "No byval parameters are used."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1796
+#: ../../../CodeGenerator.md:1828
 msgid ""
 "On ppc32/64 GOT/PIC only module-local calls (visibility = hidden or "
 "protected) are supported."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1799
+#: ../../../CodeGenerator.md:1831
 msgid "WebAssembly constraints:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1801
+#: ../../../CodeGenerator.md:1833
 msgid "No variable argument lists are used"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1803
+#: ../../../CodeGenerator.md:1835
 msgid "The 'tail-call' target attribute is enabled."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1805
+#: ../../../CodeGenerator.md:1837
 msgid ""
 "The caller and callee's return types must match. The caller cannot be void "
 "unless the callee is, too."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1808
+#: ../../../CodeGenerator.md:1840
 msgid "AArch64 constraints:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1812 ../../../CodeGenerator.md:1855
+#: ../../../CodeGenerator.md:1844 ../../../CodeGenerator.md:1887
 msgid "Example:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1814
+#: ../../../CodeGenerator.md:1846
 msgid "Call as `llc -tailcallopt test.ll`."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1825
+#: ../../../CodeGenerator.md:1857
 msgid "Implications of `-tailcallopt`:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1827
+#: ../../../CodeGenerator.md:1859
 msgid ""
 "To support tail call optimization in situations where the callee has more "
 "arguments than the caller a 'callee pops arguments' convention is used. This "
@@ -2487,11 +2536,11 @@ msgid ""
 "readjustment of the stack. So performance might be worse in such cases."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1833
+#: ../../../CodeGenerator.md:1865
 msgid "Sibling call optimization"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1835
+#: ../../../CodeGenerator.md:1867
 msgid ""
 "Sibling call optimization is a restricted form of tail call optimization. "
 "Unlike tail call optimization described in the previous section, it can be "
@@ -2499,126 +2548,126 @@ msgid ""
 "specified."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1840
+#: ../../../CodeGenerator.md:1872
 msgid ""
 "Sibling call optimization is currently performed on x86/x86-64 when the "
 "following constraints are met:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1843
+#: ../../../CodeGenerator.md:1875
 msgid ""
 "Caller and callee have the same calling convention. It can be either `c` or "
 "`fastcc`."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1849
+#: ../../../CodeGenerator.md:1881
 msgid ""
 "Caller and callee have matching return type or the callee result is not used."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1851
+#: ../../../CodeGenerator.md:1883
 msgid ""
 "If any of the callee arguments are being passed on the stack, they must be "
 "available in caller's own incoming argument stack and the frame offsets must "
 "be the same."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1866
+#: ../../../CodeGenerator.md:1898
 msgid "The X86 backend"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1868
+#: ../../../CodeGenerator.md:1900
 msgid ""
 "The X86 code generator lives in the `lib/Target/X86` directory.  This code "
 "generator is capable of targeting a variety of x86-32 and x86-64 processors, "
 "and includes support for ISA extensions such as MMX and SSE."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1872
+#: ../../../CodeGenerator.md:1904
 msgid "X86 Target Triples supported"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1874
+#: ../../../CodeGenerator.md:1906
 msgid ""
 "The following are the known target triples that are supported by the X86 "
 "backend.  This is not an exhaustive list, and it would be useful to add "
 "those that people test."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1878
+#: ../../../CodeGenerator.md:1910
 msgid "**i686-pc-linux-gnu** --- Linux"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1880
+#: ../../../CodeGenerator.md:1912
 msgid "**i386-unknown-freebsd5.3** --- FreeBSD 5.3"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1882
+#: ../../../CodeGenerator.md:1914
 msgid "**i686-pc-cygwin** --- Cygwin on Win32"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1884
+#: ../../../CodeGenerator.md:1916
 msgid "**i686-pc-mingw32** --- MingW on Win32"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1886
+#: ../../../CodeGenerator.md:1918
 msgid "**i386-pc-mingw32msvc** --- MingW crosscompiler on Linux"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1888
+#: ../../../CodeGenerator.md:1920
 msgid "**i686-apple-darwin*** --- Apple Darwin on X86"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1890
+#: ../../../CodeGenerator.md:1922
 msgid "**x86_64-unknown-linux-gnu** --- Linux"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1892
+#: ../../../CodeGenerator.md:1924
 msgid "X86 Calling Conventions supported"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1894
+#: ../../../CodeGenerator.md:1926
 msgid "The following target-specific calling conventions are known to backend:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1896
+#: ../../../CodeGenerator.md:1928
 msgid ""
 "**x86_StdCall** --- stdcall calling convention seen on Microsoft Windows "
 "platform (CC ID = 64)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1899
+#: ../../../CodeGenerator.md:1931
 msgid ""
 "**x86_FastCall** --- fastcall calling convention seen on Microsoft Windows "
 "platform (CC ID = 65)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1902
+#: ../../../CodeGenerator.md:1934
 msgid ""
 "**x86_ThisCall** --- Similar to X86_StdCall. Passes first argument in ECX, "
 "others via stack. Callee is responsible for stack cleaning. This convention "
 "is used by MSVC by default for methods in its ABI (CC ID = 70)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1908
+#: ../../../CodeGenerator.md:1940
 msgid "Representing X86 addressing modes in MachineInstrs"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1910
+#: ../../../CodeGenerator.md:1942
 msgid ""
 "The x86 has a very flexible way of accessing memory.  It is capable of "
 "forming memory addresses of the following expression directly in integer "
 "instructions (which use ModR/M addressing):"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1918
+#: ../../../CodeGenerator.md:1950
 msgid ""
 "In order to represent this, LLVM tracks no less than 5 operands for each "
 "memory operand of this form.  This means that the \"load\" form of '`mov`' "
 "has the following `MachineOperand`s in this order:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1928
+#: ../../../CodeGenerator.md:1960
 msgid ""
 "Stores, and all other instructions, treat the four memory operands in the "
 "same way and in the same order.  If the segment register is unspecified "
@@ -2627,11 +2676,11 @@ msgid ""
 "their memory reference."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1933
+#: ../../../CodeGenerator.md:1965
 msgid "X86 address spaces supported"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1935
+#: ../../../CodeGenerator.md:1967
 msgid ""
 "x86 has a feature which provides the ability to perform loads and stores to "
 "different address spaces via the x86 segment registers.  A segment override "
@@ -2645,14 +2694,14 @@ msgid ""
 "numbers."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1945
+#: ../../../CodeGenerator.md:1977
 msgid ""
 "While these address spaces may seem similar to TLS via the `thread_local` "
 "keyword, and often use the same underlying hardware, there are some "
 "fundamental differences."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1949
+#: ../../../CodeGenerator.md:1981
 msgid ""
 "The `thread_local` keyword applies to global variables and specifies that "
 "they are to be allocated in thread-local memory. There are no type "
@@ -2662,7 +2711,7 @@ msgid ""
 "have implementations of it for some configurations)"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1956
+#: ../../../CodeGenerator.md:1988
 msgid ""
 "Special address spaces, in contrast, apply to static types. Every load and "
 "store has a particular address space in its address operand type, and this "
@@ -2674,57 +2723,57 @@ msgid ""
 "yet handle them correctly in some cases)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1965
+#: ../../../CodeGenerator.md:1997
 msgid ""
 "Some operating systems and runtime environments use (or may in the future "
 "use) the FS/GS-segment registers for various low-level purposes, so care "
 "should be taken when considering them."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1969
+#: ../../../CodeGenerator.md:2001
 msgid "Instruction naming"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1971
+#: ../../../CodeGenerator.md:2003
 msgid ""
 "An instruction name consists of the base name, a default operand size, and a "
 "character per operand with an optional special size. For example:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1981
+#: ../../../CodeGenerator.md:2013
 msgid "The PowerPC backend"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1983
+#: ../../../CodeGenerator.md:2015
 msgid ""
 "The PowerPC code generator lives in the `lib/Target/PowerPC` directory.  The "
 "code generation is retargetable to several variations or *subtargets* of the "
 "PowerPC ISA; including ppc32, ppc64 and altivec."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1987
+#: ../../../CodeGenerator.md:2019
 msgid "LLVM PowerPC ABI"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1989
+#: ../../../CodeGenerator.md:2021
 msgid ""
 "LLVM follows the AIX PowerPC ABI, with two deviations. LLVM uses a PC "
 "relative (PIC) or static addressing for accessing global values, so no TOC "
 "(r2) is used. Second, r31 is used as a frame pointer to allow dynamic growth "
 "of a stack frame.  LLVM takes advantage of having no TOC to provide space to "
 "save the frame pointer in the PowerPC linkage area of the caller frame.  "
-"Other details of PowerPC ABI can be found at [PowerPC ABI](http://developer."
-"apple.com/documentation/DeveloperTools/Conceptual/LowLevelABI/"
+"Other details of PowerPC ABI can be found at [PowerPC ABI](http://"
+"developer.apple.com/documentation/DeveloperTools/Conceptual/LowLevelABI/"
 "Articles/32bitPowerPC.html). Note: This link describes the 32-bit ABI.  The "
 "64-bit ABI is similar except space for GPRs are 8 bytes wide (not 4) and r13 "
 "is reserved for system use."
 msgstr ""
 
-#: ../../../CodeGenerator.md:1997
+#: ../../../CodeGenerator.md:2029
 msgid "Frame Layout"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1999
+#: ../../../CodeGenerator.md:2031
 msgid ""
 "The size of a PowerPC frame is usually fixed for the duration of a "
 "function's invocation.  Since the frame is fixed size, all references into "
@@ -2737,39 +2786,39 @@ msgid ""
 "be properly aligned."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2008
+#: ../../../CodeGenerator.md:2040
 msgid "An invocation frame is laid out as follows (low memory at top):"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Stack frame area"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Linkage"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Parameter area"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Dynamic area"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Locals area"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Saved registers area"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Previous Frame"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2020
+#: ../../../CodeGenerator.md:2052
 msgid ""
 "The *linkage* area is used by a callee to save special registers prior to "
 "allocating its own frame.  Only three entries are relevant to LLVM. The "
@@ -2783,75 +2832,75 @@ msgid ""
 "mode and 48 bytes in 64-bit mode."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2031
+#: ../../../CodeGenerator.md:2063
 msgid "32-bit linkage area:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Offset"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Contents"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "0"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Saved SP (r1)"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Saved CR"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "8"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Saved LR"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "12"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Reserved"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "16"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "20"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "Saved FP (r31)"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2042
+#: ../../../CodeGenerator.md:2074
 msgid "64-bit linkage area:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "24"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "32"
 msgstr ""
 
-#: ../../../CodeGenerator.md:1753
+#: ../../../CodeGenerator.md:1785
 msgid "40"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2053
+#: ../../../CodeGenerator.md:2085
 msgid ""
 "The *parameter area* is used to store arguments being passed to a callee "
 "function.  Following the PowerPC ABI, the first few arguments are actually "
@@ -2868,14 +2917,14 @@ msgid ""
 "arguments using fixed offsets from the stack pointer (or base pointer.)"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2067
+#: ../../../CodeGenerator.md:2099
 msgid ""
 "Combining the information about the linkage, parameter areas and alignment. "
 "A stack frame is minimally 64 bytes in 32-bit mode and 128 bytes in 64-bit "
 "mode."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2070
+#: ../../../CodeGenerator.md:2102
 msgid ""
 "The *dynamic area* starts out as size zero.  If a function uses dynamic "
 "alloca then space is added to the stack, the linkage and parameter areas are "
@@ -2887,23 +2936,23 @@ msgid ""
 "byte alignment."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2078
+#: ../../../CodeGenerator.md:2110
 msgid ""
 "The *locals area* is where the llvm compiler reserves space for local "
 "variables."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2080
+#: ../../../CodeGenerator.md:2112
 msgid ""
 "The *saved registers area* is where the llvm compiler spills callee saved "
 "registers on entry to the callee."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2083
+#: ../../../CodeGenerator.md:2115
 msgid "Prolog/Epilog"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2085
+#: ../../../CodeGenerator.md:2117
 msgid ""
 "The llvm prolog and epilog are the same as described in the PowerPC ABI, "
 "with the following exceptions.  Callee saved registers are spilled after the "
@@ -2914,19 +2963,19 @@ msgid ""
 "debugging."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2092
+#: ../../../CodeGenerator.md:2124
 msgid "Dynamic Allocation"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2095
+#: ../../../CodeGenerator.md:2127
 msgid "TODO - More to come."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2097
+#: ../../../CodeGenerator.md:2129
 msgid "The NVPTX backend"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2099
+#: ../../../CodeGenerator.md:2131
 msgid ""
 "The NVPTX code generator under lib/Target/NVPTX is an open-source version of "
 "the NVIDIA NVPTX code generator for LLVM.  It is contributed by NVIDIA and "
@@ -2935,77 +2984,77 @@ msgid ""
 "than or equal to 2.0 (Fermi)."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2105
+#: ../../../CodeGenerator.md:2137
 msgid ""
 "This target is of production quality and should be completely compatible "
 "with the official NVIDIA toolchain."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2108
+#: ../../../CodeGenerator.md:2140
 msgid "Code Generator Options:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "Option"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "Description"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "sm_20"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "Set shader model/compute capability to 2.0"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "sm_21"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "Set shader model/compute capability to 2.1"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "sm_30"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "Set shader model/compute capability to 3.0"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "sm_35"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "Set shader model/compute capability to 3.5"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "ptx30"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "Target PTX 3.0"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "ptx31"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2094
+#: ../../../CodeGenerator.md:2126
 msgid "Target PTX 3.1"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2119
+#: ../../../CodeGenerator.md:2151
 msgid "The extended Berkeley Packet Filter (eBPF) backend"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2121
+#: ../../../CodeGenerator.md:2153
 msgid ""
 "Extended BPF (or eBPF) is similar to the original (\"classic\") BPF (cBPF) "
 "used to filter network packets.  The [bpf() system call](http://man7.org/"
@@ -3018,56 +3067,56 @@ msgid ""
 "outlined below."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2138
+#: ../../../CodeGenerator.md:2170
 msgid "Instruction encoding (arithmetic and jump)"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2139
+#: ../../../CodeGenerator.md:2171
 msgid ""
 "eBPF is reusing most of the opcode encoding from classic to simplify "
 "conversion of classic BPF to eBPF.  For arithmetic and jump instructions the "
 "8-bit 'code' field is divided into three parts:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2151
+#: ../../../CodeGenerator.md:2183
 msgid "Three LSB bits store instruction class which is one of:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2164
+#: ../../../CodeGenerator.md:2196
 msgid ""
 "When BPF_CLASS(code) == BPF_ALU or BPF_ALU64 or BPF_JMP, 4th bit encodes "
 "source operand"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2172
+#: ../../../CodeGenerator.md:2204
 msgid "and four MSB bits store operation code"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2191
+#: ../../../CodeGenerator.md:2223
 msgid "If BPF_CLASS(code) == BPF_JMP, BPF_OP(code) is one of"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2206
+#: ../../../CodeGenerator.md:2238
 msgid "Instruction encoding (load, store)"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2207
+#: ../../../CodeGenerator.md:2239
 msgid "For load and store instructions the 8-bit 'code' field is divided as:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2217
+#: ../../../CodeGenerator.md:2249
 msgid "Size modifier is one of"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2226
+#: ../../../CodeGenerator.md:2258
 msgid "Mode modifier is one of"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2239
+#: ../../../CodeGenerator.md:2271
 msgid "Packet data access (BPF_ABS, BPF_IND)"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2241
+#: ../../../CodeGenerator.md:2273
 msgid ""
 "Two non-generic instructions: (`BPF_ABS | <size> | BPF_LD`) and (`BPF_IND | "
 "<size> | BPF_LD`) which are used to access packet data. Register R6 is an "
@@ -3080,15 +3129,15 @@ msgid ""
 "the execution of the program."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2251
+#: ../../../CodeGenerator.md:2283
 msgid "`BPF_IND | BPF_W | BPF_LD` is equivalent to:"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2257
+#: ../../../CodeGenerator.md:2289
 msgid "eBPF maps"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2259
+#: ../../../CodeGenerator.md:2291
 msgid ""
 "eBPF maps are provided for sharing data between kernel and user-space. "
 "Currently implemented types are hash and array, with potential extension to "
@@ -3097,11 +3146,11 @@ msgid ""
 "supports create, update, find and delete functions on maps."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2265
+#: ../../../CodeGenerator.md:2297
 msgid "Function calls"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2267
+#: ../../../CodeGenerator.md:2299
 msgid ""
 "Function call arguments are passed using up to five registers (R1 - R5). The "
 "return value is passed in a dedicated register (R0).  Four additional "
@@ -3114,17 +3163,17 @@ msgid ""
 "kernel JIT maps them as"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2291
+#: ../../../CodeGenerator.md:2323
 msgid ""
 "since x86_64 ABI mandates rdi, rsi, rdx, rcx, r8, r9 for argument passing "
 "and rbx, r12 - r15 are callee saved."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2294
+#: ../../../CodeGenerator.md:2326
 msgid "Program start"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2296
+#: ../../../CodeGenerator.md:2328
 msgid ""
 "An eBPF program receives a single argument and contains a single eBPF main "
 "routine; the program does not contain eBPF functions. Function calls are "
@@ -3135,22 +3184,22 @@ msgid ""
 "valid register usage and operand types."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2304
+#: ../../../CodeGenerator.md:2336
 msgid "The AMDGPU backend"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2306
+#: ../../../CodeGenerator.md:2338
 msgid ""
 "The AMDGPU code generator lives in the `lib/Target/AMDGPU` directory. This "
 "code generator is capable of targeting a variety of AMD GPU processors. "
 "Refer to {doc}`AMDGPUUsage` for more information."
 msgstr ""
 
-#: ../../../CodeGenerator.md:2310
+#: ../../../CodeGenerator.md:2342
 msgid "The Lightweight Fault Isolation (LFI) sub-architecture"
 msgstr ""
 
-#: ../../../CodeGenerator.md:2312
+#: ../../../CodeGenerator.md:2344
 msgid ""
 "LFI is a sub-architecture available for certain backends that allows "
 "programs compiled for the target to run in a sandboxed environment that is "

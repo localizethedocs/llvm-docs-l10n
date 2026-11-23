@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LLVM main\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-25 19:47+0000\n"
+"POT-Creation-Date: 2026-11-23 20:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -112,8 +112,8 @@ msgid ""
 "transforming it. They are tested in general using the same infrastructure as "
 "the regression tests, by creating a separate \"Printer\" pass to consume the "
 "analysis result and print it on the standard output in a textual format "
-"suitable for FileCheck. See [llvm/test/Analysis/BranchProbabilityInfo/loop."
-"ll](https://github.com/llvm/llvm-project/blob/main/llvm/test/Analysis/"
+"suitable for FileCheck. See [llvm/test/Analysis/BranchProbabilityInfo/"
+"loop.ll](https://github.com/llvm/llvm-project/blob/main/llvm/test/Analysis/"
 "BranchProbabilityInfo/loop.ll) for an example of such test."
 msgstr ""
 
@@ -330,9 +330,9 @@ msgstr ""
 #: ../../../TestingGuide.md:224
 msgid ""
 "{program}`lit` performs substitution on each `RUN` line to replace LLVM tool "
-"names with the full paths to the executable built for each tool (in "
-"`$(LLVM_OBJ_ROOT)/bin`). This ensures that {program}`lit` does not invoke "
-"any stray LLVM tools in the user's path during testing."
+"names with the full paths to the executable built for each tool (in `$"
+"(LLVM_OBJ_ROOT)/bin`). This ensures that {program}`lit` does not invoke any "
+"stray LLVM tools in the user's path during testing."
 msgstr ""
 
 #: ../../../TestingGuide.md:229
@@ -538,61 +538,92 @@ msgid ""
 "same output."
 msgstr ""
 
-#: ../../../TestingGuide.md:375
+#: ../../../TestingGuide.md:374
+msgid ""
+"Don't produce output the test doesn't check. If a `RUN` line only checks "
+"diagnostics on stderr (e.g., errors, warnings, remarks), or only checks that "
+"the tool doesn't crash, suppress the normal output instead of writing it to "
+"the default location (a file or stdout) or redirecting it to `/dev/null`:"
+msgstr ""
+
+#: ../../../TestingGuide.md:380
+msgid "`opt`, `llvm-as`: `-disable-output`"
+msgstr ""
+
+#: ../../../TestingGuide.md:381
+msgid "`llc`, `llvm-mc`: `-filetype=null`"
+msgstr ""
+
+#: ../../../TestingGuide.md:387
+msgid ""
+"Writing the output to stdout clutters the lit log on failure, and with `2>&1 "
+"| FileCheck` the output is mixed in with the diagnostics, where it can "
+"accidentally match `CHECK` or `CHECK-NOT` lines."
+msgstr ""
+
+#: ../../../TestingGuide.md:391
+msgid ""
+"Redirecting with `-o /dev/null` still does all the work of printing or "
+"encoding the output. `-filetype=null` skips the MC assembler and object "
+"writer entirely, so tests for errors from the emitter (e.g., relocation "
+"errors) still need `-filetype=obj`."
+msgstr ""
+
+#: ../../../TestingGuide.md:396
 msgid "Extra files"
 msgstr ""
 
-#: ../../../TestingGuide.md:377
+#: ../../../TestingGuide.md:398
 msgid ""
 "If your test requires extra files besides the file containing the `RUN:` "
 "lines, and the extra files are small, consider specifying them in the same "
 "file and using `split-file` to extract them. For example,"
 msgstr ""
 
-#: ../../../TestingGuide.md:393
+#: ../../../TestingGuide.md:414
 msgid "The parts are separated by the regex `^(.|//)--- <part>`."
 msgstr ""
 
-#: ../../../TestingGuide.md:395
+#: ../../../TestingGuide.md:416
 msgid ""
 "If you want to test relative line numbers like `[[#@LINE+1]]`, specify `--"
 "leading-lines` to add leading empty lines to preserve line numbers."
 msgstr ""
 
-#: ../../../TestingGuide.md:398
+#: ../../../TestingGuide.md:419
 msgid ""
 "If the extra files are large, the idiomatic place to put them is in a "
 "subdirectory `Inputs`. You can then refer to the extra files as `%S/Inputs/"
 "foo.bar`."
 msgstr ""
 
-#: ../../../TestingGuide.md:401
+#: ../../../TestingGuide.md:422
 msgid ""
 "For example, consider `test/Linker/ident.ll`. The directory structure is as "
 "follows:"
 msgstr ""
 
-#: ../../../TestingGuide.md:413
+#: ../../../TestingGuide.md:434
 msgid "For convenience, these are the contents:"
 msgstr ""
 
-#: ../../../TestingGuide.md:439
+#: ../../../TestingGuide.md:460
 msgid ""
 "For symmetry, `ident.ll` is just a dummy file that doesn't actually "
 "participate in the test besides holding the `RUN:` lines."
 msgstr ""
 
-#: ../../../TestingGuide.md:443
+#: ../../../TestingGuide.md:464
 msgid ""
 "Some existing tests use `RUN: true` in extra files instead of just putting "
 "the extra files in an `Inputs/` directory. This pattern is deprecated."
 msgstr ""
 
-#: ../../../TestingGuide.md:448
+#: ../../../TestingGuide.md:469
 msgid "Elaborated tests"
 msgstr ""
 
-#: ../../../TestingGuide.md:450
+#: ../../../TestingGuide.md:471
 msgid ""
 "Generally, IR and assembly test files benefit from being cleaned to remove "
 "unnecessary details. However, for tests requiring elaborate IR or assembly "
@@ -602,73 +633,73 @@ msgid ""
 "update_test_body.py` on the test file to generate the needed content."
 msgstr ""
 
-#: ../../../TestingGuide.md:477
+#: ../../../TestingGuide.md:498
 msgid ""
 "The script will prepare extra files with `split-file`, invoke `gen`, and "
 "then rewrite the part after `gen` with its stdout."
 msgstr ""
 
-#: ../../../TestingGuide.md:480
+#: ../../../TestingGuide.md:501
 msgid ""
 "For convenience, if the test needs a single assembly file, you can also wrap "
 "`gen` and its required files with `.ifdef` and `.endif`. Then you can skip "
 "`split-file` in `RUN` lines."
 msgstr ""
 
-#: ../../../TestingGuide.md:500
+#: ../../../TestingGuide.md:521
 msgid ""
 "Consider specifying an explicit target triple to avoid differences when "
 "regeneration is needed on another machine."
 msgstr ""
 
-#: ../../../TestingGuide.md:503
+#: ../../../TestingGuide.md:524
 msgid ""
 "`gen` is invoked with `PWD` set to `/proc/self/cwd`. Clang commands don't "
 "need `-fdebug-compilation-dir=` since its default value is `PWD`."
 msgstr ""
 
-#: ../../../TestingGuide.md:506
+#: ../../../TestingGuide.md:527
 msgid ""
-"Check prefixes should be placed before `.endif` since the part after `."
-"endif` is replaced."
+"Check prefixes should be placed before `.endif` since the part after "
+"`.endif` is replaced."
 msgstr ""
 
-#: ../../../TestingGuide.md:510
+#: ../../../TestingGuide.md:531
 msgid ""
 "If the test body contains multiple files, you can print `---` separators and "
 "utilize `split-file` in `RUN` lines."
 msgstr ""
 
-#: ../../../TestingGuide.md:528
+#: ../../../TestingGuide.md:549
 msgid "Fragile tests"
 msgstr ""
 
-#: ../../../TestingGuide.md:530
+#: ../../../TestingGuide.md:551
 msgid ""
 "It is easy to write a fragile test that could fail spuriously if the tool "
 "being tested outputs a full path to the input file.  For example, {program}"
 "`opt` by default outputs a `ModuleID`:"
 msgstr ""
 
-#: ../../../TestingGuide.md:548
+#: ../../../TestingGuide.md:569
 msgid "`ModuleID` can unexpectedly match against `CHECK` lines.  For example:"
 msgstr ""
 
-#: ../../../TestingGuide.md:559
+#: ../../../TestingGuide.md:580
 msgid "This test will fail if placed into a `download` directory."
 msgstr ""
 
-#: ../../../TestingGuide.md:561
+#: ../../../TestingGuide.md:582
 msgid ""
 "To make your tests robust, always use `opt ... < %s` in the `RUN` line. "
 "{program}`opt` does not output a `ModuleID` when input comes from stdin."
 msgstr ""
 
-#: ../../../TestingGuide.md:564
+#: ../../../TestingGuide.md:585
 msgid "Platform-Specific Tests"
 msgstr ""
 
-#: ../../../TestingGuide.md:566
+#: ../../../TestingGuide.md:587
 msgid ""
 "Whenever adding tests that require the knowledge of a specific platform, "
 "either related to code generated, specific output or back-end features, you "
@@ -676,28 +707,28 @@ msgid ""
 "architectures (and don't even compile all back-ends), don't fail."
 msgstr ""
 
-#: ../../../TestingGuide.md:572
+#: ../../../TestingGuide.md:593
 msgid ""
 "The first problem is to check for target-specific output, for example sizes "
 "of structures, paths and architecture names, for example:"
 msgstr ""
 
-#: ../../../TestingGuide.md:575
+#: ../../../TestingGuide.md:596
 msgid "Tests containing Windows paths will fail on Linux and vice versa."
 msgstr ""
 
-#: ../../../TestingGuide.md:576
+#: ../../../TestingGuide.md:597
 msgid ""
 "Tests that check for `x86_64` somewhere in the text will fail anywhere else."
 msgstr ""
 
-#: ../../../TestingGuide.md:577
+#: ../../../TestingGuide.md:598
 msgid ""
 "Tests where the debug information calculates the size of types and "
 "structures."
 msgstr ""
 
-#: ../../../TestingGuide.md:579
+#: ../../../TestingGuide.md:600
 msgid ""
 "Also, if the test relies on any behaviour that is coded in any back-end, it "
 "must go in its own directory. So, for instance, code generator tests for ARM "
@@ -706,28 +737,28 @@ msgid ""
 "run if a specific back-end is compiled and available."
 msgstr ""
 
-#: ../../../TestingGuide.md:585
+#: ../../../TestingGuide.md:606
 msgid "For instance, on `test/CodeGen/ARM`, the `lit.local.cfg` is:"
 msgstr ""
 
-#: ../../../TestingGuide.md:593
+#: ../../../TestingGuide.md:614
 msgid ""
 "Other platform-specific tests are those that depend on a specific feature of "
 "a specific sub-architecture, for example only to Intel chips that support "
 "`AVX2`."
 msgstr ""
 
-#: ../../../TestingGuide.md:596
+#: ../../../TestingGuide.md:617
 msgid ""
 "For instance, `test/CodeGen/X86/psubus.ll` tests three sub-architecture "
 "variants:"
 msgstr ""
 
-#: ../../../TestingGuide.md:605
+#: ../../../TestingGuide.md:626
 msgid "And the checks are different:"
 msgstr ""
 
-#: ../../../TestingGuide.md:616
+#: ../../../TestingGuide.md:637
 msgid ""
 "So, if you're testing for a behaviour that you know is platform-specific or "
 "depends on special features of sub-architectures, you must add the specific "
@@ -735,18 +766,18 @@ msgid ""
 "directory that will filter out all other architectures."
 msgstr ""
 
-#: ../../../TestingGuide.md:622
+#: ../../../TestingGuide.md:643
 msgid "Constraining test execution"
 msgstr ""
 
-#: ../../../TestingGuide.md:624
+#: ../../../TestingGuide.md:645
 msgid ""
 "Some tests can be run only in specific configurations, such as with debug "
 "builds or on particular platforms. Use `REQUIRES` and `UNSUPPORTED` to "
 "control when the test is enabled."
 msgstr ""
 
-#: ../../../TestingGuide.md:628
+#: ../../../TestingGuide.md:649
 msgid ""
 "Some tests are expected to fail. For example, there may be a known bug that "
 "the test detects. Use `XFAIL` to mark a test as an expected failure. An "
@@ -754,13 +785,13 @@ msgid ""
 "failure if its execution succeeds."
 msgstr ""
 
-#: ../../../TestingGuide.md:642
+#: ../../../TestingGuide.md:663
 msgid ""
 "`REQUIRES` and `UNSUPPORTED` and `XFAIL` all accept a comma-separated list "
 "of boolean expressions. The values in each expression may be:"
 msgstr ""
 
-#: ../../../TestingGuide.md:645
+#: ../../../TestingGuide.md:666
 msgid ""
 "Features added to `config.available_features` by configuration files such as "
 "`lit.cfg`. String comparison of features is case-sensitive. Furthermore, a "
@@ -771,7 +802,7 @@ msgid ""
 "`helllo`, and so on."
 msgstr ""
 
-#: ../../../TestingGuide.md:651
+#: ../../../TestingGuide.md:672
 msgid ""
 "The default target triple, preceded by the string `target=` (for example, "
 "`target=x86_64-pc-windows-msvc`). Typically, regular expressions are used to "
@@ -779,33 +810,33 @@ msgid ""
 "match any Windows target triple)."
 msgstr ""
 
-#: ../../../TestingGuide.md:656
+#: ../../../TestingGuide.md:677
 msgid "`REQUIRES` enables the test if all expressions are true."
 msgstr ""
 
-#: ../../../TestingGuide.md:657
+#: ../../../TestingGuide.md:678
 msgid "`UNSUPPORTED` disables the test if any expression is true."
 msgstr ""
 
-#: ../../../TestingGuide.md:658
+#: ../../../TestingGuide.md:679
 msgid "`XFAIL` expects the test to fail if any expression is true."
 msgstr ""
 
-#: ../../../TestingGuide.md:660
+#: ../../../TestingGuide.md:681
 msgid ""
 "Use, `XFAIL: *` if the test is expected to fail everywhere. Similarly, use "
 "`UNSUPPORTED: target={{.*}}` to disable the test everywhere."
 msgstr ""
 
-#: ../../../TestingGuide.md:671
+#: ../../../TestingGuide.md:692
 msgid "Tips for writing constraints"
 msgstr ""
 
-#: ../../../TestingGuide.md:673
+#: ../../../TestingGuide.md:694
 msgid "**`REQUIRES` and `UNSUPPORTED`**"
 msgstr ""
 
-#: ../../../TestingGuide.md:675
+#: ../../../TestingGuide.md:696
 msgid ""
 "These are logical inverses. In principle, `UNSUPPORTED` isn't absolutely "
 "necessary (the logical negation could be used with `REQUIRES` to get exactly "
@@ -815,11 +846,11 @@ msgid ""
 "the test is expected never to work."
 msgstr ""
 
-#: ../../../TestingGuide.md:682
+#: ../../../TestingGuide.md:703
 msgid "**`UNSUPPORTED` and `XFAIL`**"
 msgstr ""
 
-#: ../../../TestingGuide.md:684
+#: ../../../TestingGuide.md:705
 msgid ""
 "Both of these indicate that the test isn't expected to work; however, they "
 "have different effects. `UNSUPPORTED` causes the test to be skipped; this "
@@ -830,11 +861,11 @@ msgid ""
 "which is more appropriate in each case."
 msgstr ""
 
-#: ../../../TestingGuide.md:692
+#: ../../../TestingGuide.md:713
 msgid "**Using `target=...`**"
 msgstr ""
 
-#: ../../../TestingGuide.md:694
+#: ../../../TestingGuide.md:715
 msgid ""
 "Checking the target triple can be tricky; it's easy to mis-specify. For "
 "example, `target=mips{{.*}}` will match not only mips, but also mipsel, "
@@ -844,7 +875,7 @@ msgid ""
 "idea to use a trailing wildcard to allow for unexpected suffixes."
 msgstr ""
 
-#: ../../../TestingGuide.md:702
+#: ../../../TestingGuide.md:723
 msgid ""
 "Also, it's generally better to write regular expressions that use entire "
 "triple components than to do something clever to shorten them. For example, "
@@ -854,55 +885,55 @@ msgid ""
 "freebsd.*}} || target={{.+-netbsd.*}}`"
 msgstr ""
 
-#: ../../../TestingGuide.md:710
+#: ../../../TestingGuide.md:731
 msgid "Substitutions"
 msgstr ""
 
-#: ../../../TestingGuide.md:712
+#: ../../../TestingGuide.md:733
 msgid ""
 "Besides replacing LLVM tool names, the following substitutions are performed "
 "in `RUN` lines:"
 msgstr ""
 
-#: ../../../TestingGuide.md:715
+#: ../../../TestingGuide.md:736
 msgid "`%%`"
 msgstr ""
 
-#: ../../../TestingGuide.md:717
+#: ../../../TestingGuide.md:738
 msgid "Replaced by a single `%`. This allows escaping other substitutions."
 msgstr ""
 
-#: ../../../TestingGuide.md:719
+#: ../../../TestingGuide.md:740
 msgid "`%s`"
 msgstr ""
 
-#: ../../../TestingGuide.md:721
+#: ../../../TestingGuide.md:742
 msgid ""
 "File path to the test case's source. This is suitable for passing on the   "
 "command line as the input to an LLVM tool."
 msgstr ""
 
-#: ../../../TestingGuide.md:724
+#: ../../../TestingGuide.md:745
 msgid "Example: `/home/user/llvm/test/MC/ELF/foo_test.s`"
 msgstr ""
 
-#: ../../../TestingGuide.md:726
+#: ../../../TestingGuide.md:747
 msgid "`%S`"
 msgstr ""
 
-#: ../../../TestingGuide.md:728
+#: ../../../TestingGuide.md:749
 msgid "Directory path to the test case's source."
 msgstr ""
 
-#: ../../../TestingGuide.md:730
+#: ../../../TestingGuide.md:751
 msgid "Example: `/home/user/llvm/test/MC/ELF`"
 msgstr ""
 
-#: ../../../TestingGuide.md:732
+#: ../../../TestingGuide.md:753
 msgid "`%t`"
 msgstr ""
 
-#: ../../../TestingGuide.md:734
+#: ../../../TestingGuide.md:755
 msgid ""
 "File path to a temporary file name that can be used for this test case.   "
 "The file name won't conflict with other test cases. You can append to it   "
@@ -910,164 +941,164 @@ msgid ""
 "some redirected output."
 msgstr ""
 
-#: ../../../TestingGuide.md:739
+#: ../../../TestingGuide.md:760
 msgid "Example: `/home/user/llvm.build/test/MC/ELF/Output/foo_test.s.tmp`"
 msgstr ""
 
-#: ../../../TestingGuide.md:741
+#: ../../../TestingGuide.md:762
 msgid "`%T`"
 msgstr ""
 
-#: ../../../TestingGuide.md:743
+#: ../../../TestingGuide.md:764
 msgid ""
 "Directory of `%t`. Deprecated. Shouldn't be used, because it can be easily   "
 "misused and cause race conditions between tests."
 msgstr ""
 
-#: ../../../TestingGuide.md:746
+#: ../../../TestingGuide.md:767
 msgid ""
 "Use `rm -rf %t && mkdir %t` instead if a temporary directory is necessary."
 msgstr ""
 
-#: ../../../TestingGuide.md:748
+#: ../../../TestingGuide.md:769
 msgid "Example: `/home/user/llvm.build/test/MC/ELF/Output`"
 msgstr ""
 
-#: ../../../TestingGuide.md:750
+#: ../../../TestingGuide.md:771
 msgid "`%{pathsep}`"
 msgstr ""
 
-#: ../../../TestingGuide.md:752
+#: ../../../TestingGuide.md:773
 msgid "Expands to the path separator, i.e. `:` (or `;` on Windows)."
 msgstr ""
 
-#: ../../../TestingGuide.md:754
+#: ../../../TestingGuide.md:775
 msgid "`%{fs-src-root}`"
 msgstr ""
 
-#: ../../../TestingGuide.md:756
+#: ../../../TestingGuide.md:777
 msgid ""
 "Expands to the root component of file system paths for the source "
 "directory,   i.e. `/` on Unix systems or `C:\\` (or another drive) on "
 "Windows."
 msgstr ""
 
-#: ../../../TestingGuide.md:759
+#: ../../../TestingGuide.md:780
 msgid "`%{fs-tmp-root}`"
 msgstr ""
 
-#: ../../../TestingGuide.md:761
+#: ../../../TestingGuide.md:782
 msgid ""
 "Expands to the root component of file system paths for the test's "
 "temporary   directory, i.e. `/` on Unix systems or `C:\\` (or another drive) "
 "on   Windows."
 msgstr ""
 
-#: ../../../TestingGuide.md:765
+#: ../../../TestingGuide.md:786
 msgid "`%{fs-sep}`"
 msgstr ""
 
-#: ../../../TestingGuide.md:767
+#: ../../../TestingGuide.md:788
 msgid "Expands to the file system separator, i.e. `/` or `\\` on Windows."
 msgstr ""
 
-#: ../../../TestingGuide.md:769
+#: ../../../TestingGuide.md:790
 msgid "`%/s, %/S, %/t, %/T`"
 msgstr ""
 
-#: ../../../TestingGuide.md:771
+#: ../../../TestingGuide.md:792
 msgid ""
 "Act like the corresponding substitution above but replace any `\\`   "
 "character with a `/`. This is useful to normalize path separators."
 msgstr ""
 
-#: ../../../TestingGuide.md:774
+#: ../../../TestingGuide.md:795
 msgid "Example: `%s:  C:\\Desktop Files/foo_test.s.tmp`"
 msgstr ""
 
-#: ../../../TestingGuide.md:776
+#: ../../../TestingGuide.md:797
 msgid "Example: `%/s: C:/Desktop Files/foo_test.s.tmp`"
 msgstr ""
 
-#: ../../../TestingGuide.md:778
+#: ../../../TestingGuide.md:799
 msgid ""
-"`%{s:real}, %{S:real}, %{t:real}, %{T:real}` `%{/s:real}, %{/S:real}, %{/t:"
-"real}, %{/T:real}`"
+"`%{s:real}, %{S:real}, %{t:real}, %{T:real}` `%{/s:real}, %{/S:real}, %{/"
+"t:real}, %{/T:real}`"
 msgstr ""
 
-#: ../../../TestingGuide.md:499
+#: ../../../TestingGuide.md:520
 msgid "<br />\n"
 msgstr ""
 
-#: ../../../TestingGuide.md:499
+#: ../../../TestingGuide.md:520
 msgid "\\\\\n"
 msgstr ""
 
-#: ../../../TestingGuide.md:781
+#: ../../../TestingGuide.md:802
 msgid ""
 ":   Act like the corresponding substitution, including with `/`, but use     "
 "the real path by expanding all symbolic links and substitute drives."
 msgstr ""
 
-#: ../../../TestingGuide.md:788
+#: ../../../TestingGuide.md:809
 msgid "`%:s, %:S, %:t, %:T`"
 msgstr ""
 
-#: ../../../TestingGuide.md:790
+#: ../../../TestingGuide.md:811
 msgid ""
 "Act like the corresponding substitution above but remove colons at   the "
 "beginning of Windows paths. This is useful to allow concatenation   of "
 "absolute paths on Windows to produce a legal path."
 msgstr ""
 
-#: ../../../TestingGuide.md:794
+#: ../../../TestingGuide.md:815
 msgid "Example: `%s:  C:\\Desktop Files\\foo_test.s.tmp`"
 msgstr ""
 
-#: ../../../TestingGuide.md:796
+#: ../../../TestingGuide.md:817
 msgid "Example: `%:s: C\\Desktop Files\\foo_test.s.tmp`"
 msgstr ""
 
-#: ../../../TestingGuide.md:798
+#: ../../../TestingGuide.md:819
 msgid "`%errc_<ERRCODE>`"
 msgstr ""
 
-#: ../../../TestingGuide.md:800
+#: ../../../TestingGuide.md:821
 msgid ""
 "Some error messages may be substituted to allow different spellings   based "
 "on the host platform."
 msgstr ""
 
-#: ../../../TestingGuide.md:803
+#: ../../../TestingGuide.md:824
 msgid ""
 "The following error codes are currently supported:   ENOENT, EISDIR, EINVAL, "
 "EACCES."
 msgstr ""
 
-#: ../../../TestingGuide.md:806
+#: ../../../TestingGuide.md:827
 msgid "Example: `Linux %errc_ENOENT: No such file or directory`"
 msgstr ""
 
-#: ../../../TestingGuide.md:808
+#: ../../../TestingGuide.md:829
 msgid "Example: `Windows %errc_ENOENT: no such file or directory`"
 msgstr ""
 
-#: ../../../TestingGuide.md:810
+#: ../../../TestingGuide.md:831
 msgid "`%if feature %{<if branch>%} %else %{<else branch>%}`"
 msgstr ""
 
-#: ../../../TestingGuide.md:812
+#: ../../../TestingGuide.md:833
 msgid ""
 "Conditional substitution: if `feature` is available it expands to   `<if "
 "branch>`, otherwise it expands to `<else branch>`.   `%else %{<else branch>%}"
 "` is optional and treated like `%else %{%}`   if not present."
 msgstr ""
 
-#: ../../../TestingGuide.md:817
+#: ../../../TestingGuide.md:838
 msgid "`%(line)`, `%(line+<number>)`, `%(line-<number>)`"
 msgstr ""
 
-#: ../../../TestingGuide.md:819
+#: ../../../TestingGuide.md:840
 msgid ""
 "The number of the line where this substitution is used, with an   optional "
 "integer offset.  These expand only if they appear   immediately in `RUN:`, "
@@ -1077,87 +1108,87 @@ msgid ""
 "numbers."
 msgstr ""
 
-#: ../../../TestingGuide.md:826
+#: ../../../TestingGuide.md:847
 msgid "**LLVM-specific substitutions:**"
 msgstr ""
 
-#: ../../../TestingGuide.md:828
+#: ../../../TestingGuide.md:849
 msgid "`%shlibext`"
 msgstr ""
 
-#: ../../../TestingGuide.md:830
+#: ../../../TestingGuide.md:851
 msgid ""
 "The suffix for the host platforms shared library files. This includes the   "
 "period as the first character."
 msgstr ""
 
-#: ../../../TestingGuide.md:833
+#: ../../../TestingGuide.md:854
 msgid "Example: `.so` (Linux), `.dylib` (macOS), `.dll` (Windows)"
 msgstr ""
 
-#: ../../../TestingGuide.md:835
+#: ../../../TestingGuide.md:856
 msgid "`%exeext`"
 msgstr ""
 
-#: ../../../TestingGuide.md:837
+#: ../../../TestingGuide.md:858
 msgid ""
 "The suffix for the host platforms executable files. This includes the   "
 "period as the first character."
 msgstr ""
 
-#: ../../../TestingGuide.md:840
+#: ../../../TestingGuide.md:861
 msgid "Example: `.exe` (Windows), empty on Linux."
 msgstr ""
 
-#: ../../../TestingGuide.md:842
+#: ../../../TestingGuide.md:863
 msgid "**Clang-specific substitutions:**"
 msgstr ""
 
-#: ../../../TestingGuide.md:844
+#: ../../../TestingGuide.md:865
 msgid "`%clang`"
 msgstr ""
 
-#: ../../../TestingGuide.md:846
+#: ../../../TestingGuide.md:867
 msgid "Invokes the Clang driver."
 msgstr ""
 
-#: ../../../TestingGuide.md:848
+#: ../../../TestingGuide.md:869
 msgid "`%clang_cpp`"
 msgstr ""
 
-#: ../../../TestingGuide.md:850
+#: ../../../TestingGuide.md:871
 msgid "Invokes the Clang driver as the preprocessor."
 msgstr ""
 
-#: ../../../TestingGuide.md:852
+#: ../../../TestingGuide.md:873
 msgid "`%clang_cl`"
 msgstr ""
 
-#: ../../../TestingGuide.md:854
+#: ../../../TestingGuide.md:875
 msgid "Invokes the CL-compatible Clang driver."
 msgstr ""
 
-#: ../../../TestingGuide.md:856
+#: ../../../TestingGuide.md:877
 msgid "`%clangxx`"
 msgstr ""
 
-#: ../../../TestingGuide.md:858
+#: ../../../TestingGuide.md:879
 msgid "Invokes the G++-compatible Clang driver."
 msgstr ""
 
-#: ../../../TestingGuide.md:860
+#: ../../../TestingGuide.md:881
 msgid "`%clang_cc1`"
 msgstr ""
 
-#: ../../../TestingGuide.md:862
+#: ../../../TestingGuide.md:883
 msgid "Invokes the Clang frontend."
 msgstr ""
 
-#: ../../../TestingGuide.md:864
+#: ../../../TestingGuide.md:885
 msgid "`%itanium_abi_triple`, `%ms_abi_triple`"
 msgstr ""
 
-#: ../../../TestingGuide.md:866
+#: ../../../TestingGuide.md:887
 msgid ""
 "These substitutions can be used to get the current target triple adjusted "
 "to   the desired ABI. For example, if the test suite is running with the   "
@@ -1166,30 +1197,30 @@ msgid ""
 "constraining it to a specific triple."
 msgstr ""
 
-#: ../../../TestingGuide.md:872
+#: ../../../TestingGuide.md:893
 msgid "**FileCheck-specific substitutions:**"
 msgstr ""
 
-#: ../../../TestingGuide.md:874
+#: ../../../TestingGuide.md:895
 msgid "`%ProtectFileCheckOutput`"
 msgstr ""
 
-#: ../../../TestingGuide.md:876
+#: ../../../TestingGuide.md:897
 msgid ""
 "This should precede a `FileCheck` call if and only if the call's textual   "
 "output affects test results.  It's usually easy to tell: just look for   "
 "redirection or piping of the `FileCheck` call's stdout or stderr."
 msgstr ""
 
-#: ../../../TestingGuide.md:882
+#: ../../../TestingGuide.md:903
 msgid "**Test-specific substitutions:**"
 msgstr ""
 
-#: ../../../TestingGuide.md:884
+#: ../../../TestingGuide.md:905
 msgid "Additional substitutions can be defined as follows:"
 msgstr ""
 
-#: ../../../TestingGuide.md:886
+#: ../../../TestingGuide.md:907
 msgid ""
 "Lit configuration files (e.g., `lit.cfg` or `lit.local.cfg`) can define "
 "substitutions for all tests in a test directory.  They do so by extending "
@@ -1199,15 +1230,15 @@ msgid ""
 "to be escape sequences)."
 msgstr ""
 
-#: ../../../TestingGuide.md:892
+#: ../../../TestingGuide.md:913
 msgid ""
-"To define substitutions within a single test file, lit supports the `DEFINE:"
-"` and `REDEFINE:` directives, described in detail below.  So that they have "
-"no effect on other test files, these directives modify a copy of the "
-"substitution list that is produced by lit configuration files."
+"To define substitutions within a single test file, lit supports the "
+"`DEFINE:` and `REDEFINE:` directives, described in detail below.  So that "
+"they have no effect on other test files, these directives modify a copy of "
+"the substitution list that is produced by lit configuration files."
 msgstr ""
 
-#: ../../../TestingGuide.md:897
+#: ../../../TestingGuide.md:918
 msgid ""
 "For example, the following directives can be inserted into a test file to "
 "define `%{cflags}` and `%{fcflags}` substitutions with empty initial values, "
@@ -1215,7 +1246,7 @@ msgid ""
 "substitution:"
 msgstr ""
 
-#: ../../../TestingGuide.md:911
+#: ../../../TestingGuide.md:932
 msgid ""
 "Alternatively, the above substitutions can be defined in a lit configuration "
 "file to be shared with other test files.  Either way, the test file can then "
@@ -1223,7 +1254,7 @@ msgid ""
 "substitutions as desired before each use of `%{check}` in a `RUN:` line:"
 msgstr ""
 
-#: ../../../TestingGuide.md:934
+#: ../../../TestingGuide.md:955
 msgid ""
 "Besides providing initial values, the initial `DEFINE:` directives for the "
 "parameter substitutions in the above example serve a second purpose: they "
@@ -1233,11 +1264,11 @@ msgid ""
 "might refer to it."
 msgstr ""
 
-#: ../../../TestingGuide.md:941
+#: ../../../TestingGuide.md:962
 msgid "In general, substitution expansion behaves as follows:"
 msgstr ""
 
-#: ../../../TestingGuide.md:943
+#: ../../../TestingGuide.md:964
 msgid ""
 "Upon arriving at each `RUN:` line, lit expands all substitutions in that "
 "`RUN:` line using their current values from the substitution list.  No "
@@ -1245,7 +1276,7 @@ msgid ""
 "directives except `%(line)`, `%(line+<number>)`, and `%(line-<number>)`."
 msgstr ""
 
-#: ../../../TestingGuide.md:948
+#: ../../../TestingGuide.md:969
 msgid ""
 "When expanding substitutions in a `RUN:` line, lit makes only one pass "
 "through the substitution list by default.  In this case, a substitution must "
@@ -1256,7 +1287,7 @@ msgid ""
 "configuration file.)"
 msgstr ""
 
-#: ../../../TestingGuide.md:955
+#: ../../../TestingGuide.md:976
 msgid ""
 "While lit configuration files can insert anywhere in the substitution list, "
 "the insertion behavior of the `DEFINE:` and `REDEFINE:` directives is "
@@ -1264,7 +1295,7 @@ msgid ""
 "the example above."
 msgstr ""
 
-#: ../../../TestingGuide.md:959
+#: ../../../TestingGuide.md:980
 msgid ""
 "Defining a substitution in terms of itself, whether directly or via other "
 "substitutions, should be avoided.  It usually produces an infinitely "
@@ -1272,18 +1303,18 @@ msgid ""
 "the substitution in terms of its previous value, even when using `REDEFINE:`."
 msgstr ""
 
-#: ../../../TestingGuide.md:964
+#: ../../../TestingGuide.md:985
 msgid ""
 "The relationship between the `DEFINE:` and `REDEFINE:` directive is "
 "analogous to the relationship between a variable declaration and variable "
 "assignment in many programming languages:"
 msgstr ""
 
-#: ../../../TestingGuide.md:968
+#: ../../../TestingGuide.md:989
 msgid "`DEFINE: %{name} = value`"
 msgstr ""
 
-#: ../../../TestingGuide.md:970
+#: ../../../TestingGuide.md:991
 msgid ""
 "This directive assigns the specified value to a new substitution whose  "
 "pattern is `%{name}`, or it reports an error if there is already a  "
@@ -1296,11 +1327,11 @@ msgid ""
 "expand."
 msgstr ""
 
-#: ../../../TestingGuide.md:979
+#: ../../../TestingGuide.md:1000
 msgid "`REDEFINE: %{name} = value`"
 msgstr ""
 
-#: ../../../TestingGuide.md:981
+#: ../../../TestingGuide.md:1002
 msgid ""
 "This directive assigns the specified value to an existing substitution "
 "whose  pattern is `%{name}`, or it reports an error if there are no "
@@ -1310,13 +1341,13 @@ msgid ""
 "other existing  substitutions is preserved."
 msgstr ""
 
-#: ../../../TestingGuide.md:988
+#: ../../../TestingGuide.md:1009
 msgid ""
 "The following properties apply to both the `DEFINE:` and `REDEFINE:` "
 "directives:"
 msgstr ""
 
-#: ../../../TestingGuide.md:991
+#: ../../../TestingGuide.md:1012
 msgid ""
 "**Substitution name**: In the directive, whitespace immediately before or "
 "after `%{name}` is optional and discarded.  `%{name}` must start with `%{`, "
@@ -1325,7 +1356,7 @@ msgid ""
 "This syntax has a few advantages:"
 msgstr ""
 
-#: ../../../TestingGuide.md:997
+#: ../../../TestingGuide.md:1018
 msgid ""
 "It is impossible for `%{name}` to contain sequences that are special in "
 "Python's `re.sub` patterns.  Otherwise, attempting to specify `%{name}` as a "
@@ -1333,7 +1364,7 @@ msgid ""
 "expansions."
 msgstr ""
 
-#: ../../../TestingGuide.md:1001
+#: ../../../TestingGuide.md:1022
 msgid ""
 "The braces help avoid the possibility that another substitution's pattern "
 "will match part of `%{name}` or vice-versa, producing confusing expansions.  "
@@ -1342,7 +1373,7 @@ msgid ""
 "theoretically possible."
 msgstr ""
 
-#: ../../../TestingGuide.md:1007
+#: ../../../TestingGuide.md:1028
 msgid ""
 "**Substitution value**: The value includes all text from the first non-"
 "whitespace character after `=` to the last non-whitespace character.  If "
@@ -1351,7 +1382,7 @@ msgid ""
 "strings are treated as plain text in the value."
 msgstr ""
 
-#: ../../../TestingGuide.md:1012
+#: ../../../TestingGuide.md:1033
 msgid ""
 "**Line continuations**: If the last non-whitespace character on the line "
 "after `:` is `\\`, then the next directive must use the same directive "
@@ -1364,29 +1395,29 @@ msgid ""
 "continuation containing only whitespace after its `:` is an error."
 msgstr ""
 
-#: ../../../TestingGuide.md:1024
+#: ../../../TestingGuide.md:1045
 msgid "**recursiveExpansionLimit:**"
 msgstr ""
 
-#: ../../../TestingGuide.md:1026
+#: ../../../TestingGuide.md:1047
 msgid ""
-"As described in the previous section, when expanding substitutions in a `RUN:"
-"` line, lit makes only one pass through the substitution list by default.  "
-"Thus, if substitutions are not defined in the proper order, some will remain "
-"in the `RUN:` line unexpanded.  For example, the following directives refer "
-"to `%{inner}` within `%{outer}` but do not define `%{inner}` until after "
-"`%{outer}`:"
+"As described in the previous section, when expanding substitutions in a "
+"`RUN:` line, lit makes only one pass through the substitution list by "
+"default.  Thus, if substitutions are not defined in the proper order, some "
+"will remain in the `RUN:` line unexpanded.  For example, the following "
+"directives refer to `%{inner}` within `%{outer}` but do not define `%{inner}"
+"` until after `%{outer}`:"
 msgstr ""
 
-#: ../../../TestingGuide.md:1042
+#: ../../../TestingGuide.md:1063
 msgid ""
-"`DEFINE:` inserts substitutions at the start of the substitution list, so "
-"`%{inner}` expands first but has no effect because the original `RUN:` line "
+"`DEFINE:` inserts substitutions at the start of the substitution list, so `%"
+"{inner}` expands first but has no effect because the original `RUN:` line "
 "does not contain `%{inner}`.  Next, `%{outer}` expands, and the output of "
 "the `echo` command becomes:"
 msgstr ""
 
-#: ../../../TestingGuide.md:1051
+#: ../../../TestingGuide.md:1072
 msgid ""
 "Of course, one way to fix this simple case is to reverse the definitions of "
 "`%{outer}` and `%{inner}`.  However, if a test has a complex set of "
@@ -1394,24 +1425,24 @@ msgid ""
 "sufficient substitution order."
 msgstr ""
 
-#: ../../../TestingGuide.md:1056
+#: ../../../TestingGuide.md:1077
 msgid ""
-"To address such use cases, lit configuration files support `config."
-"recursiveExpansionLimit`, which can be set to a non-negative integer to "
-"specify the maximum number of passes through the substitution list.  Thus, "
-"in the above example, setting the limit to 2 would cause lit to make a "
+"To address such use cases, lit configuration files support "
+"`config.recursiveExpansionLimit`, which can be set to a non-negative integer "
+"to specify the maximum number of passes through the substitution list.  "
+"Thus, in the above example, setting the limit to 2 would cause lit to make a "
 "second pass that expands `%{inner}` in the `RUN:` line, and the output from "
 "the `echo` command would then be:"
 msgstr ""
 
-#: ../../../TestingGuide.md:1067
+#: ../../../TestingGuide.md:1088
 msgid ""
-"To improve performance, lit will stop making passes when it notices the `RUN:"
-"` line has stopped changing.  In the above example, setting the limit higher "
-"than 2 is thus harmless."
+"To improve performance, lit will stop making passes when it notices the "
+"`RUN:` line has stopped changing.  In the above example, setting the limit "
+"higher than 2 is thus harmless."
 msgstr ""
 
-#: ../../../TestingGuide.md:1071
+#: ../../../TestingGuide.md:1092
 msgid ""
 "To facilitate debugging, after reaching the limit, lit will make one extra "
 "pass and report an error if the `RUN:` line changes again.  In the above "
@@ -1419,65 +1450,65 @@ msgid ""
 "instead of producing incorrect output."
 msgstr ""
 
-#: ../../../TestingGuide.md:1076
+#: ../../../TestingGuide.md:1097
 msgid "Options"
 msgstr ""
 
-#: ../../../TestingGuide.md:1078
+#: ../../../TestingGuide.md:1099
 msgid ""
 "The llvm lit configuration allows some things to be customized with user "
 "options:"
 msgstr ""
 
-#: ../../../TestingGuide.md:1080
+#: ../../../TestingGuide.md:1101
 msgid "`llc`, `opt`, ..."
 msgstr ""
 
-#: ../../../TestingGuide.md:1082
+#: ../../../TestingGuide.md:1103
 msgid ""
 "Substitute the respective llvm tool name with a custom command line. This   "
 "allows to specify custom paths and default arguments for these tools.   "
 "Example:"
 msgstr ""
 
-#: ../../../TestingGuide.md:1088
+#: ../../../TestingGuide.md:1109
 msgid "`run_long_tests`"
 msgstr ""
 
-#: ../../../TestingGuide.md:1090
+#: ../../../TestingGuide.md:1111
 msgid "Enable the execution of long running tests."
 msgstr ""
 
-#: ../../../TestingGuide.md:1092
+#: ../../../TestingGuide.md:1113
 msgid "`llvm_site_config`"
 msgstr ""
 
-#: ../../../TestingGuide.md:1094
+#: ../../../TestingGuide.md:1115
 msgid "Load the specified lit configuration instead of the default one."
 msgstr ""
 
-#: ../../../TestingGuide.md:1097
+#: ../../../TestingGuide.md:1118
 msgid "Other Features"
 msgstr ""
 
-#: ../../../TestingGuide.md:1099
+#: ../../../TestingGuide.md:1120
 msgid ""
 "To make `RUN` line writing easier, several helper programs are available. "
 "These helpers are in the `PATH` when running tests, so you can just call "
 "them using their name. For example:"
 msgstr ""
 
-#: ../../../TestingGuide.md:1103
+#: ../../../TestingGuide.md:1124
 msgid "`not`"
 msgstr ""
 
-#: ../../../TestingGuide.md:1105
+#: ../../../TestingGuide.md:1126
 msgid ""
 "This program runs its arguments and then inverts the result code from it.   "
 "Zero result codes become 1. Non-zero result codes become 0."
 msgstr ""
 
-#: ../../../TestingGuide.md:1108
+#: ../../../TestingGuide.md:1129
 msgid ""
 "To make the output more useful, {program}`lit` will scan the lines of the "
 "test case for ones that contain a pattern that matches `PR[0-9]+`. This is "
@@ -1487,20 +1518,20 @@ msgid ""
 "This is useful to quickly get some context when a test fails."
 msgstr ""
 
-#: ../../../TestingGuide.md:1116
+#: ../../../TestingGuide.md:1137
 msgid ""
 "Finally, any line that contains \"END.\" will cause the special "
 "interpretation of lines to terminate. This is generally done right after the "
 "last `RUN:` line. This has two side effects:"
 msgstr ""
 
-#: ../../../TestingGuide.md:1120
+#: ../../../TestingGuide.md:1141
 msgid ""
 "(a) it prevents special interpretation of lines that are part of the "
 "test     program, not the instructions to the test case, and"
 msgstr ""
 
-#: ../../../TestingGuide.md:1123
+#: ../../../TestingGuide.md:1144
 msgid ""
 "(b) it speeds things up for really big test cases by avoiding     "
 "interpretation of the remainder of the file."
