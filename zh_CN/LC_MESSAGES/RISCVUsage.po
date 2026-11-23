@@ -1,0 +1,1770 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-25 19:47+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../RISCVUsage.md:1
+msgid "User Guide for RISC-V Target"
+msgstr ""
+
+#: ../../../RISCVUsage.md:3
+msgid "Introduction"
+msgstr ""
+
+#: ../../../RISCVUsage.md:5
+msgid ""
+"The RISC-V target provides code generation for processors implementing "
+"supported variations of the RISC-V specification. It lives in the `llvm/lib/"
+"Target/RISCV` directory."
+msgstr ""
+
+#: ../../../RISCVUsage.md:9
+msgid "Specification Documents"
+msgstr ""
+
+#: ../../../RISCVUsage.md:11
+msgid ""
+"There have been a number of revisions to the RISC-V specifications. LLVM "
+"aims to implement the most recent ratified version of the standard RISC-V "
+"base ISAs and ISA extensions with pragmatic variances. The most recent "
+"specification can be found at: <https://github.com/riscv/riscv-isa-manual/"
+"releases/>."
+msgstr ""
+
+#: ../../../RISCVUsage.md:16
+msgid ""
+"[The official RISC-V International specification page](https://riscv.org/"
+"technical/specifications/). is also worth checking, but tends to "
+"significantly lag the specifications linked above. Make sure to check the "
+"[wiki for not yet integrated extensions](https://wiki.riscv.org/display/HOME/"
+"Recently+Ratified+Extensions) and note that in addition, we sometimes carry "
+"support for extensions that have not yet been ratified (these will be marked "
+"as experimental - see below) and support various vendor-specific extensions "
+"(see below)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:23
+msgid "The current known variances from the specification are:"
+msgstr ""
+
+#: ../../../RISCVUsage.md:25
+msgid ""
+"Unconditionally allowing instructions from zifencei, zicsr, zicntr, and "
+"zihpm without gating them on the extensions being enabled. Previous "
+"revisions of the specification included these instructions in the base ISA, "
+"and we preserve this behavior to avoid breaking existing code. If a future "
+"revision of the specification reuses these opcodes for other extensions, we "
+"may need to reevaluate this choice, and thus recommend users migrate build "
+"systems so as not to rely on this."
+msgstr ""
+
+#: ../../../RISCVUsage.md:32
+msgid ""
+"Allowing CSRs to be named without gating on specific extensions. This "
+"applies to all CSR names, not just those in zicsr, zicntr, and zihpm."
+msgstr ""
+
+#: ../../../RISCVUsage.md:34
+msgid ""
+"The ordering of `z*`, `s*`, and `x*` prefixed extension names is not "
+"enforced in user-specified ISA naming strings (e.g. `-march`)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:37
+msgid ""
+"We are actively deciding not to support multiple specification revisions at "
+"this time. We acknowledge a likely future need, but actively defer the "
+"decisions making around handling this until we have a concrete example of "
+"real hardware having shipped and an incompatible change to the specification "
+"made afterwards."
+msgstr ""
+
+#: ../../../RISCVUsage.md:43
+msgid "Base ISAs"
+msgstr ""
+
+#: ../../../RISCVUsage.md:45
+msgid ""
+"The specification defines five base instruction sets: RV32I, RV32E, RV64I, "
+"RV64E, and RV128I. Currently, LLVM fully supports RV32I, and RV64I. RV32E "
+"and RV64E are supported by the assembly-based tools only. RV128I is not "
+"supported."
+msgstr ""
+
+#: ../../../RISCVUsage.md:49
+msgid "To specify the target triple:"
+msgstr ""
+
+#: ../../../RISCVUsage.md:51
+msgid "RISC-V Architectures"
+msgstr ""
+
+#: ../../../RISCVUsage.md:59
+msgid ""
+"To select an E variant ISA (e.g. RV32E instead of RV32I), use the base "
+"architecture string (e.g. `riscv32`) with the extension `e`."
+msgstr ""
+
+#: ../../../RISCVUsage.md:62
+msgid "Profiles"
+msgstr ""
+
+#: ../../../RISCVUsage.md:64
+msgid ""
+"Supported profile names can be passed using `-march` instead of a standard "
+"ISA naming string. Currently supported profiles:"
+msgstr ""
+
+#: ../../../RISCVUsage.md:67
+msgid "`rvi20u32`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:68
+msgid "`rvi20u64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:69
+msgid "`rva20u64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:70
+msgid "`rva20s64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:71
+msgid "`rva22u64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:72
+msgid "`rva22s64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:73
+msgid "`rva23u64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:74
+msgid "`rva23s64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:75
+msgid "`rva23p1s64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:76
+msgid "`rvb23u64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:77
+msgid "`rvb23s64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:78
+msgid "`rvb23p1s64`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:80
+msgid ""
+"Note that you can also append additional extension names to be enabled, e.g. "
+"`rva20u64_zicond` will enable the `zicond` extension in addition to those in "
+"the `rva20u64` profile."
+msgstr ""
+
+#: ../../../RISCVUsage.md:84
+msgid ""
+"Profiles that are not yet ratified cannot be used unless `-menable-"
+"experimental-extensions` (or equivalent for other tools) is specified. This "
+"applies to the following profiles:"
+msgstr ""
+
+#: ../../../RISCVUsage.md:88
+msgid "`rvm23u32`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:90
+msgid ""
+"The `rva23p1s64` and `rvb23p1s64` profiles enable the same mandatory "
+"extensions as `rva23s64` and `rvb23s64`, respectively. Their additional "
+"optional extensions must be requested explicitly, for example `-"
+"march=rva23p1s64_ssctr`."
+msgstr ""
+
+#: ../../../RISCVUsage.md:97
+msgid "Ratified Extensions"
+msgstr ""
+
+#: ../../../RISCVUsage.md:99
+msgid ""
+"The following table provides a status summary for extensions which have been "
+"ratified and thus have finalized specifications. When relevant, detailed "
+"notes on support follow."
+msgstr ""
+
+#: ../../../RISCVUsage.md:103
+msgid "Ratified Extensions by Status"
+msgstr ""
+
+#: ../../../RISCVUsage.md:270
+msgid "Assembly Support"
+msgstr ""
+
+#: ../../../RISCVUsage.md:272
+msgid ""
+"LLVM supports the associated instructions in assembly. All assembly related "
+"tools (e.g. assembler, disassembler, llvm-objdump, etc..) are supported. "
+"Compiler and linker will accept extension names, and linked binaries will "
+"contain appropriate ELF flags and attributes to reflect use of named "
+"extension."
+msgstr ""
+
+#: ../../../RISCVUsage.md:274
+msgid "Supported"
+msgstr ""
+
+#: ../../../RISCVUsage.md:276
+msgid ""
+"Fully supported by the compiler. This includes everything in Assembly "
+"Support, along with - if relevant - C language intrinsics for the "
+"instructions and pattern matching by the compiler to recognize idiomatic "
+"patterns which can be lowered to the associated instructions."
+msgstr ""
+
+#: ../../../RISCVUsage.md:280
+msgid "`E`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:282
+msgid ""
+"Support of RV32E/RV64E and ilp32e/lp64e ABIs are experimental. To be "
+"compatible with the implementation of ilp32e in GCC, we don't use aligned "
+"registers to pass variadic arguments. Furthermore, we set the stack "
+"alignment to 4 bytes for types with length of 2*XLEN."
+msgstr ""
+
+#: ../../../RISCVUsage.md:286
+msgid "`Zbkb`, `Zbkx`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:288
+msgid "Pattern matching support for these instructions is incomplete."
+msgstr ""
+
+#: ../../../RISCVUsage.md:292
+msgid "`Zknd`, `Zkne`, `Zknh`, `Zksed`, `Zksh`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:294 ../../../RISCVUsage.md:300
+msgid ""
+"No pattern matching exists. As a result, these instructions can only be used "
+"from assembler or via intrinsic calls."
+msgstr ""
+
+#: ../../../RISCVUsage.md:298
+msgid ""
+"`Zvbc`, `Zvkg`, `Zvkn`, `Zvknc`, `Zvkned`, `Zvkng`, `Zvknha`, `Zvknhb`, "
+"`Zvks`, `Zvks`, `Zvks`, `Zvksc`, `Zvksed`, `Zvksg`, `Zvksh`."
+msgstr ""
+
+#: ../../../RISCVUsage.md:304
+msgid "`Zve32x`, `Zve32f`, `Zvl32b`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:306
+msgid ""
+"LLVM currently assumes a minimum VLEN (vector register width) of 64 bits "
+"during compilation, and as a result `Zve32x` and `Zve32f` are supported only "
+"for VLEN>=64. Assembly support doesn't have this restriction."
+msgstr ""
+
+#: ../../../RISCVUsage.md:310
+msgid "`Zicntr`, `Zicsr`, `Zifencei`, `Zihpm`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:312
+msgid ""
+"Between versions 2.0 and 2.1 of the base I specification, a backwards "
+"incompatible change was made to remove selected instructions and CSRs from "
+"the base ISA. These instructions were grouped into a set of new extensions, "
+"but were no longer required by the base ISA. This change is partially "
+"described in \"Preface to Document Version 20190608-Base-Ratified\" from the "
+"specification document (the `zicntr` and `zihpm` bits are not mentioned). "
+"LLVM currently implements version 2.1 of the base specification. To maintain "
+"compatibility, instructions from these extensions are accepted without being "
+"in the `-march` string. LLVM also allows the explicit specification of the "
+"extensions in an `-march` string."
+msgstr ""
+
+#: ../../../RISCVUsage.md:316
+msgid ""
+"`Za128rs`, `Za64rs`, `Zama16b`, `Zic64b`, `Ziccamoa`, `Ziccamoc`, `Ziccif`, "
+"`Zicclsm`, `Ziccrse`, `Shcounterenvw`, `Shgatpa`, `Shtvala`, `Shvsatpa`, "
+"`Shvstvala`, `Shvstvecd`, `Ssccptr`, `Sscounterenw`, `Ssstateen`, "
+"`Ssstrict`, `Sstvala`, `Sstvecd`, `Ssu64xl`, `Svade`, `Svbare`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:318
+msgid ""
+"These extensions are defined as part of the [RISC-V Profiles specification]"
+"(https://github.com/riscv/riscv-profiles/releases/tag/v1.0). They do not "
+"introduce any new features themselves, but instead describe existing "
+"hardware features."
+msgstr ""
+
+#: ../../../RISCVUsage.md:322
+msgid ""
+"`Sdext`, `Sdtrig` [The RISC-V Debug Specification](https://github.com/riscv/"
+"riscv-debug-spec/releases/download/1.0/riscv-debug-specification.pdf)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:326
+msgid "`Zacas`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:328
+msgid ""
+"The compiler will not generate amocas.d on RV32 or amocas.q on RV64 due to "
+"ABI compatibility. These can only be used in the assembler."
+msgstr ""
+
+#: ../../../RISCVUsage.md:330
+msgid "Atomics ABIs"
+msgstr ""
+
+#: ../../../RISCVUsage.md:332
+msgid ""
+"At the time of writing there are three atomics mappings (ABIs) [defined for "
+"RISC-V](https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/"
+"riscv-elf.adoc#tag_riscv_atomic_abi-14-uleb128version). As of LLVM 19, LLVM "
+"defaults to \"A6S\", which is compatible with both the original \"A6\" and "
+"the future \"A7\" ABI. See [the psABI atomics document](https://github.com/"
+"riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-atomic.adoc) for more "
+"information on these mappings."
+msgstr ""
+
+#: ../../../RISCVUsage.md:334
+msgid ""
+"Note that although the \"A6S\" mapping is used, the ELF attribute recording "
+"the mapping isn't currently emitted by default due to a bug causing a crash "
+"in older versions of binutils when processing files containing this "
+"attribute."
+msgstr ""
+
+#: ../../../RISCVUsage.md:336
+msgid "Experimental Extensions"
+msgstr ""
+
+#: ../../../RISCVUsage.md:338
+msgid ""
+"LLVM supports (to various degrees) a number of experimental extensions. All "
+"experimental extensions have `experimental-` as a prefix. There is "
+"explicitly no compatibility promised between versions of the toolchain, and "
+"regular users are strongly advised *not* to make use of experimental "
+"extensions before they reach ratification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:340
+msgid ""
+"The primary goal of experimental support is to assist in the process of "
+"ratification by providing an existence proof of an implementation, and "
+"simplifying efforts to validate the value of a proposed extension against "
+"large code bases. Experimental extensions are expected to either transition "
+"to ratified status, or be eventually removed. The decision on whether to "
+"accept an experimental extension is currently done on an entirely case by "
+"case basis; if you want to propose one, attending the bi-weekly RISC-V sync-"
+"up call is strongly advised."
+msgstr ""
+
+#: ../../../RISCVUsage.md:342
+msgid "`experimental-p`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:344
+msgid ""
+"LLVM implements the [0.21 draft specification](https://github.com/riscv/"
+"riscv-p-spec/blob/master/P-ext-proposal.adoc)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:346
+msgid "`experimental-zibi`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:348
+msgid ""
+"LLVM implements the [0.1 release specification](https://github.com/riscv/"
+"zibi/releases/tag/v0.1.0)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:350
+msgid "`experimental-zicfilp`, `experimental-zicfiss`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:352
+msgid ""
+"LLVM implements the [1.0 release specification](https://github.com/riscv/"
+"riscv-cfi/releases/tag/v1.0)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:354
+msgid ""
+"`experimental-smcsps`, `experimental-sscsps`, `experimental-smijt`, "
+"`experimental-ssijt`, `experimental-smehv`, `experimental-ssehv`, "
+"`experimental-smip`, `experimental-ssip`, `experimental-smidctrl`, "
+"`experimental-ssidctrl`, `experimental-smnip`, `experimental-ssnip`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:356
+msgid ""
+"LLVM implements the [0.20 release specification](https://github.com/riscv/"
+"riscv-fast-interrupt/releases/tag/v0.20)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:358
+msgid "`experimental-zvbc32e`, `experimental-zvkgs`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:360
+msgid ""
+"LLVM implements the [0.7 release specification](https://github.com/user-"
+"attachments/files/16450464/riscv-crypto-spec-vector-extra_v0.0.7.pdf)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:362
+msgid "`experimental-svukte`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:364
+msgid ""
+"LLVM implements the [1.0 draft specification](https://github.com/riscv/riscv-"
+"isa-manual/pull/1564)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:366
+msgid "`experimental-zvdot4a8i`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:368
+msgid ""
+"LLVM implements the [0.1 draft specification](https://github.com/riscv/riscv-"
+"isa-manual/pull/2576)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:370
+msgid ""
+"`experimental-zvqwdota8i`, `experimental-zvqwdota16i`, `experimental-"
+"zvfwdota16bf`, `experimental-zvfqwdota8f`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:372 ../../../RISCVUsage.md:404
+msgid ""
+"LLVM implements the [0.2 draft specification](https://github.com/aswaterman/"
+"riscv-misc/blob/main/isa/ldot-bdot/ldot-bdot.adoc)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:374
+msgid "`experimental-smpmpmt`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:376
+msgid ""
+"LLVM implements the [0.6 draft specification](https://github.com/riscv/riscv-"
+"isa-manual/blob/smpmpmt/src/smpmpmt.adoc)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:378
+msgid "`experimental-zvabd`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:380
+msgid ""
+"LLVM implements the [0.9 draft specification](https://github.com/riscv/"
+"integer-vector-absolute-difference/releases/tag/v0.9)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:382
+msgid "`experimental-zvzip`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:384
+msgid ""
+"LLVM implements the [0.3 draft specification](https://github.com/riscv/riscv-"
+"isa-manual/pull/3233)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:386
+msgid "`experimental-zvvfmm`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:388 ../../../RISCVUsage.md:392
+#: ../../../RISCVUsage.md:396 ../../../RISCVUsage.md:400
+msgid ""
+"LLVM implements the [0.1 draft specification](https://github.com/riscv/"
+"integrated-matrix-extension/releases/tag/riscv-isa-"
+"release-71c48b9-2026-05-17)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:390
+msgid "`experimental-zvvmm`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:394
+msgid "`experimental-zvvmtls`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:398
+msgid "`experimental-zvvmttls`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:402
+msgid ""
+"`experimental-zvqwbdota8i`, `experimental-zvqwbdota16i`, `experimental-"
+"zvfqwbdota8f`, `experimental-zvfwbdota16bf`, `experimental-zvfbdota32f`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:406
+msgid "`experimental-zilx`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:408
+msgid ""
+"LLVM implements the [0.1 draft specification](https://github.com/riscv/riscv-"
+"zilx)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:410
+msgid "`experimental-zvfofp8min`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:412
+msgid ""
+"LLVM implements the [0.9 draft specification](https://github.com/riscv/riscv-"
+"isa-manual/pull/2979)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:414
+msgid ""
+"To use an experimental extension from `clang`, you must add `-menable-"
+"experimental-extensions` to the command line, and specify the exact version "
+"of the experimental extension you are using. To use an experimental "
+"extension with LLVM's internal developer tools (e.g. `llc`, `llvm-objdump`, "
+"`llvm-mc`), you must prefix the extension name with `experimental-`. Note "
+"that you don't need to specify the version with internal tools, and "
+"shouldn't include the `experimental-` prefix with `clang`."
+msgstr ""
+
+#: ../../../RISCVUsage.md:416
+msgid "Vendor Extensions"
+msgstr ""
+
+#: ../../../RISCVUsage.md:418
+msgid ""
+"Vendor extensions are extensions which are not standardized by RISC-V "
+"International, and are instead defined by a hardware vendor. The term vendor "
+"extension roughly parallels the definition of a `non-standard` extension "
+"from Section 1.3 of the Volume I: RISC-V Unprivileged ISA specification. In "
+"particular, we expect to eventually accept both `custom` extensions and `non-"
+"conforming` extensions."
+msgstr ""
+
+#: ../../../RISCVUsage.md:420
+msgid ""
+"Inclusion of a vendor extension will be considered on a case by case basis. "
+"All proposals should be brought to the bi-weekly RISC-V sync calls for "
+"discussion. For a general idea of the factors likely to be considered, "
+"please see the [Clang documentation](https://clang.llvm.org/"
+"get_involved.html)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:422
+msgid ""
+"It is our intention to follow the naming conventions described in [riscv-non-"
+"isa/riscv-toolchain-conventions](https://github.com/riscv-non-isa/riscv-"
+"toolchain-conventions#conventions-for-vendor-extensions). Exceptions to this "
+"naming will need to be strongly motivated."
+msgstr ""
+
+#: ../../../RISCVUsage.md:424
+msgid "The current vendor extensions supported are:"
+msgstr ""
+
+#: ../../../RISCVUsage.md:426
+msgid "`XAIFET`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:428
+msgid ""
+"LLVM implements [the AIFET (AI Foundry's ET) vendor-defined instructions "
+"specified in](https://github.com/aifoundry-org/et-man/blob/main/"
+"ET%20Programmer's%20Reference%20Manual.pdf) originally defined by Esperanto "
+"Technologies (and now under the AI Foundry non-profit). Instructions are "
+"prefixed with `aif.` as described in the specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:430
+msgid "`XTHeadBa`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:432
+msgid ""
+"LLVM implements [the THeadBa (address-generation) vendor-defined "
+"instructions specified in](https://github.com/T-head-Semi/thead-extension-"
+"spec/releases/download/2.2.2/xthead-2023-01-30-2.2.2.pdf) by T-HEAD of "
+"Alibaba. Instructions are prefixed with `th.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:434
+msgid "`XTHeadBb`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:436
+msgid ""
+"LLVM implements [the THeadBb (basic bit-manipulation) vendor-defined "
+"instructions specified in](https://github.com/T-head-Semi/thead-extension-"
+"spec/releases/download/2.2.2/xthead-2023-01-30-2.2.2.pdf) by T-HEAD of "
+"Alibaba. Instructions are prefixed with `th.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:438
+msgid "`XTHeadBs`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:440
+msgid ""
+"LLVM implements [the THeadBs (single-bit operations) vendor-defined "
+"instructions specified in](https://github.com/T-head-Semi/thead-extension-"
+"spec/releases/download/2.2.2/xthead-2023-01-30-2.2.2.pdf) by T-HEAD of "
+"Alibaba. Instructions are prefixed with `th.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:442
+msgid "`XTHeadCondMov`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:444
+msgid ""
+"LLVM implements [the THeadCondMov (conditional move) vendor-defined "
+"instructions specified in](https://github.com/T-head-Semi/thead-extension-"
+"spec/releases/download/2.2.2/xthead-2023-01-30-2.2.2.pdf) by T-HEAD of "
+"Alibaba. Instructions are prefixed with `th.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:446
+msgid "`XTHeadCmo`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:448
+msgid ""
+"LLVM implements [the THeadCmo (cache management operations) vendor-defined "
+"instructions specified in](https://github.com/T-head-Semi/thead-extension-"
+"spec/releases/download/2.2.2/xthead-2023-01-30-2.2.2.pdf) by T-HEAD of "
+"Alibaba. Instructions are prefixed with `th.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:450
+msgid "`XTHeadFMemIdx`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:452
+msgid ""
+"LLVM implements [the THeadFMemIdx (indexed memory operations for floating "
+"point) vendor-defined instructions specified in](https://github.com/T-head-"
+"Semi/thead-extension-spec/releases/download/2.2.2/"
+"xthead-2023-01-30-2.2.2.pdf) by T-HEAD of Alibaba. Instructions are prefixed "
+"with `th.` as described in the specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:454
+msgid "`XTheadMac`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:456
+msgid ""
+"LLVM implements [the XTheadMac (multiply-accumulate instructions) vendor-"
+"defined instructions specified in](https://github.com/T-head-Semi/thead-"
+"extension-spec/releases/download/2.2.2/xthead-2023-01-30-2.2.2.pdf) by T-"
+"HEAD of Alibaba. Instructions are prefixed with `th.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:458
+msgid "`XTHeadMemIdx`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:460
+msgid ""
+"LLVM implements [the THeadMemIdx (indexed memory operations) vendor-defined "
+"instructions specified in](https://github.com/T-head-Semi/thead-extension-"
+"spec/releases/download/2.2.2/xthead-2023-01-30-2.2.2.pdf) by T-HEAD of "
+"Alibaba. Instructions are prefixed with `th.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:462
+msgid "`XTHeadMemPair`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:464
+msgid ""
+"LLVM implements [the THeadMemPair (two-GPR memory operations) vendor-defined "
+"instructions specified in](https://github.com/T-head-Semi/thead-extension-"
+"spec/releases/download/2.2.2/xthead-2023-01-30-2.2.2.pdf) by T-HEAD of "
+"Alibaba. Instructions are prefixed with `th.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:466
+msgid "`XTHeadSync`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:468
+msgid ""
+"LLVM implements [the THeadSync (multi-core synchronization instructions) "
+"vendor-defined instructions specified in](https://github.com/T-head-Semi/"
+"thead-extension-spec/releases/download/2.2.2/xthead-2023-01-30-2.2.2.pdf) by "
+"T-HEAD of Alibaba. Instructions are prefixed with `th.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:470
+msgid "`XTHeadVdot`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:472
+msgid ""
+"LLVM implements [version 1.0.0 of the THeadV-family custom instructions "
+"specification](https://github.com/T-head-Semi/thead-extension-spec/releases/"
+"download/2.2.0/xthead-2022-12-04-2.2.0.pdf) by T-HEAD of Alibaba. All "
+"instructions are prefixed with `th.` as described in the specification, and "
+"the riscv-toolchain-convention document linked above."
+msgstr ""
+
+#: ../../../RISCVUsage.md:474
+msgid "`Xsfmm*`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:476
+msgid ""
+"LLVM implements [version 0.6 of the Xsfmm Family of Attached Matrix "
+"Extensions Specification](https://www.sifive.com/document-file/xsfmm-matrix-"
+"extensions-specification) by SiFive. All instructions are prefixed with "
+"`sf.` as described in the specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:478
+msgid "`XSfvcp`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:480
+msgid ""
+"LLVM implements [version 1.1.0 of the SiFive Vector Coprocessor Interface "
+"(VCIX) Software Specification](https://sifive.cdn.prismic.io/sifive/"
+"Zn3m1R5LeNNTwnLS_vcix-spec-software-v1p1.pdf) by SiFive. All instructions "
+"are prefixed with `sf.vc.` as described in the specification, and the riscv-"
+"toolchain-convention document linked above."
+msgstr ""
+
+#: ../../../RISCVUsage.md:482
+msgid "`Xsfvfexp16e`, `Xsfvfbfexp16e`, and `Xsfvfexp32e`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:484
+msgid ""
+"LLVM implements [version 0.5 of the Vector Exponential Extension "
+"Specification](https://www.sifive.com/document-file/exponential-function-"
+"instruction-xsfvfexp32e-xsfvf) by SiFive. All instructions are prefixed with "
+"`sf.` as described in the specification linked above."
+msgstr ""
+
+#: ../../../RISCVUsage.md:486
+msgid "`Xsfvfexpa` and `Xsfvfexpa64e`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:488
+msgid ""
+"LLVM implements [version 0.2 of the Vector Exponential Approximation "
+"Extension Specification](https://www.sifive.com/document-file/exponential-"
+"approximation-instruction-xsfvfexpa-ex) by SiFive. All instructions are "
+"prefixed with `sf.` as described in the specification linked above."
+msgstr ""
+
+#: ../../../RISCVUsage.md:490
+msgid "`XSfvqmaccdod`, `XSfvqmaccqoq`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:492
+msgid ""
+"LLVM implements [version 1.1.0 of the SiFive Int8 Matrix Multiplication "
+"Extensions Specification](https://sifive.cdn.prismic.io/sifive/1a2ad85b-"
+"d818-49f7-ba83-f51f1731edbe_int8-matmul-spec.pdf) by SiFive. All "
+"instructions are prefixed with `sf.` as described in the specification "
+"linked above."
+msgstr ""
+
+#: ../../../RISCVUsage.md:494
+msgid "`Xsfvfnrclipxfqf`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:496
+msgid ""
+"LLVM implements [version 1.0.0 of the FP32-to-int8 Ranged Clip Instructions "
+"Extension Specification](https://sifive.cdn.prismic.io/sifive/0aacff47-"
+"f530-43dc-8446-5caa2260ece0_xsfvfnrclipxfqf-spec.pdf) by SiFive. All "
+"instructions are prefixed with `sf.` as described in the specification "
+"linked above."
+msgstr ""
+
+#: ../../../RISCVUsage.md:498
+msgid "`Xsfvfwmaccqqq`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:500
+msgid ""
+"LLVM implements [version 1.0.0 of the Matrix Multiply Accumulate Instruction "
+"Extension Specification](https://sifive.cdn.prismic.io/sifive/c391d53e-"
+"ffcf-4091-82f6-c37bf3e883ed_xsfvfwmaccqqq-spec.pdf) by SiFive. All "
+"instructions are prefixed with `sf.` as described in the specification "
+"linked above."
+msgstr ""
+
+#: ../../../RISCVUsage.md:502
+msgid "`XCVbitmanip`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:504
+msgid ""
+"LLVM implements [version 1.0.0 of the CORE-V Bit Manipulation custom "
+"instructions specification](https://github.com/openhwgroup/cv32e40p/blob/"
+"62bec66b36182215e18c9cf10f723567e23878e9/docs/source/"
+"instruction_set_extensions.rst) by OpenHW Group. All instructions are "
+"prefixed with `cv.` as described in the specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:506
+msgid "`XCVelw`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:508
+msgid ""
+"LLVM implements [version 1.0.0 of the CORE-V Event load custom instructions "
+"specification](https://github.com/openhwgroup/cv32e40p/blob/master/docs/"
+"source/instruction_set_extensions.rst) by OpenHW Group. All instructions are "
+"prefixed with `cv.` as described in the specification. These instructions "
+"are only available for riscv32 at this time."
+msgstr ""
+
+#: ../../../RISCVUsage.md:510
+msgid "`XCVmac`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:512
+msgid ""
+"LLVM implements [version 1.0.0 of the CORE-V Multiply-Accumulate (MAC) "
+"custom instructions specification](https://github.com/openhwgroup/cv32e40p/"
+"blob/4f024fe4b15a68b76615b0630c07a6745c620da7/docs/source/"
+"instruction_set_extensions.rst) by OpenHW Group. All instructions are "
+"prefixed with `cv.mac` as described in the specification. These instructions "
+"are only available for riscv32 at this time."
+msgstr ""
+
+#: ../../../RISCVUsage.md:514
+msgid "`XCVmem`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:516
+msgid ""
+"LLVM implements [version 1.0.0 of the CORE-V Post-Increment load and stores "
+"custom instructions specification](https://github.com/openhwgroup/cv32e40p/"
+"blob/master/docs/source/instruction_set_extensions.rst) by OpenHW Group. All "
+"instructions are prefixed with `cv.` as described in the specification. "
+"These instructions are only available for riscv32 at this time."
+msgstr ""
+
+#: ../../../RISCVUsage.md:518
+msgid "`XCValu`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:520
+msgid ""
+"LLVM implements [version 1.0.0 of the Core-V ALU custom instructions "
+"specification](https://github.com/openhwgroup/cv32e40p/blob/"
+"4f024fe4b15a68b76615b0630c07a6745c620da7/docs/source/"
+"instruction_set_extensions.rst) by Core-V. All instructions are prefixed "
+"with `cv.` as described in the specification. These instructions are only "
+"available for riscv32 at this time."
+msgstr ""
+
+#: ../../../RISCVUsage.md:522
+msgid "`XCVsimd`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:524
+msgid ""
+"LLVM implements [version 1.0.0 of the CORE-V SIMD custom instructions "
+"specification](https://github.com/openhwgroup/cv32e40p/blob/cv32e40p_v1.3.2/"
+"docs/source/instruction_set_extensions.rst) by OpenHW Group. All "
+"instructions are prefixed with `cv.` as described in the specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:526
+msgid "`XCVbi`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:528
+msgid ""
+"LLVM implements [version 1.0.0 of the CORE-V immediate branching custom "
+"instructions specification](https://github.com/openhwgroup/cv32e40p/blob/"
+"cv32e40p_v1.3.2/docs/source/instruction_set_extensions.rst) by OpenHW Group. "
+"All instructions are prefixed with `cv.` as described in the specification. "
+"These instructions are only available for riscv32 at this time."
+msgstr ""
+
+#: ../../../RISCVUsage.md:530
+msgid "`XSiFivecdiscarddlone`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:532
+msgid ""
+"LLVM implements [the SiFive sf.cdiscard.d.l1 instruction](https://"
+"sifive.cdn.prismic.io/sifive/767804da-53b2-4893-97d5-"
+"b7c030ae0a94_s76mc_core_complex_manual_21G3.pdf) by SiFive."
+msgstr ""
+
+#: ../../../RISCVUsage.md:534
+msgid "`XSiFivecflushdlone`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:536
+msgid ""
+"LLVM implements [the SiFive sf.cflush.d.l1 instruction](https://"
+"sifive.cdn.prismic.io/sifive/767804da-53b2-4893-97d5-"
+"b7c030ae0a94_s76mc_core_complex_manual_21G3.pdf) by SiFive."
+msgstr ""
+
+#: ../../../RISCVUsage.md:538
+msgid "`XSfcease`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:540
+msgid ""
+"LLVM implements [the SiFive sf.cease instruction](https://"
+"sifive.cdn.prismic.io/sifive/767804da-53b2-4893-97d5-"
+"b7c030ae0a94_s76mc_core_complex_manual_21G3.pdf) by SiFive."
+msgstr ""
+
+#: ../../../RISCVUsage.md:542
+msgid "`Xwchc`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:544
+msgid ""
+"LLVM implements `the custom compressed opcodes present in some QingKe cores` "
+"by WCH / Nanjing Qinheng Microelectronics. The vendor refers to these "
+"opcodes by the name \"XW\"."
+msgstr ""
+
+#: ../../../RISCVUsage.md:546
+msgid "`experimental-Xqccmi`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:548
+msgid ""
+"LLVM implements [version 0.2 of the Qualcomm 16-bit Instruction Lookup Table "
+"extension specification](https://github.com/qualcomm/riscv-unified-db/"
+"releases#release-Xqccmi-0.2.0) by Qualcomm. All instructions are prefixed "
+"with `qc.` as described in the specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:550
+msgid "`Xqccmp`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:552
+msgid ""
+"LLVM implements [version 0.3 of the 16-bit Push/Pop instructions and double-"
+"moves extension specification](https://github.com/quic/riscv-unified-db/"
+"releases/tag/Xqccmp_extension-0.3.0) by Qualcomm. All instructions are "
+"prefixed with `qc.` as described in the specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:554
+msgid "`experimental-Xqccmt`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:556
+msgid ""
+"LLVM implements [version 0.1 of the Qualcomm 16-bit Table Jump extension "
+"specification](https://github.com/riscv/riscv-unified-db/pull/1788) by "
+"Qualcomm. All instructions are prefixed with `qc.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:558
+msgid "`Xqci`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:560
+msgid ""
+"LLVM implements [version 0.13 of the Qualcomm uC extension specification]"
+"(https://github.com/quic/riscv-unified-db/releases/tag/Xqci-0.13.0) by "
+"Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:562
+msgid "`Xqcia`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:564
+msgid ""
+"LLVM implements [version 0.7 of the Qualcomm uC Arithmetic extension "
+"specification](https://github.com/quic/riscv-unified-db/releases/tag/"
+"Xqci-0.13.0) by Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:566
+msgid "`Xqciac`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:568
+msgid ""
+"LLVM implements [version 0.3 of the Qualcomm uC Load-Store Address "
+"Calculation extension specification](https://github.com/quic/riscv-unified-"
+"db/releases/tag/Xqci-0.13.0) by Qualcomm. These instructions are only "
+"available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:570
+msgid "`Xqcibi`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:572
+msgid ""
+"LLVM implements [version 0.2 of the Qualcomm uC Branch Immediate extension "
+"specification](https://github.com/quic/riscv-unified-db/releases/tag/"
+"Xqci-0.13.0) by Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:574
+msgid "`Xqcibm`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:576
+msgid ""
+"LLVM implements [version 0.8 of the Qualcomm uC Bit Manipulation extension "
+"specification](https://github.com/quic/riscv-unified-db/releases/tag/"
+"Xqci-0.13.0) by Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:578
+msgid "`Xqcicli`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:580
+msgid ""
+"LLVM implements [version 0.3 of the Qualcomm uC Conditional Load Immediate "
+"extension specification](https://github.com/quic/riscv-unified-db/releases/"
+"tag/Xqci-0.13.0) by Qualcomm. These instructions are only available for "
+"riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:582
+msgid "`Xqcicm`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:584
+msgid ""
+"LLVM implements [version 0.2 of the Qualcomm uC Conditional Move extension "
+"specification](https://github.com/quic/riscv-unified-db/releases/tag/"
+"Xqci-0.13.0) by Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:586
+msgid "`Xqcics`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:588
+msgid ""
+"LLVM implements [version 0.2 of the Qualcomm uC Conditional Select extension "
+"specification](https://github.com/quic/riscv-unified-db/releases/tag/"
+"Xqci-0.13.0) by Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:590
+msgid "`Xqcicsr`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:592
+msgid ""
+"LLVM implements [version 0.4 of the Qualcomm uC CSR extension specification]"
+"(https://github.com/quic/riscv-unified-db/releases/tag/Xqci-0.13.0) by "
+"Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:594
+msgid "`Xqciint`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:596
+msgid ""
+"LLVM implements [version 0.10 of the Qualcomm uC Interrupts extension "
+"specification](https://github.com/quic/riscv-unified-db/releases/tag/"
+"Xqci-0.13.0) by Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:598
+msgid "`Xqciio`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:600
+msgid ""
+"LLVM implements [version 0.1 of the Qualcomm uC External Input Output "
+"extension specification](https://github.com/quic/riscv-unified-db/releases/"
+"tag/Xqci-0.13.0) by Qualcomm. These instructions are only available for "
+"riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:602
+msgid "`Xqcilb`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:604
+msgid ""
+"LLVM implements [version 0.2 of the Qualcomm uC Long Branch extension "
+"specification](https://github.com/quic/riscv-unified-db/releases/tag/"
+"Xqci-0.13.0) by Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:606
+msgid "`Xqcili`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:608
+msgid ""
+"LLVM implements [version 0.2 of the Qualcomm uC Load Large Immediate "
+"extension specification](https://github.com/quic/riscv-unified-db/releases/"
+"tag/Xqci-0.13.0) by Qualcomm. These instructions are only available for "
+"riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:610
+msgid "`Xqcilia`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:612
+msgid ""
+"LLVM implements [version 0.2 of the Qualcomm uC Large Immediate Arithmetic "
+"extension specification](https://github.com/quic/riscv-unified-db/releases/"
+"tag/Xqci-0.13.0) by Qualcomm. These instructions are only available for "
+"riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:614
+msgid "`Xqcilo`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:616
+msgid ""
+"LLVM implements [version 0.3 of the Qualcomm uC Large Offset Load Store "
+"extension specification](https://github.com/quic/riscv-unified-db/releases/"
+"tag/Xqci-0.13.0) by Qualcomm. These instructions are only available for "
+"riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:618
+msgid "`Xqcilsm`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:620
+msgid ""
+"LLVM implements [version 0.6 of the Qualcomm uC Load Store Multiple "
+"extension specification](https://github.com/quic/riscv-unified-db/releases/"
+"tag/Xqci-0.13.0) by Qualcomm. These instructions are only available for "
+"riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:622
+msgid "`Xqcisim`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:624
+msgid ""
+"LLVM implements [version 0.2 of the Qualcomm uC Simulation Hint extension "
+"specification](https://github.com/quic/riscv-unified-db/releases/tag/"
+"Xqci-0.13.0) by Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:626
+msgid "`Xqcisls`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:628
+msgid ""
+"LLVM implements [version 0.2 of the Qualcomm uC Scaled Load Store extension "
+"specification](https://github.com/quic/riscv-unified-db/releases/tag/"
+"Xqci-0.13.0) by Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:630
+msgid "`Xqcisync`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:632
+msgid ""
+"LLVM implements [version 0.3 of the Qualcomm uC Sync Delay extension "
+"specification](https://github.com/quic/riscv-unified-db/releases/tag/"
+"Xqci-0.13.0) by Qualcomm. These instructions are only available for riscv32."
+msgstr ""
+
+#: ../../../RISCVUsage.md:634
+msgid "`Xmipscbop`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:636
+msgid ""
+"LLVM implements MIPS prefetch extension [p8700 processor](https://mips.com/"
+"products/hardware/p8700/) by MIPS."
+msgstr ""
+
+#: ../../../RISCVUsage.md:638
+msgid "`Xmipscmov`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:640
+msgid ""
+"LLVM implements conditional move for the [p8700 processor](https://mips.com/"
+"products/hardware/p8700/) by MIPS."
+msgstr ""
+
+#: ../../../RISCVUsage.md:642
+msgid "`Xmipslsp`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:644
+msgid ""
+"LLVM implements load/store pair instructions for the [p8700 processor]"
+"(https://mips.com/products/hardware/p8700/) by MIPS."
+msgstr ""
+
+#: ../../../RISCVUsage.md:646
+msgid "`XAndesPerf`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:648
+msgid ""
+"LLVM implements [version 5.0.0 of the Andes Performance Extension "
+"specification](https://github.com/andestech/andes-v5-isa/releases/download/"
+"ast-v5_4_0-release/AndeStar_V5_ISA_Spec_UM165-v1.5.08-20250317.pdf) by Andes "
+"Technology. All instructions are prefixed with `nds.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:650
+msgid "`XAndesBFHCvt`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:652
+msgid ""
+"LLVM implements [version 5.0.0 of the Andes Scalar BFLOAT16 Conversion "
+"Extension specification](https://github.com/andestech/andes-v5-isa/releases/"
+"download/ast-v5_4_0-release/AndeStar_V5_ISA_Spec_UM165-v1.5.08-20250317.pdf) "
+"by Andes Technology. All instructions are prefixed with `nds.` as described "
+"in the specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:654
+msgid "`XAndesVBFHCvt`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:656
+msgid ""
+"LLVM implements [version 5.0.0 of the Andes Vector BFLOAT16 Conversion "
+"Extension specification](https://github.com/andestech/andes-v5-isa/releases/"
+"download/ast-v5_4_0-release/AndeStar_V5_ISA_Spec_UM165-v1.5.08-20250317.pdf) "
+"by Andes Technology. All instructions are prefixed with `nds.` as described "
+"in the specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:658
+msgid "`XAndesVSINTH`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:660
+msgid ""
+"LLVM implements [version 5.0.0 of the Andes Vector Small Int Handling "
+"Extension specification](https://github.com/andestech/andes-v5-isa/releases/"
+"download/ast-v5_4_0-release/AndeStar_V5_ISA_Spec_UM165-v1.5.08-20250317.pdf) "
+"by Andes Technology. All instructions are prefixed with `nds.` as described "
+"in the specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:662
+msgid "`XAndesVSINTLoad`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:664
+msgid ""
+"LLVM implements [version 5.0.0 of the Andes Vector INT4 Load Extension "
+"specification](https://github.com/andestech/andes-v5-isa/releases/download/"
+"ast-v5_4_0-release/AndeStar_V5_ISA_Spec_UM165-v1.5.08-20250317.pdf) by Andes "
+"Technology. All instructions are prefixed with `nds.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:666
+msgid "`XAndesVPackFPH`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:668
+msgid ""
+"LLVM implements [version 5.0.0 of the Andes Vector Packed FP16 Extension "
+"specification](https://github.com/andestech/andes-v5-isa/releases/download/"
+"ast-v5_4_0-release/AndeStar_V5_ISA_Spec_UM165-v1.5.08-20250317.pdf) by Andes "
+"Technology. All instructions are prefixed with `nds.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:670
+msgid "`XAndesVDot`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:672
+msgid ""
+"LLVM implements [version 5.0.0 of the Andes Vector Dot Product Extension "
+"specification](https://github.com/andestech/andes-v5-isa/releases/download/"
+"ast-v5_4_0-release/AndeStar_V5_ISA_Spec_UM165-v1.5.08-20250317.pdf) by Andes "
+"Technology. All instructions are prefixed with `nds.` as described in the "
+"specification."
+msgstr ""
+
+#: ../../../RISCVUsage.md:674
+msgid "`XSMTVDot`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:676
+msgid ""
+"SpacemiT defines [Integrated Matrix Extension (IME) specification](https://"
+"github.com/spacemit-com/riscv-ime-extension-spec/releases/tag/v1.0). LLVM "
+"implements the hardware-adapted subset for SpacemiT X60, defined in the "
+"[feature document](https://developer.spacemit.com/documentation?"
+"token=BWbGwbx7liGW21kq9lucSA6Vnpb#2.1) by SpacemiT. All instructions are "
+"prefixed with `smt.` as described in the implementation guide. Note that "
+"this implemented subset is `version 1.0.0 of the SpacemiT Vector Dot Product "
+"Extension specification`, which is strictly a subset of the full IME "
+"specification to reflect the capabilities of SpacemiT X60 hardware correctly."
+msgstr ""
+
+#: ../../../RISCVUsage.md:679
+msgid "`XSMTVDotII`"
+msgstr ""
+
+#: ../../../RISCVUsage.md:681
+msgid ""
+"SpacemiT defines the [Integrated Matrix Extension (IME) specification]"
+"(https://github.com/spacemit-com/docs-ai/blob/main/en/architecture/"
+"ime_extension.md) LLVM implements the hardware-adapted subset for SpacemiT "
+"A100"
+msgstr ""
+
+#: ../../../RISCVUsage.md:684
+msgid "Experimental C Intrinsics"
+msgstr ""
+
+#: ../../../RISCVUsage.md:686
+msgid ""
+"In some cases an extension is non-experimental but the C intrinsics for that "
+"extension are still experimental. To use C intrinsics for such an extension "
+"from `clang`, you must add `-menable-experimental-extensions` to the command "
+"line. This currently applies to the following extensions:"
+msgstr ""
+
+#: ../../../RISCVUsage.md:691
+msgid "No extensions have experimental intrinsics."
+msgstr ""
+
+#: ../../../RISCVUsage.md:693
+msgid "Long (>32-bit) Instruction Support"
+msgstr ""
+
+#: ../../../RISCVUsage.md:695
+msgid ""
+"RISC-V is a variable-length ISA, but the standard currently only defines 16- "
+"and 32-bit instructions. The specification describes longer instruction "
+"encodings, but these are not ratified."
+msgstr ""
+
+#: ../../../RISCVUsage.md:697
+msgid ""
+"The LLVM disassembler, `llvm-objdump`, does use the longer instruction "
+"encodings described in the specification to guess the instruction length (up "
+"to 176 bits) and will group the disassembly view of encoding bytes "
+"correspondingly."
+msgstr ""
+
+#: ../../../RISCVUsage.md:699
+msgid ""
+"The LLVM integrated assembler for RISC-V supports two different kinds of "
+"`.insn` directive, for assembling instructions that LLVM does not yet "
+"support:"
+msgstr ""
+
+#: ../../../RISCVUsage.md:701
+msgid ""
+"`.insn type, args*` which takes a known instruction type, and a list of "
+"fields. You are strongly recommended to use this variant of the directive if "
+"your instruction fits an existing instruction type."
+msgstr ""
+
+#: ../../../RISCVUsage.md:702
+msgid ""
+"`.insn [ length , ] encoding` which takes an (optional) explicit length (in "
+"bytes) and a raw encoding for the instruction. When given an explicit "
+"length, this variant can encode instructions up to 64 bits long. The "
+"encoding part of the directive must be given all bits for the instruction, "
+"none are filled in for the user. When used without the optional length, this "
+"variant of the directive will use the LSBs of the raw encoding to work out "
+"if an instruction is 16 or 32 bits long. LLVM does not infer that an "
+"instruction might be longer than 32 bits - in this case, the user must give "
+"the length explicitly."
+msgstr ""
+
+#: ../../../RISCVUsage.md:704
+msgid ""
+"It is strongly recommended to use the `.insn` directive for assembling "
+"unsupported instructions instead of `.word` or `.hword`, because it will "
+"produce the correct mapping symbols to mark the word as an instruction, not "
+"data."
+msgstr ""
+
+#: ../../../RISCVUsage.md:706
+msgid "Global Pointer (GP) Relaxation and the Small Data Limit"
+msgstr ""
+
+#: ../../../RISCVUsage.md:708
+msgid ""
+"Some of the RISC-V psABI variants reserve `gp` (`x3`) for use as a \"Global "
+"Pointer\", to make generating data addresses more efficient."
+msgstr ""
+
+#: ../../../RISCVUsage.md:710
+msgid "To use this functionality, you need to be doing all of the following:"
+msgstr ""
+
+#: ../../../RISCVUsage.md:712
+msgid "Use the `medlow` (aka `small`) code model;"
+msgstr ""
+
+#: ../../../RISCVUsage.md:713
+msgid ""
+"Not use the `gp` register for any other uses (some platforms use it for the "
+"shadow stack and others as a temporary -- as denoted by the "
+"`Tag_RISCV_x3_reg_usage` build attribute);"
+msgstr ""
+
+#: ../../../RISCVUsage.md:714
+msgid ""
+"Compile your objects with Clang's `-mrelax` option, to enable relaxation "
+"annotations on relocatable objects (this is the default, but `-mno-relax` "
+"disables these relaxation annotations);"
+msgstr ""
+
+#: ../../../RISCVUsage.md:715
+msgid ""
+"Compile for a position-dependent static executable (not a shared library, "
+"and `-fno-PIC` / `-fno-pic` / `-fno-pie`); and"
+msgstr ""
+
+#: ../../../RISCVUsage.md:716
+msgid "Use LLD's `--relax-gp` option."
+msgstr ""
+
+#: ../../../RISCVUsage.md:718
+msgid ""
+"LLD will relax (rewrite) any code sequences that materialize an address "
+"within 2048 bytes of `__global_pointer$` (which will be defined if it is "
+"used and does not already exist) to instead generate the address using `gp` "
+"and the correct (signed) 12-bit immediate. This usually saves at least one "
+"instruction compared to materialising a full 32-bit address value."
+msgstr ""
+
+#: ../../../RISCVUsage.md:720
+msgid ""
+"There can only be one `gp` value in a process (as `gp` is not changed when "
+"calling into a function in a shared library), so the symbol is only defined "
+"and this relaxation is only done for executables, and not for shared "
+"libraries. The linker expects executable startup code to put the value of "
+"`__global_pointer$` (from the executable) into `gp` before any user code is "
+"run."
+msgstr ""
+
+#: ../../../RISCVUsage.md:722
+msgid ""
+"Arguably, the most efficient use for this addressing mode is for smaller "
+"global variables, as larger global variables likely need many more loads or "
+"stores when they are being accessed anyway, so the cost of materializing the "
+"upper bits can be shared."
+msgstr ""
+
+#: ../../../RISCVUsage.md:724
+msgid ""
+"Therefore the compiler can place smaller global variables into sections with "
+"names starting with `.sdata` or `.sbss` (matching sections with names "
+"starting with `.data` and `.bss` respectively). LLD knows to define the "
+"`global_pointer$` symbol close to these sections, and to lay these sections "
+"out adjacent to the `.data` section."
+msgstr ""
+
+#: ../../../RISCVUsage.md:726
+msgid ""
+"Clang's `-msmall-data-limit=` option controls what the threshold size is (in "
+"bytes) for a global variable to be considered small. `-msmall-data-limit=0` "
+"disables the use of sections starting `.sdata` and `.sbss`. The `-msmall-"
+"data-limit=` option will not move global variables that have an explicit "
+"data section, and will keep globals in separate sections if you are using `-"
+"fdata-sections`."
+msgstr ""
+
+#: ../../../RISCVUsage.md:728
+msgid ""
+"The small data limit threshold is also used to separate small constants into "
+"sections with names starting with `.srodata`. LLD does not place these with "
+"the `.sdata` and `.sbss` sections as `.srodata` sections are read only and "
+"the other two are writable. Instead the `.srodata` sections are placed "
+"adjacent to `.rodata`."
+msgstr ""
+
+#: ../../../RISCVUsage.md:730
+msgid ""
+"Data suggests that these options can produce significant improvements across "
+"a range of benchmarks."
+msgstr ""
+
+#: ../../../RISCVUsage.md:732
+msgid "Save/Restore Support"
+msgstr ""
+
+#: ../../../RISCVUsage.md:734
+msgid ""
+"In some circumstances, LLVM may not emit `__riscv_restore_<N>` tail calls "
+"when it has used `__riscv_save_<N>` to save GPRs. This is done intentionally "
+"-- specifically when the `__riscv_restore_<N>` call does not support "
+"functionality that can be emitted inline before or after a `__riscv_save<N>` "
+"call. We still emit the `__riscv_save_<N>` call so that the code size impact "
+"of inlining the restore sequence is not as severe as if we also inlined the "
+"save sequence."
+msgstr ""
+
+#: ../../../RISCVUsage.md:736
+msgid "Sanitizers"
+msgstr ""
+
+#: ../../../RISCVUsage.md:739
+msgid ""
+"This is a summary of the current state of sanitizers, and not an official "
+"support statement."
+msgstr ""
+
+#: ../../../RISCVUsage.md:742
+msgid "UBSan is not platform-specific, and should work out of the box."
+msgstr ""
+
+#: ../../../RISCVUsage.md:744
+msgid ""
+"ASan and TSan already have shadow mappings defined for Linux on RISC-V, and "
+"are likely to work."
+msgstr ""
+
+#: ../../../RISCVUsage.md:746
+msgid ""
+"HWASan is also likely to work, though RISC-V Pointer Masking (very new) is "
+"needed as well to make it run efficiently."
+msgstr ""
+
+#: ../../../RISCVUsage.md:748
+msgid ""
+"Memtag: N/A - there is currently no ratified RISC-V memory tagging spec."
+msgstr ""
+
+#: ../../../RISCVUsage.md:750
+msgid ""
+"MSan is unlikely to work: there are currently no RISC-V-specific shadow "
+"mappings (this is probably easy to fix; perhaps the default Linux 64-bit "
+"mapping will work) and MSan does not explicitly handle any of the "
+"`@llvm.riscv.*` intrinsics (this is significantly more work to fix)."
+msgstr ""
+
+#: ../../../RISCVUsage.md:752
+msgid ""
+"Some intrinsics will be handled correctly anyway, if the RISC-V intrinsic is "
+"auto-upgraded into cross-platform LLVM intrinsics. Some others will be "
+"\"heuristically\" handled (possibly incorrectly). The rest will default to "
+"the \"strict\" handler, which checks that all the parameters are fully "
+"initialized."
+msgstr ""
+
+#: ../../../RISCVUsage.md:754
+msgid ""
+"MSan intrinsics support is only required if code (including dependencies) "
+"manually calls the intrinsic."
+msgstr ""
+
+#: ../../../RISCVUsage.md:756
+msgid "Scheduling Model and Tuning"
+msgstr ""
+
+#: ../../../RISCVUsage.md:758
+msgid ""
+"RISC-V is highly configurable, meaning its scheduling models could be highly "
+"diversified as well. Yet we still believe it is helpful to provide a "
+"\"generic\" tuning processor / scheduling model that represents the \"lowest "
+"common denominator\" RISC-V implementation at the time. The idea is that it "
+"could serve as a \"good-enough\" baseline model for performance tuning "
+"purposes on some of the most common use cases."
+msgstr ""
+
+#: ../../../RISCVUsage.md:760
+msgid ""
+"Though details of this generic scheduling model might evolve over time, we "
+"always have some _expectations_ on the kind of processors it is used for."
+msgstr ""
+
+#: ../../../RISCVUsage.md:762
+msgid ""
+"For example, the `generic` tuning processor is expected to target in-order, "
+"superscalar application processors designed for general-purpose computing. "
+"It is usually RVA22U64- or RVA23U64-capable intended to run Linux. The "
+"`generic-ooo` has a similar set of expectations, except it is targeting out-"
+"of-order application processors."
+msgstr ""
+
+#: ../../../RISCVUsage.md:764
+msgid ""
+"Right now, we simply assign a scheduling model that is widely used by the "
+"community to `generic`. But in the future, we can create a standalone "
+"scheduling model for `generic`, or even create a generic model for each of "
+"the individual sectors. For example, a `generic-embedded` for embedded "
+"processors and a `generic-server` for server workloads."
+msgstr ""
+
+#: ../../../RISCVUsage.md:766
+msgid ""
+"These future generic models could even serve as the \"base\" model for other "
+"scheduling models to derive from: it's not uncommon for multiple processors "
+"to share a similar set of instruction scheduling info except a few key "
+"instructions, and this is especially true for RISC-V given its highly "
+"configurable nature. If we could design the base model in a way that it can "
+"be _parameterized_ by subtarget tuning features, we can substitue the "
+"traditional way of creating individual scheduling models with a combination "
+"of base scheduling model + different subtarget features."
+msgstr ""
+
+#: ../../../RISCVUsage.md:768
+msgid "Processor-Specific Tuning Feature String"
+msgstr ""
+
+#: ../../../RISCVUsage.md:770
+msgid ""
+"Due to RISC-V's highly configurable nature, it is often desirable to share a "
+"single scheduling model across multiple similar RISC-V processors that only "
+"differ in a small number of (uArch) tuning features. An example of such "
+"tuning feature could be whether the latency of vector operations depend on "
+"VL or not. This could be extended to tuning features that are not directly "
+"connected to scheduling model but other parts of the RISC-V backend, like "
+"the cost of `vrgather.vv` instruction."
+msgstr ""
+
+#: ../../../RISCVUsage.md:772
+msgid ""
+"To that end, RISC-V LLVM supports a tuning feature string format, through "
+"frontend flags like `-mtune` in Clang, to help users building a performance "
+"model by \"configuring\" an existing tune CPU, along with its scheduling "
+"model. For example, this flag"
+msgstr ""
+
+#: ../../../RISCVUsage.md:778
+msgid ""
+"takes `sifive-x280` as the \"base\" tune CPU and configured it with `single-"
+"element-vec-fp64`. This gives us a performance model that looks exactly like "
+"that of `sifive-x280`, except some of the 64-bit vector floating point "
+"instructions now produce only a single element per cycle due to `single-"
+"element-vec-fp64`."
+msgstr ""
+
+#: ../../../RISCVUsage.md:780
+msgid ""
+"More formally speaking, each tuning feature string has the following format:"
+msgstr ""
+
+#: ../../../RISCVUsage.md:786
+msgid "where"
+msgstr ""
+
+#: ../../../RISCVUsage.md:794
+msgid ""
+"A *directive* can and can only _enable_ or _disable_ a certain tuning "
+"feature from the tuning CPU. A **positive directive**, like the `single-"
+"element-vec-fp64` we just saw, enables an additional tuning feature in the "
+"associated tuning model. A **negative directive**, on the other hand, "
+"removes a certain tuning feature. For example, `sifive-x390` already has the "
+"`single-element-vec-fp64` feature, and we can use"
+msgstr ""
+
+#: ../../../RISCVUsage.md:800
+msgid ""
+"to create a new performance model that looks nearly the same as `sifive-"
+"x390` except `single-element-vec-fp64` being cut out. In this case, `full-"
+"vec-fp64` is a negative directive."
+msgstr ""
+
+#: ../../../RISCVUsage.md:802
+msgid "There are some rules for the list of directives, though:"
+msgstr ""
+
+#: ../../../RISCVUsage.md:804
+msgid "The same directive cannot appear more than once."
+msgstr ""
+
+#: ../../../RISCVUsage.md:805
+msgid ""
+"The positive and negative directives that belong to the same feature cannot "
+"appear at the same time."
+msgstr ""
+
+#: ../../../RISCVUsage.md:806
+msgid ""
+"If a feature implies other features -- for example, `short-forward-branch-"
+"imul` implies `short-forward-branch-ialu` -- then the _implied_ features are "
+"subject to the previous two rules, too. For example, we cannot write "
+"_\"short-forward-branch-imul,no-short-forward-branch-ialu\"_, because the "
+"feature implied by `short-forward-branch-imul` violates rule 2."
+msgstr ""
+
+#: ../../../RISCVUsage.md:808
+msgid ""
+"In addition to the rules listed above, right now, this string only accepts "
+"directives that are explicitly supported by the tune CPU. For example, "
+"_\"sifive-x280:prefer-w-inst\"_ is not a valid string as `prefer-w-inst` is "
+"not supported by `sifive-x280` at this moment. Vendors of these processors "
+"are expected to maintain the compatibility of their supported directives "
+"across different versions. There have been lots of discussions on having "
+"\"generic\" features that are universally supported by all RISC-V CPUs, yet "
+"many concerns -- including the difficulty to maintain compatibility across "
+"_all_ CPU targets and versions -- make us decide to table this issue until "
+"we find a reliable process to select such features."
+msgstr ""

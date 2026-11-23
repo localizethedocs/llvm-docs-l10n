@@ -1,0 +1,472 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2003-2025, LLVM Project
+# This file is distributed under the same license as the LLVM package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LLVM main\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-25 19:47+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:1
+msgid "How to set up LLVM-style RTTI for your class hierarchy"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:3
+msgid "Background"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:5
+msgid ""
+"LLVM avoids using C++'s built in RTTI. Instead, it pervasively uses its own "
+"hand-rolled form of RTTI which is much more efficient and flexible, although "
+"it requires a bit more work from you as a class author."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:9
+msgid ""
+"A description of how to use LLVM-style RTTI from a client's perspective is "
+"given in the {ref}`Programmer's Manual <isa>`. This document, in contrast, "
+"discusses the steps you need to take as a class hierarchy author to make "
+"LLVM-style RTTI available to your clients."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:14
+msgid ""
+"Before diving in, make sure that you are familiar with the Object Oriented "
+"Programming concept of \"[is-a][is-a]\"."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:17
+msgid "Basic Setup"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:19
+msgid ""
+"This section describes how to set up the most basic form of LLVM-style RTTI "
+"(which is sufficient for 99.9% of the cases). We will set up LLVM-style RTTI "
+"for this class hierarchy:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:45
+msgid ""
+"The most basic working setup for LLVM-style RTTI requires the following "
+"steps:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:48
+msgid ""
+"In the header where you declare `Shape`, you will want to `#include \"llvm/"
+"Support/Casting.h\"`, which declares LLVM's RTTI templates. That way your "
+"clients don't even have to think about it."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:56
+msgid ""
+"In the base class, introduce an enum which discriminates all of the "
+"different concrete classes in the hierarchy, and stash the enum value "
+"somewhere in the base class."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:60
+msgid "Here is the code after introducing this change:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:80
+msgid ""
+"You will usually want to keep the `Kind` member encapsulated and private, "
+"but let the enum `ShapeKind` be public along with providing a `getKind()` "
+"method. This is convenient for clients so that they can do a `switch` over "
+"the enum."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:85
+msgid ""
+"A common naming convention is that these enums are \"kind\"s, to avoid "
+"ambiguity with the words \"type\" or \"class\" which have overloaded "
+"meanings in many contexts within LLVM. Sometimes there will be a natural "
+"name for it, like \"opcode\". Don't bikeshed over this; when in doubt use "
+"`Kind`."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:90
+msgid ""
+"You might wonder why the `Kind` enum doesn't have an entry for `Shape`. The "
+"reason for this is that since `Shape` is abstract (`computeArea() = 0;`), "
+"you will never actually have non-derived instances of exactly that class "
+"(only subclasses). See [Concrete Bases and Deeper Hierarchies](#concrete-"
+"bases-and-deeper-hierarchies) for information on how to deal with non-"
+"abstract bases. It's worth mentioning here that unlike `dynamic_cast<>`, "
+"LLVM-style RTTI can be used (and is often used) for classes that don't have "
+"v-tables."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:99
+msgid ""
+"Next, you need to make sure that the `Kind` gets initialized to the value "
+"corresponding to the dynamic type of the class. Typically, you will want to "
+"have it be an argument to the constructor of the base class, and then pass "
+"in the respective `XXXKind` from subclass constructors."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:104
+msgid "Here is the code after that change:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:141
+msgid ""
+"Finally, you need to inform LLVM's RTTI templates how to dynamically "
+"determine the type of a class (i.e. whether the `isa<>`/`dyn_cast<>` should "
+"succeed). The default \"99.9% of use cases\" way to accomplish this is "
+"through a small static member function `classof`. In order to have proper "
+"context for an explanation, we will display this code first, and then below "
+"describe each part:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:188
+msgid ""
+"The job of `classof` is to dynamically determine whether an object of a base "
+"class is in fact of a particular derived class. In order to downcast a type "
+"`Base` to a type `Derived`, there needs to be a `classof` in `Derived` which "
+"will accept an object of type `Base`."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:193
+msgid "To be concrete, consider the following code:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:202
+msgid ""
+"The code of the `isa<>` test in this code will eventually boil down---after "
+"template instantiation and some other machinery---to a check roughly like "
+"`Circle::classof(S)`. For more information, see {ref}`classof-contract`."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:207
+msgid ""
+"The argument to `classof` should always be an *ancestor* class because the "
+"implementation has logic to allow and optimize away upcasts/up-`isa<>`'s "
+"automatically. It is as though every class `Foo` automatically has a "
+"`classof` like:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:224
+msgid ""
+"Note that this is the reason that we did not need to introduce a `classof` "
+"into `Shape`: all relevant classes derive from `Shape`, and `Shape` itself "
+"is abstract (has no entry in the `Kind` enum), so this notional inferred "
+"`classof` is all we need. See [Concrete Bases and Deeper Hierarchies]"
+"(#concrete-bases-and-deeper-hierarchies) for more information about how to "
+"extend this example to more general hierarchies."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:231
+msgid ""
+"Although for this small example setting up LLVM-style RTTI seems like a lot "
+"of \"boilerplate\", if your classes are doing anything interesting then this "
+"will end up being a tiny fraction of the code."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:235
+msgid "Concrete Bases and Deeper Hierarchies"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:237
+msgid ""
+"For concrete bases (i.e. non-abstract interior nodes of the inheritance "
+"tree), the `Kind` check inside `classof` needs to be a bit more complicated. "
+"The situation differs from the example above in that"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:241
+msgid ""
+"Since the class is concrete, it must itself have an entry in the `Kind` enum "
+"because it is possible to have objects with this class as a dynamic type."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:244
+msgid ""
+"Since the class has children, the check inside `classof` must take them into "
+"account."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:247
+msgid ""
+"Say that `SpecialSquare` and `OtherSpecialSquare` derive from `Square`, and "
+"so `ShapeKind` becomes:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:259
+msgid "Then in `Square`, we would need to modify the `classof` like so:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:271
+msgid ""
+"The reason that we need to test a range like this instead of just equality "
+"is that both `SpecialSquare` and `OtherSpecialSquare` \"is-a\" `Square`, and "
+"so `classof` needs to return `true` for them."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:275
+msgid ""
+"This approach can be made to scale to arbitrarily deep hierarchies. The "
+"trick is that you arrange the enum values so that they correspond to a "
+"preorder traversal of the class hierarchy tree. With that arrangement, all "
+"subclass tests can be done with two comparisons as shown above. If you just "
+"list the class hierarchy like a list of bullet points, you'll get the "
+"ordering right:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:290
+msgid "A Bug to be Aware Of"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:292
+msgid ""
+"The example just given opens the door to bugs where the `classof`s are not "
+"updated to match the `Kind` enum when adding (or removing) classes to (from) "
+"the hierarchy."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:296
+msgid ""
+"Continuing the example above, suppose we add a `SomewhatSpecialSquare` as a "
+"subclass of `Square`, and update the `ShapeKind` enum like so:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:309
+msgid ""
+"Now, suppose that we forget to update `Square::classof()`, so it still looks "
+"like:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:321
+msgid ""
+"As the comment indicates, this code contains a bug. A straightforward and "
+"non-clever way to avoid this is to introduce an explicit `SK_LastSquare` "
+"entry in the enum when adding the first subclass(es). For example, we could "
+"rewrite the example at the beginning of [Concrete Bases and Deeper "
+"Hierarchies](#concrete-bases-and-deeper-hierarchies) as:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:346
+msgid "Then, adding new subclasses is easy:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:359
+msgid "Notice that `Square::classof` does not need to be changed."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:363
+msgid "The Contract of `classof`"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:365
+msgid ""
+"To be more precise, let `classof` be inside a class `C`. Then the contract "
+"for `classof` is \"return `true` if the dynamic type of the argument is-a "
+"`C`\". As long as your implementation fulfills this contract, you can tweak "
+"and optimize it as much as you want."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:370
+msgid ""
+"For example, LLVM-style RTTI can work fine in the presence of multiple-"
+"inheritance by defining an appropriate `classof`. An example of this in "
+"practice is [Decl](https://clang.llvm.org/doxygen/classclang_1_1Decl.html) "
+"vs. [DeclContext](https://clang.llvm.org/doxygen/"
+"classclang_1_1DeclContext.html) inside Clang. The `Decl` hierarchy is done "
+"very similarly to the example setup demonstrated in this tutorial. The key "
+"part is how to then incorporate `DeclContext`: all that is needed is in "
+"`bool DeclContext::classof(const Decl *)`, which asks the question \"Given a "
+"`Decl`, how can I determine if it is-a `DeclContext`?\". It answers this "
+"with a simple switch over the set of `Decl` \"kinds\", and returning true "
+"for ones that are known to be `DeclContext`'s."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:384
+msgid "Rules of Thumb"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:386
+msgid ""
+"The `Kind` enum should have one entry per concrete class, ordered according "
+"to a preorder traversal of the inheritance tree."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:388
+msgid ""
+"The argument to `classof` should be a `const Base *`, where `Base` is some "
+"ancestor in the inheritance hierarchy. The argument should *never* be a "
+"derived class or the class itself: the template machinery for `isa<>` "
+"already handles this case and optimizes it."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:392
+msgid ""
+"For each class in the hierarchy that has no children, implement a `classof` "
+"that checks only against its `Kind`."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:394
+msgid ""
+"For each class in the hierarchy that has children, implement a `classof` "
+"that checks a range of the first child's `Kind` and the last child's `Kind`."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:398
+msgid "RTTI for Open Class Hierarchies"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:400
+msgid ""
+"Sometimes it is not possible to know all types in a hierarchy ahead of time. "
+"For example, in the shapes hierarchy described above the authors may have "
+"wanted their code to work for user defined shapes too. To support use cases "
+"that require open hierarchies LLVM provides the `RTTIRoot` and `RTTIExtends` "
+"utilities."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:406
+msgid ""
+"The `RTTIRoot` class describes an interface for performing RTTI checks. The "
+"`RTTIExtends` class template provides an implementation of this interface "
+"for classes derived from `RTTIRoot`. `RTTIExtends` uses the \"[Curiously "
+"Recurring Template Idiom][curiously recurring template idiom]\", taking the "
+"class being defined as its first template argument and the parent class as "
+"the second argument. Any class that uses `RTTIExtends` must define a `static "
+"char ID` member, the address of which will be used to identify the type."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:414
+msgid ""
+"This open-hierarchy RTTI support should only be used if your use case "
+"requires it. Otherwise the standard LLVM RTTI system should be preferred."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:417
+msgid "E.g."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:449
+msgid "Advanced Use Cases"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:451
+msgid ""
+"The underlying implementation of isa/cast/dyn_cast is all controlled through "
+"a struct called `CastInfo`. `CastInfo` provides 4 methods, `isPossible`, "
+"`doCast`, `castFailed`, and `doCastIfPossible`. These are for `isa`, `cast`, "
+"and `dyn_cast`, in order. You can control the way your cast is performed by "
+"creating a specialization of the `CastInfo` struct (to your desired types) "
+"that provides the same static methods as the base `CastInfo` struct."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:459
+msgid ""
+"This can be a lot of boilerplate, so we also have what we call Cast Traits. "
+"These are structs that provide one or more of the above methods so you can "
+"factor out common casting patterns in your project. We provide a few in the "
+"header file ready to be used, and we'll show a few examples motivating their "
+"usage. These examples are not exhaustive, and adding new cast traits is easy "
+"so users should feel free to add them to their project, or contribute them "
+"if they're particularly useful!"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:467
+msgid ""
+"Enabling isa/cast/dyn_cast for Handle Types by Specializing `simplify_type`"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:469
+msgid ""
+"It is common to require pointer handle types like smart pointers or "
+"iterators. Yet, since the `classof` method is only implemented for the "
+"underlying types, developers must manually unwrap them into raw pointers "
+"prior to invoking `isa`, `cast`, or `dyn_cast`."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:473
+msgid ""
+"To avoid this boilerplate, you can specialize the `simplify_type` template "
+"for your handle type. For example, if you have an iterator class for `Shape` "
+"called `ShapeIterator`, you can specialize `simplify_type` like so:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:495
+msgid ""
+"By doing this, you can now use `isa`, `cast`, and `dyn_cast` directly on "
+"`ShapeIterator` objects without having to manually call `get()` on them. For "
+"example:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:506
+msgid "Value to value casting"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:508
+msgid ""
+"In this case, we have a struct that is what we call 'nullable' - i.e. it is "
+"constructible from `nullptr` and that results in a value you can tell is "
+"invalid."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:523
+msgid ""
+"Given something like this, we want to pass this object around by value, and "
+"we would like to cast from objects of this type to some other set of "
+"objects. For now, we assume that the types we want to cast *to* all provide "
+"`classof`. So we can use some provided cast traits like so:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:539
+msgid "Pointer to value casting"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:541
+msgid ""
+"Now given the value above `SomeValue`, maybe we'd like to be able to cast to "
+"that type from a char pointer type. So what we would do in that case is:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:558
+msgid ""
+"This would enable us to cast from a `char *` to a SomeValue, if we wanted to."
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:560
+msgid "Optional value casting"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:562
+msgid ""
+"When your types are not constructible from `nullptr` or there isn't a simple "
+"way to tell when an object is invalid, you may want to use `std::optional`. "
+"In those cases, you probably want something like this:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:571
+msgid ""
+"That cast trait requires that `T` is constructible from `const SomeValue &` "
+"but it enables casting like so:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:579
+msgid ""
+"With the `_if_present` variants, you can even do optional chaining like this:"
+msgstr ""
+
+#: ../../../HowToSetUpLLVMStyleRTTI.md:586
+msgid ""
+"and `valOr` will be `std::nullopt` if either `someVal` cannot be converted "
+"*or* if `someVal` was also `std::nullopt`."
+msgstr ""
